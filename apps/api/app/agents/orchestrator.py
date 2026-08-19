@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Protocol
+
 from app.agents.base import (
     AgentCapability,
     AgentRequest,
@@ -22,6 +24,10 @@ _LABELS = {
     AgentCapability.TUTORING: "小涟辅导",
     AgentCapability.ASSESSMENT: "学习评估",
 }
+
+
+class ReadAgent(Protocol):
+    def run(self, request: AgentRequest) -> AgentResult: ...
 
 
 class EducationAgentOrchestrator:
@@ -90,13 +96,13 @@ class EducationAgentOrchestrator:
         )
 
     @staticmethod
-    def _run_read_agent(agent, request, trace) -> AgentResult:
+    def _run_read_agent(agent: ReadAgent, request: AgentRequest, trace: list[AgentTraceItem]) -> AgentResult:
         result = agent.run(request)
         trace.append(EducationAgentOrchestrator._trace(result))
         return result
 
 
-def _unique(items: list[str]) -> list[str]:
+def _unique(items: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(items))
 
 

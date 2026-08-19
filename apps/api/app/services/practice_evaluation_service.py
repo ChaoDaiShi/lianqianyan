@@ -70,7 +70,19 @@ class PracticeEvaluationService:
                 confidence = result.confidence
                 evidence_count = result.evidence_count
 
-            # 3) 单一提交点 —— Evidence 与 Mastery 同事务
+            # 3) 将服务端投影结果写回同一条 Evidence，供后续 Tutor/Assessment 解释。
+            # 这些字段来自 ProjectionResult，客户端与 Agent 都不能伪造或写入。
+            self._evidence_repo.update_payload(
+                evidence.id,
+                {
+                    "mastery_before": mastery_before,
+                    "mastery_after": mastery_after,
+                    "confidence": confidence,
+                    "evidence_count": evidence_count,
+                },
+            )
+
+            # 4) 单一提交点 —— Evidence 与 Mastery 同事务
             self._db.commit()
         except Exception:
             self._db.rollback()

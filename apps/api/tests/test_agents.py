@@ -12,9 +12,11 @@ from app.agents import (
     AgentCapability,
     AgentRequest,
     AssessmentAgent,
+    AgentRouter,
     DiagnosisAgent,
     EducationAgentOrchestrator,
     PlannerAgent,
+    RouteDecision,
 )
 from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
 from app.db.session import get_db
@@ -81,6 +83,25 @@ def agent_chat(client: TestClient, message: str, capability: str | None = None):
     )
 
 
+def test_router_routes_standard_messages() -> None:
+    router = AgentRouter()
+    assert router.route("我哪里薄弱", None) == RouteDecision(AgentCapability.DIAGNOSIS)
+    assert router.route("今天学什么", None) == RouteDecision(AgentCapability.PLANNING)
+    assert router.route("为什么这题错了", None) == RouteDecision(AgentCapability.ASSESSMENT)
+    assert router.route("解释死锁", None) == RouteDecision(AgentCapability.TUTORING)
+    assert router.route("随便聊聊", None) == RouteDecision(AgentCapability.TUTORING)
+
+
+def test_router_prioritizes_collaboration_and_explicit_capability() -> None:
+    router = AgentRouter()
+    assert router.route("我现在最应该学什么，为什么？", None) == RouteDecision(
+        AgentCapability.PLANNING, collaborative=True
+    )
+    assert router.route("解释死锁", AgentCapability.DIAGNOSIS) == RouteDecision(
+        AgentCapability.DIAGNOSIS
+    )
+
+
 def test_diagnosis_agent_reuses_service_result(testdb: _TestDB) -> None:
     result = DiagnosisAgent(testdb.session()).run(request("我哪里薄弱"))
     assert result.success is True
@@ -104,6 +125,47 @@ def test_assessment_agent_is_read_only(testdb: _TestDB) -> None:
     assert result.success is True
     assert result.data["evidence"] is None
     assert "目前还没有足够记录" in result.summary
+
+
+def test_assessment_agent_explains_real_projection_without_writing_mastery(testdb: _TestDB) -> None:
+    from app.domain import PracticeEvaluateRequest
+    from app.services import PracticeEvaluationService
+    from app.services.mastery_repository import MasteryRepository
+
+    session = testdb.session()
+    before = MasteryRepository(session).get_by_learner_and_knowledge_point(
+        DEMO_LEARNER_ID, "kp-pv"
+    )
+    assert before is not None
+    response = PracticeEvaluationService(session).evaluate(
+        PracticeEvaluateRequest(
+            learner_id=DEMO_LEARNER_ID,
+            course_id=COURSE_OS,
+            knowledge_point_id="kp-pv",
+            question_id="q-assessment-agent",
+            is_correct=True,
+            score=1.0,
+            difficulty=0.6,
+        )
+    )
+    after_practice = MasteryRepository(session).get_by_learner_and_knowledge_point(
+        DEMO_LEARNER_ID, "kp-pv"
+    )
+    assert after_practice is not None
+    assessment = AssessmentAgent(session).run(request("分析一下我刚才的练习"))
+    assert assessment.data["mastery_before"] == response.mastery_before
+    assert assessment.data["mastery_after"] == response.mastery_after
+    assert assessment.data["confidence"] == response.confidence
+    assert assessment.data["evidence_count"] == response.evidence_count
+
+    before_chat = (after_practice.mastery_score, after_practice.evidence_count)
+    assessment_again = AssessmentAgent(session).run(request("分析一下我刚才的练习"))
+    after_chat = MasteryRepository(session).get_by_learner_and_knowledge_point(
+        DEMO_LEARNER_ID, "kp-pv"
+    )
+    assert after_chat is not None
+    assert (after_chat.mastery_score, after_chat.evidence_count) == before_chat
+    assert assessment_again.success is True
 
 
 def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:

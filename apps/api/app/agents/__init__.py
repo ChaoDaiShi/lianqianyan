@@ -9,6 +9,8 @@ from app.agents.base import (
 from app.agents.assessment_agent import AssessmentAgent
 from app.agents.diagnosis_agent import DiagnosisAgent
 from app.agents.planner_agent import PlannerAgent
+from app.agents.router import AgentRouter, RouteDecision
+from app.agents.tutor_agent import TutorAgent
 from app.agents.orchestrator import EducationAgentOrchestrator
 
 __all__ = [

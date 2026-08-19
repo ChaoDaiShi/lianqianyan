@@ -61,7 +61,15 @@ def test_provider_rejects_invalid_json_and_empty_choices():
         asyncio.run(empty.chat([LLMMessage("user", "问题")]))
 
 
-def test_provider_normalizes_v1_base_urls():
+def test_provider_reports_timeout_without_exposing_request_details():
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("upstream timed out", request=request)
+
+    provider = _provider(handler)
+    with pytest.raises(RuntimeError, match="timed out"):
+        asyncio.run(provider.chat([LLMMessage("user", "问题")]))
+
+
     assert OpenAICompatibleProvider.endpoint_for("https://llm.test") == "https://llm.test/v1/chat/completions"
     assert OpenAICompatibleProvider.endpoint_for("https://llm.test/") == "https://llm.test/v1/chat/completions"
     assert OpenAICompatibleProvider.endpoint_for("https://llm.test/v1") == "https://llm.test/v1/chat/completions"

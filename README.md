@@ -17,8 +17,7 @@
 ## 产品定位
 
 - 用户对外只看到一个 AI：**小涟**（Education Agent）。
-- 逻辑能力划分为 Profile / Diagnosis / Planner / Tutor / Practice / Assessment / Memory / Resource。
-- 第一阶段这些实现为 **Service / Skill**，而不是多个真正运行的 Agent。
+- **Diagnosis / Planner / Tutor / Assessment Agent**：Phase 3-2 已将这些能力包装为真正执行的轻量 Agent 模块，由确定性 Orchestrator 编排；这不是完全自主 Agent Swarm。
 
 ---
 
@@ -228,7 +227,43 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
     三个演示问题）。Demo：死锁问题引用诊断、今天学什么引用计划、PV 问题引用画像。
 - **FastAPI 最小骨架**：`/api/health` + 各业务路由占位 + 健康测试。
 - **统一 LLM Provider 抽象**（接口真实；当前演示使用 Mock Provider）。
-- **MCP 架构预留**：目录 + README + Tool 接口设计（不实现假工具）。
+- **MCP 架构预留**：目录 + README + Tool 接口设计（本轮不启用 MCP Runtime / Tools）。
+
+---
+
+## Phase 3-2：Real AI Tutor & Multi-Agent Orchestration
+
+Phase 3-2 已将教育能力组织为轻量、确定性编排的 Agent Layer：
+
+```text
+Learner State Layer
+  Mastery / Profile / Diagnosis / StudyPlan / Evidence
+                       ↓
+Education Agent Layer
+  Diagnosis Agent · Planner Agent · Tutor Agent · Assessment Agent
+                       ↓
+EducationAgentOrchestrator
+                       ↓
+XiaolianPage / LearningSpace Tutor
+```
+
+- **Diagnosis Agent**：包装 `LearnerProfileService` 与 `DiagnosisService`，不复制诊断算法。
+- **Planner Agent**：普通问题读取 Current Plan；只有明确生成/重新规划时才调用 `generate_plan()`。
+- **Tutor Agent**：复用 `TutorService`、请求级 Tutor Context 和集中 Prompt，负责最终自然语言表达。
+- **Assessment Agent**：读取最近真实练习 Evidence，只解释结果，不修改 Mastery。
+- **Router**：显式 capability 优先；未指定时按确定性关键词路由，未知问题默认辅导。
+- **Orchestrator**：协作问题按 `Diagnosis → Planner → Tutor` DAG 执行；Diagnosis/Planner 使用结构化服务，最终最多一次 LLM 调用。Trace 只记录真实执行的 Agent。
+
+新增 `POST /api/agents/chat`，旧 `POST /api/tutor/chat` 保持兼容。Provider 配置完整时使用 OpenAI-compatible HTTP Provider，否则使用稳定的 Mock Provider：
+
+- `EDUCATION_LLM_BASE_URL`
+- `EDUCATION_LLM_API_KEY`
+- `EDUCATION_LLM_MODEL`
+- `EDUCATION_LLM_TIMEOUT`
+
+新 API 明确区分 `provider: mock|openai_compatible` 与 `response_mode: provider|fallback`，不再把 Mock 调用宣传为真实外部 LLM。API Key 只来自环境变量，异常日志不记录完整 Key。
+
+本阶段实现的是围绕教育能力边界封装的 Agent 模块，由统一 Orchestrator 确定性编排；不宣称完全自主 Agent Swarm。
 
 ---
 
@@ -243,7 +278,8 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 - 更多课程内容与练习题型（当前 `/space` 已提供当前计划任务 + 学习内容 + 快速练习 + 小涟助手）
 - **AI Tutor 已具备基础（Phase 3-0）**：已支持「学习上下文驱动 AI Tutor」
   （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，
-  见上文）；**尚未实现**：RAG / 记忆持久化（聊天历史）/ 真实 LLM API Key（当前 Mock）。
+  见上文）。Phase 3-2 进一步提供确定性 Agent Router / Orchestrator 与 OpenAI-compatible Provider；
+  无完整真实配置时仍使用 Mock Provider。**尚未实现**：RAG / 记忆持久化（聊天历史）。
 - AI 自动出题 / AI 判题
 - 费曼复述 / 错题本
 - 知识图谱 / RAG / 向量数据库
@@ -271,8 +307,7 @@ Agent 系统接入。预计 Tool：`get_learner_profile`、`diagnose_learning_st
 
 ---
 
-> **声明**：当前版本属于 EducationMind 第一阶段，**不宣称**已经实现完整学习画像、
-> 多智能体或 MCP Runtime。
+> **声明**：当前版本属于 EducationMind Phase 3-2，已实现真实学习状态驱动的轻量 Agent 编排与可选 OpenAI-compatible Provider；**不宣称**已经实现完整自主 Agent Swarm、知识图谱或 MCP Runtime。
 
 ## License
 

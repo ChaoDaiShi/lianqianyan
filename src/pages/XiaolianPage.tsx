@@ -91,7 +91,7 @@ export function XiaolianPage() {
     setInput(question);
   };
 
-  const handleSend = async (rawText?: string) => {
+  const handleSend = async (rawText?: string, capability?: AgentCapability | null) => {
     const text = (rawText ?? input).trim();
     if (!text || pending) return;
     setInput('');
@@ -102,7 +102,7 @@ export function XiaolianPage() {
         learnerId: DEMO_LEARNER_ID,
         courseId: DEMO_COURSE_ID,
         message: text,
-        capability: selectedCapability,
+        capability: capability === undefined ? selectedCapability : capability,
       });
       setSelectedCapability(null);
       setMessages((prev) => [
@@ -187,7 +187,7 @@ export function XiaolianPage() {
         </div>
 
         <div className="flex flex-wrap gap-2 pb-3">
-          {DEMO_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question)} className="rounded-full border border-blue-200 bg-blue-50/60 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50">{question}</button>)}
+          {DEMO_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-full border border-blue-200 bg-blue-50/60 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50">{question}</button>)}
         </div>
 
         <form className="flex items-center gap-2 border-t border-gray-100 pt-3" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}>

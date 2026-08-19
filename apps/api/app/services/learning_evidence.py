@@ -61,6 +61,20 @@ class LearningEvidenceRepository:
         self._db.flush()
         return self._to_out(record)
 
+    def update_payload(self, evidence_id: str, additions: dict) -> LearningEvidenceOut | None:
+        """在当前业务事务内补充服务端派生的证据字段。"""
+        record = self._db.get(LearningEvidence, evidence_id)
+        if record is None:
+            return None
+        try:
+            payload = json.loads(record.payload or "{}")
+        except json.JSONDecodeError:
+            payload = {}
+        payload.update(additions)
+        record.payload = json.dumps(payload, ensure_ascii=False)
+        self._db.flush()
+        return self._to_out(record)
+
     def list_all(self) -> list[LearningEvidenceOut]:
         """列出全部学习证据（按时间倒序）。"""
         records = self._db.scalars(

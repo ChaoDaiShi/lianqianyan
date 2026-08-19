@@ -36,14 +36,26 @@ class AssessmentAgent:
         score = payload.get("score")
         correctness = "答对了" if is_correct else "这次没有答对"
         score_text = f"得分 {round(float(score) * 100)}%" if score is not None else "暂未记录得分"
+        mastery_before = payload.get("mastery_before")
+        mastery_after = payload.get("mastery_after")
+        confidence = payload.get("confidence")
+        evidence_count = payload.get("evidence_count")
+        projection_text = ""
+        if mastery_before is not None and mastery_after is not None:
+            direction = "提升" if mastery_after >= mastery_before else "回落"
+            projection_text = f"掌握度从 {round(float(mastery_before) * 100)}% 到 {round(float(mastery_after) * 100)}%，{direction}。"
         return AgentResult(
             agent=AgentCapability.ASSESSMENT,
-            summary=f"最近一次练习{correctness}，{score_text}。掌握度变化由练习评价服务记录。",
+            summary=f"最近一次练习{correctness}，{score_text}。{projection_text}掌握度变化由练习评价服务记录。",
             data={
                 "evidence": latest.model_dump(mode="json"),
                 "is_correct": is_correct,
                 "score": score,
                 "difficulty": payload.get("difficulty"),
+                "mastery_before": mastery_before,
+                "mastery_after": mastery_after,
+                "confidence": confidence,
+                "evidence_count": evidence_count,
             },
             context_used=["evidence"],
             suggested_actions=[{"type": "retry_practice", "label": "再做一道练习"}],
