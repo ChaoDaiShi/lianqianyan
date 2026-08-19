@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.routes import (
+    agents,
     assessment,
     diagnosis,
     health,
@@ -23,6 +24,7 @@ api_router.include_router(diagnosis.router)
 api_router.include_router(plans.router)
 api_router.include_router(learning.router)
 api_router.include_router(practice.router)
+api_router.include_router(agents.router)
 api_router.include_router(assessment.router)
 api_router.include_router(reports.router)
 api_router.include_router(tutor.router)
