@@ -274,9 +274,12 @@ export function LearningSpacePage() {
                 <ModulePractice
                   knowledgePointName={currentTask.knowledgePointName}
                   questions={module.questions}
-                  onPracticeComplete={() => {
-                    profile.refetch();
-                    diagnosis.refetch();
+                  onPracticeComplete={async () => {
+                    const [profileUpdated, diagnosisUpdated] = await Promise.all([
+                      profile.refetch(),
+                      diagnosis.refetch(),
+                    ]);
+                    return profileUpdated && diagnosisUpdated;
                   }}
                 />
               )}

@@ -31,7 +31,7 @@ export interface AsyncState<T> {
   data: T | null;
   loading: boolean;
   error: boolean;
-  refetch: () => void;
+  refetch: () => Promise<boolean>;
 }
 
 function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[]): AsyncState<T> {
@@ -39,17 +39,23 @@ function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[]): AsyncState<T> 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const refetch = useCallback(() => {
+  const refetch = useCallback(async (): Promise<boolean> => {
     setLoading(true);
     setError(false);
-    fetcher()
-      .then((d) => setData(d))
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    try {
+      const nextData = await fetcher();
+      setData(nextData);
+      return true;
+    } catch {
+      setError(true);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   }, deps);
 
   useEffect(() => {
-    refetch();
+    void refetch();
   }, [refetch]);
 
   return { data, loading, error, refetch };

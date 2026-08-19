@@ -5,6 +5,7 @@ import {
   Loader2,
   FileQuestion,
   Sparkles,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { evaluatePractice, type PracticeEvaluationResponse } from '@/lib/educationApi';
@@ -16,7 +17,7 @@ interface ModulePracticeProps {
   knowledgePointName: string;
   questions: DemoQuestion[];
   /** 练习成功（已调用后端）后回调，用于刷新 Profile / Diagnosis。 */
-  onPracticeComplete?: () => void;
+  onPracticeComplete?: () => Promise<boolean> | boolean;
 }
 
 type ResultState =
@@ -36,6 +37,8 @@ function pct(value: number): string {
  * 但提交后**必须**调用真实 POST /api/practice/evaluate，掌握度变化
  * （before/after/confidence）由服务端计算并持久化，禁止前端 mastery += 5。
  */
+type RefreshStatus = 'idle' | 'refreshing' | 'done' | 'error';
+
 export function ModulePractice({
   knowledgePointName,
   questions,
@@ -44,6 +47,7 @@ export function ModulePractice({
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ResultState>({ status: 'idle' });
+  const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>('idle');
 
   if (questions.length === 0) {
     return (
@@ -79,7 +83,13 @@ export function ModulePractice({
         difficulty: question.difficulty,
       });
       setResult({ status: 'done', correct: isCorrect, data });
-      onPracticeComplete?.();
+      if (onPracticeComplete) {
+        setRefreshStatus('refreshing');
+        const refreshed = await onPracticeComplete();
+        setRefreshStatus(refreshed ? 'done' : 'error');
+      } else {
+        setRefreshStatus('done');
+      }
     } catch {
       setResult({ status: 'error', message: '暂时没能记录这次练习结果，请稍后再试。' });
     }
@@ -90,6 +100,7 @@ export function ModulePractice({
       setQIndex((i) => i + 1);
       setSelected(null);
       setResult({ status: 'idle' });
+      setRefreshStatus('idle');
     }
   };
 
@@ -194,10 +205,24 @@ export function ModulePractice({
                   ? `这次练习暴露出了一些还需要巩固的内容。`
                   : `学习状态已更新。`}
             </p>
-            <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
-              <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" />
-              小涟已经记录这次学习结果，你的学习画像已更新。
-            </p>
+            {refreshStatus === 'refreshing' && (
+              <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-blue-600">
+                <Loader2 className="mt-0.5 h-3 w-3 shrink-0 animate-spin" />
+                正在刷新学习画像与诊断…
+              </p>
+            )}
+            {refreshStatus === 'done' && (
+              <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
+                <CheckCircle2 className="mt-0.5 h-3 w-3 shrink-0 text-emerald-500" />
+                小涟已经记录这次学习结果，你的学习画像与诊断已更新。
+              </p>
+            )}
+            {refreshStatus === 'error' && (
+              <p className="mt-1 flex items-start gap-1.5 text-xs leading-relaxed text-amber-700">
+                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                练习结果已记录，但学习画像或诊断暂时未能刷新，请稍后重试页面数据。
+              </p>
+            )}
             <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
               计划将在后续重新规划时根据最新学习状态调整。
             </p>
