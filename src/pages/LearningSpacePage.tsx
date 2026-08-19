@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import {
   LayoutGrid,
   Loader2,
@@ -13,6 +13,7 @@ import {
 import { AppShell } from '@/components/layout/AppShell';
 import { SpaceTutor } from '@/components/learning/SpaceTutor';
 import { ModulePractice } from '@/components/learning/ModulePractice';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { useCurrentPlan, useLearnerProfile, useDiagnosis } from '@/lib/hooks';
 import {
   DEMO_LEARNER_ID,
@@ -45,11 +46,10 @@ function findKp(
  * 数据全部真实：Plan Task（来自 Latest Plan）+ Profile / Diagnosis（掌握度/状态）。
  */
 export function LearningSpacePage() {
-  const navigate = useNavigate();
+  const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const [searchParams] = useSearchParams();
   const taskIdParam = searchParams.get('task_id');
-  const kpParam = searchParams.get('kp');
-  const planIdParam = searchParams.get('plan_id');
+  const kpParam = searchParams.get('knowledge_point_id');
 
   const workspaceTaskId = useWorkspaceStore((s) => s.taskId);
   const workspaceKp = useWorkspaceStore((s) => s.knowledgePointId);
@@ -63,9 +63,8 @@ export function LearningSpacePage() {
 
   const tasks = plan?.tasks ?? [];
 
-  const activeKpId =
-    kpParam ?? workspaceKp ?? tasks[0]?.knowledgePointId ?? null;
-  const activeTaskId = taskIdParam ?? workspaceTaskId ?? null;
+  const activeKpId = kpParam ?? workspaceKp;
+  const activeTaskId = taskIdParam ?? workspaceTaskId;
 
   const currentTask: PersistedStudyTask | null = useMemo(() => {
     if (activeTaskId) {
@@ -75,7 +74,7 @@ export function LearningSpacePage() {
     if (activeKpId) {
       return tasks.find((t) => t.knowledgePointId === activeKpId) ?? null;
     }
-    return tasks[0] ?? null;
+    return null;
   }, [tasks, activeTaskId, activeKpId]);
 
   const kpDiagnosis = useMemo(
@@ -88,16 +87,7 @@ export function LearningSpacePage() {
     : null;
 
   const handleStartTask = (task: PersistedStudyTask) => {
-    useWorkspaceStore.getState().setContext({
-      planId: plan?.id ?? planIdParam,
-      taskId: task.id,
-      knowledgePointId: task.knowledgePointId,
-    });
-    navigate(
-      `/space?plan_id=${encodeURIComponent(plan?.id ?? '')}&task_id=${encodeURIComponent(
-        task.id
-      )}&kp=${encodeURIComponent(task.knowledgePointId)}`
-    );
+    if (plan) void startTask(plan, task);
   };
 
   return (
@@ -172,14 +162,27 @@ export function LearningSpacePage() {
                         {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes} 分钟
                       </p>
                     </div>
-                    <Button size="sm" className="gap-1" onClick={() => handleStartTask(task)}>
-                      <PlayCircle className="h-3.5 w-3.5" />
-                      开始学习
+                    <Button
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => handleStartTask(task)}
+                      disabled={startingTaskId === task.id}
+                    >
+                      {startingTaskId === task.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <PlayCircle className="h-3.5 w-3.5" />
+                      )}
+                      {startingTaskId === task.id ? '正在进入…' : '开始学习'}
                     </Button>
                   </div>
                 ))}
               </div>
             </div>
+          )}
+
+          {startError && (
+            <p className="text-sm text-amber-700">{startError}</p>
           )}
         </div>
       )}

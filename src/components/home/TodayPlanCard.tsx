@@ -1,9 +1,8 @@
 import { CalendarClock, Loader2, AlertTriangle, RotateCw, PlayCircle, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useCurrentPlan } from '@/lib/hooks';
-import { useWorkspaceStore, DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
+import { DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { ACTION_TYPE_LABEL } from '@/domain';
-import type { PersistedStudyTask } from '@/domain';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -28,36 +27,14 @@ function formatTime(iso: string): string {
  * /plans/generate，GET 页面绝不自动制造数据库副作用；生成后旧计划自动 supersede）。
  */
 export function TodayPlanCard() {
-  const navigate = useNavigate();
-  const setContext = useWorkspaceStore((s) => s.setContext);
+  const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const { summary, plan, loading, error, refetch, generate, generating } =
     useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
 
   const tasks = plan?.tasks ?? [];
 
-  const handleStartTask = (task: PersistedStudyTask) => {
-    setContext({
-      planId: plan?.id ?? null,
-      taskId: task.id,
-      knowledgePointId: task.knowledgePointId,
-    });
-    navigate(
-      `/space?plan_id=${encodeURIComponent(plan?.id ?? '')}&task_id=${encodeURIComponent(
-        task.id
-      )}&kp=${encodeURIComponent(task.knowledgePointId)}`
-    );
-  };
-
   const handleGenerate = async () => {
-    const created = await generate();
-    if (created && created.tasks.length > 0) {
-      const first = created.tasks[0];
-      setContext({
-        planId: created.id,
-        taskId: first.id,
-        knowledgePointId: first.knowledgePointId,
-      });
-    }
+    await generate();
   };
 
   return (
@@ -151,10 +128,15 @@ export function TodayPlanCard() {
                   size="sm"
                   variant="outline"
                   className="shrink-0 gap-1"
-                  onClick={() => handleStartTask(task)}
+                  onClick={() => plan && void startTask(plan, task)}
+                  disabled={startingTaskId === task.id}
                 >
-                  <PlayCircle className="h-3.5 w-3.5" />
-                  开始学习
+                  {startingTaskId === task.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <PlayCircle className="h-3.5 w-3.5" />
+                  )}
+                  {startingTaskId === task.id ? '正在进入…' : '开始学习'}
                 </Button>
               </div>
             ))}
@@ -167,6 +149,10 @@ export function TodayPlanCard() {
         <p className="mt-4 text-sm text-gray-500">
           当前没有需要立即补强的知识点，可以继续推进新的学习内容。
         </p>
+      )}
+
+      {startError && (
+        <p className="mt-3 text-sm text-amber-700">{startError}</p>
       )}
 
       <p className={cn('mt-4 text-[11px] text-gray-300')}>

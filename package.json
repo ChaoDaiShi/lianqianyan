@@ -15,7 +15,7 @@
     "type-check": "tsc --noEmit",
     "type-check:watch": "tsc --noEmit --watch",
     "check": "pnpm run type-check && pnpm run lint",
-    "clean": "rm -rf dist",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "prebuild": "pnpm run clean",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

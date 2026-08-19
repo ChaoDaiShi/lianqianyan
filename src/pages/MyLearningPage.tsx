@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap,
   Loader2,
@@ -10,15 +9,13 @@ import {
   ListChecks,
   RotateCw,
   RefreshCw,
-  History,
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
-import { useCurrentPlan, usePlanHistory } from '@/lib/hooks';
-import { DEMO_LEARNER_ID, DEMO_COURSE_ID, useWorkspaceStore } from '@/store';
-import { ACTION_TYPE_LABEL, PLAN_STATUS_LABEL } from '@/domain';
-import type { PersistedStudyTask } from '@/domain';
+import { useCurrentPlan } from '@/lib/hooks';
+import { DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
+import { ACTION_TYPE_LABEL } from '@/domain';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 function formatTime(iso: string): string {
   try {
@@ -39,41 +36,17 @@ const STRATEGY_LABEL: Record<string, string> = {
 };
 
 /**
- * 我的学习 —— /#/my-learning（Phase 3-1 升级：Current Plan 正式语义）。
+ * 我的学习 —— /#/my-learning。
  *
- * 主区块展示**当前 ACTIVE 计划**（GET /api/plans/current）：计划生成时间 / 策略 /
- * 任务数量 + Task Timeline；无当前计划 → 「小涟还没有为你生成学习计划」+ 生成按钮
- * （用户显式点击才 POST /plans/generate）。
- *
- * 「重新规划」会显式 POST /plans/generate —— 后端在同一事务内把旧计划标记为
- * superseded，生成后新计划即唯一当前计划。
- *
- * 底部列出**历史计划**（含已 superseded 的计划，latest 在前），用于回溯
- * 学习路线的演变；历史计划不可再开始学习。
+ * 只展示当前 ACTIVE 计划：生成时间 / 策略 / 任务数量 + Task Timeline。
+ * 无当前计划时由用户显式生成；重新规划会取代现有计划，但不代表自动动态重规划。
  */
 export function MyLearningPage() {
-  const navigate = useNavigate();
-  const setContext = useWorkspaceStore((s) => s.setContext);
+  const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const { summary, plan, loading, error, refetch, generate, generating } =
     useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const history = usePlanHistory(DEMO_LEARNER_ID, DEMO_COURSE_ID);
 
   const tasks = plan?.tasks ?? [];
-  // 历史列表不重复展示当前计划（仅展示已被 superseded 的旧计划）
-  const historyItems = (history.data ?? []).filter((item) => item.id !== plan?.id);
-
-  const handleStartTask = (task: PersistedStudyTask) => {
-    setContext({
-      planId: plan?.id ?? null,
-      taskId: task.id,
-      knowledgePointId: task.knowledgePointId,
-    });
-    navigate(
-      `/space?plan_id=${encodeURIComponent(plan?.id ?? '')}&task_id=${encodeURIComponent(
-        task.id
-      )}&kp=${encodeURIComponent(task.knowledgePointId)}`
-    );
-  };
 
   return (
     <AppShell>
@@ -208,9 +181,18 @@ export function MyLearningPage() {
                       {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes} min
                     </p>
                   </div>
-                  <Button size="sm" className="shrink-0 gap-1" onClick={() => handleStartTask(task)}>
-                    <PlayCircle className="h-3.5 w-3.5" />
-                    开始学习
+                  <Button
+                    size="sm"
+                    className="shrink-0 gap-1"
+                    onClick={() => plan && void startTask(plan, task)}
+                    disabled={startingTaskId === task.id}
+                  >
+                    {startingTaskId === task.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <PlayCircle className="h-3.5 w-3.5" />
+                    )}
+                    {startingTaskId === task.id ? '正在进入…' : '开始学习'}
                   </Button>
                 </div>
               ))}
@@ -221,42 +203,8 @@ export function MyLearningPage() {
             </p>
           )}
 
-          {/* 历史计划 */}
-          {historyItems.length > 0 && (
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <div className="flex items-center gap-2">
-                <History className="h-4 w-4 text-gray-400" />
-                <h2 className="text-sm font-semibold text-gray-600">历史计划</h2>
-                <span className="text-xs text-gray-300">（已更新计划 · 不可再开始学习）</span>
-              </div>
-              <div className="mt-3 space-y-2">
-                {historyItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3 rounded-xl border border-gray-50 bg-gray-50/40 px-4 py-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-600">
-                        生成于 {formatTime(item.generatedAt)}
-                      </p>
-                      <p className="mt-0.5 text-xs text-gray-400">
-                        {item.taskCount} 项任务 · {STRATEGY_LABEL[item.strategy] ?? item.strategy}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        'shrink-0 rounded-full px-2.5 py-1 text-xs font-medium',
-                        item.status === 'superseded'
-                          ? 'bg-gray-100 text-gray-500'
-                          : 'bg-blue-50 text-blue-700'
-                      )}
-                    >
-                      {PLAN_STATUS_LABEL[item.status]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {startError && (
+            <p className="text-sm text-amber-700">{startError}</p>
           )}
 
           <p className="text-[11px] text-gray-300">
