@@ -1,13 +1,13 @@
 # 忆涟千言—教 · EducationMind
 
-> 基于学习画像、学习证据与动态学习规划的 **个性化 AI 学习伙伴**。
+> 基于学习画像、学习证据与个性化学习规划的 **AI 智能学习伙伴**。
 
 「忆涟千言—教」不是普通 AI 聊天机器人。核心目标是把“学生现在会什么、不会什么、
 接下来应该学什么”持续地判断出来，并形成完整学习闭环：
 
 ```text
-学习目标 → 学习诊断 → 学习画像 → 个性化学习规划 → 学习执行
-   → 练习 / 提问 / 复述 / 测评 → 生成学习证据 → 更新掌握度 → 动态调整学习计划
+学习目标 → 学习诊断 → 个性化规划 → 学习执行 → AI 辅导
+   → 练习反馈 → 学习状态更新 → 为后续重规划提供最新学习状态
 ```
 
 > **页面只是学习过程的表现层，Learning Evidence 才是 EducationMind 的核心数据。**
@@ -85,7 +85,8 @@ OpenAI-compatible / DeepSeek / Qwen）。
 ```text
 ├── src/                      # Web 前端（React Workspace 本体）
 │   ├── domain/               # 领域模型（TS）
-│   ├── mock/                 # 集中 Mock 数据（Single Source of Truth）
+│   ├── mock/                 # 旧版展示数据（核心学习状态页面不再使用）
+│   ├── content/              # 集中 Demo 教学内容（非学习者状态 Mock）
 │   ├── store/                # Zustand 状态（小涟面板）
 │   ├── lib/                  # api 客户端 + 服务 + 工具
 │   ├── components/           # 侧边栏 / 卡片 / 小涟面板 / 占位页
@@ -138,11 +139,13 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 > `mastery=0 且 evidence=0 ≠ 学生完全不会`，而是 **UNASSESSED（尚未评估）**。
 > 这是前后端共同遵守的可信性原则，绝不把「未知」伪装成「0 分」或「薄弱」。
 
-- **教育 Web Workspace**：左侧教育工作台导航 + 学习首页完整实现。
-- **学习首页**：问候区、学习数据卡片、当前学习计划、今日学习任务、
-  真实「需要重点关注 + 小涟建议」、个性化学习路径（七阶段：学→问→探→练→诊→述→测）。
-- **全局小涟**：右下角悬浮 AI 入口 + 右侧 Assistant 面板（Mock 回复 / 仅 UI）。
-- **集中 Mock 数据**：`src/mock/` 为唯一演示数据来源。
+- **学习首页 Dashboard**：真实展示课程、学习画像、诊断重点与当前学习计划；支持显式生成计划和从任务进入学习空间。
+- **我的学习**：展示当前学习计划、策略、生成时间与任务时间线；不在比赛 Web 中展开计划历史管理。
+- **智能学习空间**：任务上下文、集中 Demo 教学内容、内嵌小涟、固定高质量练习，以及真实 Mastery before → after 反馈。
+- **上下文感知 Tutor**：全局小涟页与学习空间共用 `POST /api/tutor/chat`，后端结合 Profile、Diagnosis、StudyPlan 与 Evidence 作答。
+- **学习报告**：汇总真实 Profile、Diagnosis、Current Plan 与 Recent Evidence，并以轻量横向条展示知识点状态。
+- **真实状态边界**：Profile、Diagnosis、StudyPlan、Tutor Answer、Practice Evaluation 与状态变化均来自 API；API 失败不会回退 Mock Learner State。
+- **静态内容边界**：课程讲解、固定练习题和快捷问题集中在 `src/content/`，只作为教学资源。
 - **领域模型基础类型**：TS（`src/domain`）与 Python（`apps/api/app/domain`）。
 - **学习证据真实链路（已打通）**：首页「继续学习 / 开始这段学习」→ 前端 `startLearning()`
    经 Vite 代理 → `POST /api/learning/start` → `LearningEvidenceService`/`Repository` → 持久化
@@ -208,8 +211,7 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
     在**同一事务**内先 supersede 旧 ACTIVE 再落新计划，任意时刻至多一个 ACTIVE；
     `GET /api/plans/current?learner_id=&course_id=` 读取当前 ACTIVE 计划（完整
     Plan + Tasks；无 → 404，GET 绝不自动生成）。Web 侧 `/#/my-learning` 展示
-    **当前计划**（任务 Timeline + 「重新规划」按钮 + 历史计划列表，历史计划标记
-    superseded 不可再开始学习）；首页「今日学习计划」、`/#/space`、`/#/archive`
+    **当前计划**（任务 Timeline + 「重新规划」按钮；比赛 Web 不展示历史计划管理）；首页「今日学习计划」、`/#/space`、`/#/archive`
     全部读取 current 语义。「重新规划」= 显式重新生成（自动 supersede 旧计划），
     **不是**自动/定时 Dynamic Replanning。
 - **学习上下文驱动 AI Tutor（Phase 3-0）**：真实链路从「Diagnosis/Plan」升级为
@@ -234,13 +236,11 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 
 以下能力当前**尚未实现**，不提前宣传：
 
-- 自动 / 定时 **Dynamic Replanning**（当前「重新规划」为显式触发：
+- 计划历史管理 UI（后端保留 `GET /api/plans` History 能力，比赛 Web 只展示当前计划）
+- 自动 / 定时 **Dynamic Replanning**（当前「重新规划」为用户显式触发：
   `POST /api/plans/generate` 自动 supersede 旧计划；时间轴 / deadline 驱动的
   自动重规划尚未实现）
-- 历史计划**详情展开**（`/#/my-learning` 已展示历史计划列表与 superseded 状态，
-  点击查看某份旧计划的完整 Tasks 属后续）
-- 完整学习空间（当前 `/space` 提供当前计划任务 + 学习内容 + 快速练习 + 小涟助手，
-  更多练习题型待后续阶段）
+- 更多课程内容与练习题型（当前 `/space` 已提供当前计划任务 + 学习内容 + 快速练习 + 小涟助手）
 - **AI Tutor 已具备基础（Phase 3-0）**：已支持「学习上下文驱动 AI Tutor」
   （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，
   见上文）；**尚未实现**：RAG / 记忆持久化（聊天历史）/ 真实 LLM API Key（当前 Mock）。
