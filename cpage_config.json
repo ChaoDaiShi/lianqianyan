@@ -1,0 +1,13 @@
+{
+  "name": "忆涟千言—教",
+  "description": "基于学习画像与学习证据的个性化 AI 学习伙伴，构建完整学习闭环",
+  "icon": "https://agent.nuwax.com/api/f/s3/icon/20260812/cf70c027292a4c84aea96c9a613cb388.svg",
+  "coverImg": null,
+  "coverImgSourceType": null,
+  "needLogin": true,
+  "proxyConfigs": null,
+  "pageArgConfigs": null,
+  "dataSourcePlugins": null,
+  "dataSourceWorkflows": null,
+  "resourceGroup": null
+}
