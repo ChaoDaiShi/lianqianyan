@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  chatWithAgents,
   chatWithTutor,
   fetchCurrentPlan,
   fetchDiagnosis,
@@ -8,6 +9,8 @@ import {
   fetchRecentEvidence,
   generatePlan,
   type TutorChatResponse,
+  type AgentCapability,
+  type AgentChatResponse,
 } from '@/lib/educationApi';
 import type {
   DiagnosisResult,
@@ -188,6 +191,25 @@ export function useTutorChat(learnerId: string, courseId: string) {
     [learnerId, courseId]
   );
 
+  return { send, pending };
+}
+
+export function useAgentChat(learnerId: string, courseId: string) {
+  const [pending, setPending] = useState(false);
+  const send = useCallback(
+    async (message: string, capability?: AgentCapability | null): Promise<AgentChatResponse | null> => {
+      if (!message.trim()) return null;
+      setPending(true);
+      try {
+        return await chatWithAgents({ learnerId, courseId, message, capability });
+      } catch {
+        return null;
+      } finally {
+        setPending(false);
+      }
+    },
+    [learnerId, courseId]
+  );
   return { send, pending };
 }
 
