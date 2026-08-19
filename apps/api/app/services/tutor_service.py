@@ -80,6 +80,8 @@ class TutorService:
                 context_used=context.context_used,
                 suggested_actions=suggested_actions,
                 source="llm",
+                provider=result.usage.get("provider", self._llm.name),
+                response_mode="provider",
             )
         except Exception as exc:  # LLM 失败 → 确定性兜底（诚实标记，不伪装 LLM）
             logger.warning("tutor llm failed, using fallback: %s", exc)
@@ -88,6 +90,8 @@ class TutorService:
                 context_used=context.context_used,
                 suggested_actions=suggested_actions,
                 source="fallback",
+                provider=self._llm.name,
+                response_mode="fallback",
             )
 
     # -- 确定性建议（非 LLM 自由发挥） -------------------------------------------

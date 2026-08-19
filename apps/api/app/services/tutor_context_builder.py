@@ -40,6 +40,7 @@ from app.domain.tutor import (
 from app.services.diagnosis_service import DiagnosisService
 from app.services.learner_profile_service import LearnerProfileService
 from app.services.learning_evidence import LearningEvidenceRepository
+from app.services.study_plan_application_service import StudyPlanApplicationService
 from app.services.study_plan_repository import StudyPlanRepository
 from app.services.study_task_repository import StudyTaskRepository
 
@@ -64,6 +65,11 @@ class TutorContextBuilder:
         self._diagnosis_service = diagnosis_service or DiagnosisService(db)
         self._plan_repo = plan_repo or StudyPlanRepository(db)
         self._task_repo = task_repo or StudyTaskRepository(db)
+        self._plan_application = StudyPlanApplicationService(
+            db,
+            plan_repo=self._plan_repo,
+            task_repo=self._task_repo,
+        )
         self._evidence_repo = evidence_repo or LearningEvidenceRepository(db)
 
     def build(self, learner_id: str, course_id: str) -> TutorContext:
@@ -145,25 +151,22 @@ class TutorContextBuilder:
         )
 
     def _build_plan(self, learner_id: str, course_id: str) -> TutorPlanContext:
-        # 无 current plan lifecycle：只取 generated_at DESC 第一条（最新计划）。
-        plans = self._plan_repo.list_by_learner_and_course(learner_id, course_id)
-        if not plans:
+        current = self._plan_application.get_current(learner_id, course_id)
+        if current is None:
             return TutorPlanContext()
-        latest = plans[0]
-        tasks = self._task_repo.list_by_plan_id(latest.id)
         return TutorPlanContext(
             has_plan=True,
-            plan_id=latest.id,
-            generated_at=latest.generated_at,
+            plan_id=current.id,
+            generated_at=current.generated_at,
             tasks=[
                 TutorPlanTaskContext(
                     order=task.order,
                     knowledge_point_id=task.knowledge_point_id,
                     knowledge_point_name=task.knowledge_point_name,
-                    action_type=task.action_type,  # ORM 已存稳定 enum value（str）
+                    action_type=task.action_type.value,
                     estimated_minutes=task.estimated_minutes,
                 )
-                for task in tasks
+                for task in current.tasks
             ],
         )
 
@@ -179,6 +182,13 @@ class TutorContextBuilder:
                     record.evidence_type.value == "practice_answer_evaluated"
                 ),
                 occurred_at=record.occurred_at,
+                is_correct=record.payload.get("is_correct"),
+                score=record.payload.get("score"),
+                difficulty=record.payload.get("difficulty"),
+                mastery_before=record.payload.get("mastery_before"),
+                mastery_after=record.payload.get("mastery_after"),
+                confidence=record.payload.get("confidence"),
+                evidence_count=record.payload.get("evidence_count"),
             )
             for record in records
         ]

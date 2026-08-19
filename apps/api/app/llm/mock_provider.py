@@ -49,7 +49,7 @@ def _fmt_time(value: datetime | None) -> str:
 class MockTutorProvider(BaseLLMProvider):
     """确定性 Mock Tutor Provider（演示默认；无真实 API Key 时使用）。"""
 
-    name = "mock-tutor"
+    name = "mock"
 
     async def chat(self, messages: list[LLMMessage], **kwargs) -> LLMResult:
         context = kwargs.get("context")
