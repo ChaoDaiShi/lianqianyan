@@ -8,8 +8,11 @@ import {
   type AgentCapability,
   type AgentChatResponse,
   type AgentTraceItem,
+  type KnowledgeSource,
 } from '@/lib/educationApi';
 import { cn } from '@/lib/utils';
+import { SourceReferences } from '@/components/learning/SourceReferences';
+import { useLlmStatus } from '@/lib/hooks';
 
 const DEMO_LEARNER_ID = 'demo-user-001';
 const DEMO_COURSE_ID = 'course-os';
@@ -46,6 +49,9 @@ interface ChatMessage {
   isFallback?: boolean;
   suggestedActions?: string[];
   agentTrace?: AgentTraceItem[];
+  sources?: KnowledgeSource[];
+  provider?: string;
+  model?: string | null;
 }
 
 function buildAssistantMessage(content: string, extra?: Partial<ChatMessage>): ChatMessage {
@@ -71,6 +77,7 @@ function Trace({ items }: { items: AgentTraceItem[] }) {
 }
 
 export function XiaolianPage() {
+  const llmStatus = useLlmStatus();
   const [messages, setMessages] = useState<ChatMessage[]>([
     buildAssistantMessage(
       '你好，我是小涟，你的智能学习中枢。\n我会结合你的学习画像、诊断结果和学习计划，为你提供针对性的学习帮助。'
@@ -112,6 +119,9 @@ export function XiaolianPage() {
           isFallback: result.responseMode === 'fallback',
           suggestedActions: result.suggestedActions.map((action) => action.label),
           agentTrace: result.agentTrace,
+          sources: result.sources,
+          provider: result.provider,
+          model: result.model,
         }),
       ]);
     } catch (error) {
@@ -133,6 +143,10 @@ export function XiaolianPage() {
             <h1 className="text-lg font-bold text-gray-900">小涟 · 智能学习中枢</h1>
             <p className="text-xs text-gray-500">结合你的学习画像、诊断结果和学习计划，为你提供针对性的学习帮助。</p>
           </div>
+        </div>
+
+        <div className="mb-3 text-xs text-gray-500">
+          Provider：{llmStatus.data?.configured ? `${llmStatus.data.provider} · ${llmStatus.data.model}` : '本地演示模式'}
         </div>
 
         <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-4">
@@ -180,6 +194,8 @@ export function XiaolianPage() {
                   </div>
                 )}
                 {msg.role === 'assistant' && msg.agentTrace && <Trace items={msg.agentTrace} />}
+                {msg.role === 'assistant' && msg.sources && <SourceReferences sources={msg.sources} />}
+                {msg.role === 'assistant' && msg.provider && <p className="mt-1 text-[10px] text-gray-400">Provider：{msg.provider}{msg.model ? ` · ${msg.model}` : ' · 本地演示'}</p>}
               </div>
             </div>
           ))}

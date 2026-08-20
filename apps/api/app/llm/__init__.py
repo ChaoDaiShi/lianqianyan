@@ -7,14 +7,12 @@ from app.llm.provider import (
     LLMMessage,
     LLMResult,
 )
+from app.llm.status import LlmStatus, get_llm_status, is_llm_configured
 
 
 def get_llm_provider() -> BaseLLMProvider:
     settings = get_settings()
-    if all(
-        value and value.strip()
-        for value in (settings.llm_base_url, settings.llm_api_key, settings.llm_model)
-    ):
+    if is_llm_configured(settings):
         from app.llm.openai_compatible_provider import OpenAICompatibleProvider
 
         return OpenAICompatibleProvider(
@@ -34,5 +32,8 @@ __all__ = [
     "BaseProviderRegistry",
     "LLMMessage",
     "LLMResult",
+    "LlmStatus",
     "get_llm_provider",
+    "get_llm_status",
+    "is_llm_configured",
 ]

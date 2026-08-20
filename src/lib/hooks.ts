@@ -4,13 +4,17 @@ import {
   chatWithTutor,
   fetchCurrentPlan,
   fetchDiagnosis,
+  fetchKnowledgePoint,
   fetchLearnerProfile,
+  fetchLlmStatus,
   fetchPlanHistory,
   fetchRecentEvidence,
   generatePlan,
   type TutorChatResponse,
   type AgentCapability,
   type AgentChatResponse,
+  type KnowledgePointContent,
+  type LlmStatus,
 } from '@/lib/educationApi';
 import type {
   DiagnosisResult,
@@ -194,23 +198,40 @@ export function useTutorChat(learnerId: string, courseId: string) {
   return { send, pending };
 }
 
-export function useAgentChat(learnerId: string, courseId: string) {
+export function useAgentChat(learnerId: string, courseId: string, knowledgePointId?: string) {
   const [pending, setPending] = useState(false);
   const send = useCallback(
     async (message: string, capability?: AgentCapability | null): Promise<AgentChatResponse | null> => {
       if (!message.trim()) return null;
       setPending(true);
       try {
-        return await chatWithAgents({ learnerId, courseId, message, capability });
+        return await chatWithAgents({ learnerId, courseId, message, capability, knowledgePointId });
       } catch {
         return null;
       } finally {
         setPending(false);
       }
     },
-    [learnerId, courseId]
+    [learnerId, courseId, knowledgePointId]
   );
   return { send, pending };
+}
+
+export function useKnowledgePoint(
+  knowledgePointId: string | undefined,
+  courseId: string
+): AsyncState<KnowledgePointContent> {
+  return useAsync(
+    () => {
+      if (!knowledgePointId) return Promise.reject(new Error('knowledge point is required'));
+      return fetchKnowledgePoint(knowledgePointId, courseId);
+    },
+    [knowledgePointId, courseId]
+  );
+}
+
+export function useLlmStatus(): AsyncState<LlmStatus> {
+  return useAsync(fetchLlmStatus, []);
 }
 
 /** GET /api/learning/evidence —— 最近学习行为（报告展示用）。 */

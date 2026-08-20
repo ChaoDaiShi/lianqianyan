@@ -49,6 +49,7 @@ class AssessmentAgent:
             summary=f"最近一次练习{correctness}，{score_text}。{projection_text}掌握度变化由练习评价服务记录。",
             data={
                 "evidence": latest.model_dump(mode="json"),
+                "knowledge_point_id": latest.knowledge_point_id,
                 "is_correct": is_correct,
                 "score": score,
                 "difficulty": payload.get("difficulty"),

@@ -14,7 +14,20 @@
 
 ---
 
-## 产品定位
+## Phase 3-3：Real LLM & Course RAG Grounding
+
+当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `knowledge_retrieval`。检索按 `course_id` 隔离，使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
+
+Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
+
+新增只读接口：
+
+- `POST /api/knowledge/search`
+- `GET /api/knowledge/points/{knowledge_point_id}?course_id=course-os`
+- `GET /api/system/llm`
+
+`POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使缺少关键词的问题仍能检索当前课程材料。
+
 
 - 用户对外只看到一个 AI：**小涟**（Education Agent）。
 - **Diagnosis / Planner / Tutor / Assessment Agent**：Phase 3-2 已将这些能力包装为真正执行的轻量 Agent 模块，由确定性 Orchestrator 编排；这不是完全自主 Agent Swarm。
@@ -230,6 +243,20 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 - **MCP 架构预留**：目录 + README + Tool 接口设计（本轮不启用 MCP Runtime / Tools）。
 
 ---
+
+## Phase 3-3：Real LLM & Course RAG Grounding
+
+当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `knowledge_retrieval`。课程知识按 `course_id` 隔离，当前使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
+
+Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
+
+新增只读接口：
+
+- `POST /api/knowledge/search`
+- `GET /api/knowledge/points/{knowledge_point_id}?course_id=course-os`
+- `GET /api/system/llm`
+
+`POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使“这四个条件怎么记？”等缺少关键词的问题仍能检索当前课程材料。
 
 ## Phase 3-2：Real AI Tutor & Multi-Agent Orchestration
 

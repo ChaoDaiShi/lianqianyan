@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Protocol
 
 from app.agents.base import (
@@ -15,6 +16,7 @@ from app.agents.assessment_agent import AssessmentAgent
 from app.agents.router import AgentRouter
 from app.agents.tutor_agent import TutorAgent
 from app.llm.provider import BaseLLMProvider
+from app.knowledge import KnowledgeContextBuilder, RetrievedKnowledge
 from sqlalchemy.orm import Session
 
 
@@ -37,6 +39,7 @@ class EducationAgentOrchestrator:
         self._planner = PlannerAgent(db)
         self._tutor = TutorAgent(db, llm_provider=llm_provider)
         self._assessment = AssessmentAgent(db)
+        self._knowledge = KnowledgeContextBuilder()
 
     async def handle(self, request: AgentRequest) -> AgentsChatResponse:
         decision = self._router.route(request.message, request.capability)
@@ -49,9 +52,11 @@ class EducationAgentOrchestrator:
             planner = self._planner.run(request, diagnosis=diagnosis)
             trace.append(self._trace(planner))
             results.append(planner)
+            knowledge = self._retrieve(request, trace)
             tutor = await self._tutor.run(
                 request,
                 extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump()},
+                knowledge=knowledge,
             )
             trace.append(self._trace(tutor))
             results.append(tutor)
@@ -62,11 +67,27 @@ class EducationAgentOrchestrator:
             trace.append(self._trace(result))
             results.append(result)
         elif decision.capability == AgentCapability.ASSESSMENT:
-            result = self._assessment.run(request)
-            trace.append(self._trace(result))
-            results.append(result)
+            assessment = self._assessment.run(request)
+            trace.append(self._trace(assessment))
+            results.append(assessment)
+            evidence = assessment.data.get("evidence")
+            if evidence is not None:
+                knowledge_point_id = evidence.get("knowledge_point_id")
+                knowledge = self._retrieve(
+                    request,
+                    trace,
+                    knowledge_point_id=knowledge_point_id,
+                )
+                tutor = await self._tutor.run(
+                    request,
+                    knowledge=knowledge,
+                    assessment=assessment.data,
+                )
+                trace.append(self._trace(tutor))
+                results.append(tutor)
         else:
-            result = await self._tutor.run(request)
+            knowledge = self._retrieve(request, trace)
+            result = await self._tutor.run(request, knowledge=knowledge)
             trace.append(self._trace(result))
             results.append(result)
 
@@ -81,11 +102,34 @@ class EducationAgentOrchestrator:
             answer=answer,
             selected_capability=decision.capability,
             provider=tutor_result.provider if tutor_result else "none",
+            model=tutor_result.model if tutor_result else None,
             response_mode=tutor_result.response_mode if tutor_result else "provider",
+            sources=tutor_result.sources if tutor_result else [],
             context_used=context_used,
             suggested_actions=actions,
             agent_trace=trace,
         )
+
+    def _retrieve(
+        self,
+        request: AgentRequest,
+        trace: list[AgentTraceItem],
+        knowledge_point_id: str | None = None,
+    ) -> list[RetrievedKnowledge]:
+        knowledge = self._knowledge.build(
+            request.course_id,
+            request.message,
+            knowledge_point_id=knowledge_point_id or request.knowledge_point_id,
+        )
+        if knowledge:
+            trace.append(
+                AgentTraceItem(
+                    agent="knowledge_retrieval",
+                    label="课程知识检索",
+                    type="tool",
+                )
+            )
+        return knowledge
 
     @staticmethod
     def _trace(result: AgentResult) -> AgentTraceItem:

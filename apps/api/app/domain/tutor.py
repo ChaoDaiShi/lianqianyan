@@ -5,6 +5,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.knowledge import KnowledgeSource
+
 
 class TutorConversationRequest(BaseModel):
     learner_id: str = Field(min_length=1)
@@ -26,7 +28,9 @@ class TutorResponse(BaseModel):
     suggested_actions: list[str] = Field(default_factory=list)
     source: Literal["llm", "fallback"] = "llm"
     provider: str = "mock"
+    model: str | None = None
     response_mode: Literal["provider", "fallback"] = "provider"
+    sources: list[KnowledgeSource] = Field(default_factory=list)
 
 
 class TutorProfilePointContext(BaseModel):

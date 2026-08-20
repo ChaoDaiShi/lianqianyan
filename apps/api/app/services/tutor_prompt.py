@@ -12,7 +12,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from app.domain.tutor import TutorContext
+from app.knowledge import RetrievedKnowledge
 from app.llm.provider import LLMMessage
 
 # 集中 System Prompt（角色 + 回答原则）。原则与 README / .project.md 保持一致。
@@ -23,7 +26,9 @@ SYSTEM_PROMPT = """你是忆涟千言—教的小涟，一名陪伴学生学习�
 2. 上下文里没有的数据，不要假装知道；可以说“我还没有你的相关学习记录”。
 3. 优先帮助学生理解问题本身，再结合数据给出针对性解释。
 4. 每次回答末尾给出下一步学习建议。
-5. 使用简体中文，语气亲切、专业、简洁。"""
+5. 课程事实只能依据 COURSE KNOWLEDGE；材料未提供时明确说明，不得编造。
+6. Diagnosis 与 Plan 只依据 LEARNER CONTEXT，不得用课程材料改变诊断或任务排序。
+7. 使用简体中文，语气亲切、专业、简洁。"""
 
 # User 消息引导语：明确这是「请求级」上下文，不是长期记忆。
 CONTEXT_INTRO = "以下是你掌握的学生学习上下文（仅用于本次回答，非持久记忆）："
@@ -32,16 +37,53 @@ CONTEXT_INTRO = "以下是你掌握的学生学习上下文（仅用于本次回
 class TutorPromptBuilder:
     """将 TutorContext 渲染为 LLM messages。"""
 
-    def build_messages(self, context: TutorContext, user_message: str) -> list[LLMMessage]:
-        """System（角色与原则）+ User（上下文块 + 学生问题）。"""
-        context_block = self.render_context(context)
-        user_content = (
-            f"{CONTEXT_INTRO}\n\n{context_block}\n\n学生的问题：\n{user_message}"
-        )
+    def build_messages(
+        self,
+        context: TutorContext,
+        user_message: str,
+        knowledge: list[RetrievedKnowledge] | None = None,
+        assessment: dict[str, Any] | None = None,
+    ) -> list[LLMMessage]:
+        """Build grounded messages from learner, course, evidence, and question blocks."""
+        blocks = [
+            f"LEARNER CONTEXT\n{CONTEXT_INTRO}\n{self.render_context(context)}",
+            f"COURSE KNOWLEDGE\n{self.render_knowledge(knowledge or [])}",
+        ]
+        if assessment is not None:
+            blocks.append(f"ASSESSMENT EVIDENCE\n{self.render_assessment(assessment)}")
+        blocks.append(f"USER QUESTION\n{user_message}")
         return [
             LLMMessage(role="system", content=SYSTEM_PROMPT),
-            LLMMessage(role="user", content=user_content),
+            LLMMessage(role="user", content="\n\n".join(blocks)),
         ]
+
+    @staticmethod
+    def render_knowledge(knowledge: list[RetrievedKnowledge]) -> str:
+        if not knowledge:
+            return "（本次未检索到可用课程材料）"
+        return "\n\n".join(
+            f"[{index}] {item.title} · {item.section}\n{item.content}"
+            for index, item in enumerate(knowledge, start=1)
+        )
+
+    @staticmethod
+    def render_assessment(assessment: dict[str, Any]) -> str:
+        fields = (
+            ("knowledge_point_id", "知识点"),
+            ("is_correct", "是否答对"),
+            ("score", "得分"),
+            ("difficulty", "难度"),
+            ("mastery_before", "练习前掌握度"),
+            ("mastery_after", "练习后掌握度"),
+            ("confidence", "置信度"),
+            ("evidence_count", "评价证据数"),
+        )
+        lines = [
+            f"- {label}: {assessment.get(key)}"
+            for key, label in fields
+            if assessment.get(key) is not None
+        ]
+        return "\n".join(lines) if lines else "（没有可解释的练习证据）"
 
     # -- 上下文渲染（确定性） ----------------------------------------------------
 

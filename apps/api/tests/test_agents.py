@@ -175,8 +175,11 @@ def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:
     assert [item["agent"] for item in body["agent_trace"]] == [
         "diagnosis",
         "planning",
+        "knowledge_retrieval",
         "tutoring",
     ]
+    assert body["agent_trace"][2]["type"] == "tool"
+    assert body["sources"]
     assert body["agent_trace"][-1]["status"] == "completed"
     assert body["provider"] == "mock"
 
@@ -184,7 +187,12 @@ def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:
 def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:
     body = agent_chat(client, "给我解释死锁四个必要条件。").json()
     assert body["selected_capability"] == "tutoring"
-    assert [item["agent"] for item in body["agent_trace"]] == ["tutoring"]
+    assert [item["agent"] for item in body["agent_trace"]] == [
+        "knowledge_retrieval",
+        "tutoring",
+    ]
+    assert body["sources"]
+    assert all(source["knowledge_point_id"] == "kp-deadlock" for source in body["sources"])
 
 
 def test_explicit_capability_is_honored(client: TestClient) -> None:
@@ -201,8 +209,91 @@ def test_assessment_api_uses_assessment_capability(client: TestClient) -> None:
     body = agent_chat(client, "分析一下我刚才的练习").json()
     assert body["selected_capability"] == "assessment"
     assert [item["agent"] for item in body["agent_trace"]] == ["assessment"]
+    assert body["sources"] == []
+
+
+def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB) -> None:
+    from app.domain import PracticeEvaluateRequest
+    from app.llm.provider import BaseLLMProvider, LLMMessage, LLMResult
+    from app.services import PracticeEvaluationService
+    from app.services.mastery_repository import MasteryRepository
+
+    class RecordingProvider(BaseLLMProvider):
+        name = "recording"
+
+        def __init__(self) -> None:
+            self.messages: list[LLMMessage] = []
+            self.calls = 0
+
+        async def chat(self, messages: list[LLMMessage], **kwargs) -> LLMResult:
+            self.calls += 1
+            self.messages = messages
+            return LLMResult(content="基于证据与课程材料的错因解释。")
+
+    session = testdb.session()
+    PracticeEvaluationService(session).evaluate(
+        PracticeEvaluateRequest(
+            learner_id=DEMO_LEARNER_ID,
+            course_id=COURSE_OS,
+            knowledge_point_id="kp-deadlock",
+            question_id="q-deadlock-grounding",
+            is_correct=False,
+            score=0.0,
+            difficulty=0.7,
+        )
+    )
+    mastery = MasteryRepository(session).get_by_learner_and_knowledge_point(
+        DEMO_LEARNER_ID, "kp-deadlock"
+    )
+    assert mastery is not None
+    before_chat = (mastery.mastery_score, mastery.evidence_count)
+    provider = RecordingProvider()
+
+    response = asyncio.run(
+        EducationAgentOrchestrator(session, llm_provider=provider).handle(
+            request("分析一下我刚才为什么错")
+        )
+    )
+
+    assert provider.calls == 1
+    assert "ASSESSMENT EVIDENCE" in provider.messages[1].content
+    assert "COURSE KNOWLEDGE" in provider.messages[1].content
+    assert [item.agent for item in response.agent_trace] == [
+        AgentCapability.ASSESSMENT,
+        "knowledge_retrieval",
+        AgentCapability.TUTORING,
+    ]
+    assert response.sources
+    after_chat = MasteryRepository(session).get_by_learner_and_knowledge_point(
+        DEMO_LEARNER_ID, "kp-deadlock"
+    )
+    assert after_chat is not None
+    assert (after_chat.mastery_score, after_chat.evidence_count) == before_chat
 
 
 def test_orchestrator_has_no_agent_loop(testdb: _TestDB) -> None:
     response = asyncio.run(EducationAgentOrchestrator(testdb.session()).handle(request("解释死锁")))
-    assert [item.agent for item in response.agent_trace] == [AgentCapability.TUTORING]
+    assert [item.agent for item in response.agent_trace] == [
+        "knowledge_retrieval",
+        AgentCapability.TUTORING,
+    ]
+
+
+def test_learning_space_context_retrieves_implicit_deadlock_question(testdb: _TestDB) -> None:
+    grounded_request = AgentRequest(
+        learner_id=DEMO_LEARNER_ID,
+        course_id=COURSE_OS,
+        knowledge_point_id="kp-deadlock",
+        message="四个条件怎么记？",
+    )
+
+    response = asyncio.run(
+        EducationAgentOrchestrator(testdb.session()).handle(grounded_request)
+    )
+
+    assert response.sources
+    assert response.sources[0].knowledge_point_id == "kp-deadlock"
+    assert [item.agent for item in response.agent_trace] == [
+        "knowledge_retrieval",
+        AgentCapability.TUTORING,
+    ]

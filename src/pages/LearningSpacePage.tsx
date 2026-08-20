@@ -14,7 +14,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { SpaceTutor } from '@/components/learning/SpaceTutor';
 import { ModulePractice } from '@/components/learning/ModulePractice';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
-import { useCurrentPlan, useLearnerProfile, useDiagnosis } from '@/lib/hooks';
+import { useCurrentPlan, useLearnerProfile, useDiagnosis, useKnowledgePoint } from '@/lib/hooks';
 import {
   DEMO_LEARNER_ID,
   DEMO_COURSE_ID,
@@ -85,6 +85,7 @@ export function LearningSpacePage() {
   const module = currentTask
     ? getLearningModule(currentTask.knowledgePointId)
     : null;
+  const knowledge = useKnowledgePoint(currentTask?.knowledgePointId, DEMO_COURSE_ID);
 
   const handleStartTask = (task: PersistedStudyTask) => {
     if (plan) void startTask(plan, task);
@@ -246,14 +247,15 @@ export function LearningSpacePage() {
             <div className="lg:col-span-3 space-y-6">
               {module && (
                 <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                  <h2 className="text-lg font-bold text-gray-900">{module.title}</h2>
-                  <div className="mt-4 space-y-3">
-                    {module.points.map((point, idx) => (
-                      <div key={idx} className="flex gap-3">
-                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700">
-                          {idx + 1}
-                        </span>
-                        <p className="text-sm leading-relaxed text-gray-700">{point}</p>
+                  <h2 className="text-lg font-bold text-gray-900">{knowledge.data?.title ?? module.title}</h2>
+                  <div className="mt-4 space-y-4">
+                    {(knowledge.data?.sections ?? module.points.map((content, index) => ({ title: `重点 ${index + 1}`, content }))).map((section) => (
+                      <div key={section.title} className="flex gap-3">
+                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700">•</span>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{section.title}</p>
+                          <p className="mt-1 text-sm leading-relaxed text-gray-700">{section.content}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -288,6 +290,7 @@ export function LearningSpacePage() {
             {/* 右 ~35%：小涟学习助手 */}
             <div className="lg:col-span-2">
               <SpaceTutor
+                knowledgePointId={currentTask.knowledgePointId}
                 knowledgePointName={currentTask.knowledgePointName}
                 quickQuestions={module?.quickQuestions}
               />

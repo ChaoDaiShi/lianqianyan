@@ -9,16 +9,20 @@ from app.api.routes import (
     assessment,
     diagnosis,
     health,
+    knowledge,
     learning,
     plans,
     practice,
     profile,
     reports,
+    system,
     tutor,
 )
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
+api_router.include_router(system.router)
+api_router.include_router(knowledge.router)
 api_router.include_router(profile.router)
 api_router.include_router(diagnosis.router)
 api_router.include_router(plans.router)

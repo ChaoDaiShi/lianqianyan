@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.agents.base import AgentCapability, AgentRequest, AgentResult
 from app.domain.tutor import TutorConversationRequest
 from app.llm.provider import BaseLLMProvider
+from app.knowledge import RetrievedKnowledge
 from app.services.tutor_service import TutorService
 
 
@@ -20,6 +21,8 @@ class TutorAgent:
         self,
         request: AgentRequest,
         extra_context: dict[str, Any] | None = None,
+        knowledge: list[RetrievedKnowledge] | None = None,
+        assessment: dict[str, Any] | None = None,
     ) -> AgentResult:
         message = request.message
         if extra_context:
@@ -35,7 +38,9 @@ class TutorAgent:
                 learner_id=request.learner_id,
                 course_id=request.course_id,
                 message=message,
-            )
+            ),
+            knowledge=knowledge,
+            assessment=assessment,
         )
         return AgentResult(
             agent=AgentCapability.TUTORING,
@@ -47,5 +52,7 @@ class TutorAgent:
             ],
             context_used=response.context_used,
             provider=response.provider,
+            model=response.model,
             response_mode=response.response_mode,
+            sources=response.sources,
         )

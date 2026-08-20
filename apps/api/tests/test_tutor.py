@@ -23,6 +23,7 @@ from app.domain import Base
 from app.domain.tutor import TutorConversationRequest
 from app.llm.provider import BaseLLMProvider, LLMMessage, LLMResult
 from app.main import create_app
+from app.knowledge import KnowledgeContextBuilder
 from app.services import TutorContextBuilder, TutorService
 
 COURSE_OS = "course-os"
@@ -189,19 +190,27 @@ class _RecordingProvider(BaseLLMProvider):
 def test_tutor_service_calls_llm_provider(testdb: _TestDB) -> None:
     provider = _RecordingProvider()
     service = TutorService(testdb.session(), llm_provider=provider)
+    knowledge = KnowledgeContextBuilder().build(
+        COURSE_OS, "给我解释死锁四个必要条件"
+    )
 
-    response = _run_chat(service)
+    response = _run_chat(service, knowledge=knowledge)
 
     assert len(provider.calls) == 1
     messages, kwargs = provider.calls[0]
     roles = [m.role for m in messages]
     assert roles == ["system", "user"]
-    assert "学生的问题：" in messages[1].content
-    # Prompt 中包含上下文（系统提示 + 上下文块），LLM 收到 context 快照
+    assert "LEARNER CONTEXT" in messages[1].content
+    assert "COURSE KNOWLEDGE" in messages[1].content
+    assert "USER QUESTION" in messages[1].content
+    assert "四个必要条件" in messages[1].content
     assert kwargs.get("context") is not None
     assert response.answer == "这是小涟的回答。"
     assert response.source == "llm"
     assert "diagnosis" in response.context_used
+    assert [source.id for source in response.sources] == [
+        item.chunk_id for item in knowledge
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -218,14 +227,17 @@ class _FailingProvider(BaseLLMProvider):
 
 def test_tutor_service_falls_back_on_llm_failure(testdb: _TestDB) -> None:
     service = TutorService(testdb.session(), llm_provider=_FailingProvider())
+    knowledge = KnowledgeContextBuilder().build(COURSE_OS, "死锁四个必要条件")
 
-    response = _run_chat(service)
+    response = _run_chat(service, knowledge=knowledge)
 
     assert response.source == "fallback"
     assert "兜底" in response.answer
-    assert response.answer != ""  # 有确定性回答，不空手
-    assert response.suggested_actions  # 建议依然可用
+    assert response.answer != ""
+    assert response.suggested_actions
     assert "diagnosis" in response.context_used
+    assert response.sources
+    assert "四个必要条件" in response.answer
 
 
 # ---------------------------------------------------------------------------
@@ -286,10 +298,12 @@ def test_demo_deadlock_question_uses_diagnosis_context(client: TestClient) -> No
 # ---------------------------------------------------------------------------
 
 
-def _run_chat(service: TutorService):
+def _run_chat(service: TutorService, knowledge=None, assessment=None):
     import asyncio
 
     request = TutorConversationRequest(
         learner_id=DEMO_LEARNER_ID, course_id=COURSE_OS, message=DEMO_MESSAGE
     )
-    return asyncio.run(service.chat(request))
+    return asyncio.run(
+        service.chat(request, knowledge=knowledge, assessment=assessment)
+    )

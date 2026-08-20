@@ -5,6 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.knowledge import KnowledgeSource
+
 
 class AgentCapability(str, Enum):
     DIAGNOSIS = "diagnosis"
@@ -18,6 +20,7 @@ class AgentRequest(BaseModel):
     course_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
     capability: AgentCapability | None = None
+    knowledge_point_id: str | None = None
 
     @field_validator("learner_id", "course_id", "message")
     @classmethod
@@ -29,9 +32,10 @@ class AgentRequest(BaseModel):
 
 
 class AgentTraceItem(BaseModel):
-    agent: AgentCapability
+    agent: AgentCapability | str
     label: str
     status: str = "completed"
+    type: str = "agent"
 
 
 class AgentResult(BaseModel):
@@ -42,14 +46,18 @@ class AgentResult(BaseModel):
     suggested_actions: list[dict[str, str]] = Field(default_factory=list)
     context_used: list[str] = Field(default_factory=list)
     provider: str = "none"
+    model: str | None = None
     response_mode: str = "provider"
+    sources: list[KnowledgeSource] = Field(default_factory=list)
 
 
 class AgentsChatResponse(BaseModel):
     answer: str
     selected_capability: AgentCapability
     provider: str = "none"
+    model: str | None = None
     response_mode: str = "provider"
+    sources: list[KnowledgeSource] = Field(default_factory=list)
     context_used: list[str] = Field(default_factory=list)
     suggested_actions: list[dict[str, str]] = Field(default_factory=list)
     agent_trace: list[AgentTraceItem] = Field(default_factory=list)

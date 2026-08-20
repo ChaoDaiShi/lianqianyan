@@ -78,14 +78,49 @@ export interface TutorChatResponse {
   contextUsed: string[];
   suggestedActions: string[];
   source: 'llm' | 'fallback';
+  provider: string;
+  model: string | null;
+  sources: KnowledgeSource[];
+}
+
+export interface KnowledgeSource {
+  id: string;
+  title: string;
+  section: string;
+  knowledgePointId: string;
+  excerpt: string;
+}
+
+export interface RetrievedKnowledge {
+  chunkId: string;
+  documentId: string;
+  title: string;
+  section: string;
+  knowledgePointId: string;
+  content: string;
+  score: number;
+  source: string;
+}
+
+export interface KnowledgePointContent {
+  knowledgePointId: string;
+  title: string;
+  sections: Array<{ title: string; content: string }>;
+}
+
+export interface LlmStatus {
+  provider: string;
+  model: string | null;
+  configured: boolean;
 }
 
 export type AgentCapability = 'diagnosis' | 'planning' | 'tutoring' | 'assessment';
 
 export interface AgentTraceItem {
-  agent: AgentCapability;
+  agent: AgentCapability | 'knowledge_retrieval';
   label: string;
   status: string;
+  type: 'agent' | 'tool';
 }
 
 export interface SuggestedAction {
@@ -98,13 +133,16 @@ export interface AgentChatRequest {
   courseId: string;
   message: string;
   capability?: AgentCapability | null;
+  knowledgePointId?: string;
 }
 
 export interface AgentChatResponse {
   answer: string;
   selectedCapability: AgentCapability;
   provider: string;
+  model: string | null;
   responseMode: 'provider' | 'fallback';
+  sources: KnowledgeSource[];
   contextUsed: string[];
   suggestedActions: SuggestedAction[];
   agentTrace: AgentTraceItem[];
@@ -129,6 +167,9 @@ export async function chatWithTutor(
     contextUsed: (raw['context_used'] as string[]) ?? [],
     suggestedActions: (raw['suggested_actions'] as string[]) ?? [],
     source: raw['source'] as 'llm' | 'fallback',
+    provider: (raw['provider'] as string) ?? 'none',
+    model: (raw['model'] as string | null) ?? null,
+    sources: mapSources(raw['sources']),
   };
 }
 
@@ -140,13 +181,16 @@ export async function chatWithAgents(
     course_id: request.courseId,
     message: request.message,
     capability: request.capability ?? null,
+    knowledge_point_id: request.knowledgePointId ?? null,
   });
   const raw = extractApiData(response);
   return {
     answer: raw['answer'] as string,
     selectedCapability: raw['selected_capability'] as AgentCapability,
     provider: (raw['provider'] as string) ?? 'none',
+    model: (raw['model'] as string | null) ?? null,
     responseMode: (raw['response_mode'] as 'provider' | 'fallback') ?? 'provider',
+    sources: mapSources(raw['sources']),
     contextUsed: (raw['context_used'] as string[]) ?? [],
     suggestedActions: ((raw['suggested_actions'] as unknown[]) ?? []).map((item) => {
       const action = item as Record<string, unknown>;
@@ -155,10 +199,68 @@ export async function chatWithAgents(
     agentTrace: ((raw['agent_trace'] as unknown[]) ?? []).map((item) => {
       const trace = item as Record<string, unknown>;
       return {
-        agent: trace['agent'] as AgentCapability,
+        agent: trace['agent'] as AgentTraceItem['agent'],
         label: trace['label'] as string,
         status: trace['status'] as string,
+        type: (trace['type'] as 'agent' | 'tool') ?? 'agent',
       };
+    }),
+  };
+}
+
+export async function fetchLlmStatus(): Promise<LlmStatus> {
+  const response = await api.get<Record<string, unknown>>('/api/system/llm');
+  const raw = extractApiData(response);
+  return {
+    provider: raw['provider'] as string,
+    model: (raw['model'] as string | null) ?? null,
+    configured: raw['configured'] as boolean,
+  };
+}
+
+export async function searchKnowledge(params: {
+  courseId: string;
+  query: string;
+  knowledgePointId?: string;
+  topK?: number;
+}): Promise<RetrievedKnowledge[]> {
+  const response = await api.post<Record<string, unknown>>('/api/knowledge/search', {
+    course_id: params.courseId,
+    query: params.query,
+    knowledge_point_id: params.knowledgePointId ?? null,
+    top_k: params.topK ?? 4,
+  });
+  const raw = extractApiData(response);
+  return ((raw['results'] as unknown[]) ?? []).map((item) => {
+    const value = item as Record<string, unknown>;
+    return {
+      chunkId: value['chunk_id'] as string,
+      documentId: value['document_id'] as string,
+      title: value['title'] as string,
+      section: value['section'] as string,
+      knowledgePointId: value['knowledge_point_id'] as string,
+      content: value['content'] as string,
+      score: value['score'] as number,
+      source: value['source'] as string,
+    };
+  });
+}
+
+export async function fetchKnowledgePoint(
+  knowledgePointId: string,
+  courseId = 'course-os'
+): Promise<KnowledgePointContent> {
+  const response = await api.get<Record<string, unknown>>(
+    `/api/knowledge/points/${knowledgePointId}`,
+    { params: { course_id: courseId } }
+  );
+  const raw = extractApiData(response);
+  return {
+    knowledgePointId: raw['knowledge_point_id'] as string,
+    title: raw['title'] as string,
+    sections: ((raw['sections'] as unknown[]) ?? []).map((item) => {
+      const section = item as Record<string, unknown>;
+      return { title: section['title'] as string, content: section['content'] as string };
     }),
   };
 }
@@ -340,6 +442,19 @@ export async function fetchRecentEvidence(): Promise<LearningEvidence[]> {
   const response = await api.get<unknown[]>('/api/learning/evidence');
   const raw = extractApiData<unknown[]>(response);
   return ((raw as Record<string, unknown>[]) ?? []).map(mapEvidence);
+}
+
+function mapSources(raw: unknown): KnowledgeSource[] {
+  return ((raw as unknown[]) ?? []).map((item) => {
+    const source = item as Record<string, unknown>;
+    return {
+      id: source['id'] as string,
+      title: source['title'] as string,
+      section: source['section'] as string,
+      knowledgePointId: source['knowledge_point_id'] as string,
+      excerpt: source['excerpt'] as string,
+    };
+  });
 }
 
 function mapEvidence(raw: Record<string, unknown>): LearningEvidence {

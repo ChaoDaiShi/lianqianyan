@@ -53,28 +53,43 @@ class MockTutorProvider(BaseLLMProvider):
 
     async def chat(self, messages: list[LLMMessage], **kwargs) -> LLMResult:
         context = kwargs.get("context")
+        knowledge = kwargs.get("knowledge") or []
+        assessment = kwargs.get("assessment")
         user_message = next(
             (m.content for m in messages if m.role == "user"), ""
         )
         # 只提取「学生的问题」部分做关键词路由，
         # 避免把上下文块里的知识点名称（如“死锁”）误判为提问主题。
-        question = user_message.split("学生的问题：", 1)[-1].strip()
+        question = user_message.split("USER QUESTION", 1)[-1].strip()
         return LLMResult(
-            content=self._compose(question, context),
+            content=self._compose(question, context, knowledge, assessment),
             usage={"provider": self.name, "mock": True},
         )
 
     # -- 确定性回答模板（全部数据来自 TutorContext，不编造） -------------------
 
     @staticmethod
-    def _compose(user_message: str, context) -> str:
+    def _compose(user_message: str, context, knowledge, assessment) -> str:
         diagnosis = getattr(context, "diagnosis", None)
         plan = getattr(context, "plan", None)
         profile = getattr(context, "profile", None)
 
-        # 死锁问题 → 引用 Diagnosis
+        if assessment:
+            correctness = "答对" if assessment.get("is_correct") else "答错"
+            answer = (
+                f"我读取了你最近一次真实练习证据：这次{correctness}，"
+                f"得分为 {_pct(assessment.get('score'))}。"
+            )
+            if knowledge:
+                first = knowledge[0]
+                excerpt = " ".join(first.content.split())[:220]
+                answer += f"\n结合课程材料「{first.title} · {first.section}」：{excerpt}"
+            answer += "\n下一步建议对照上述概念重做一道同知识点练习。"
+            return answer
+
+        # 死锁问题 → 引用 Diagnosis 与实际检索材料
         if "死锁" in user_message and diagnosis is not None:
-            return _answer_deadlock(diagnosis, plan)
+            return _with_knowledge(_answer_deadlock(diagnosis, plan), knowledge)
 
         # 「今天学什么 / 计划」→ 引用 StudyPlan
         if any(k in user_message for k in ("今天", "学什么", "计划", "任务")) and plan is not None:
@@ -91,7 +106,7 @@ class MockTutorProvider(BaseLLMProvider):
             return _answer_pv(profile, pv)
 
         # 通用 → 引用整体画像 + 主要问题
-        return _answer_general(context)
+        return _with_knowledge(_answer_general(context), knowledge)
 
     @staticmethod
     def _no_context_message() -> str:
@@ -99,6 +114,14 @@ class MockTutorProvider(BaseLLMProvider):
             "我查看了你的学习上下文，目前还没有关于你的学习记录。"
             "建议先完成一次练习评估（学习空间）或生成学习计划，我就能结合真实数据为你分析。"
         )
+
+
+def _with_knowledge(answer: str, knowledge) -> str:
+    if not knowledge:
+        return answer
+    first = knowledge[0]
+    excerpt = " ".join(first.content.split())[:220]
+    return f"{answer}\n课程知识重点（{first.title} · {first.section}）：{excerpt}"
 
 
 def _answer_deadlock(diagnosis, plan) -> str:

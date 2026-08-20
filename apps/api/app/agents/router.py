@@ -16,7 +16,13 @@ class AgentRouter:
 
     _diagnosis_keywords = ("掌握", "薄弱", "学得怎么样", "哪里不会", "水平")
     _planning_keywords = ("今天学什么", "计划", "路线", "下一步", "安排")
-    _assessment_keywords = ("为什么这题错了", "这次练习怎么样", "分析我的答案", "分析一下我刚才的练习")
+    _assessment_keywords = (
+        "为什么这题错了",
+        "为什么错",
+        "这次练习怎么样",
+        "分析我的答案",
+        "分析一下我刚才的练习",
+    )
 
     def route(
         self,

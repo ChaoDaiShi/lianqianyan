@@ -33,7 +33,8 @@ from app.domain.tutor import (
     TutorConversationRequest,
     TutorResponse,
 )
-from app.llm import BaseLLMProvider, get_llm_provider
+from app.llm import BaseLLMProvider, get_llm_provider, get_llm_status
+from app.knowledge import KnowledgeContextBuilder, RetrievedKnowledge
 from app.services.tutor_context_builder import TutorContextBuilder
 from app.services.tutor_prompt import TutorPromptBuilder
 
@@ -67,31 +68,58 @@ class TutorService:
         self._context_builder = context_builder or TutorContextBuilder(db)
         self._prompt_builder = prompt_builder or TutorPromptBuilder()
 
-    async def chat(self, request: TutorConversationRequest) -> TutorResponse:
-        """处理一次学生提问：构建上下文 → 组织 Prompt → 调用 LLM（失败走 fallback）。"""
+    async def chat(
+        self,
+        request: TutorConversationRequest,
+        knowledge: list[RetrievedKnowledge] | None = None,
+        assessment: dict[str, Any] | None = None,
+    ) -> TutorResponse:
+        """Build grounded context, call one provider, and preserve exact sources."""
         context = self._context_builder.build(request.learner_id, request.course_id)
-        messages = self._prompt_builder.build_messages(context, request.message)
+        retrieved = knowledge or []
+        sources = KnowledgeContextBuilder.sources(retrieved)
+        messages = self._prompt_builder.build_messages(
+            context,
+            request.message,
+            knowledge=retrieved,
+            assessment=assessment,
+        )
         suggested_actions = self._suggest_actions(context)
+        context_used = list(context.context_used)
+        if retrieved:
+            context_used.append("course_knowledge")
+        if assessment is not None:
+            context_used.append("assessment_evidence")
+        model = get_llm_status().model
 
         try:
-            result = await self._llm.chat(messages, context=context)
+            result = await self._llm.chat(
+                messages,
+                context=context,
+                knowledge=retrieved,
+                assessment=assessment,
+            )
             return TutorResponse(
                 answer=result.content,
-                context_used=context.context_used,
+                context_used=context_used,
                 suggested_actions=suggested_actions,
                 source="llm",
                 provider=result.usage.get("provider", self._llm.name),
+                model=model,
                 response_mode="provider",
+                sources=sources,
             )
         except Exception as exc:  # LLM 失败 → 确定性兜底（诚实标记，不伪装 LLM）
             logger.warning("tutor llm failed, using fallback: %s", exc)
             return TutorResponse(
-                answer=self._fallback_answer(context, request.message),
-                context_used=context.context_used,
+                answer=self._fallback_answer(context, request.message, retrieved),
+                context_used=context_used,
                 suggested_actions=suggested_actions,
                 source="fallback",
                 provider=self._llm.name,
+                model=model,
                 response_mode="fallback",
+                sources=sources,
             )
 
     # -- 确定性建议（非 LLM 自由发挥） -------------------------------------------
@@ -122,7 +150,12 @@ class TutorService:
 
     # -- 确定性兜底回答（LLM 失败时使用，明确标记 fallback） ----------------------
 
-    def _fallback_answer(self, context: TutorContext, message: str) -> str:
+    def _fallback_answer(
+        self,
+        context: TutorContext,
+        message: str,
+        knowledge: list[RetrievedKnowledge] | None = None,
+    ) -> str:
         focus = context.diagnosis.primary_focus if context.diagnosis else None
         plan_tasks = context.plan.tasks if context.plan.has_plan else []
 
@@ -144,6 +177,15 @@ class TutorService:
                 "我再为你制定更有针对性的建议。"
             )
 
+        knowledge_note = ""
+        if knowledge:
+            first = knowledge[0]
+            excerpt = " ".join(first.content.split())[:220]
+            knowledge_note = (
+                f"\n课程知识提示（{first.title} · {first.section}）：{excerpt}"
+            )
         return (
-            "（兜底回答 · 小涟暂时无法生成个性化分析，以下为基于你学习数据的确定性建议）\n" + core
+            "（兜底回答 · 小涟暂时无法生成个性化分析，以下为基于你学习数据的确定性建议）\n"
+            + core
+            + knowledge_note
         )
