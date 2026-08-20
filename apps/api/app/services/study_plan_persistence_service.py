@@ -40,6 +40,20 @@ class StudyPlanPersistenceService:
         self._plan_repo = plan_repo or StudyPlanRepository(db)
         self._task_repo = task_repo or StudyTaskRepository(db)
 
+    def stage(self, draft: StudyPlanDraft) -> PersistedStudyPlan:
+        """Create and flush an ACTIVE plan aggregate without committing."""
+        plan = self._plan_repo.create(
+            learner_id=draft.learner_id,
+            course_id=draft.course_id,
+            strategy=draft.strategy,
+            status=StudyPlanStatus.ACTIVE,
+            generated_at=draft.generated_at,
+            source_diagnosis_generated_at=draft.source_diagnosis_generated_at,
+            reason_codes=draft.reason_codes,
+        )
+        task_records = self._task_repo.create_many(plan_id=plan.id, tasks=draft.tasks)
+        return self._to_persisted(plan, task_records)
+
     def persist(self, draft: StudyPlanDraft) -> PersistedStudyPlan:
         """持久化一份 Planner 输出，返回完整 Persistent Plan。
 
@@ -49,26 +63,16 @@ class StudyPlanPersistenceService:
           旧 ACTIVE 计划（同一事务）—— 保证任意时刻只有一个 ACTIVE 计划。
         """
         try:
-            # Active 唯一性：同一事务内作废旧 ACTIVE，再落新 ACTIVE。
-            # 任何一步失败 rollback 全部，绝不留下「无当前计划」的空窗。
-            self._plan_repo.supersede_active_plans(draft.learner_id, draft.course_id)
-            plan = self._plan_repo.create(
-                learner_id=draft.learner_id,
-                course_id=draft.course_id,
-                strategy=draft.strategy,
-                status=StudyPlanStatus.ACTIVE,
-                generated_at=draft.generated_at,
-                source_diagnosis_generated_at=draft.source_diagnosis_generated_at,
-                reason_codes=draft.reason_codes,
+            self._plan_repo.supersede_active_for_learner_course(
+                draft.learner_id, draft.course_id
             )
-            task_records = self._task_repo.create_many(plan_id=plan.id, tasks=draft.tasks)
-            # 单一提交点 —— supersede + Plan + Tasks 同事务
+            persisted = self.stage(draft)
             self._db.commit()
         except Exception:
             self._db.rollback()
             raise
 
-        return self._to_persisted(plan, task_records)
+        return persisted
 
     @staticmethod
     def _to_persisted(

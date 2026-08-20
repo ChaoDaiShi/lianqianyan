@@ -368,17 +368,6 @@ class MasteryStateOut(BaseModel):
     updated_at: datetime
 
 
-class PracticeEvaluateResponse(BaseModel):
-    """练习评价响应 —— 含证据与投影前后掌握度。"""
-
-    evidence: LearningEvidenceOut
-    mastery_before: float = Field(ge=0.0, le=1.0)
-    mastery_after: float = Field(ge=0.0, le=1.0)
-    confidence: float = Field(ge=0.0, le=1.0)
-    evidence_count: int = Field(ge=0)
-    message: str
-
-
 class KnowledgePointDiagnosis(BaseModel):
     """单个知识点的诊断结果。"""
 

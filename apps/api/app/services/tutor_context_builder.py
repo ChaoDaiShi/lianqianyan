@@ -8,9 +8,8 @@
 数据来源（**全部复用既有服务，禁止重复计算**）：
 - Learner Profile → `LearnerProfileService.build_profile`（Derived Read Model，只构建一次）
 - Diagnosis     → `DiagnosisService.build_from_profile`（复用同一 Profile，不自行判断 weak / priority）
-- Study Plan    → `StudyPlanRepository.list_by_learner_and_course` 取
-                  `generated_at DESC` 第一条（**没有 current plan lifecycle**，
-                  本轮不做 Active 唯一语义）+ `StudyTaskRepository.list_by_plan_id`
+- Study Plan    → `StudyPlanApplicationService.get_current` 读取当前 ACTIVE Plan；
+                  不从 History 第一条近似当前状态 + `StudyTaskRepository.list_by_plan_id`
 - Recent Evidence → `LearningEvidenceRepository.list_recent_by_learner`（最近 N 条）
 
 约束：

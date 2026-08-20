@@ -10,6 +10,7 @@ Repository 负责 Domain Enum ↔ DB 表示转换（strategy / status / reason_c
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime
 
@@ -25,6 +26,8 @@ from app.domain import (
 from app.domain.models import StudyTask
 from app.domain.planner import PersistedStudyPlan, PersistedStudyPlanSummary
 from app.services.study_task_repository import StudyTaskRepository
+
+logger = logging.getLogger(__name__)
 
 
 class StudyPlanRepository:
@@ -84,37 +87,42 @@ class StudyPlanRepository:
             ).all()
         )
 
-    def get_current(self, learner_id: str, course_id: str) -> StudyPlan | None:
-        """读取该 learner/course 的当前 ACTIVE 计划（Phase 3-1）。
-
-        新计划持久化时旧 ACTIVE 会被 supersede，因此理论唯一；
-        排序（generated_at DESC）仅为兼容 Phase 3-1 之前遗留的多 ACTIVE 旧数据
-        提供确定性兜底，不伪装唯一约束存在。
-        """
-        return self._db.scalars(
-            select(StudyPlan)
-            .where(
-                StudyPlan.learner_id == learner_id,
-                StudyPlan.course_id == course_id,
-                StudyPlan.status == StudyPlanStatus.ACTIVE.value,
+    def get_active_by_learner_and_course(
+        self, learner_id: str, course_id: str
+    ) -> StudyPlan | None:
+        """Read the newest ACTIVE plan without repairing legacy duplicate rows."""
+        plans = list(
+            self._db.scalars(
+                select(StudyPlan)
+                .where(
+                    StudyPlan.learner_id == learner_id,
+                    StudyPlan.course_id == course_id,
+                    StudyPlan.status == StudyPlanStatus.ACTIVE.value,
+                )
+                .order_by(StudyPlan.generated_at.desc())
+                .limit(2)
+            ).all()
+        )
+        if len(plans) > 1:
+            logger.warning(
+                "multiple active plans detected: learner_id=%s course_id=%s",
+                learner_id,
+                course_id,
             )
-            .order_by(StudyPlan.generated_at.desc())
-            .limit(1)
-        ).first()
+        return plans[0] if plans else None
 
-    def supersede_active_plans(
+    def get_current(self, learner_id: str, course_id: str) -> StudyPlan | None:
+        """Compatibility alias for the formal current-plan repository method."""
+        return self.get_active_by_learner_and_course(learner_id, course_id)
+
+    def supersede_active_for_learner_course(
         self,
         learner_id: str,
         course_id: str,
         *,
         except_plan_id: str | None = None,
     ) -> int:
-        """将该 learner/course 现有 ACTIVE 计划全部标记为 SUPERSEDED（Phase 3-1）。
-
-        - 只做 update（不 commit），由上层服务（PersistenceService）统一提交，
-          与新计划同事务 —— 绝不出现「旧计划已作废但新计划没生成」的半状态。
-        - 返回被更新的行数（日志 / 断言用）。
-        """
+        """Mark scoped ACTIVE plans SUPERSEDED without committing."""
         stmt = (
             update(StudyPlan)
             .where(
@@ -131,6 +139,20 @@ class StudyPlanRepository:
             stmt = stmt.where(StudyPlan.id != except_plan_id)
         result = self._db.execute(stmt)
         return result.rowcount or 0
+
+    def supersede_active_plans(
+        self,
+        learner_id: str,
+        course_id: str,
+        *,
+        except_plan_id: str | None = None,
+    ) -> int:
+        """Compatibility alias for existing callers."""
+        return self.supersede_active_for_learner_course(
+            learner_id,
+            course_id,
+            except_plan_id=except_plan_id,
+        )
 
     @staticmethod
     def to_domain(plan: StudyPlan, tasks: list[StudyTask]) -> PersistedStudyPlan:

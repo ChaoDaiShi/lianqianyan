@@ -8,7 +8,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { evaluatePractice, type PracticeEvaluationResponse } from '@/lib/educationApi';
+import { evaluatePractice, type PracticeEvaluationResponse, type ReplanningResult } from '@/lib/educationApi';
 import { DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
 import type { DemoQuestion } from '@/content/learningContent';
 import { cn } from '@/lib/utils';
@@ -16,8 +16,8 @@ import { cn } from '@/lib/utils';
 interface ModulePracticeProps {
   knowledgePointName: string;
   questions: DemoQuestion[];
-  /** 练习成功（已调用后端）后回调，用于刷新 Profile / Diagnosis。 */
-  onPracticeComplete?: () => Promise<boolean> | boolean;
+  /** 练习成功后刷新 Profile / Diagnosis / Current Plan，并返回刷新是否成功。 */
+  onPracticeComplete?: (replanning: ReplanningResult) => Promise<boolean> | boolean;
 }
 
 type ResultState =
@@ -85,7 +85,7 @@ export function ModulePractice({
       setResult({ status: 'done', correct: isCorrect, data });
       if (onPracticeComplete) {
         setRefreshStatus('refreshing');
-        const refreshed = await onPracticeComplete();
+        const refreshed = await onPracticeComplete(data.replanning);
         setRefreshStatus(refreshed ? 'done' : 'error');
       } else {
         setRefreshStatus('done');
@@ -223,9 +223,24 @@ export function ModulePractice({
                 练习结果已记录，但学习画像或诊断暂时未能刷新，请稍后重试页面数据。
               </p>
             )}
-            <p className="mt-1 text-[11px] leading-relaxed text-gray-400">
-              计划将在后续重新规划时根据最新学习状态调整。
-            </p>
+            {result.status === 'done' && result.data.replanning.status === 'performed' && (
+              <p className="mt-1 text-xs leading-relaxed text-blue-700">
+                小涟已调整你的学习计划
+                {result.data.replanning.previousTopTask && result.data.replanning.newTopTask
+                  ? `：${result.data.replanning.previousTopTask.knowledgePointName} → ${result.data.replanning.newTopTask.knowledgePointName}`
+                  : '。'}
+              </p>
+            )}
+            {result.status === 'done' && result.data.replanning.status === 'not_needed' && (
+              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                学习状态已更新，当前学习计划仍然适合你。
+              </p>
+            )}
+            {result.status === 'done' && result.data.replanning.status === 'failed' && (
+              <p className="mt-1 text-xs leading-relaxed text-amber-700">
+                本次学习结果已经记录，但学习计划暂未能更新。
+              </p>
+            )}
           </div>
         </div>
       )}

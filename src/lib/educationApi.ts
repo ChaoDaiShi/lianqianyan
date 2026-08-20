@@ -50,6 +50,33 @@ export interface PracticeEvaluationRequest {
   difficulty: number;
 }
 
+export type ReplanningReasonCode =
+  | 'PRIMARY_FOCUS_CHANGED'
+  | 'TASK_ACTION_CHANGED'
+  | 'TASK_SET_CHANGED'
+  | 'TASK_ORDER_CHANGED'
+  | 'TOP_TASK_RESOLVED'
+  | 'NO_MATERIAL_CHANGE'
+  | 'NO_ACTIVE_PLAN';
+
+export type ReplanningStatus = 'not_needed' | 'performed' | 'failed';
+
+export interface ReplanningTaskPreview {
+  knowledgePointId: string;
+  knowledgePointName: string;
+  actionType: PlannerActionType;
+}
+
+export interface ReplanningResult {
+  status: ReplanningStatus;
+  performed: boolean;
+  reasonCodes: ReplanningReasonCode[];
+  previousPlanId: string | null;
+  newPlan: PersistedStudyPlan | null;
+  previousTopTask: ReplanningTaskPreview | null;
+  newTopTask: ReplanningTaskPreview | null;
+}
+
 export interface PracticeEvaluationResponse {
   evidence: LearningEvidence;
   masteryBefore: number;
@@ -57,6 +84,7 @@ export interface PracticeEvaluationResponse {
   confidence: number;
   evidenceCount: number;
   message: string;
+  replanning: ReplanningResult;
 }
 
 export interface MasteryState {
@@ -308,7 +336,19 @@ export async function evaluatePractice(
     confidence: raw['confidence'] as number,
     evidenceCount: raw['evidence_count'] as number,
     message: raw['message'] as string,
+    replanning: mapReplanningResult(raw['replanning'] as Record<string, unknown>),
   };
+}
+
+export async function replanPlan(
+  learnerId: string,
+  courseId = 'course-os'
+): Promise<ReplanningResult> {
+  const response = await api.post<Record<string, unknown>>('/api/plans/replan', {
+    learner_id: learnerId,
+    course_id: courseId,
+  });
+  return mapReplanningResult(extractApiData(response));
 }
 
 export async function fetchMastery(learnerId: string, knowledgePointId: string): Promise<MasteryState> {
@@ -388,6 +428,27 @@ export async function generatePlan(learnerId: string, courseId = 'course-os'): P
 export async function fetchPlanDetail(planId: string): Promise<PersistedStudyPlan> {
   const response = await api.get<Record<string, unknown>>(`/api/plans/${planId}`);
   return mapPlanFromRaw(extractApiData(response));
+}
+
+function mapReplanningResult(raw: Record<string, unknown>): ReplanningResult {
+  const mapPreview = (value: unknown): ReplanningTaskPreview | null => {
+    if (!value) return null;
+    const preview = value as Record<string, unknown>;
+    return {
+      knowledgePointId: preview['knowledge_point_id'] as string,
+      knowledgePointName: preview['knowledge_point_name'] as string,
+      actionType: preview['action_type'] as PlannerActionType,
+    };
+  };
+  return {
+    status: raw['status'] as ReplanningStatus,
+    performed: raw['performed'] as boolean,
+    reasonCodes: (raw['reason_codes'] as ReplanningReasonCode[]) ?? [],
+    previousPlanId: (raw['previous_plan_id'] as string | null) ?? null,
+    newPlan: raw['new_plan'] ? mapPlanFromRaw(raw['new_plan'] as Record<string, unknown>) : null,
+    previousTopTask: mapPreview(raw['previous_top_task']),
+    newTopTask: mapPreview(raw['new_top_task']),
+  };
 }
 
 function mapPlanFromRaw(raw: Record<string, unknown>): PersistedStudyPlan {

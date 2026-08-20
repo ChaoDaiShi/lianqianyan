@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.domain import (
@@ -22,18 +24,28 @@ from app.domain import (
     MasteryStateOut,
     PracticeEvaluateRequest,
     PracticeEvaluateResponse,
+    ReplanningResult,
+    ReplanningStatus,
 )
+from app.services.dynamic_replanning_service import DynamicReplanningService
 from app.services.learning_evidence import LearningEvidenceRepository
 from app.services.mastery_projection_service import MasteryProjectionService
+
+logger = logging.getLogger(__name__)
 
 
 class PracticeEvaluationService:
     """练习评价业务编排。"""
 
-    def __init__(self, db: Session) -> None:
+    def __init__(
+        self,
+        db: Session,
+        replanning_service: DynamicReplanningService | None = None,
+    ) -> None:
         self._db = db
         self._evidence_repo = LearningEvidenceRepository(db)
         self._projection_service = MasteryProjectionService(db)
+        self._replanning = replanning_service or DynamicReplanningService(db)
 
     def evaluate(self, req: PracticeEvaluateRequest) -> PracticeEvaluateResponse:
         try:
@@ -88,6 +100,20 @@ class PracticeEvaluationService:
             self._db.rollback()
             raise
 
+        try:
+            replanning = self._replanning.replan(req.learner_id, req.course_id)
+        except Exception:
+            self._db.rollback()
+            logger.exception(
+                "dynamic replanning failed after practice commit: learner_id=%s course_id=%s",
+                req.learner_id,
+                req.course_id,
+            )
+            replanning = ReplanningResult(
+                status=ReplanningStatus.FAILED,
+                performed=False,
+            )
+
         return PracticeEvaluateResponse(
             evidence=evidence,
             mastery_before=mastery_before,
@@ -95,4 +121,5 @@ class PracticeEvaluationService:
             confidence=confidence,
             evidence_count=evidence_count,
             message="小涟已记录本次练习结果并更新掌握度",
+            replanning=replanning,
         )

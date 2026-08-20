@@ -46,6 +46,7 @@ from app.domain import (
     PersistedStudyPlanSummary,
 )
 from app.services.diagnosis_service import DiagnosisService
+from app.services.study_plan_lifecycle_service import StudyPlanLifecycleService
 from app.services.study_plan_persistence_service import StudyPlanPersistenceService
 from app.services.study_plan_repository import StudyPlanRepository
 from app.services.study_planner_service import StudyPlannerService
@@ -65,15 +66,22 @@ class StudyPlanApplicationService:
         persistence_service: StudyPlanPersistenceService | None = None,
         plan_repo: StudyPlanRepository | None = None,
         task_repo: StudyTaskRepository | None = None,
+        lifecycle_service: StudyPlanLifecycleService | None = None,
     ) -> None:
         self._db = db
         self._diagnosis = diagnosis_service or DiagnosisService(db)
         self._planner = planner_service or StudyPlannerService()
-        self._persistence = persistence_service or StudyPlanPersistenceService(
-            db, plan_repo=plan_repo, task_repo=task_repo
-        )
         self._plan_repo = plan_repo or StudyPlanRepository(db)
         self._task_repo = task_repo or StudyTaskRepository(db)
+        self._persistence = persistence_service or StudyPlanPersistenceService(
+            db, plan_repo=self._plan_repo, task_repo=self._task_repo
+        )
+        self._lifecycle = lifecycle_service or StudyPlanLifecycleService(
+            db,
+            persistence=self._persistence,
+            plan_repo=self._plan_repo,
+            task_repo=self._task_repo,
+        )
 
     # -- 生成（显式业务动作，唯一入口是客户端表达「给这个 learner/course 生成计划」） ----
 
@@ -87,7 +95,12 @@ class StudyPlanApplicationService:
             learner_id, course_id, course_name
         )
         draft = self._planner.generate_from_diagnosis(learner_id, course_id, diagnosis)
-        persisted = self._persistence.persist(draft)
+        current = self._lifecycle.get_current_plan(learner_id, course_id)
+        persisted = (
+            self._lifecycle.create_initial_plan(draft)
+            if current is None
+            else self._lifecycle.replace_active_plan(draft)
+        )
 
         logger.info(
             "study plan generated: plan_id=%s learner_id=%s course_id=%s task_count=%d",
@@ -114,11 +127,7 @@ class StudyPlanApplicationService:
         - 无当前计划（从未生成 / 被 Empty Plan 取代后）→ None。
         - 纯读取：不自动生成、不 refresh Diagnosis、不写 DB。
         """
-        plan = self._plan_repo.get_current(learner_id, course_id)
-        if plan is None:
-            return None
-        tasks = self._task_repo.list_by_plan_id(plan.id)
-        return StudyPlanRepository.to_domain(plan, tasks)
+        return self._lifecycle.get_current_plan(learner_id, course_id)
 
     # -- 历史（读取无副作用；generated_at DESC 由 Repository 保证，不二次排序） -------
 

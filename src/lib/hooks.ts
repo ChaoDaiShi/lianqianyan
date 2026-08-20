@@ -91,7 +91,7 @@ export interface CurrentPlanState {
   loading: boolean;
   /** current 读取失败（网络 / 500，不含 404 空状态） */
   error: boolean;
-  refetch: () => void;
+  refetch: () => Promise<boolean>;
 }
 
 /** 完整 Plan → 摘要（generate 成功后复用，避免二次请求 History）。 */
@@ -129,16 +129,20 @@ export function useCurrentPlan(
   const [error, setError] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  const load = useCallback(() => {
+  const load = useCallback(async (): Promise<boolean> => {
     setLoading(true);
     setError(false);
-    fetchCurrentPlan(learnerId, courseId)
-      .then((current) => {
-        setPlan(current);
-        setSummary(current ? toSummary(current) : null);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
+    try {
+      const current = await fetchCurrentPlan(learnerId, courseId);
+      setPlan(current);
+      setSummary(current ? toSummary(current) : null);
+      return true;
+    } catch {
+      setError(true);
+      return false;
+    } finally {
+      setLoading(false);
+    }
   }, [learnerId, courseId]);
 
   useEffect(() => {

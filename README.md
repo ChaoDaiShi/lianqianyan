@@ -224,8 +224,7 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
     `GET /api/plans/current?learner_id=&course_id=` 读取当前 ACTIVE 计划（完整
     Plan + Tasks；无 → 404，GET 绝不自动生成）。Web 侧 `/#/my-learning` 展示
     **当前计划**（任务 Timeline + 「重新规划」按钮；比赛 Web 不展示历史计划管理）；首页「今日学习计划」、`/#/space`、`/#/archive`
-    全部读取 current 语义。「重新规划」= 显式重新生成（自动 supersede 旧计划），
-    **不是**自动/定时 Dynamic Replanning。
+    全部读取 current 语义。显式 `POST /api/plans/generate` 会原子替换旧 Active 计划；练习提交后还会经过确定性的 Dynamic Replanning Policy，只有 Material Change 才自动替换当前计划。
 - **学习上下文驱动 AI Tutor（Phase 3-0）**：真实链路从「Diagnosis/Plan」升级为
   「学生提问 → **TutorContextBuilder**（Profile / Diagnosis / StudyPlan / 最近证据，
   全部复用既有服务，禁止重复计算）→ **集中 Prompt** → **LLM Provider 抽象** →
@@ -258,7 +257,20 @@ Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`�
 
 `POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使“这四个条件怎么记？”等缺少关键词的问题仍能检索当前课程材料。
 
-## Phase 3-2：Real AI Tutor & Multi-Agent Orchestration
+## Phase 3-4：Dynamic Replanning & Active Plan Lifecycle
+
+Phase 3-4 closes the evidence-driven learning loop without adding an LLM call or a new Agent:
+
+```text
+Practice Evidence → Mastery Projection → Diagnosis → Candidate Plan
+  → deterministic ReplanningPolicy → keep Current or atomically replace Active Plan
+```
+
+- `GET /api/plans/current` is the only Current Plan read model. It returns the newest Active plan, warns on legacy duplicate Active rows without mutating them, and returns 404 when none exists.
+- `POST /api/plans/replan` is an explicit deterministic replan endpoint. Practice uses the same service after its Evidence + Mastery transaction commits.
+- Practice and replanning are independent transactions. A replanning failure returns `replanning.status=failed` while preserving the committed practice evidence and mastery update.
+- Material changes are machine-readable through `PRIMARY_FOCUS_CHANGED`, `TASK_ACTION_CHANGED`, `TASK_SET_CHANGED`, `TASK_ORDER_CHANGED`, `TOP_TASK_RESOLVED`, `NO_MATERIAL_CHANGE`, and `NO_ACTIVE_PLAN`.
+- The Web Learning Space refreshes Profile, Diagnosis, and Current Plan after practice and distinguishes performed, not-needed, and failed replanning feedback.
 
 Phase 3-2 已将教育能力组织为轻量、确定性编排的 Agent Layer：
 
@@ -299,9 +311,7 @@ XiaolianPage / LearningSpace Tutor
 以下能力当前**尚未实现**，不提前宣传：
 
 - 计划历史管理 UI（后端保留 `GET /api/plans` History 能力，比赛 Web 只展示当前计划）
-- 自动 / 定时 **Dynamic Replanning**（当前「重新规划」为用户显式触发：
-  `POST /api/plans/generate` 自动 supersede 旧计划；时间轴 / deadline 驱动的
-  自动重规划尚未实现）
+- 时间轴 / deadline 驱动的定时重规划（Practice 触发的证据驱动 Dynamic Replanning 已在 Phase 3-4 实现）
 - 更多课程内容与练习题型（当前 `/space` 已提供当前计划任务 + 学习内容 + 快速练习 + 小涟助手）
 - **AI Tutor 已具备基础（Phase 3-0）**：已支持「学习上下文驱动 AI Tutor」
   （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，

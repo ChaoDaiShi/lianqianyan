@@ -24,15 +24,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.domain import PersistedStudyPlan, PersistedStudyPlanSummary
+from app.domain import PersistedStudyPlan, PersistedStudyPlanSummary, ReplanningResult
 from app.domain.models import StudyPlanGenerateRequest
-from app.services import StudyPlanApplicationService
+from app.services import DynamicReplanningService, StudyPlanApplicationService
 
 router = APIRouter(prefix="/plans", tags=["plans"])
 
 
 def _service(db: Session = Depends(get_db)) -> StudyPlanApplicationService:
     return StudyPlanApplicationService(db)
+
+
+def _replanning_service(db: Session = Depends(get_db)) -> DynamicReplanningService:
+    return DynamicReplanningService(db)
 
 
 @router.get("", response_model=list[PersistedStudyPlanSummary])
@@ -80,6 +84,15 @@ def generate_plan(
     旧 ACTIVE 计划在同一事务内被 supersede —— 生成后该计划即为唯一当前计划。
     """
     return service.generate_plan(payload.learner_id, payload.course_id)
+
+
+@router.post("/replan", response_model=ReplanningResult)
+def replan_current(
+    payload: StudyPlanGenerateRequest,
+    service: DynamicReplanningService = Depends(_replanning_service),
+) -> ReplanningResult:
+    """Compare against the current plan and replace it only for material change."""
+    return service.replan(payload.learner_id, payload.course_id)
 
 
 @router.get("/{plan_id}", response_model=PersistedStudyPlan)
