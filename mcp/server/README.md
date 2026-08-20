@@ -1,46 +1,36 @@
-# MCP Server —— EducationMind（架构预留）
+# EducationMind MCP Server
 
-> MCP Server 未来负责把 EducationMind Domain Service 封装为标准 MCP Tools，
-> 供其他 Agent 系统（通过 MCP）接入教育能力。
-
-**本轮只保留目录结构、README 与接口设计，不实现任何 Tool，也不编写不可用的假工具。**
-
-## 定位
-
-EducationMind 对外提供三类入口：
+EducationMind 通过官方 Python MCP SDK 提供真实 stdio Server。MCP Tool 与内部 Agent 共享同一个 `EducationToolRegistry`，每次调用都直接进入既有 Application Service，不通过 HTTP 自调用，也不复制画像、诊断、规划、RAG 或重规划逻辑。
 
 ```text
-Web UI   ·   Education API   ·   MCP Server   ← 本目录
+MCP Client → tools/list | tools/call → EducationToolRegistry → Application Service
+Internal Agent ─────────────────────→ EducationToolRegistry → Application Service
 ```
 
-通过 MCP，其他 Agent 可以标准地调用教育领域能力（如获取学习画像、诊断学习状态、
-生成学习计划、评估作答、更新掌握度、生成学习报告）。
+## 启动与验证
 
-## 目录结构
+从仓库根目录运行：
 
-```text
-mcp/server/
-├── README.md
-└── docs/
-    └── tools.md      # 未来 Tool 的接口设计（本轮仅设计）
+```bash
+uv sync --project apps/api
+uv run --project apps/api python mcp/server/server.py
 ```
 
-未来实现（后续阶段）时，本目录将增加：
+Server stdout 只承载 JSON-RPC/MCP 协议；普通日志写到 stderr，入口中没有启动提示 `print`。
 
-```text
-mcp/server/
-├── src/education_mcp_server/<tool>.py
-├── pyproject.toml
-└── tests/
+协议级 smoke 会真实启动上面的子进程，并执行 initialize → tools/list → tools/call `get_learning_diagnosis`：
+
+```bash
+uv run --project apps/api python mcp/server/smoke.py
+uv run --project apps/api pytest apps/api/tests/test_mcp_server.py -q
 ```
 
-## 未来 Tool 接口设计
+## 行为边界
 
-见 [docs/tools.md](./docs/tools.md)。核心 Tool 与教育领域模型一一对应，
-数据最终来源于 LearningEvidence → LearnerProfile → Diagnosis → StudyPlan 的闭环。
+- `tools/list` 的 inputSchema 直接来自同一 Pydantic Tool input model。
+- `tools/call` 只调用 `EducationToolRegistry.execute`，单次超时为 30 秒。
+- 成功和失败都保留 `structuredContent`；失败设置 `isError=true`，不向客户端返回 Python traceback。
+- 写工具只有 `generate_study_plan` 与 `replan_study_plan`，annotations 中 `readOnlyHint=false`。
+- 不暴露 `evaluate_practice`、Agent Chat、环境变量、API Key、Authorization 或 Base URL。
 
-## 不做什么（本轮）
-
-- 不实现具体 MCP Tool 逻辑
-- 不引入 MCP SDK 依赖
-- 不编写“看起来实现了 MCP”的假工具
+完整目录和输入见 [docs/tools.md](./docs/tools.md)。

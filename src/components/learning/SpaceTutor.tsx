@@ -6,6 +6,7 @@ import type { AgentChatResponse } from '@/lib/educationApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { AgentToolTrace } from '@/components/learning/AgentToolTrace';
 import { SourceReferences } from '@/components/learning/SourceReferences';
 
 interface SpaceTutorProps {
@@ -98,7 +99,7 @@ export function SpaceTutor({ knowledgePointId, knowledgePointName, quickQuestion
               {msg.role === 'assistant' && <div className="mb-1 flex items-center gap-1 text-[10px] text-gray-400"><Sparkles className="h-2.5 w-2.5 text-blue-500" />小涟{msg.isFallback && <span className="rounded bg-amber-50 px-1 py-px text-[9px] text-amber-600">基础辅导模式</span>}</div>}
               <p className="whitespace-pre-line">{msg.content}</p>
               {msg.role === 'assistant' && msg.contextUsed && msg.contextUsed.length > 0 && <div className="mt-1.5 flex flex-wrap gap-1 border-t border-gray-200 pt-1.5"><span className="text-[10px] text-gray-400">已参考：</span>{msg.contextUsed.map((key) => <span key={key} className="rounded-full bg-blue-50 px-1.5 py-px text-[10px] text-blue-600">{CONTEXT_LABELS[key] ?? key}</span>)}</div>}
-              {msg.role === 'assistant' && msg.agentTrace && msg.agentTrace.length > 0 && <div className="mt-1.5 border-t border-gray-200 pt-1.5 text-[10px] text-blue-600">本次由：{msg.agentTrace.map((item) => item.label).join(' → ')} 协同完成</div>}
+              {msg.role === 'assistant' && msg.agentTrace && msg.agentTrace.length > 0 && <AgentToolTrace items={msg.agentTrace} compact />}
               {msg.role === 'assistant' && msg.provider && <div className="mt-1 text-[10px] text-gray-400">Provider：{msg.provider}{msg.model ? ` · ${msg.model}` : ' · 本地演示'}</div>}
               {msg.role === 'assistant' && msg.sources && <SourceReferences sources={msg.sources} />}
             </div>

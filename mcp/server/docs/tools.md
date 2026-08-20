@@ -1,37 +1,25 @@
-# MCP Tools 接口设计（未来）
+# EducationMind MCP Tools
 
-> 本文档是 **MCP Server 未来 Tool** 的设计草图，本轮不实现。所有 Tool 均封装
-> EducationMind Domain Service，数据来自 LearningEvidence 驱动的闭环。
+以下目录由 `apps/api/app/tools/registry.py` 集中注册，并同时服务内部 Agent、`GET /api/tools` 与 MCP `tools/list`。
 
-## Tool 清单与输入输出
-
-| Tool | 输入 | 输出 | 说明 |
+| Tool | 输入 | 只读 | Application 边界 |
 | --- | --- | --- | --- |
-| `get_learner_profile` | `user_id` | `LearnerProfile` | 学习画像（由学习证据汇聚） |
-| `diagnose_learning_state` | `user_id`, `knowledge_point_id?` | `DiagnosisResult`（薄弱点/等级） | 学习诊断 |
-| `generate_study_plan` | `user_id`, `goal?`, `start_date?` | `StudyPlan` | 个性化学习规划 |
-| `get_current_study_plan` | `user_id` | `StudyPlan` | 当前学习计划 |
-| `start_learning_session` | `user_id`, `knowledge_point_id?` | `session_id` | 开启学习会话 |
-| `generate_practice` | `user_id`, `knowledge_point_id`, `count` | `Question[]` | 自适应练习 |
-| `evaluate_answer` | `session_id`, `question_id`, `user_answer` | `{ correct, mastery_delta }` | 作答评估 |
-| `evaluate_feynman_explanation` | `session_id`, `knowledge_point_id`, `explanation` | `{ score, feedback }` | 费曼复述评估 |
-| `update_mastery` | `user_id`, `knowledge_point_id`, `delta` | `MasteryRecord` | 更新掌握度 |
-| `generate_learning_report` | `user_id`, `period` | `LearningReport` | 生成学习报告 |
+| `get_learner_profile` | `learner_id`, `course_id` | 是 | `LearnerProfileService` |
+| `get_learning_diagnosis` | `learner_id`, `course_id` | 是 | `DiagnosisService` |
+| `get_current_study_plan` | `learner_id`, `course_id` | 是 | `StudyPlanApplicationService.get_current` |
+| `search_course_knowledge` | `course_id`, `query`, `knowledge_point_id?`, `top_k?` | 是 | `LexicalKnowledgeRetriever` |
+| `get_recent_learning_evidence` | `learner_id`, `course_id`, `limit?` | 是 | `LearningEvidenceRepository` |
+| `generate_study_plan` | `learner_id`, `course_id` | 否 | `StudyPlanApplicationService.generate_plan` |
+| `replan_study_plan` | `learner_id`, `course_id` | 否 | `DynamicReplanningService.replan` |
 
-## 数据依赖链路
+## 契约
 
-```text
-generate_practice / evaluate_answer / evaluate_feynman_explanation / start_learning_session
-        ↓  产生  ↓
-    LearningEvidence
-        ↓  汇聚  ↓
-    LearnerProfile → diagnose_learning_state → generate_study_plan
-        ↓
-    generate_learning_report
-```
+- 输入由 Pydantic 校验；`top_k` 为 1..8，Evidence limit 为 1..100。
+- Tool 返回统一 `{success, data, error, metadata}`；参数错误为 `INVALID_ARGUMENTS`，未知名称为 `TOOL_NOT_FOUND`，内部异常为清理后的 `TOOL_EXECUTION_FAILED`，协议超时为 `TOOL_TIMEOUT`。
+- Current Plan 不存在时是成功且 `data=null`；Tool 读取不自动生成第一份计划。
+- `replan_study_plan` 保留 Phase 3-4 Material Change 与原子替换语义。
+- `evaluate_practice` 刻意不暴露：练习评价仍只能经过原有 Practice API/Application Service 的证据与掌握度事务边界。
 
-## 约定
+## 安全
 
-- 所有 Tool 通过 MCP 标准协议暴露（`tools/call` 等），不引入私有协议。
-- 输入输出模型与 `apps/api/app/domain`（Python）及 `src/domain`（TS）保持一致。
-- 安全：通过用户身份（user_id）隔离数据，不暴露其他学习者数据。
+Tool 与 MCP 均不重新实现业务逻辑，不经 HTTP 调用自己的 API，不提供 OAuth/RBAC 或自主 Tool Calling Runtime。响应绝不包含 `EDUCATION_LLM_API_KEY`；本目录不暴露 Provider 状态工具。

@@ -9,12 +9,14 @@ import {
   fetchLlmStatus,
   fetchPlanHistory,
   fetchRecentEvidence,
+  fetchToolCatalog,
   generatePlan,
   type TutorChatResponse,
   type AgentCapability,
   type AgentChatResponse,
   type KnowledgePointContent,
   type LlmStatus,
+  type ToolDefinition,
 } from '@/lib/educationApi';
 import type {
   DiagnosisResult,
@@ -232,6 +234,10 @@ export function useKnowledgePoint(
     },
     [knowledgePointId, courseId]
   );
+}
+
+export function useToolCatalog(): AsyncState<ToolDefinition[]> {
+  return useAsync(fetchToolCatalog, []);
 }
 
 export function useLlmStatus(): AsyncState<LlmStatus> {

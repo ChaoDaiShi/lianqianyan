@@ -110,14 +110,18 @@ def test_diagnosis_agent_reuses_service_result(testdb: _TestDB) -> None:
 
 def test_planner_ordinary_question_reads_without_generating(testdb: _TestDB, monkeypatch) -> None:
     agent = PlannerAgent(testdb.session())
-    monkeypatch.setattr(
-        agent._application,
-        "generate_plan",
-        lambda *_: pytest.fail("ordinary planner question must not write"),
-    )
+    original_execute = agent._tools.execute
+
+    def execute_read_only(name, arguments):
+        if name == "generate_study_plan":
+            pytest.fail("ordinary planner question must not write")
+        return original_execute(name, arguments)
+
+    monkeypatch.setattr(agent._tools, "execute", execute_read_only)
     result = agent.run(request("我今天学什么"))
     assert result.success is True
     assert result.data["plan"] is None
+    assert [item.name for item in result.tool_trace] == ["get_current_study_plan"]
 
 
 def test_assessment_agent_is_read_only(testdb: _TestDB) -> None:
@@ -174,11 +178,21 @@ def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:
     body = response.json()
     assert [item["agent"] for item in body["agent_trace"]] == [
         "diagnosis",
+        "get_learning_diagnosis",
         "planning",
-        "knowledge_retrieval",
+        "get_current_study_plan",
+        "search_course_knowledge",
         "tutoring",
     ]
-    assert body["agent_trace"][2]["type"] == "tool"
+    assert [item["type"] for item in body["agent_trace"]] == [
+        "agent",
+        "tool",
+        "agent",
+        "tool",
+        "tool",
+        "agent",
+    ]
+    assert body["agent_trace"][1]["name"] == "get_learning_diagnosis"
     assert body["sources"]
     assert body["agent_trace"][-1]["status"] == "completed"
     assert body["provider"] == "mock"
@@ -188,7 +202,7 @@ def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:
     body = agent_chat(client, "给我解释死锁四个必要条件。").json()
     assert body["selected_capability"] == "tutoring"
     assert [item["agent"] for item in body["agent_trace"]] == [
-        "knowledge_retrieval",
+        "search_course_knowledge",
         "tutoring",
     ]
     assert body["sources"]
@@ -198,7 +212,10 @@ def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:
 def test_explicit_capability_is_honored(client: TestClient) -> None:
     body = agent_chat(client, "解释死锁", "diagnosis").json()
     assert body["selected_capability"] == "diagnosis"
-    assert [item["agent"] for item in body["agent_trace"]] == ["diagnosis"]
+    assert [item["agent"] for item in body["agent_trace"]] == [
+        "diagnosis",
+        "get_learning_diagnosis",
+    ]
 
 
 def test_agents_api_rejects_blank_message(client: TestClient) -> None:
@@ -208,7 +225,10 @@ def test_agents_api_rejects_blank_message(client: TestClient) -> None:
 def test_assessment_api_uses_assessment_capability(client: TestClient) -> None:
     body = agent_chat(client, "分析一下我刚才的练习").json()
     assert body["selected_capability"] == "assessment"
-    assert [item["agent"] for item in body["agent_trace"]] == ["assessment"]
+    assert [item["agent"] for item in body["agent_trace"]] == [
+        "assessment",
+        "get_recent_learning_evidence",
+    ]
     assert body["sources"] == []
 
 
@@ -260,7 +280,8 @@ def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB
     assert "COURSE KNOWLEDGE" in provider.messages[1].content
     assert [item.agent for item in response.agent_trace] == [
         AgentCapability.ASSESSMENT,
-        "knowledge_retrieval",
+        "get_recent_learning_evidence",
+        "search_course_knowledge",
         AgentCapability.TUTORING,
     ]
     assert response.sources
@@ -274,7 +295,7 @@ def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB
 def test_orchestrator_has_no_agent_loop(testdb: _TestDB) -> None:
     response = asyncio.run(EducationAgentOrchestrator(testdb.session()).handle(request("解释死锁")))
     assert [item.agent for item in response.agent_trace] == [
-        "knowledge_retrieval",
+        "search_course_knowledge",
         AgentCapability.TUTORING,
     ]
 
@@ -294,6 +315,6 @@ def test_learning_space_context_retrieves_implicit_deadlock_question(testdb: _Te
     assert response.sources
     assert response.sources[0].knowledge_point_id == "kp-deadlock"
     assert [item.agent for item in response.agent_trace] == [
-        "knowledge_retrieval",
+        "search_course_knowledge",
         AgentCapability.TUTORING,
     ]

@@ -11,8 +11,9 @@ import {
   type KnowledgeSource,
 } from '@/lib/educationApi';
 import { cn } from '@/lib/utils';
+import { AgentToolTrace } from '@/components/learning/AgentToolTrace';
 import { SourceReferences } from '@/components/learning/SourceReferences';
-import { useLlmStatus } from '@/lib/hooks';
+import { useLlmStatus, useToolCatalog } from '@/lib/hooks';
 
 const DEMO_LEARNER_ID = 'demo-user-001';
 const DEMO_COURSE_ID = 'course-os';
@@ -58,26 +59,9 @@ function buildAssistantMessage(content: string, extra?: Partial<ChatMessage>): C
   return { id: crypto.randomUUID(), role: 'assistant', content, ...extra };
 }
 
-function Trace({ items }: { items: AgentTraceItem[] }) {
-  if (items.length === 0) return null;
-  return (
-    <div className="mt-2 border-t border-gray-100 pt-2">
-      <p className="text-[11px] text-gray-400">本次由</p>
-      <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] font-medium text-blue-600">
-        {items.map((item, index) => (
-          <span key={`${item.agent}-${index}`} className="flex items-center gap-1">
-            {index > 0 && <span className="text-gray-300">→</span>}
-            {item.label}
-          </span>
-        ))}
-        <span className="font-normal text-gray-400">协同完成</span>
-      </div>
-    </div>
-  );
-}
-
 export function XiaolianPage() {
   const llmStatus = useLlmStatus();
+  const toolCatalog = useToolCatalog();
   const [messages, setMessages] = useState<ChatMessage[]>([
     buildAssistantMessage(
       '你好，我是小涟，你的智能学习中枢。\n我会结合你的学习画像、诊断结果和学习计划，为你提供针对性的学习帮助。'
@@ -149,7 +133,32 @@ export function XiaolianPage() {
           Provider：{llmStatus.data?.configured ? `${llmStatus.data.provider} · ${llmStatus.data.model}` : '本地演示模式'}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-4">
+        <section className="mb-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xs font-bold text-gray-800">小涟能力工具箱</h2>
+              <p className="text-[10px] text-gray-400">来自 Education Tool Registry 的实时目录</p>
+            </div>
+            {toolCatalog.error && (
+              <button type="button" onClick={() => void toolCatalog.refetch()} className="text-[10px] text-blue-600">
+                重新加载
+              </button>
+            )}
+          </div>
+          <div className="mt-2 flex max-h-20 flex-wrap gap-1.5 overflow-y-auto">
+            {toolCatalog.loading && <span className="text-[10px] text-gray-400">正在读取工具目录…</span>}
+            {toolCatalog.data?.map((tool) => (
+              <span key={tool.name} title={tool.description} className="inline-flex items-center gap-1 rounded-full border border-indigo-100 bg-white px-2 py-1 font-mono text-[9px] text-indigo-700">
+                {tool.name}
+                <span className={cn('rounded px-1 font-sans text-[8px]', tool.readOnly ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-700')}>
+                  {tool.readOnly ? '只读' : '可写'}
+                </span>
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid grid-cols-2 gap-2 pb-3 sm:grid-cols-4">
           {CAPABILITIES.map((item) => (
             <button
               key={item.capability}
@@ -193,7 +202,7 @@ export function XiaolianPage() {
                     {msg.suggestedActions.map((action, index) => <p key={index} className="flex items-start gap-1.5 text-xs text-gray-600"><span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-blue-400" />{action}</p>)}
                   </div>
                 )}
-                {msg.role === 'assistant' && msg.agentTrace && <Trace items={msg.agentTrace} />}
+                {msg.role === 'assistant' && msg.agentTrace && <AgentToolTrace items={msg.agentTrace} />}
                 {msg.role === 'assistant' && msg.sources && <SourceReferences sources={msg.sources} />}
                 {msg.role === 'assistant' && msg.provider && <p className="mt-1 text-[10px] text-gray-400">Provider：{msg.provider}{msg.model ? ` · ${msg.model}` : ' · 本地演示'}</p>}
               </div>

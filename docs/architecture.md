@@ -7,7 +7,7 @@
                             │
             ┌───────────────┼───────────────┐
             │               │               │
-           Web             API          MCP Server *
+           Web             API          MCP Server
             │               │               │
             └───────────────┼───────────────┘
                             ↓
@@ -22,7 +22,12 @@
                      Learning Evidence
 ```
 
-`*` MCP Server 本轮仅架构预留（见 `mcp/server/`）。
+MCP Server 已使用官方 Python SDK 提供 stdio transport。内部 Agent 与 MCP Client 共享 `EducationToolRegistry`，并通过同一组 Education Tools 直接调用既有 Application Service；MCP 层不通过 HTTP 自调用，也不复制业务规则。
+
+```text
+Internal Agent → EducationToolRegistry → Application Service
+MCP Client → MCP Tool → EducationToolRegistry → Application Service
+```
 
 ## 三个边界
 

@@ -16,12 +16,14 @@ from app.api.routes import (
     profile,
     reports,
     system,
+    tools,
     tutor,
 )
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
 api_router.include_router(system.router)
+api_router.include_router(tools.router)
 api_router.include_router(knowledge.router)
 api_router.include_router(profile.router)
 api_router.include_router(diagnosis.router)

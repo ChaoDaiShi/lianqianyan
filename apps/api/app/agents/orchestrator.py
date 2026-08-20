@@ -16,7 +16,8 @@ from app.agents.assessment_agent import AssessmentAgent
 from app.agents.router import AgentRouter
 from app.agents.tutor_agent import TutorAgent
 from app.llm.provider import BaseLLMProvider
-from app.knowledge import KnowledgeContextBuilder, RetrievedKnowledge
+from app.knowledge import RetrievedKnowledge
+from app.tools import EducationToolRegistry, build_tool_registry
 from sqlalchemy.orm import Session
 
 
@@ -35,11 +36,11 @@ class ReadAgent(Protocol):
 class EducationAgentOrchestrator:
     def __init__(self, db: Session, llm_provider: BaseLLMProvider | None = None) -> None:
         self._router = AgentRouter()
-        self._diagnosis = DiagnosisAgent(db)
-        self._planner = PlannerAgent(db)
+        self._tools: EducationToolRegistry = build_tool_registry(db)
+        self._diagnosis = DiagnosisAgent(db, tools=self._tools)
+        self._planner = PlannerAgent(db, tools=self._tools)
         self._tutor = TutorAgent(db, llm_provider=llm_provider)
-        self._assessment = AssessmentAgent(db)
-        self._knowledge = KnowledgeContextBuilder()
+        self._assessment = AssessmentAgent(db, tools=self._tools)
 
     async def handle(self, request: AgentRequest) -> AgentsChatResponse:
         decision = self._router.route(request.message, request.capability)
@@ -50,7 +51,7 @@ class EducationAgentOrchestrator:
             diagnosis = self._run_read_agent(self._diagnosis, request, trace)
             results.append(diagnosis)
             planner = self._planner.run(request, diagnosis=diagnosis)
-            trace.append(self._trace(planner))
+            self._append_result_trace(planner, trace)
             results.append(planner)
             knowledge = self._retrieve(request, trace)
             tutor = await self._tutor.run(
@@ -64,11 +65,11 @@ class EducationAgentOrchestrator:
             results.append(self._run_read_agent(self._diagnosis, request, trace))
         elif decision.capability == AgentCapability.PLANNING:
             result = self._planner.run(request)
-            trace.append(self._trace(result))
+            self._append_result_trace(result, trace)
             results.append(result)
         elif decision.capability == AgentCapability.ASSESSMENT:
             assessment = self._assessment.run(request)
-            trace.append(self._trace(assessment))
+            self._append_result_trace(assessment, trace)
             results.append(assessment)
             evidence = assessment.data.get("evidence")
             if evidence is not None:
@@ -116,20 +117,27 @@ class EducationAgentOrchestrator:
         trace: list[AgentTraceItem],
         knowledge_point_id: str | None = None,
     ) -> list[RetrievedKnowledge]:
-        knowledge = self._knowledge.build(
-            request.course_id,
-            request.message,
-            knowledge_point_id=knowledge_point_id or request.knowledge_point_id,
+        tool_result = self._tools.execute(
+            "search_course_knowledge",
+            {
+                "course_id": request.course_id,
+                "query": request.message,
+                "knowledge_point_id": knowledge_point_id or request.knowledge_point_id,
+                "top_k": 4,
+            },
         )
-        if knowledge:
-            trace.append(
-                AgentTraceItem(
-                    agent="knowledge_retrieval",
-                    label="课程知识检索",
-                    type="tool",
-                )
+        trace.append(
+            AgentTraceItem(
+                agent="search_course_knowledge",
+                name="search_course_knowledge",
+                label="课程知识检索",
+                type="tool",
+                status="completed" if tool_result.success else "failed",
             )
-        return knowledge
+        )
+        if not tool_result.success or not isinstance(tool_result.data, list):
+            return []
+        return [RetrievedKnowledge.model_validate(item) for item in tool_result.data]
 
     @staticmethod
     def _trace(result: AgentResult) -> AgentTraceItem:
@@ -140,9 +148,23 @@ class EducationAgentOrchestrator:
         )
 
     @staticmethod
+    def _append_result_trace(result: AgentResult, trace: list[AgentTraceItem]) -> None:
+        trace.append(EducationAgentOrchestrator._trace(result))
+        for item in result.tool_trace:
+            trace.append(
+                AgentTraceItem(
+                    agent=item.name,
+                    name=item.name,
+                    label=item.name,
+                    status=item.status,
+                    type="tool",
+                )
+            )
+
+    @staticmethod
     def _run_read_agent(agent: ReadAgent, request: AgentRequest, trace: list[AgentTraceItem]) -> AgentResult:
         result = agent.run(request)
-        trace.append(EducationAgentOrchestrator._trace(result))
+        EducationAgentOrchestrator._append_result_trace(result, trace)
         return result
 
 

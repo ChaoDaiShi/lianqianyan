@@ -2,6 +2,22 @@
 
 > 基于学习画像、学习证据与个性化学习规划的 **AI 智能学习伙伴**。
 
+## Phase 3-5：Education Tools & MCP
+
+当前 Profile、Diagnosis、Current Plan、Course Knowledge、Recent Evidence、Plan Generation 与 Dynamic Replanning 已封装为七个共享 Education Tools：内部 Agent 和外部 stdio MCP Client 都通过同一个 `EducationToolRegistry` 直接调用既有 Application Service，不通过 HTTP 自调用，也不复制业务规则。
+
+```text
+Internal Agent → Tool Registry → Application Service
+MCP Client → MCP Tool → Tool Registry → Application Service
+```
+
+- `GET /api/tools` 返回真实 Tool Definition、Pydantic input schema 与只读/可写边界；小涟页的“能力工具箱”直接消费该目录。
+- Agent Trace 区分 Agent 能力卡和真实 Tool 胶囊，只显示实际执行节点。
+- MCP Server 使用官方 Python SDK 与 stdio transport，支持 initialize、tools/list、tools/call、structuredContent、30 秒超时和清理后的错误；协议 stdout 不写普通日志。
+- 写工具只有 `generate_study_plan` 与 `replan_study_plan`；不暴露 `evaluate_practice` 或 Agent Chat MCP Tool。
+
+协议 smoke：`uv run --project apps/api python mcp/server/smoke.py`。
+
 「忆涟千言—教」不是普通 AI 聊天机器人。核心目标是把“学生现在会什么、不会什么、
 接下来应该学什么”持续地判断出来，并形成完整学习闭环：
 
@@ -14,9 +30,9 @@
 
 ---
 
-## Phase 3-3：Real LLM & Course RAG Grounding
+## Current Course RAG
 
-当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `knowledge_retrieval`。检索按 `course_id` 隔离，使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
+当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `search_course_knowledge`。检索按 `course_id` 隔离，使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
 
 Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
 
@@ -27,7 +43,6 @@ Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`�
 - `GET /api/system/llm`
 
 `POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使缺少关键词的问题仍能检索当前课程材料。
-
 
 - 用户对外只看到一个 AI：**小涟**（Education Agent）。
 - **Diagnosis / Planner / Tutor / Assessment Agent**：Phase 3-2 已将这些能力包装为真正执行的轻量 Agent 模块，由确定性 Orchestrator 编排；这不是完全自主 Agent Swarm。
@@ -64,7 +79,7 @@ Education Web
                             │
             ┌───────────────┼───────────────┐
             │               │               │
-           Web             API          MCP Server *
+           Web             API          MCP Server
             │               │               │
             └───────────────┼───────────────┘
                             ↓
@@ -84,7 +99,7 @@ Education Web
 | Web UI | `src/` | React 18 + TypeScript + Vite + React Router（hash）+ Zustand + Tailwind + Lucide |
 | Education API | `apps/api/` | Python + FastAPI + Pydantic + SQLAlchemy（uv） |
 | Education Domain | `src/domain`（TS）· `apps/api/app/domain`（Python） | 双实现、契约一致 |
-| MCP Server | `mcp/server/` | **本轮仅架构预留** |
+| MCP Server | `mcp/server/` | official Python MCP SDK + stdio + shared Education Tool Registry |
 
 数据库第一阶段 SQLite，保持迁移能力（SQLAlchemy 统一抽象，未来 PostgreSQL/MySQL
 仅改 `EDUCATION_DATABASE_URL`）。AI 层保留统一 LLM Provider 抽象（支持未来
@@ -105,7 +120,7 @@ OpenAI-compatible / DeepSeek / Qwen）。
 │   └── pages/                # 路由页面
 ├── apps/api/                 # FastAPI 后端（Education API）
 ├── packages/                 # 共享包（预留）
-├── mcp/server/               # MCP 架构预留（README + 接口设计）
+├── mcp/server/               # stdio MCP Server（共享 Education Tool Registry）
 ├── docs/                     # 架构文档
 └── README.md
 ```
@@ -239,13 +254,13 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
     三个演示问题）。Demo：死锁问题引用诊断、今天学什么引用计划、PV 问题引用画像。
 - **FastAPI 最小骨架**：`/api/health` + 各业务路由占位 + 健康测试。
 - **统一 LLM Provider 抽象**（接口真实；当前演示使用 Mock Provider）。
-- **MCP 架构预留**：目录 + README + Tool 接口设计（本轮不启用 MCP Runtime / Tools）。
+- **MCP Server**：真实 stdio Server、七个共享 Education Tools、`tools/list` / `tools/call` 与协议 smoke 已实现；不提供 `evaluate_practice`。
 
 ---
 
-## Phase 3-3：Real LLM & Course RAG Grounding
+## Phase 3-3 Historical Snapshot
 
-当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `knowledge_retrieval`。课程知识按 `course_id` 隔离，当前使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
+当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `search_course_knowledge`。课程知识按 `course_id` 隔离，当前使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
 
 Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
 
@@ -316,11 +331,11 @@ XiaolianPage / LearningSpace Tutor
 - **AI Tutor 已具备基础（Phase 3-0）**：已支持「学习上下文驱动 AI Tutor」
   （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，
   见上文）。Phase 3-2 进一步提供确定性 Agent Router / Orchestrator 与 OpenAI-compatible Provider；
-  无完整真实配置时仍使用 Mock Provider。**尚未实现**：RAG / 记忆持久化（聊天历史）。
+  无完整真实配置时仍使用 Mock Provider。**尚未实现**：聊天历史记忆持久化。
 - AI 自动出题 / AI 判题
 - 费曼复述 / 错题本
-- 知识图谱 / RAG / 向量数据库
-- MCP Runtime / MCP Tools / SDK / Multi-Agent Runtime
+- 知识图谱 / 向量数据库（当前仅有本地确定性课程检索）
+- 完整自主 Multi-Agent Runtime
 - 数字人 / TTS / 语音识别
 - 复杂考试系统 / 网络搜索 / PDF 解析 / 管理后台
 
@@ -332,19 +347,11 @@ XiaolianPage / LearningSpace Tutor
 
 ---
 
-## MCP 集成规划
+## MCP 集成
 
-MCP Server 未来把 EducationMind Domain Service 封装为标准 MCP Tools，供其他
-Agent 系统接入。预计 Tool：`get_learner_profile`、`diagnose_learning_state`、
-`generate_study_plan`、`get_current_study_plan`、`start_learning_session`、
-`generate_practice`、`evaluate_answer`、`evaluate_feynman_explanation`、
-`update_mastery`、`generate_learning_report`。
+MCP Server 已通过官方 Python SDK 提供 stdio 协议。七个真实 Tool 的目录、输入 schema、读写边界和错误契约见 `mcp/server/docs/tools.md`；内部 Agent 与 MCP Client 共享 `EducationToolRegistry`。本轮不提供 Agent Chat、`evaluate_practice`、OAuth/RBAC 或自主无限 Tool Calling。
 
-详见 `mcp/server/README.md` 与 `mcp/server/docs/tools.md`。
-
----
-
-> **声明**：当前版本属于 EducationMind Phase 3-2，已实现真实学习状态驱动的轻量 Agent 编排与可选 OpenAI-compatible Provider；**不宣称**已经实现完整自主 Agent Swarm、知识图谱或 MCP Runtime。
+> **声明**：当前版本属于 EducationMind Phase 3-5，已实现真实学习状态驱动的轻量 Agent 编排、共享 Education Tool Registry、stdio MCP Tool 协议与可选 OpenAI-compatible Provider；**不宣称**已经实现完整自主 Agent Swarm、知识图谱或向量数据库。
 
 ## License
 

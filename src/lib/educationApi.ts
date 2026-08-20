@@ -142,10 +142,19 @@ export interface LlmStatus {
   configured: boolean;
 }
 
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  capability: string;
+  readOnly: boolean;
+  inputSchema: Record<string, unknown>;
+}
+
 export type AgentCapability = 'diagnosis' | 'planning' | 'tutoring' | 'assessment';
 
 export interface AgentTraceItem {
-  agent: AgentCapability | 'knowledge_retrieval';
+  agent: AgentCapability | string;
+  name?: string | null;
   label: string;
   status: string;
   type: 'agent' | 'tool';
@@ -228,12 +237,25 @@ export async function chatWithAgents(
       const trace = item as Record<string, unknown>;
       return {
         agent: trace['agent'] as AgentTraceItem['agent'],
+        name: (trace['name'] as string | null) ?? null,
         label: trace['label'] as string,
         status: trace['status'] as string,
         type: (trace['type'] as 'agent' | 'tool') ?? 'agent',
       };
     }),
   };
+}
+
+export async function fetchToolCatalog(): Promise<ToolDefinition[]> {
+  const response = await api.get<unknown[]>('/api/tools');
+  const raw = extractApiData<unknown[]>(response);
+  return ((raw as Record<string, unknown>[]) ?? []).map((item) => ({
+    name: item['name'] as string,
+    description: item['description'] as string,
+    capability: item['capability'] as string,
+    readOnly: item['read_only'] as boolean,
+    inputSchema: (item['input_schema'] as Record<string, unknown>) ?? {},
+  }));
 }
 
 export async function fetchLlmStatus(): Promise<LlmStatus> {

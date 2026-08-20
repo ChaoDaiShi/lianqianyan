@@ -36,6 +36,12 @@ class AgentTraceItem(BaseModel):
     label: str
     status: str = "completed"
     type: str = "agent"
+    name: str | None = None
+
+
+class ToolTraceItem(BaseModel):
+    name: str
+    status: str = "completed"
 
 
 class AgentResult(BaseModel):
@@ -49,6 +55,7 @@ class AgentResult(BaseModel):
     model: str | None = None
     response_mode: str = "provider"
     sources: list[KnowledgeSource] = Field(default_factory=list)
+    tool_trace: list[ToolTraceItem] = Field(default_factory=list)
 
 
 class AgentsChatResponse(BaseModel):
