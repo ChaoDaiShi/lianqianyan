@@ -108,6 +108,47 @@ export function deriveLearningStages(input: {
   }));
 }
 
+export interface FilteredLearningEvidence {
+  learningStarted: LearningEvidence[];
+  practiceEvaluated: LearningEvidence[];
+}
+
+export function filterLearningEvidence(input: {
+  evidence: LearningEvidence[];
+  learnerId: string;
+  courseId: string;
+  knowledgePointId: string;
+}): FilteredLearningEvidence {
+  const matchingEvidence = input.evidence.filter(
+    (item) =>
+      item.learnerId === input.learnerId &&
+      item.courseId === input.courseId &&
+      item.knowledgePointId === input.knowledgePointId,
+  );
+
+  return {
+    learningStarted: matchingEvidence.filter(
+      (item) => item.evidenceType === 'learning_started',
+    ),
+    practiceEvaluated: matchingEvidence.filter(
+      (item) => item.evidenceType === 'practice_answer_evaluated',
+    ),
+  };
+}
+
+export function getPracticeReplanningText(
+  evaluation: PracticeEvaluationResponse,
+): string {
+  switch (evaluation.replanning.status) {
+    case 'performed':
+      return '学习计划已根据本次评价调整。';
+    case 'not_needed':
+      return '本次评价已记录，当前学习计划无需调整。';
+    case 'failed':
+      return '本次评价已记录，但学习计划调整未成功。';
+  }
+}
+
 export interface LearningJourneyEvent {
   id: string;
   occurredAt: string;

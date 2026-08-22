@@ -1,304 +1,236 @@
-import { useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import {
-  LayoutGrid,
-  Loader2,
-  AlertTriangle,
-  PlayCircle,
-  Clock,
-  TrendingUp,
-  ArrowLeft,
-  Sparkles,
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, LayoutGrid, RotateCw } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
-import { SpaceTutor } from '@/components/learning/SpaceTutor';
-import { ModulePractice } from '@/components/learning/ModulePractice';
-import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
-import { useCurrentPlan, useLearnerProfile, useDiagnosis, useKnowledgePoint } from '@/lib/hooks';
+import { GlassPanel } from '@/components/design/GlassPanel';
+import { QuestCard } from '@/components/design/QuestCard';
+import { LearningState } from '@/components/feedback/LearningState';
+import { EvidenceInsightCard } from '@/components/learning/EvidenceInsightCard';
+import { LearningArtifactPanel } from '@/components/learning/LearningArtifactPanel';
+import { LearningModulePanel } from '@/components/learning/LearningModulePanel';
+import { LearningJourneyHeader } from '@/components/learning/LearningJourneyHeader';
+import { LearningStageProgress } from '@/components/learning/LearningStageProgress';
 import {
-  DEMO_LEARNER_ID,
+  deriveLearningStages,
+  filterLearningEvidence,
+} from '@/components/learning/learningLoop';
+import { ModulePractice } from '@/components/learning/ModulePractice';
+import { SpaceTutor } from '@/components/learning/SpaceTutor';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
+import { Button } from '@/components/ui/button';
+import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
+import type { DiagnosisResult, KnowledgePointDiagnosis, PersistedStudyTask } from '@/domain';
+import type { AgentChatResponse, PracticeEvaluationResponse } from '@/lib/educationApi';
+import { useCurrentPlan, useDiagnosis, useKnowledgePoint, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
+import {
   DEMO_COURSE_ID,
+  DEMO_LEARNER_ID,
+  useLearningLoopStore,
   useWorkspaceStore,
+  useXiaolianRuntimeStore,
 } from '@/store';
 import { getLearningModule } from '@/content/learningContent';
-import { ACTION_TYPE_LABEL, DIAGNOSIS_STATUS_LABEL } from '@/domain';
-import type { PersistedStudyTask, KnowledgePointDiagnosis } from '@/domain';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
-function findKp(
-  points: KnowledgePointDiagnosis[],
-  kpId: string | null
-): KnowledgePointDiagnosis | null {
-  if (!kpId) return null;
-  return points.find((p) => p.knowledgePointId === kpId) ?? null;
+interface TaskScopedValue<T> {
+  taskId: string;
+  data: T;
 }
 
-/**
- * 学习空间 —— /#/space（本轮从占位升级为完整学习空间，不另建 /learning-v2）。
- *
- * 布局（桌面端）：
- *   顶部：当前课程 / 当前任务 / 状态
- *   左侧 ~65%：学习内容区（Demo 教学讲解）
- *   右侧 ~35%：小涟学习助手（内嵌 Tutor）
- *   中下：快速练习 / 掌握度反馈
- *
- * 数据全部真实：Plan Task（来自 Latest Plan）+ Profile / Diagnosis（掌握度/状态）。
- */
+function findKnowledgePoint(diagnosis: DiagnosisResult | null, knowledgePointId: string | null) {
+  if (!diagnosis || !knowledgePointId) return null;
+  const points: KnowledgePointDiagnosis[] = [
+    ...(diagnosis.primaryFocus ? [diagnosis.primaryFocus] : []),
+    ...diagnosis.priorityInterventions,
+    ...diagnosis.strengths,
+    ...diagnosis.weakPoints,
+    ...diagnosis.developingPoints,
+    ...diagnosis.unassessedPoints,
+  ];
+  return points.find((point) => point.knowledgePointId === knowledgePointId) ?? null;
+}
+
 export function LearningSpacePage() {
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const [searchParams] = useSearchParams();
+  const [evaluation, setEvaluation] = useState<TaskScopedValue<PracticeEvaluationResponse> | null>(null);
+  const [latestResponse, setLatestResponse] = useState<TaskScopedValue<AgentChatResponse> | null>(null);
+  const [tutorPending, setTutorPending] = useState(false);
+  const [evaluationPending, setEvaluationPending] = useState(false);
+  const [completedRequest, setCompletedRequest] = useState(false);
+  const setRuntimeState = useXiaolianRuntimeStore((state) => state.setState);
+  const resetRuntime = useXiaolianRuntimeStore((state) => state.reset);
   const taskIdParam = searchParams.get('task_id');
-  const kpParam = searchParams.get('knowledge_point_id');
-
-  const workspaceTaskId = useWorkspaceStore((s) => s.taskId);
-  const workspaceKp = useWorkspaceStore((s) => s.knowledgePointId);
-
-  const { plan, loading, error, refetch } = useCurrentPlan(
-    DEMO_LEARNER_ID,
-    DEMO_COURSE_ID
-  );
+  const knowledgePointParam = searchParams.get('knowledge_point_id');
+  const workspaceTaskId = useWorkspaceStore((state) => state.taskId);
+  const workspaceKnowledgePointId = useWorkspaceStore((state) => state.knowledgePointId);
+  const { plan, loading, error, refetch } = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-
+  const evidence = useRecentEvidence();
   const tasks = plan?.tasks ?? [];
-
-  const activeKpId = kpParam ?? workspaceKp;
+  const activeKnowledgePointId = knowledgePointParam ?? workspaceKnowledgePointId;
   const activeTaskId = taskIdParam ?? workspaceTaskId;
-
   const currentTask: PersistedStudyTask | null = useMemo(() => {
     if (activeTaskId) {
-      const byId = tasks.find((t) => t.id === activeTaskId);
-      if (byId) return byId;
+      const task = tasks.find((item) => item.id === activeTaskId);
+      if (task) return task;
     }
-    if (activeKpId) {
-      return tasks.find((t) => t.knowledgePointId === activeKpId) ?? null;
-    }
-    return null;
-  }, [tasks, activeTaskId, activeKpId]);
-
-  const kpDiagnosis = useMemo(
-    () => findKp(profile.data?.knowledgePoints ?? [], currentTask?.knowledgePointId ?? null),
-    [profile.data, currentTask]
+    return activeKnowledgePointId
+      ? tasks.find((item) => item.knowledgePointId === activeKnowledgePointId) ?? null
+      : null;
+  }, [activeKnowledgePointId, activeTaskId, tasks]);
+  const currentDiagnosis = useMemo(
+    () => findKnowledgePoint(diagnosis.data, currentTask?.knowledgePointId ?? null),
+    [currentTask, diagnosis.data]
+  );
+  const module = currentTask ? getLearningModule(currentTask.knowledgePointId) : null;
+  const knowledge = useKnowledgePoint(currentTask?.knowledgePointId, DEMO_COURSE_ID);
+  const currentKnowledge = knowledge.data?.knowledgePointId === currentTask?.knowledgePointId
+    ? knowledge.data
+    : null;
+  const currentKnowledgeLoading = knowledge.loading || (knowledge.data !== null && currentKnowledge === null);
+  const pageAnalyzing = profile.loading || diagnosis.loading || evidence.loading || (Boolean(currentTask) && knowledge.loading);
+  const currentTaskId = currentTask?.id ?? null;
+  const storedReflectionResult = useLearningLoopStore((state) =>
+    currentTask
+      ? state.reflectionResults[currentTask.knowledgePointId] ?? null
+      : null,
+  );
+  const storedPracticeEvaluation = useLearningLoopStore((state) =>
+    currentTaskId
+      ? state.practiceEvaluations[currentTaskId] ?? null
+      : null,
+  );
+  const setPracticeEvaluation = useLearningLoopStore(
+    (state) => state.setPracticeEvaluation,
+  );
+  const localEvaluation =
+    evaluation?.taskId === currentTaskId ? evaluation.data : null;
+  const currentEvaluation = localEvaluation ?? storedPracticeEvaluation;
+  const currentTutorResponse = latestResponse?.taskId === currentTaskId ? latestResponse.data : null;
+  const currentEvidence = useMemo(
+    () =>
+      currentTask
+        ? filterLearningEvidence({
+            evidence: evidence.data ?? [],
+            learnerId: DEMO_LEARNER_ID,
+            courseId: DEMO_COURSE_ID,
+            knowledgePointId: currentTask.knowledgePointId,
+          })
+        : { learningStarted: [], practiceEvaluated: [] },
+    [currentTask, evidence.data],
+  );
+  const stages = useMemo(
+    () =>
+      deriveLearningStages({
+        hasLearningStarted: currentEvidence.learningStarted.length > 0,
+        hasTutorResponse: currentTutorResponse !== null,
+        practiceEvaluation: currentEvaluation,
+        reflectionResult: storedReflectionResult,
+      }),
+    [
+      currentEvaluation,
+      currentEvidence.learningStarted.length,
+      currentTutorResponse,
+      storedReflectionResult,
+    ],
+  );
+  const allStagesComplete = stages.every(
+    (stage) => stage.status === 'completed',
   );
 
-  const module = currentTask
-    ? getLearningModule(currentTask.knowledgePointId)
-    : null;
-  const knowledge = useKnowledgePoint(currentTask?.knowledgePointId, DEMO_COURSE_ID);
+  useEffect(() => {
+    setEvaluation(null);
+    setLatestResponse(null);
+    setTutorPending(false);
+    setEvaluationPending(false);
+    setCompletedRequest(false);
+  }, [currentTask?.id]);
+  useEffect(() => {
+    if (evaluationPending) setRuntimeState('evaluating');
+    else if (tutorPending) setRuntimeState('teaching');
+    else if (loading) setRuntimeState('planning');
+    else if (pageAnalyzing) setRuntimeState('analyzing');
+    else if (completedRequest) setRuntimeState('success');
+    else setRuntimeState('idle');
+  }, [completedRequest, evaluationPending, loading, pageAnalyzing, setRuntimeState, tutorPending]);
+  useEffect(() => () => resetRuntime(), [resetRuntime]);
 
+  const handleTutorPending = useCallback((pending: boolean) => {
+    setTutorPending(pending);
+    if (pending) setCompletedRequest(false);
+  }, []);
+  const handleEvaluationPending = useCallback((pending: boolean) => {
+    setEvaluationPending(pending);
+    if (pending) setCompletedRequest(false);
+  }, []);
+  const handleTutorResponse = useCallback((response: AgentChatResponse) => {
+    if (!currentTaskId) return;
+    setLatestResponse({ taskId: currentTaskId, data: response });
+    setCompletedRequest(true);
+  }, [currentTaskId]);
+  const handleEvaluationComplete = useCallback((result: PracticeEvaluationResponse) => {
+    if (!currentTaskId) return;
+    setEvaluation({ taskId: currentTaskId, data: result });
+    setPracticeEvaluation(currentTaskId, result);
+    setCompletedRequest(true);
+  }, [currentTaskId, setPracticeEvaluation]);
   const handleStartTask = (task: PersistedStudyTask) => {
     if (plan) void startTask(plan, task);
   };
 
   return (
     <AppShell>
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <LayoutGrid className="h-4 w-4" />
-          <span>智能学习空间</span>
+      <div className="space-y-6">
+        <div>
+          <p className="flex items-center gap-2 text-xs font-semibold text-primary-700"><LayoutGrid className="h-4 w-4" />AI LEARNING WORKBENCH</p>
+          <h1 className="mt-2 text-3xl font-bold">{currentTask ? '小涟学习工作台' : '选择一项学习任务'}</h1>
+          <p className="mt-2 text-sm text-[var(--em-muted-ink)]">围绕当前真实任务对话、练习，并留下可核验的学习产物。</p>
         </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-[26px]">
-          {currentTask ? '正在学习' : '选择学习任务'}
-        </h1>
+
+        {loading && <LearningState kind="loading" title="正在加载当前学习计划" />}
+        {error && !currentTask && <LearningState kind="error" title="暂时无法读取学习计划" action={<Button variant="outline" onClick={refetch} className="gap-2"><RotateCw className="h-4 w-4" />重新加载</Button>} />}
+        {!loading && !error && !currentTask && <div className="space-y-5"><LearningState kind="empty" title="请选择一个学习任务开始" description="学习工作台由真实 Current Plan 任务进入。" action={<Button asChild variant="outline"><Link to="/" className="gap-2"><ArrowLeft className="h-4 w-4" />返回首页</Link></Button>} />{tasks.length > 0 && <GlassPanel className="p-5 sm:p-6"><h2 className="text-lg font-bold">当前计划任务</h2><div className="mt-4 space-y-3">{tasks.slice(0, 3).map((task, index) => <QuestCard key={task.id} task={task} index={index} pending={startingTaskId === task.id} onStart={() => handleStartTask(task)} />)}</div>{startError && <p className="mt-3 text-sm text-amber-700">{startError}</p>}</GlassPanel>}</div>}
+
+        {!loading && currentTask && <>
+          {plan && <LearningJourneyHeader plan={plan} currentTask={currentTask} />}
+          <LearningStageProgress stages={stages} />
+          {allStagesComplete && currentDiagnosis ? (
+            <XiaolianFeedbackBubble
+              scenario="learning_completed"
+              diagnosis={currentDiagnosis}
+            />
+          ) : storedReflectionResult ? (
+            <XiaolianFeedbackBubble
+              scenario="reflection_completed"
+              result={storedReflectionResult}
+            />
+          ) : currentEvaluation ? (
+            <XiaolianFeedbackBubble
+              scenario="practice_completed"
+              evaluation={currentEvaluation}
+            />
+          ) : null}
+          <div className="grid gap-6 xl:grid-cols-[15rem_minmax(24rem,1fr)_20rem] xl:items-start">
+            <div className="order-1 xl:order-2 xl:col-start-2 xl:row-start-1"><SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} /></div>
+
+            <div className="order-2 xl:order-1 xl:col-start-1 xl:row-start-1"><LearningModulePanel task={currentTask} taskCount={tasks.length} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
+
+            <div className="order-3 xl:col-start-3 xl:row-start-1 xl:sticky xl:top-24"><LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} /></div>
+
+            {module && <div className="order-4 xl:col-start-2 xl:row-start-2"><ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} /></div>}
+          </div>
+          <EvidenceInsightCard
+            evidence={evidence.data ?? []}
+            learnerId={DEMO_LEARNER_ID}
+            courseId={DEMO_COURSE_ID}
+            knowledgePointId={currentTask.knowledgePointId}
+            loading={evidence.loading}
+            error={evidence.error}
+            onRetry={() => void evidence.refetch()}
+          />
+        </>}
       </div>
-
-      {loading && (
-        <div className="flex items-center justify-center gap-2 py-24 text-gray-400">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>正在加载学习计划…</span>
-        </div>
-      )}
-
-      {error && !currentTask && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-gray-100 bg-white py-16">
-          <AlertTriangle className="h-6 w-6 text-amber-500" />
-          <p className="text-sm text-gray-500">暂时无法读取学习计划</p>
-          <Button variant="outline" onClick={refetch}>
-            重新加载
-          </Button>
-        </div>
-      )}
-
-      {/* 无任务态：可选任务列表 */}
-      {!loading && !error && !currentTask && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-8 text-center">
-            <Sparkles className="mx-auto h-8 w-8 text-blue-400" />
-            <p className="mt-3 text-base font-semibold text-gray-800">
-              请选择一个学习任务开始
-            </p>
-            <p className="mt-1 text-sm text-gray-500">
-              从当前学习计划中选择任务，或返回首页选择。
-            </p>
-            <div className="mt-4 flex justify-center gap-3">
-              <Button asChild variant="outline">
-                <Link to="/" className="gap-1.5">
-                  <ArrowLeft className="h-4 w-4" />
-                  返回首页选择任务
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {tasks.length > 0 && (
-            <div>
-              <h2 className="mb-3 text-sm font-semibold text-gray-600">
-                当前学习计划的任务
-              </h2>
-              <div className="space-y-2">
-                {tasks.slice(0, 3).map((task, index) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-sm font-bold text-blue-700">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-gray-900">
-                        {task.knowledgePointName}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes} 分钟
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="gap-1"
-                      onClick={() => handleStartTask(task)}
-                      disabled={startingTaskId === task.id}
-                    >
-                      {startingTaskId === task.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <PlayCircle className="h-3.5 w-3.5" />
-                      )}
-                      {startingTaskId === task.id ? '正在进入…' : '开始学习'}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {startError && (
-            <p className="text-sm text-amber-700">{startError}</p>
-          )}
-        </div>
-      )}
-
-      {/* 有任务态 */}
-      {!loading && currentTask && (
-        <div className="space-y-6">
-          {/* 顶部状态条 */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-4">
-              <div>
-                <p className="text-xs text-gray-400">当前正在学习</p>
-                <p className="text-lg font-bold text-gray-900">
-                  {currentTask.knowledgePointName}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">任务类型</p>
-                <p className="text-sm font-semibold text-gray-800">
-                  {ACTION_TYPE_LABEL[currentTask.actionType]}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400">预计</p>
-                <p className="flex items-center gap-1 text-sm font-semibold text-gray-800">
-                  <Clock className="h-3.5 w-3.5 text-gray-400" />
-                  {currentTask.estimatedMinutes} 分钟
-                </p>
-              </div>
-              {kpDiagnosis ? (
-                <>
-                  <div>
-                    <p className="text-xs text-gray-400">当前掌握度</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {Math.round(kpDiagnosis.masteryScore * 100)}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400">状态</p>
-                    <span
-                      className={cn(
-                        'rounded-full px-2.5 py-0.5 text-xs font-medium',
-                        kpDiagnosis.status === 'weak'
-                          ? 'bg-orange-50 text-orange-700'
-                          : 'bg-blue-50 text-blue-700'
-                      )}
-                    >
-                      {DIAGNOSIS_STATUS_LABEL[kpDiagnosis.status]}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <div className="text-sm text-gray-400">尚未评估</div>
-              )}
-            </div>
-          </div>
-
-          {/* 主内容区：左内容 / 右 Tutor */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            {/* 左 ~65%：学习内容 */}
-            <div className="lg:col-span-3 space-y-6">
-              {module && (
-                <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-                  <h2 className="text-lg font-bold text-gray-900">{knowledge.data?.title ?? module.title}</h2>
-                  <div className="mt-4 space-y-4">
-                    {(knowledge.data?.sections ?? module.points.map((content, index) => ({ title: `重点 ${index + 1}`, content }))).map((section) => (
-                      <div key={section.title} className="flex gap-3">
-                        <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700">•</span>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">{section.title}</p>
-                          <p className="mt-1 text-sm leading-relaxed text-gray-700">{section.content}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-5 rounded-xl bg-blue-50/70 p-4">
-                    <div className="flex items-center gap-1.5 text-sm font-semibold text-blue-700">
-                      <TrendingUp className="h-4 w-4" />
-                      关键理解
-                    </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-gray-700">
-                      {module.keyInsight}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 练习 + 掌握度反馈 */}
-              {module && (
-                <ModulePractice
-                  knowledgePointName={currentTask.knowledgePointName}
-                  questions={module.questions}
-                  onPracticeComplete={async (replanning) => {
-                    const [profileUpdated, diagnosisUpdated, planUpdated] = await Promise.all([
-                      profile.refetch(),
-                      diagnosis.refetch(),
-                      replanning.status === 'performed' ? refetch() : Promise.resolve(true),
-                    ]);
-                    return profileUpdated && diagnosisUpdated && planUpdated;
-                  }}
-                />
-              )}
-            </div>
-
-            {/* 右 ~35%：小涟学习助手 */}
-            <div className="lg:col-span-2">
-              <SpaceTutor
-                knowledgePointId={currentTask.knowledgePointId}
-                knowledgePointName={currentTask.knowledgePointName}
-                quickQuestions={module?.quickQuestions}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </AppShell>
   );
 }

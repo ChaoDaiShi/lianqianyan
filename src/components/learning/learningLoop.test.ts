@@ -9,6 +9,8 @@ import {
   buildJourneyEvents,
   buildReflectionResult,
   deriveLearningStages,
+  filterLearningEvidence,
+  getPracticeReplanningText,
   type ReflectionResult,
 } from './learningLoop';
 
@@ -218,6 +220,74 @@ describe('deriveLearningStages', () => {
         reflectionResult,
       }).map((stage) => stage.status),
     ).toEqual(['current', 'locked', 'locked', 'locked', 'locked']);
+  });
+});
+
+describe('filterLearningEvidence', () => {
+  it('returns only matching learning-start and practice-evaluation evidence', () => {
+    const matchingLearning = createEvidence({
+      id: 'evidence-learning-1',
+      evidenceType: 'learning_started',
+    });
+    const matchingPractice = createEvidence({
+      id: 'evidence-practice-1',
+      evidenceType: 'practice_answer_evaluated',
+    });
+    const otherLearner = createEvidence({
+      id: 'evidence-other-learner',
+      learnerId: 'learner-2',
+      evidenceType: 'learning_started',
+    });
+    const otherCourse = createEvidence({
+      id: 'evidence-other-course',
+      courseId: 'course-2',
+      evidenceType: 'practice_answer_evaluated',
+    });
+    const otherKnowledgePoint = createEvidence({
+      id: 'evidence-other-knowledge',
+      knowledgePointId: 'kp-scheduling',
+      evidenceType: 'learning_started',
+    });
+    const evidence = [
+      matchingLearning,
+      otherLearner,
+      matchingPractice,
+      otherCourse,
+      otherKnowledgePoint,
+    ];
+
+    const result = filterLearningEvidence({
+      evidence,
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      knowledgePointId: 'kp-deadlock',
+    });
+
+    expect(result).toEqual({
+      learningStarted: [matchingLearning],
+      practiceEvaluated: [matchingPractice],
+    });
+    expect(evidence).toEqual([
+      matchingLearning,
+      otherLearner,
+      matchingPractice,
+      otherCourse,
+      otherKnowledgePoint,
+    ]);
+  });
+});
+
+describe('getPracticeReplanningText', () => {
+  it.each([
+    ['performed', '学习计划已根据本次评价调整。'],
+    ['not_needed', '本次评价已记录，当前学习计划无需调整。'],
+    ['failed', '本次评价已记录，但学习计划调整未成功。'],
+  ] as const)('maps %s to deterministic presentation text', (status, expected) => {
+    const evaluation = createEvaluation('2026-08-22T10:05:00.000Z');
+    evaluation.replanning.status = status;
+    evaluation.replanning.performed = status === 'performed';
+
+    expect(getPracticeReplanningText(evaluation)).toBe(expected);
   });
 });
 
