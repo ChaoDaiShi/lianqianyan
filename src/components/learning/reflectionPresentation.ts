@@ -20,6 +20,22 @@ export function buildReflectionHref(
   return `/reflection?task_id=${encodeURIComponent(task.id)}&knowledge_point_id=${encodeURIComponent(task.knowledgePointId)}&knowledge_point_name=${encodeURIComponent(task.knowledgePointName)}`;
 }
 
+export function buildLearningSpaceHref(input: {
+  taskId: string;
+  knowledgePointId: string;
+}): string {
+  const query = [
+    input.taskId
+      ? `task_id=${encodeURIComponent(input.taskId)}`
+      : null,
+    input.knowledgePointId
+      ? `knowledge_point_id=${encodeURIComponent(input.knowledgePointId)}`
+      : null,
+  ].filter((part): part is string => part !== null);
+
+  return query.length > 0 ? `/space?${query.join('&')}` : '/space';
+}
+
 export function getReflectionPageStatus(input: {
   requestedKnowledgePointId: string;
   data: KnowledgePointContent | null;

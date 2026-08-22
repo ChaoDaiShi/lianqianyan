@@ -3,7 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { LearningState } from '@/components/feedback/LearningState';
 import { ReflectionWorkspace } from '@/components/learning/ReflectionWorkspace';
-import { getReflectionPageStatus } from '@/components/learning/reflectionPresentation';
+import {
+  buildLearningSpaceHref,
+  getReflectionPageStatus,
+} from '@/components/learning/reflectionPresentation';
 import { Button } from '@/components/ui/button';
 import { useKnowledgePoint } from '@/lib/hooks';
 import { DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
@@ -15,6 +18,10 @@ export function ReflectionPage() {
   const knowledgePointName =
     searchParams.get('knowledge_point_name')?.trim() ?? '';
   const taskId = searchParams.get('task_id')?.trim() ?? '';
+  const learningSpaceHref = buildLearningSpaceHref({
+    taskId,
+    knowledgePointId,
+  });
   const knowledgeState = useKnowledgePoint(
     knowledgePointId || undefined,
     DEMO_COURSE_ID,
@@ -46,7 +53,7 @@ export function ReflectionPage() {
         description="请从学习工作台选择真实知识点后进入复述。"
         action={
           <Button asChild variant="outline">
-            <Link to="/space" className="gap-2">
+            <Link to={learningSpaceHref} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               返回学习工作台
             </Link>
@@ -92,7 +99,7 @@ export function ReflectionPage() {
         description="接口未返回真实标题和章节目标，提交入口保持关闭。"
         action={
           <Button asChild variant="outline">
-            <Link to="/space" className="gap-2">
+            <Link to={learningSpaceHref} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               返回学习工作台
             </Link>
@@ -117,7 +124,7 @@ export function ReflectionPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5">
         <Button asChild variant="ghost">
-          <Link to="/space" className="gap-2">
+          <Link to={learningSpaceHref} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             返回学习工作台
           </Link>

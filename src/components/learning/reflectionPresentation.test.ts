@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { KnowledgePointContent } from '@/lib/educationApi';
 import {
+  buildLearningSpaceHref,
   buildReflectionHref,
   getReflectionPageStatus,
   REFLECTION_FEEDBACK_DISCLAIMER,
@@ -16,6 +17,17 @@ describe('reflection presentation', () => {
       }),
     ).toBe(
       '/reflection?task_id=task%2Fretry%202&knowledge_point_id=kp%2Fdeadlock&knowledge_point_name=Deadlock%20%26%20recovery',
+    );
+  });
+
+  it('preserves explicit task and knowledge-point identity when returning to space', () => {
+    expect(
+      buildLearningSpaceHref({
+        taskId: 'task/retry 2',
+        knowledgePointId: 'kp/deadlock',
+      }),
+    ).toBe(
+      '/space?task_id=task%2Fretry%202&knowledge_point_id=kp%2Fdeadlock',
     );
   });
 

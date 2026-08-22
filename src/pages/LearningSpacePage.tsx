@@ -102,6 +102,11 @@ export function LearningSpacePage() {
       ? state.practiceEvaluations[currentTaskId] ?? null
       : null,
   );
+  const currentLearningSessionId = useLearningLoopStore((state) =>
+    currentTaskId
+      ? state.learningSessionIds[currentTaskId] ?? null
+      : null,
+  );
   const setPracticeEvaluation = useLearningLoopStore(
     (state) => state.setPracticeEvaluation,
   );
@@ -117,10 +122,10 @@ export function LearningSpacePage() {
             learnerId: DEMO_LEARNER_ID,
             courseId: DEMO_COURSE_ID,
             knowledgePointId: currentTask.knowledgePointId,
-            learningStartedNotBefore: currentTask.createdAt,
+            learningSessionId: currentLearningSessionId,
           })
         : { learningStarted: [], practiceEvaluated: [] },
-    [currentTask, evidence.data],
+    [currentLearningSessionId, currentTask, evidence.data],
   );
   const stages = useMemo(
     () =>

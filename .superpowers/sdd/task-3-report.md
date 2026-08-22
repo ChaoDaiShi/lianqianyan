@@ -314,3 +314,176 @@ Result: exit code 0.
 
 - The template still has no DOM rendering harness. The route handoff is covered through the extracted route builder, with component wiring checked by TypeScript and ESLint.
 - `StudyTask.createdAt` is the conservative available boundary because the current frontend evidence contract does not expose a directly matchable task ID or session ID.
+
+## Third Review Fixes: Exact Start Session and Reflection Return Identity
+
+### Implementation
+
+- Added a non-persisted `learningSessionIds` map to `useLearningLoopStore`, keyed by the real `StudyTask.id`.
+- Added `setLearningSessionId(taskId, sessionId)` without seeding or fabricating any session value.
+- Extracted and tested `startPlanTaskLearning`; after a successful real `startLearning` call, it records `LearningStartResult.sessionId` under the selected task before navigation. Failed starts record nothing.
+- Replaced timestamp-based Understand eligibility with exact identity matching.
+- `LearningSpacePage` reads the current task's stored session and passes it to `filterLearningEvidence`.
+- Understand completion now requires learner, course, knowledge point, `learning_started`, `source === 'current_study_plan'`, and an exact `LearningEvidence.sessionId` match.
+- When the current task has no stored session, Understand remains incomplete.
+- Preserved read-only Evidence listing behavior through an explicit helper mode: omitted `learningSessionId` lists matching source-backed Evidence, while `null` or a string applies conservative completion filtering.
+- Added `buildLearningSpaceHref` and used it for every `ReflectionPage` return link so explicit `task_id` and `knowledge_point_id` survive refresh and direct navigation.
+
+### TDD RED
+
+Exact-session Evidence command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 2 of 16 tests failed.
+- A post-boundary `recommended_path` event and a different-session `current_study_plan` event were both accepted.
+- The no-current-session case also accepted learning-start Evidence.
+
+Session store command:
+
+```text
+pnpm test --run src/store/useLearningLoopStore.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 1 of 3 tests failed because `setLearningSessionId` did not exist.
+
+Start handoff command:
+
+```text
+pnpm test --run src/components/learning/useStartPlanTask.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 2 of 2 tests failed because `startPlanTaskLearning` did not exist.
+
+Reflection return-route command:
+
+```text
+pnpm test --run src/components/learning/reflectionPresentation.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 1 of 4 tests failed because `buildLearningSpaceHref` did not exist.
+
+Read-only Evidence compatibility command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 1 of 17 tests failed because strict session filtering also emptied the read-only Evidence listing mode.
+
+### TDD GREEN
+
+Exact-session Evidence command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: exit code 0; 1 file passed, 16 tests passed.
+
+Session store command:
+
+```text
+pnpm test --run src/store/useLearningLoopStore.test.ts
+```
+
+Result: exit code 0; 1 file passed, 3 tests passed.
+
+Start handoff command:
+
+```text
+pnpm test --run src/components/learning/useStartPlanTask.test.ts
+```
+
+Result: exit code 0; 1 file passed, 2 tests passed.
+
+Reflection return-route command:
+
+```text
+pnpm test --run src/components/learning/reflectionPresentation.test.ts
+```
+
+Result: exit code 0; 1 file passed, 4 tests passed.
+
+Read-only Evidence compatibility command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: exit code 0; 1 file passed, 17 tests passed.
+
+### Verification
+
+The first combined focused run passed 29 tests. The following first project-gate run then exposed the read-only helper contract collision:
+
+```text
+pnpm check
+```
+
+Result: expected integration failure, exit code 1.
+
+- TypeScript reported that `EvidenceInsightCard` omitted the newly required `learningSessionId`.
+- This led to the read-only compatibility RED/GREEN cycle above.
+
+Final focused covering command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts src/components/learning/reflectionPresentation.test.ts src/components/learning/useStartPlanTask.test.ts src/store/useLearningLoopStore.test.ts src/pages/learningSpacePresentation.test.ts
+```
+
+Result: exit code 0; 5 files passed, 30 tests passed, 0 failed.
+
+Required project gate:
+
+```text
+pnpm check
+```
+
+Result: exit code 0.
+
+- `tsc --noEmit` passed.
+- ESLint passed with `--max-warnings 0`.
+
+### Third Fix Files
+
+- `src/components/learning/learningLoop.ts`
+- `src/components/learning/learningLoop.test.ts`
+- `src/store/useLearningLoopStore.ts`
+- `src/store/useLearningLoopStore.test.ts`
+- `src/components/learning/useStartPlanTask.ts`
+- `src/components/learning/useStartPlanTask.test.ts`
+- `src/pages/LearningSpacePage.tsx`
+- `src/components/learning/reflectionPresentation.ts`
+- `src/components/learning/reflectionPresentation.test.ts`
+- `src/pages/ReflectionPage.tsx`
+- `.superpowers/sdd/task-3-report.md`
+
+### Third Fix Self-Review
+
+- Confirmed Understand completion cannot use timestamps as a proxy for session identity.
+- Confirmed `recommended_path` Evidence is rejected even when its timestamp and session string otherwise appear current.
+- Confirmed a different `current_study_plan` session is rejected.
+- Confirmed no stored current-task session yields no Understand completion.
+- Confirmed only the real `LearningStartResult.sessionId` is stored and null start results do not mutate the map.
+- Confirmed the session map is intentionally non-persisted.
+- Confirmed Reflection persistence still requires explicit `task_id`, and return links now preserve both explicit task and knowledge-point identities.
+- Confirmed prior reflection scoping, stale-response guards, and diagnosis-refresh protections remain intact.
+- Confirmed no backend, API contract, database, Agent, MCP, or mock-learning-state changes.
+
+### Third Fix Concerns
+
+- The frontend store is intentionally non-persisted, so a full browser reload loses the start session and conservatively resets Understand to incomplete. This matches the requirement to avoid fabricating or inferring session identity.
+- The template has no DOM hook/component test harness. The start handoff and route behavior are covered through extracted typed command and route helpers, with React wiring checked by TypeScript and ESLint.

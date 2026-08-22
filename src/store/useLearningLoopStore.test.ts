@@ -44,12 +44,14 @@ const practiceEvaluation: PracticeEvaluationResponse = {
 describe('useLearningLoopStore', () => {
   beforeEach(() => {
     useLearningLoopStore.setState({
+      learningSessionIds: {},
       reflectionResults: {},
       practiceEvaluations: {},
     });
   });
 
   it('starts with empty session records', () => {
+    expect(useLearningLoopStore.getState().learningSessionIds).toEqual({});
     expect(useLearningLoopStore.getState().reflectionResults).toEqual({});
     expect(useLearningLoopStore.getState().practiceEvaluations).toEqual({});
   });
@@ -68,6 +70,19 @@ describe('useLearningLoopStore', () => {
     ).toBeUndefined();
     expect(useLearningLoopStore.getState().practiceEvaluations).toEqual({
       'task-1': practiceEvaluation,
+    });
+  });
+
+  it('stores each real learning session under its task id', () => {
+    const store = useLearningLoopStore.getState();
+
+    store.setLearningSessionId('task-1', 'session-1');
+    store.setLearningSessionId('task-2', 'session-2');
+    store.setLearningSessionId('task-1', 'session-1-restarted');
+
+    expect(useLearningLoopStore.getState().learningSessionIds).toEqual({
+      'task-1': 'session-1-restarted',
+      'task-2': 'session-2',
     });
   });
 });

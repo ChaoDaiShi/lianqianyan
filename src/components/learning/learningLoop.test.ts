@@ -224,16 +224,51 @@ describe('deriveLearningStages', () => {
 });
 
 describe('filterLearningEvidence', () => {
-  it('excludes learning-start evidence created before the current task', () => {
+  it('keeps all matching learning-start evidence for read-only listing', () => {
+    const currentPlanLearning = createEvidence({
+      id: 'evidence-learning-current-plan',
+      evidenceType: 'learning_started',
+      source: 'current_study_plan',
+      sessionId: 'session-current',
+    });
+    const recommendedPathLearning = createEvidence({
+      id: 'evidence-learning-recommended',
+      evidenceType: 'learning_started',
+      source: 'recommended_path',
+      sessionId: 'session-recommended',
+    });
+
+    expect(
+      filterLearningEvidence({
+        evidence: [currentPlanLearning, recommendedPathLearning],
+        learnerId: 'learner-1',
+        courseId: 'course-1',
+        knowledgePointId: 'kp-deadlock',
+      }).learningStarted,
+    ).toEqual([currentPlanLearning, recommendedPathLearning]);
+  });
+
+  it('accepts only current-plan learning-start evidence from the exact task session', () => {
     const matchingLearning = createEvidence({
       id: 'evidence-learning-1',
       evidenceType: 'learning_started',
+      source: 'current_study_plan',
+      sessionId: 'session-current',
       occurredAt: '2026-08-22T10:00:00.000Z',
     });
-    const historicalLearning = createEvidence({
-      id: 'evidence-learning-historical',
+    const recommendedPathLearning = createEvidence({
+      id: 'evidence-learning-recommended',
       evidenceType: 'learning_started',
-      occurredAt: '2026-08-22T08:00:00.000Z',
+      source: 'recommended_path',
+      sessionId: 'session-current',
+      occurredAt: '2026-08-22T10:01:00.000Z',
+    });
+    const otherSessionLearning = createEvidence({
+      id: 'evidence-learning-other-session',
+      evidenceType: 'learning_started',
+      source: 'current_study_plan',
+      sessionId: 'session-previous',
+      occurredAt: '2026-08-22T10:02:00.000Z',
     });
     const matchingPractice = createEvidence({
       id: 'evidence-practice-1',
@@ -256,7 +291,8 @@ describe('filterLearningEvidence', () => {
       evidenceType: 'learning_started',
     });
     const evidence = [
-      historicalLearning,
+      recommendedPathLearning,
+      otherSessionLearning,
       matchingLearning,
       otherLearner,
       matchingPractice,
@@ -269,7 +305,7 @@ describe('filterLearningEvidence', () => {
       learnerId: 'learner-1',
       courseId: 'course-1',
       knowledgePointId: 'kp-deadlock',
-      learningStartedNotBefore: '2026-08-22T09:00:00.000Z',
+      learningSessionId: 'session-current',
     });
 
     expect(result).toEqual({
@@ -277,7 +313,8 @@ describe('filterLearningEvidence', () => {
       practiceEvaluated: [matchingPractice],
     });
     expect(evidence).toEqual([
-      historicalLearning,
+      recommendedPathLearning,
+      otherSessionLearning,
       matchingLearning,
       otherLearner,
       matchingPractice,
@@ -286,9 +323,11 @@ describe('filterLearningEvidence', () => {
     ]);
   });
 
-  it('conservatively returns no learning-start evidence for an invalid task boundary', () => {
+  it('returns no learning-start evidence without a current task session', () => {
     const matchingLearning = createEvidence({
       evidenceType: 'learning_started',
+      source: 'current_study_plan',
+      sessionId: 'session-current',
       occurredAt: '2026-08-22T10:00:00.000Z',
     });
 
@@ -298,7 +337,7 @@ describe('filterLearningEvidence', () => {
         learnerId: 'learner-1',
         courseId: 'course-1',
         knowledgePointId: 'kp-deadlock',
-        learningStartedNotBefore: 'invalid',
+        learningSessionId: null,
       }).learningStarted,
     ).toEqual([]);
   });
