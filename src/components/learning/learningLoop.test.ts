@@ -120,7 +120,8 @@ describe('buildReflectionResult', () => {
     });
 
     expect(result.coveredConcepts).toEqual(['锁']);
-    expect(result.missingConcepts).toEqual([]);
+    expect(result.missingConcepts).toEqual(['C++']);
+    expect(result.nextSuggestion).toContain('C++');
   });
 
   it('returns no concepts when the course has no non-empty section titles', () => {

@@ -281,3 +281,98 @@ The repository explicitly ignores `pnpm-lock.yaml`, it is not tracked now, and i
 - Multi-character Latin/digit concepts and one-character non-Latin concepts retain the prior normalization and substring matching behavior.
 - No backend, API contract, package metadata, lockfile policy, or unrelated UI files were modified.
 - The production build passes with the existing large-chunk warning noted above.
+
+## Second Review Fix: Preserve Unsafe Anchors As Missing
+
+### Implementation Summary
+
+- Kept every non-empty section title with a non-empty normalized form in the concept set.
+- Applied the single ASCII letter/digit safety guard only when deriving coverage.
+- Confirmed that unrelated text does not cover `C++`, while `C++` remains missing and is named by `nextSuggestion`.
+- Preserved matching for the legitimate one-character Chinese concept `锁`.
+
+### TDD RED Evidence
+
+Command:
+
+```text
+pnpm exec vitest run src/components/learning/learningLoop.test.ts
+```
+
+Observed result after updating the regression expectation and before changing the model:
+
+```text
+FAIL src/components/learning/learningLoop.test.ts
+buildReflectionResult > does not match a concept collapsed to one Latin character
+expected [] to deeply equal [ 'C++' ]
+Test Files  1 failed (1)
+Tests       1 failed | 10 passed (11)
+Exit code   1
+```
+
+### TDD GREEN Evidence
+
+Command:
+
+```text
+pnpm exec vitest run src/components/learning/learningLoop.test.ts
+```
+
+Result:
+
+```text
+Test Files  1 passed (1)
+Tests       11 passed (11)
+Exit code   0
+```
+
+The regression asserts:
+
+```text
+coveredConcepts: ['锁']
+missingConcepts: ['C++']
+nextSuggestion contains: C++
+```
+
+### Fresh Verification
+
+Command:
+
+```text
+pnpm type-check
+```
+
+Result:
+
+```text
+$ tsc --noEmit
+Exit code 0
+```
+
+Command:
+
+```text
+pnpm check
+```
+
+Result:
+
+```text
+$ pnpm run type-check && pnpm run lint
+$ tsc --noEmit
+$ eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+Exit code 0
+```
+
+### Second Review Fix Files Changed
+
+- `src/components/learning/learningLoop.test.ts`
+- `src/components/learning/learningLoop.ts`
+- `.superpowers/sdd/task-1-report.md`
+
+### Second Review Fix Self-Review
+
+- Concept membership and coverage safety are now separate concerns.
+- Unsafe collapsed ASCII anchors cannot become covered through substring matching, but they still participate in missing-concept guidance.
+- Empty and punctuation-only normalized anchors remain excluded from the concept set.
+- No unrelated files, backend files, API contracts, package metadata, lockfiles, or ignore rules were modified.

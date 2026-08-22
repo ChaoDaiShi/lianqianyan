@@ -29,15 +29,14 @@ export function buildReflectionResult(input: {
       const title = section.title.trim();
       return { title, normalized: normalizeConceptText(title) };
     })
-    .filter(
-      (concept) =>
-        concept.title.length > 0 &&
-        concept.normalized.length > 0 &&
-        !/^[a-z0-9]$/i.test(concept.normalized),
-    );
+    .filter((concept) => concept.title.length > 0 && concept.normalized.length > 0);
   const normalizedSubmission = normalizeConceptText(input.submittedText);
   const coveredConcepts = concepts
-    .filter((concept) => normalizedSubmission.includes(concept.normalized))
+    .filter(
+      (concept) =>
+        !/^[a-z0-9]$/i.test(concept.normalized) &&
+        normalizedSubmission.includes(concept.normalized),
+    )
     .map((concept) => concept.title);
   const missingConcepts = concepts
     .filter((concept) => !coveredConcepts.includes(concept.title))
