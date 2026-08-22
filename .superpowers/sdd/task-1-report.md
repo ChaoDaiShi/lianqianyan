@@ -152,3 +152,132 @@ The root cause was JavaScript treating an empty normalized title as contained in
 - `pnpm-lock.yaml` is intentionally ignored by this repository and remains outside the commit even though pnpm updated it locally.
 - The worktree contains many unrelated user changes. `package.json` must be staged by task hunk so the existing `framer-motion` change remains uncommitted and preserved.
 - No reviewer subagent capability was available in this session, so review was performed directly against the brief and task-only diff.
+
+## Review Fix: Collapsed Single-Character Anchors
+
+### Implementation Summary
+
+- Added a focused regression covering `C++`, which normalizes to the single Latin anchor `c` and previously matched unrelated prose.
+- Excluded normalized anchors consisting of exactly one Latin letter or digit from concept matching.
+- Preserved legitimate one-character non-Latin concepts; the regression verifies that the Chinese concept `锁` remains matchable.
+
+### TDD RED Evidence
+
+Command:
+
+```text
+pnpm exec vitest run src/components/learning/learningLoop.test.ts
+```
+
+Observed result before the implementation change:
+
+```text
+FAIL src/components/learning/learningLoop.test.ts
+buildReflectionResult > does not match a concept collapsed to one Latin character
+expected [ 'C++', '锁' ] to deeply equal [ '锁' ]
+Test Files  1 failed (1)
+Tests       1 failed | 10 passed (11)
+Exit code   1
+```
+
+### TDD GREEN Evidence
+
+Command:
+
+```text
+pnpm exec vitest run src/components/learning/learningLoop.test.ts
+```
+
+Result:
+
+```text
+Test Files  1 passed (1)
+Tests       11 passed (11)
+Exit code   0
+```
+
+### Fresh Verification
+
+Command:
+
+```text
+pnpm type-check
+```
+
+Result:
+
+```text
+$ tsc --noEmit
+Exit code 0
+```
+
+Command:
+
+```text
+pnpm build
+```
+
+Result:
+
+```text
+$ pnpm run clean
+$ node -e "require('node:fs').rmSync('dist', { recursive: true, force: true })"
+$ tsc && vite build
+vite v5.4.21 building for production...
+✓ 2235 modules transformed.
+dist/index.html                   1.14 kB │ gzip:   0.71 kB
+dist/assets/index-BpirkeL0.css  435.37 kB │ gzip:  51.35 kB
+dist/assets/index-lL1IYhZg.js   615.18 kB │ gzip: 193.55 kB
+✓ built in 9.92s
+Exit code 0
+```
+
+Vite emitted its non-failing warning that a minified chunk exceeds 500 kB.
+
+Command:
+
+```text
+pnpm check
+```
+
+Result:
+
+```text
+$ pnpm run type-check && pnpm run lint
+$ tsc --noEmit
+$ eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+Exit code 0
+```
+
+### Lockfile Evidence And Rationale
+
+Commands:
+
+```text
+git check-ignore -v pnpm-lock.yaml
+git ls-files pnpm-lock.yaml
+git ls-tree -r --name-only 2b397aa^ -- pnpm-lock.yaml
+```
+
+Evidence:
+
+```text
+.gitignore:134:pnpm-lock.yaml pnpm-lock.yaml
+git ls-files: no output
+base commit tree: no output
+```
+
+The repository explicitly ignores `pnpm-lock.yaml`, it is not tracked now, and it did not exist in the base commit. Force-adding it would override repository policy and introduce unrelated dependency-resolution state. This review fix therefore leaves both `pnpm-lock.yaml` and `.gitignore` untouched; tracked package metadata remains the repository's declared dependency source.
+
+### Review Fix Files Changed
+
+- `src/components/learning/learningLoop.test.ts`
+- `src/components/learning/learningLoop.ts`
+- `.superpowers/sdd/task-1-report.md`
+
+### Review Fix Self-Review And Concerns
+
+- The guard is deliberately narrow: only a normalized anchor matching exactly one ASCII Latin letter or digit is excluded.
+- Multi-character Latin/digit concepts and one-character non-Latin concepts retain the prior normalization and substring matching behavior.
+- No backend, API contract, package metadata, lockfile policy, or unrelated UI files were modified.
+- The production build passes with the existing large-chunk warning noted above.

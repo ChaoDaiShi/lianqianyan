@@ -103,6 +103,26 @@ describe('buildReflectionResult', () => {
     expect(result.coveredConcepts).toEqual(['互斥条件']);
   });
 
+  it('does not match a concept collapsed to one Latin character', () => {
+    const knowledge: KnowledgePointContent = {
+      knowledgePointId: 'kp-cpp',
+      title: 'Programming languages',
+      sections: [
+        { title: 'C++', content: 'A systems programming language.' },
+        { title: '锁', content: 'A one-character non-Latin concept.' },
+      ],
+    };
+
+    const result = buildReflectionResult({
+      knowledge,
+      submittedText: 'Process scheduling uses a 锁.',
+      submittedAt: '2026-08-22T10:00:00.000Z',
+    });
+
+    expect(result.coveredConcepts).toEqual(['锁']);
+    expect(result.missingConcepts).toEqual([]);
+  });
+
   it('returns no concepts when the course has no non-empty section titles', () => {
     const knowledge: KnowledgePointContent = {
       knowledgePointId: 'kp-empty',
