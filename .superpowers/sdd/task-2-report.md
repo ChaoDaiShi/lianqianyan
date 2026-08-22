@@ -73,5 +73,41 @@ tests also pass.
 - `XiaolianFeedbackBubble` intentionally supports only
   `reflection_completed`; Task 3 must extend its props union for practice and
   diagnosis scenarios.
-- The required disclaimer is preserved verbatim from the brief, including its
-  supplied character encoding.
+
+## Review Fixes
+
+- Replaced the mojibake disclaimer with the exact required text:
+  `当前为前端教学反馈演示，不代表 AI 自动评分`.
+- Added a pure reflection page-status helper. Non-null data whose
+  `knowledgePointId` does not match the requested query ID now returns
+  `loading` before considering hook flags, errors, or empty content.
+
+### Review RED/GREEN Commands And Results
+
+- RED:
+  `pnpm test --run src/components/learning/reflectionPresentation.test.ts`
+  - Exit code 1.
+  - 1 test file failed; 2 tests failed.
+  - Disclaimer failure: expected
+    `当前为前端教学反馈演示，不代表 AI 自动评分`, received `undefined`.
+  - Stale-query failure: expected `loading`, received `undefined`.
+- GREEN:
+  `pnpm test --run src/components/learning/reflectionPresentation.test.ts`
+  - Exit code 0.
+  - 1 test file passed; 2 tests passed.
+- Final focused Task 2 verification:
+  `pnpm test --run src/components/learning/reflectionPresentation.test.ts src/components/learning/learningLoop.test.ts src/store/useLearningLoopStore.test.ts`
+  - Exit code 0.
+  - 3 test files passed; 15 tests passed.
+- Required gate: `pnpm check`
+  - Exit code 0.
+  - `tsc --noEmit` passed.
+  - ESLint passed with zero warnings.
+
+### Review TDD Evidence
+
+Both review regressions were expressed through the new pure presentation API
+before that module existed. The RED run produced two focused assertion
+failures, then the minimal constant and status helper were implemented and the
+same two tests passed. The tests were subsequently switched to static typed
+imports without changing their behavior assertions.

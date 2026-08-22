@@ -11,6 +11,7 @@ import {
   buildReflectionResult,
   type ReflectionResult,
 } from '@/components/learning/learningLoop';
+import { REFLECTION_FEEDBACK_DISCLAIMER } from '@/components/learning/reflectionPresentation';
 import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,8 +30,6 @@ type ReflectionWorkspaceState =
   | 'completed';
 
 const ANALYZING_DELAY_MS = 500;
-const FEEDBACK_DISCLAIMER =
-  '褰撳墠涓哄墠绔暀瀛﹀弽棣堟紨绀猴紝涓嶄唬琛?AI 鑷姩璇勫垎';
 
 export function ReflectionWorkspace({
   knowledge,
@@ -191,7 +190,7 @@ export function ReflectionWorkspace({
               <h2 className="text-lg font-bold">确定性教学反馈</h2>
             </div>
             <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
-              {FEEDBACK_DISCLAIMER}
+              {REFLECTION_FEEDBACK_DISCLAIMER}
             </p>
 
             <div className="mt-5 grid gap-5 sm:grid-cols-2">

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { LearningState } from '@/components/feedback/LearningState';
 import { ReflectionWorkspace } from '@/components/learning/ReflectionWorkspace';
+import { getReflectionPageStatus } from '@/components/learning/reflectionPresentation';
 import { Button } from '@/components/ui/button';
 import { useKnowledgePoint } from '@/lib/hooks';
 import { DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
@@ -29,15 +30,16 @@ export function ReflectionPage() {
     knowledgeState.data?.knowledgePointId === knowledgePointId
       ? knowledgeState.data
       : null;
-  const hasUsableContent =
-    Boolean(knowledge?.title.trim()) &&
-    Boolean(
-      knowledge?.sections.some((section) => section.title.trim().length > 0),
-    );
+  const status = getReflectionPageStatus({
+    requestedKnowledgePointId: knowledgePointId,
+    data: knowledgeState.data,
+    loading: knowledgeState.loading,
+    error: knowledgeState.error,
+  });
 
   let content;
 
-  if (!knowledgePointId) {
+  if (status === 'missing-id') {
     content = (
       <LearningState
         kind="empty"
@@ -53,7 +55,7 @@ export function ReflectionPage() {
         }
       />
     );
-  } else if (knowledgeState.loading && !knowledge) {
+  } else if (status === 'loading') {
     content = (
       <LearningState
         kind="loading"
@@ -65,7 +67,7 @@ export function ReflectionPage() {
         }
       />
     );
-  } else if (knowledgeState.error && !knowledge) {
+  } else if (status === 'error') {
     content = (
       <LearningState
         kind="error"
@@ -83,7 +85,7 @@ export function ReflectionPage() {
         }
       />
     );
-  } else if (!knowledge || !hasUsableContent) {
+  } else if (status === 'empty' || !knowledge) {
     content = (
       <LearningState
         kind="empty"
