@@ -27,7 +27,7 @@ const defaultColors = [
 ];
 
 // Custom palette extension
-const customColors = ['primary'];
+const customColors = ['primary', 'star', 'companion', 'ink'];
 
 // Shade steps
 const colorShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
@@ -427,17 +427,20 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#f7f4ff',
+          100: '#eee9ff',
+          200: '#ded6ff',
+          300: '#c4b8ff',
+          400: '#a796fb',
+          500: '#8b7cf6',
+          600: '#7663e8',
+          700: '#624ed0',
+          800: '#513fab',
+          900: '#44368a',
         },
+        star: '#6CA8FF',
+        companion: '#FF9FCB',
+        ink: '#29234A',
         gray: {
           50: '#f9fafb',
           100: '#f3f4f6',

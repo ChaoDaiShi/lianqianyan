@@ -52,6 +52,9 @@ function createEvaluation(occurredAt: string): PracticeEvaluationResponse {
 }
 
 const reflectionResult: ReflectionResult = {
+  learnerId: 'learner-1',
+  courseId: 'course-1',
+  taskId: 'task-1',
   knowledgePointId: 'kp-deadlock',
   knowledgePointName: '死锁',
   submittedText: '互斥条件会限制资源共享。',
@@ -73,12 +76,18 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: '互斥条件表示资源不能同时共享。',
       submittedAt: '2026-08-22T10:00:00.000Z',
     });
 
     expect(result).toMatchObject({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledgePointId: 'kp-deadlock',
       knowledgePointName: '死锁',
       submittedText: '互斥条件表示资源不能同时共享。',
@@ -97,6 +106,9 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: '互斥， 条件表示资源不能同时共享。',
       submittedAt: '2026-08-22T10:00:00.000Z',
@@ -116,6 +128,9 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: 'Process scheduling uses a 锁.',
       submittedAt: '2026-08-22T10:00:00.000Z',
@@ -137,6 +152,9 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: '任意复述',
       submittedAt: '2026-08-22T10:00:00.000Z',
@@ -154,6 +172,9 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: '任意复述',
       submittedAt: '2026-08-22T10:00:00.000Z',
@@ -174,6 +195,9 @@ describe('buildReflectionResult', () => {
     };
 
     const result = buildReflectionResult({
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
       knowledge,
       submittedText: '互斥条件与循环等待都可能参与死锁形成。',
       submittedAt: '2026-08-22T10:00:00.000Z',

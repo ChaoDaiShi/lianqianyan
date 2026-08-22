@@ -6,10 +6,15 @@ import { ReflectionWorkspace } from '@/components/learning/ReflectionWorkspace';
 import {
   buildLearningSpaceHref,
   getReflectionPageStatus,
+  getReflectionTaskStatus,
 } from '@/components/learning/reflectionPresentation';
 import { Button } from '@/components/ui/button';
-import { useKnowledgePoint } from '@/lib/hooks';
-import { DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
+import { useCurrentPlan, useKnowledgePoint } from '@/lib/hooks';
+import {
+  DEMO_COURSE_ID,
+  DEMO_LEARNER_ID,
+  useLearningLoopStore,
+} from '@/store';
 
 export function ReflectionPage() {
   const [searchParams] = useSearchParams();
@@ -26,6 +31,7 @@ export function ReflectionPage() {
     knowledgePointId || undefined,
     DEMO_COURSE_ID,
   );
+  const planState = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const storedResult = useLearningLoopStore((state) =>
     taskId ? state.reflectionResults[taskId] ?? null : null,
   );
@@ -42,15 +48,22 @@ export function ReflectionPage() {
     loading: knowledgeState.loading,
     error: knowledgeState.error,
   });
+  const taskStatus = getReflectionTaskStatus({
+    taskId,
+    knowledgePointId,
+    plan: planState.plan,
+    loading: planState.loading,
+    error: planState.error,
+  });
 
   let content;
 
-  if (status === 'missing-id') {
+  if (taskStatus === 'missing-task') {
     content = (
       <LearningState
         kind="empty"
-        title="缺少知识点参数"
-        description="请从学习工作台选择真实知识点后进入复述。"
+        title="缺少学习任务参数"
+        description="请从学习工作台的真实计划任务进入复述。"
         action={
           <Button asChild variant="outline">
             <Link to={learningSpaceHref} className="gap-2">
@@ -59,6 +72,56 @@ export function ReflectionPage() {
             </Link>
           </Button>
         }
+      />
+    );
+  } else if (taskStatus === 'loading') {
+    content = (
+      <LearningState
+        kind="loading"
+        title="正在核对当前学习任务"
+        description="正在从 Current Plan 读取任务与知识点归属。"
+      />
+    );
+  } else if (taskStatus === 'error') {
+    content = (
+      <LearningState
+        kind="error"
+        title="暂时无法核对学习任务"
+        description="当前计划没有加载成功，因此不会保存复述结果。"
+        action={
+          <Button
+            variant="outline"
+            onClick={() => void planState.refetch()}
+            className="gap-2"
+          >
+            <RotateCw className="h-4 w-4" />
+            重新加载
+          </Button>
+        }
+      />
+    );
+  } else if (taskStatus === 'mismatch') {
+    content = (
+      <LearningState
+        kind="empty"
+        title="学习任务与知识点不匹配"
+        description="当前计划中没有找到这组真实任务关系，复述提交入口保持关闭。"
+        action={
+          <Button asChild variant="outline">
+            <Link to={learningSpaceHref} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              返回学习工作台
+            </Link>
+          </Button>
+        }
+      />
+    );
+  } else if (status === 'missing-id') {
+    content = (
+      <LearningState
+        kind="empty"
+        title="缺少知识点参数"
+        description="请从学习工作台选择真实知识点后进入复述。"
       />
     );
   } else if (status === 'loading') {
@@ -111,6 +174,9 @@ export function ReflectionPage() {
     content = (
       <ReflectionWorkspace
         key={`${taskId}:${knowledge.knowledgePointId}`}
+        learnerId={DEMO_LEARNER_ID}
+        courseId={DEMO_COURSE_ID}
+        taskId={taskId}
         knowledge={knowledge}
         initialResult={storedResult}
         onComplete={(result) => {

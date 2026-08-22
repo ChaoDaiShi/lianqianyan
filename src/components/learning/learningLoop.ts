@@ -6,6 +6,9 @@ import type {
 } from '@/lib/educationApi';
 
 export interface ReflectionResult {
+  learnerId: string;
+  courseId: string;
+  taskId: string;
   knowledgePointId: string;
   knowledgePointName: string;
   submittedText: string;
@@ -20,6 +23,9 @@ function normalizeConceptText(value: string): string {
 }
 
 export function buildReflectionResult(input: {
+  learnerId: string;
+  courseId: string;
+  taskId: string;
   knowledge: KnowledgePointContent;
   submittedText: string;
   submittedAt: string;
@@ -44,6 +50,9 @@ export function buildReflectionResult(input: {
   const firstMissing = missingConcepts[0];
 
   return {
+    learnerId: input.learnerId,
+    courseId: input.courseId,
+    taskId: input.taskId,
     knowledgePointId: input.knowledge.knowledgePointId,
     knowledgePointName: input.knowledge.title,
     submittedText: input.submittedText,

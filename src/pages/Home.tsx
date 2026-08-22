@@ -1,43 +1,43 @@
+import { useEffect, useMemo } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { HomeProfileCard } from '@/components/home/HomeProfileCard';
-import { HomeDiagnosisCard } from '@/components/home/HomeDiagnosisCard';
+import { XiaolianDailyInsight } from '@/components/home/XiaolianDailyInsight';
 import { TodayPlanCard } from '@/components/home/TodayPlanCard';
-import { CapabilitiesCard } from '@/components/home/CapabilitiesCard';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
+import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
+import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useXiaolianRuntimeStore } from '@/store';
 
-/**
- * 学习首页 —— 忆涟千言—教 的默认首页（/#/）。
- *
- * 本轮正式从「普通卡片首页」升级为「个性化学习驾驶舱」：
- * - 顶部 Hero：欢迎语 + 当前课程 + 继续学习 / 问问小涟
- * - 今日学习计划（真实 Latest Plan + Tasks）
- * - 学习画像（真实 LearnerProfile）
- * - 当前最值得关注（真实 Diagnosis primary_focus）
- * - 小涟如何帮助你（能力展示）
- *
- * 所有学习者状态数据（Profile / Diagnosis / StudyPlan）全部来自真实 Education API，
- * API 失败展示错误态，绝不回退 Mock 冒充真实数据。
- */
 function Home() {
-  return (
-    <AppShell>
-      <HeroBanner courseName="操作系统" />
+  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const evidence = useRecentEvidence();
+  const { startTask, startingTaskId, error: startError } = useStartPlanTask();
+  const runtimeState = useXiaolianRuntimeStore((runtime) => runtime.state);
+  const setRuntimeState = useXiaolianRuntimeStore((runtime) => runtime.setState);
+  const resetRuntime = useXiaolianRuntimeStore((runtime) => runtime.reset);
+  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === DEMO_LEARNER_ID && item.courseId === DEMO_COURSE_ID);
+  const focus = diagnosis.data?.primaryFocus ?? null;
+  const currentTask = useMemo(() => {
+    const ordered = [...(plan.plan?.tasks ?? [])].sort((a, b) => a.order - b.order);
+    return (focus ? ordered.find((task) => task.knowledgePointId === focus.knowledgePointId) : null) ?? ordered[0] ?? null;
+  }, [focus, plan.plan]);
+  const loading = profile.loading || diagnosis.loading || plan.loading || evidence.loading;
+  const error = profile.error || diagnosis.error || plan.error || evidence.error;
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* 左列（2/3）：计划 + 能力 */}
-        <div className="space-y-6 lg:col-span-2">
-          <TodayPlanCard />
-          <CapabilitiesCard />
-        </div>
+  useEffect(() => {
+    if (plan.generating) setRuntimeState('planning');
+    else if (loading) setRuntimeState(plan.loading ? 'planning' : 'analyzing');
+    else if (!error && (focus || currentTask)) setRuntimeState('success');
+    else setRuntimeState('idle');
+  }, [currentTask, error, focus, loading, plan.generating, plan.loading, setRuntimeState]);
+  useEffect(() => () => resetRuntime(), [resetRuntime]);
 
-        {/* 右列（1/3）：画像 + 诊断 */}
-        <div className="space-y-6">
-          <HomeProfileCard />
-          <HomeDiagnosisCard />
-        </div>
-      </div>
-    </AppShell>
-  );
+  return <AppShell><div className="space-y-6 lg:space-y-8">
+    <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} loading={loading} error={error} runtimeState={runtimeState} />
+    <XiaolianDailyInsight profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} loading={loading} error={error} />
+    <TodayPlanCard plan={plan.plan} task={currentTask} loading={plan.loading} error={plan.error} generating={plan.generating} starting={startingTaskId === currentTask?.id} startError={startError} onGenerate={() => void plan.generate()} onStart={() => { if (plan.plan && currentTask) void startTask(plan.plan, currentTask); }} onRetry={() => void plan.refetch()} />
+  </div></AppShell>;
 }
 
 export default Home;

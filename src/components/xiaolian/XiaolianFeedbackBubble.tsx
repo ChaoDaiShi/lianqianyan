@@ -3,6 +3,7 @@ import {
   getPracticeReplanningText,
   type ReflectionResult,
 } from '@/components/learning/learningLoop';
+import { buildReflectionGrowthFeedback } from '@/components/xiaolian/xiaolianMemory';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import {
   DIAGNOSIS_REASON_TEXT,
@@ -40,25 +41,15 @@ export function XiaolianFeedbackBubble(
       </>
     );
   } else if (props.scenario === 'reflection_completed') {
+    const feedback = buildReflectionGrowthFeedback(props.result);
     content = (
       <>
-        <h2 className="mt-1 text-lg font-bold">
-          「{props.result.knowledgePointName}」复述已完成
-        </h2>
+        <h2 className="mt-1 text-lg font-bold">{feedback.title}</h2>
         <p className="mt-2 text-sm leading-7 text-[var(--em-muted-ink)]">
-          已覆盖：
-          {props.result.coveredConcepts.length > 0
-            ? props.result.coveredConcepts.join('、')
-            : '无'}
-        </p>
-        <p className="text-sm leading-7 text-[var(--em-muted-ink)]">
-          待补充：
-          {props.result.missingConcepts.length > 0
-            ? props.result.missingConcepts.join('、')
-            : '无'}
+          {feedback.observation}
         </p>
         <p className="mt-2 text-sm leading-7 text-[var(--em-ink)]">
-          {props.result.nextSuggestion}
+          {feedback.nextStep}
         </p>
       </>
     );

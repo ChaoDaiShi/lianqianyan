@@ -1,4 +1,4 @@
-import type { PersistedStudyTask } from '@/domain';
+import type { PersistedStudyPlan, PersistedStudyTask } from '@/domain';
 import type { KnowledgePointContent } from '@/lib/educationApi';
 
 export const REFLECTION_FEEDBACK_DISCLAIMER =
@@ -9,6 +9,13 @@ export type ReflectionPageStatus =
   | 'loading'
   | 'error'
   | 'empty'
+  | 'ready';
+
+export type ReflectionTaskStatus =
+  | 'missing-task'
+  | 'loading'
+  | 'error'
+  | 'mismatch'
   | 'ready';
 
 export function buildReflectionHref(
@@ -58,5 +65,24 @@ export function getReflectionPageStatus(input: {
   ) {
     return 'empty';
   }
+  return 'ready';
+}
+
+export function getReflectionTaskStatus(input: {
+  taskId: string;
+  knowledgePointId: string;
+  plan: PersistedStudyPlan | null;
+  loading: boolean;
+  error: boolean;
+}): ReflectionTaskStatus {
+  if (!input.taskId || !input.knowledgePointId) return 'missing-task';
+  if (input.loading && !input.plan) return 'loading';
+  if (input.error && !input.plan) return 'error';
+
+  const task = input.plan?.tasks.find((item) => item.id === input.taskId);
+  if (!task || task.knowledgePointId !== input.knowledgePointId) {
+    return 'mismatch';
+  }
+
   return 'ready';
 }

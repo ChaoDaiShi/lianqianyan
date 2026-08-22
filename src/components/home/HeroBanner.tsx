@@ -1,49 +1,44 @@
-import { Bot, PlayCircle, ArrowRight } from 'lucide-react';
+import { ArrowRight, Bot, PlayCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import type { DiagnosisResult, LearnerProfile, PersistedStudyPlan } from '@/domain';
+import { GlassPanel } from '@/components/design/GlassPanel';
+import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
+import type { XiaolianRuntimeState } from '@/store';
 
 interface HeroBannerProps {
-  courseName: string;
+  profile: LearnerProfile | null;
+  diagnosis: DiagnosisResult | null;
+  plan: PersistedStudyPlan | null;
+  loading: boolean;
+  error: boolean;
+  runtimeState: XiaolianRuntimeState;
 }
 
-/**
- * 首页顶部 Hero —— 个性化学习驾驶舱开场。
- * 纯展示（欢迎语 + 当前课程 + CTA），不承载真实数据。
- */
-export function HeroBanner({ courseName }: HeroBannerProps) {
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 via-white to-white p-6 md:p-8">
-      <div className="relative z-10">
-        <p className="text-sm font-medium text-blue-700">忆涟千言—教 · EducationMind</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 md:text-[28px]">
-          你好，欢迎回来
-        </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-gray-500">
-          小涟已经根据你的学习记录，整理好了当前最值得关注的学习内容。
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {courseName ? (
-            <span className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700">
-              当前课程：{courseName}
-            </span>
-          ) : null}
-        </div>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Button asChild>
-            <Link to="/space" className="gap-1.5">
-              <PlayCircle className="h-4 w-4" />
-              继续学习
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="gap-1.5">
-            <Link to="/xiaolian">
-              <Bot className="h-4 w-4" />
-              问问小涟
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      </div>
+const RUNTIME_TEXT: Record<XiaolianRuntimeState, string> = {
+  idle: '小涟正在等你一起开始',
+  thinking: '小涟正在理解你的问题',
+  analyzing: '小涟正在同步学习状态',
+  planning: '小涟正在整理学习计划',
+  teaching: '小涟正在陪你学习',
+  evaluating: '小涟正在读取练习结果',
+  success: '小涟已经准备好下一步',
+};
+
+export function HeroBanner({ profile, diagnosis, plan, loading, error, runtimeState }: HeroBannerProps) {
+  const focus = diagnosis?.primaryFocus ?? null;
+  const orderedTasks = [...(plan?.tasks ?? [])].sort((a, b) => a.order - b.order);
+  const nextTask = (focus ? orderedTasks.find((task) => task.knowledgePointId === focus.knowledgePointId) : null) ?? orderedTasks[0] ?? null;
+  const nextTaskHref = nextTask ? `/space?task_id=${encodeURIComponent(nextTask.id)}&knowledge_point_id=${encodeURIComponent(nextTask.knowledgePointId)}` : '/my-learning';
+  const hasPartialError = profile === null || diagnosis === null || plan === null;
+  const observation = loading ? '我正在读取你的学习画像、诊断与当前计划。' : diagnosis === null && error ? '学习诊断暂时没有加载成功，我不会用推测内容补齐。' : focus ? `我注意到「${focus.knowledgePointName}」是当前最值得关注的知识点。` : profile ? `${profile.courseName}的学习状态已同步，目前没有可证明的优先薄弱项。` : '当前还没有可用的学习画像。';
+  const suggestion = nextTask ? `建议先完成「${nextTask.knowledgePointName}」。` : hasPartialError && error ? '当前计划不可用，可以稍后重试“我的学习”。' : '当前没有 ACTIVE 学习任务，可以先到“我的学习”生成计划。';
+
+  return <GlassPanel className="relative min-h-[500px] overflow-hidden p-6 sm:p-8 lg:p-10">
+    <div className="absolute -left-20 top-16 h-72 w-72 rounded-full bg-companion/20 blur-3xl" /><div className="absolute -right-16 -top-16 h-80 w-80 rounded-full bg-star/20 blur-3xl" />
+    <div className="relative grid min-h-[430px] items-center gap-6 lg:grid-cols-[minmax(18rem,.8fr)_minmax(0,1.2fr)]">
+      <XiaolianCharacter state={runtimeState} size="hero" priority />
+      <div className="text-center lg:text-left"><p className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/65 px-3 py-1 text-xs font-semibold text-primary-700"><Sparkles className="h-3.5 w-3.5 text-companion" />{RUNTIME_TEXT[runtimeState]}</p><h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl">今天，我陪你从下一步开始</h1><p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-[var(--em-muted-ink)] lg:mx-0">{observation}</p><div className="mt-5 rounded-[22px] border border-white/70 bg-white/55 p-4 text-left backdrop-blur-xl"><p className="text-[10px] font-bold tracking-[0.16em] text-primary-600">CURRENT SUGGESTION</p><p className="mt-2 text-sm font-semibold leading-6">{suggestion}</p></div><div className="mt-7 flex flex-wrap justify-center gap-3 lg:justify-start"><Button asChild className="h-11 gap-2 rounded-2xl bg-primary-500 px-5"><Link to={nextTaskHref}><PlayCircle className="h-4 w-4" />{nextTask ? '开始当前任务' : '查看我的学习'}</Link></Button><Button asChild variant="outline" className="h-11 gap-2 rounded-2xl border-violet-200 bg-white/70 px-5"><Link to="/xiaolian"><Bot className="h-4 w-4" />和小涟聊聊<ArrowRight className="h-4 w-4" /></Link></Button></div></div>
     </div>
-  );
+  </GlassPanel>;
 }

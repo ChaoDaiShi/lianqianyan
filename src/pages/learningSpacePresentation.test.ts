@@ -16,6 +16,9 @@ const diagnosis: KnowledgePointDiagnosis = {
 };
 
 const reflection: ReflectionResult = {
+  learnerId: 'learner-1',
+  courseId: 'course-os',
+  taskId: 'task-1',
   knowledgePointId: 'kp-deadlock',
   knowledgePointName: 'Deadlock',
   submittedText: 'Mutual exclusion can restrict resource sharing.',

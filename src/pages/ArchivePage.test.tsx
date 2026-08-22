@@ -2,14 +2,19 @@ import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DiagnosisResult, LearnerProfile, PersistedStudyPlan } from '@/domain';
-import type { LearningJourneyTimelineProps } from '@/components/archive/LearningJourneyTimeline';
+import type { LearningStoryTimelineProps } from '@/components/archive/LearningStoryTimeline';
+import type { ReflectionResult } from '@/components/learning/learningLoop';
+import type { MemoryCapsuleProps } from '@/components/xiaolian/MemoryCapsule';
+import type { XiaolianMemoryCardProps } from '@/components/xiaolian/XiaolianMemoryCard';
 import type {
   LearningEvidence,
   PracticeEvaluationResponse,
 } from '@/lib/educationApi';
 
 const fixtures = vi.hoisted(() => ({
-  timelineProps: null as LearningJourneyTimelineProps | null,
+  storyProps: null as LearningStoryTimelineProps | null,
+  memoryProps: null as XiaolianMemoryCardProps | null,
+  capsuleProps: null as MemoryCapsuleProps | null,
   profileRefetch: vi.fn(),
   diagnosisRefetch: vi.fn(),
   planRefetch: vi.fn(),
@@ -19,6 +24,7 @@ const fixtures = vi.hoisted(() => ({
   plan: null as PersistedStudyPlan | null,
   evidence: [] as LearningEvidence[],
   practiceEvaluations: {} as Record<string, PracticeEvaluationResponse>,
+  reflectionResults: {} as Record<string, ReflectionResult>,
   planLoading: false,
   evidenceLoading: false,
   evidenceError: true,
@@ -28,10 +34,28 @@ vi.mock('@/components/archive/LearningIdentityCard', () => ({
   LearningIdentityCard: () => <div>learning-identity-card</div>,
 }));
 
-vi.mock('@/components/archive/LearningJourneyTimeline', () => ({
-  LearningJourneyTimeline: (props: LearningJourneyTimelineProps) => {
-    fixtures.timelineProps = props;
-    return <div>learning-journey-timeline</div>;
+vi.mock('@/components/archive/LearningStoryTimeline', () => ({
+  LearningStoryTimeline: (props: LearningStoryTimelineProps) => {
+    fixtures.storyProps = props;
+    return <div>learning-story-timeline</div>;
+  },
+}));
+
+vi.mock('@/components/xiaolian/XiaolianMemoryCard', () => ({
+  XiaolianMemoryCard: (props: XiaolianMemoryCardProps) => {
+    fixtures.memoryProps = props;
+    return <div>xiaolian-memory-card</div>;
+  },
+}));
+
+vi.mock('@/components/xiaolian/XiaolianLearningPortrait', () => ({
+  XiaolianLearningPortrait: () => <div>xiaolian-learning-portrait</div>,
+}));
+
+vi.mock('@/components/xiaolian/MemoryCapsule', () => ({
+  MemoryCapsule: (props: MemoryCapsuleProps) => {
+    fixtures.capsuleProps = props;
+    return <div>memory-capsule</div>;
   },
 }));
 
@@ -99,8 +123,13 @@ vi.mock('@/store', () => ({
   useLearningLoopStore: (
     selector: (state: {
       practiceEvaluations: Record<string, PracticeEvaluationResponse>;
+      reflectionResults: Record<string, ReflectionResult>;
     }) => unknown,
-  ) => selector({ practiceEvaluations: fixtures.practiceEvaluations }),
+  ) =>
+    selector({
+      practiceEvaluations: fixtures.practiceEvaluations,
+      reflectionResults: fixtures.reflectionResults,
+    }),
 }));
 
 import { ArchivePage } from './ArchivePage';
@@ -140,7 +169,9 @@ function createEvaluation(
 }
 
 beforeEach(() => {
-  fixtures.timelineProps = null;
+  fixtures.storyProps = null;
+  fixtures.memoryProps = null;
+  fixtures.capsuleProps = null;
   fixtures.profileRefetch.mockReset();
   fixtures.diagnosisRefetch.mockReset();
   fixtures.planRefetch.mockReset();
@@ -241,31 +272,67 @@ beforeEach(() => {
     'task-1': createEvaluation('practice-1', '2026-08-22T09:00:00.000Z'),
     'task-2': createEvaluation('practice-2', '2026-08-22T09:30:00.000Z'),
   };
+  fixtures.reflectionResults = {
+    'task-1': {
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      taskId: 'task-1',
+      knowledgePointId: 'kp-deadlock',
+      knowledgePointName: 'Deadlock',
+      submittedText: 'mutual exclusion',
+      submittedAt: '2026-08-22T08:30:00.000Z',
+      coveredConcepts: ['Mutual exclusion'],
+      missingConcepts: ['Circular wait'],
+      nextSuggestion: 'Review circular wait.',
+    },
+    'foreign-task': {
+      learnerId: 'learner-2',
+      courseId: 'course-1',
+      taskId: 'foreign-task',
+      knowledgePointId: 'kp-deadlock',
+      knowledgePointName: 'Deadlock',
+      submittedText: 'foreign reflection',
+      submittedAt: '2026-08-22T10:30:00.000Z',
+      coveredConcepts: ['Foreign concept'],
+      missingConcepts: [],
+      nextSuggestion: 'Foreign suggestion.',
+    },
+  };
 });
 
-describe('ArchivePage learning journey integration', () => {
-  it('preserves identity and plan UI while wiring real journey inputs and Evidence retry', () => {
+describe('ArchivePage Xiaolian memory integration', () => {
+  it('wires real profile, diagnosis, evidence, reflection, practice, and plan data', () => {
     const html = renderToStaticMarkup(<ArchivePage />);
-    const timelineProps = fixtures.timelineProps;
+    const storyProps = fixtures.storyProps;
 
     expect(html).toContain('learning-identity-card');
-    expect(html).toContain('learning-journey-timeline');
+    expect(html).toContain('xiaolian-memory-card');
+    expect(html).toContain('xiaolian-learning-portrait');
+    expect(html).toContain('memory-capsule');
+    expect(html).toContain('learning-story-timeline');
     expect(html).not.toContain('growth-timeline');
     expect(html).toContain('Operating Systems');
     expect(html).toContain('当前星轨');
     expect(html).toContain('Deadlock');
-    expect(timelineProps).not.toBeNull();
-    expect(timelineProps?.plan).toBe(fixtures.plan);
-    expect(timelineProps?.evidence).toBe(fixtures.evidence);
-    expect(timelineProps?.practiceEvaluations).toEqual(
+    expect(fixtures.memoryProps?.profile).toBe(fixtures.profile);
+    expect(fixtures.memoryProps?.diagnosis).toBe(fixtures.diagnosis);
+    expect(fixtures.memoryProps?.evidence).toBe(fixtures.evidence);
+    expect(fixtures.memoryProps?.reflectionResults).toEqual(
+      [fixtures.reflectionResults['task-1']],
+    );
+    expect(fixtures.capsuleProps?.confirmedPreferences).toEqual([]);
+    expect(storyProps).not.toBeNull();
+    expect(storyProps?.plan).toBe(fixtures.plan);
+    expect(storyProps?.evidence).toBe(fixtures.evidence);
+    expect(storyProps?.practiceEvaluations).toEqual(
       Object.values(fixtures.practiceEvaluations),
     );
-    expect(timelineProps?.learnerId).toBe('learner-1');
-    expect(timelineProps?.courseId).toBe('course-1');
-    expect(timelineProps?.loading).toBe(false);
-    expect(timelineProps?.error).toBe(true);
+    expect(storyProps?.learnerId).toBe('learner-1');
+    expect(storyProps?.courseId).toBe('course-1');
+    expect(storyProps?.loading).toBe(false);
+    expect(storyProps?.error).toBe(true);
 
-    timelineProps?.onRetry();
+    storyProps?.onRetry();
 
     expect(fixtures.evidenceRefetch).toHaveBeenCalledOnce();
     expect(fixtures.planRefetch).not.toHaveBeenCalled();
@@ -279,10 +346,24 @@ describe('ArchivePage learning journey integration', () => {
 
     const html = renderToStaticMarkup(<ArchivePage />);
 
-    expect(html).toContain('learning-journey-timeline');
+    expect(html).toContain('learning-story-timeline');
     expect(html).toContain('正在读取当前学习计划');
-    expect(fixtures.timelineProps?.plan).toBeNull();
-    expect(fixtures.timelineProps?.loading).toBe(true);
-    expect(fixtures.timelineProps?.error).toBe(false);
+    expect(fixtures.storyProps?.plan).toBeNull();
+    expect(fixtures.storyProps?.loading).toBe(true);
+    expect(fixtures.storyProps?.error).toBe(false);
+  });
+
+  it('shows an honest empty state when the real profile has no knowledge points', () => {
+    if (!fixtures.profile) throw new Error('profile fixture missing');
+    fixtures.profile = {
+      ...fixtures.profile,
+      totalKnowledgePoints: 0,
+      assessedCount: 0,
+      knowledgePoints: [],
+    };
+
+    const html = renderToStaticMarkup(<ArchivePage />);
+
+    expect(html).toContain('暂无可展示的知识点');
   });
 });

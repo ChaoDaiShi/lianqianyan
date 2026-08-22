@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   chatWithAgents,
   chatWithTutor,
@@ -47,24 +47,33 @@ function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[]): AsyncState<T> 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const requestGenerationRef = useRef(0);
 
   const refetch = useCallback(async (): Promise<boolean> => {
+    const requestGeneration = ++requestGenerationRef.current;
     setLoading(true);
     setError(false);
     try {
       const nextData = await fetcher();
+      if (requestGeneration !== requestGenerationRef.current) return false;
       setData(nextData);
       return true;
     } catch {
-      setError(true);
+      if (requestGeneration === requestGenerationRef.current) setError(true);
       return false;
     } finally {
-      setLoading(false);
+      if (requestGeneration === requestGenerationRef.current) setLoading(false);
     }
   }, deps);
 
   useEffect(() => {
+    setData(null);
+    setLoading(true);
+    setError(false);
     void refetch();
+    return () => {
+      requestGenerationRef.current += 1;
+    };
   }, [refetch]);
 
   return { data, loading, error, refetch };
@@ -130,41 +139,58 @@ export function useCurrentPlan(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const requestGenerationRef = useRef(0);
 
   const load = useCallback(async (): Promise<boolean> => {
+    const requestGeneration = ++requestGenerationRef.current;
     setLoading(true);
+    setGenerating(false);
     setError(false);
     try {
       const current = await fetchCurrentPlan(learnerId, courseId);
+      if (requestGeneration !== requestGenerationRef.current) return false;
       setPlan(current);
       setSummary(current ? toSummary(current) : null);
       return true;
     } catch {
-      setError(true);
+      if (requestGeneration === requestGenerationRef.current) setError(true);
       return false;
     } finally {
-      setLoading(false);
+      if (requestGeneration === requestGenerationRef.current) setLoading(false);
     }
   }, [learnerId, courseId]);
 
   useEffect(() => {
-    load();
+    setSummary(null);
+    setPlan(null);
+    setLoading(true);
+    setError(false);
+    setGenerating(false);
+    void load();
+    return () => {
+      requestGenerationRef.current += 1;
+    };
   }, [load]);
 
   const generate = useCallback(async (): Promise<PersistedStudyPlan | null> => {
+    const requestGeneration = ++requestGenerationRef.current;
     setGenerating(true);
+    setLoading(false);
+    setError(false);
     try {
       const created = await generatePlan(learnerId, courseId);
+      if (requestGeneration !== requestGenerationRef.current) return null;
       setPlan(created);
       setSummary(toSummary(created));
-      setError(false);
       return created;
     } catch {
-      setError(true);
+      if (requestGeneration === requestGenerationRef.current) setError(true);
       return null;
     } finally {
-      setGenerating(false);
-      setLoading(false);
+      if (requestGeneration === requestGenerationRef.current) {
+        setGenerating(false);
+        setLoading(false);
+      }
     }
   }, [learnerId, courseId]);
 
@@ -206,16 +232,28 @@ export function useTutorChat(learnerId: string, courseId: string) {
 
 export function useAgentChat(learnerId: string, courseId: string, knowledgePointId?: string) {
   const [pending, setPending] = useState(false);
+  const requestGenerationRef = useRef(0);
+
+  useEffect(() => {
+    requestGenerationRef.current += 1;
+    setPending(false);
+    return () => {
+      requestGenerationRef.current += 1;
+    };
+  }, [learnerId, courseId, knowledgePointId]);
+
   const send = useCallback(
     async (message: string, capability?: AgentCapability | null): Promise<AgentChatResponse | null> => {
       if (!message.trim()) return null;
+      const requestGeneration = ++requestGenerationRef.current;
       setPending(true);
       try {
-        return await chatWithAgents({ learnerId, courseId, message, capability, knowledgePointId });
+        const response = await chatWithAgents({ learnerId, courseId, message, capability, knowledgePointId });
+        return requestGeneration === requestGenerationRef.current ? response : null;
       } catch {
         return null;
       } finally {
-        setPending(false);
+        if (requestGeneration === requestGenerationRef.current) setPending(false);
       }
     },
     [learnerId, courseId, knowledgePointId]
@@ -248,4 +286,3 @@ export function useLlmStatus(): AsyncState<LlmStatus> {
 export function useRecentEvidence(): AsyncState<LearningEvidence[]> {
   return useAsync(() => fetchRecentEvidence(), []);
 }
-

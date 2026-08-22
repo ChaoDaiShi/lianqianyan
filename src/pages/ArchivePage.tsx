@@ -1,42 +1,20 @@
-import {
-  FolderOpen,
-  Loader2,
-  AlertTriangle,
-  Target,
-  BookOpen,
-  CalendarClock,
-  RotateCw,
-} from 'lucide-react';
-import { LearningJourneyTimeline } from '@/components/archive/LearningJourneyTimeline';
+import { BookOpen, CalendarClock, FolderOpen, RotateCw, Sparkles, Target } from 'lucide-react';
+import { LearningIdentityCard } from '@/components/archive/LearningIdentityCard';
+import { LearningStoryTimeline } from '@/components/archive/LearningStoryTimeline';
+import { formatDiagnosisPercent, getDiagnosisTone, isAssessedDiagnosis } from '@/components/diagnosis/diagnosisPresentation';
+import { GlassPanel } from '@/components/design/GlassPanel';
+import { GrowthMetric } from '@/components/design/GrowthMetric';
+import { LearningState } from '@/components/feedback/LearningState';
 import { AppShell } from '@/components/layout/AppShell';
-import {
-  useLearnerProfile,
-  useDiagnosis,
-  useCurrentPlan,
-  useRecentEvidence,
-} from '@/lib/hooks';
-import { DEMO_LEARNER_ID, DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
-import {
-  DIAGNOSIS_STATUS_LABEL,
-  DIAGNOSIS_REASON_TEXT,
-  ACTION_TYPE_LABEL,
-} from '@/domain';
-import type { KnowledgePointDiagnosis } from '@/domain';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
-function pct(value: number | null): string {
-  if (value == null) return '--';
-  return `${Math.round(value * 100)}%`;
-}
-
-const REASON_MAP: Record<string, string> = {
-  NO_EVIDENCE: '尚未完成有效评估。',
-  LIMITED_EVIDENCE: '有效练习记录较少，判断可信度有限。',
-  LOW_MASTERY: '当前掌握度偏低。',
-  ADEQUATE_MASTERY: '当前掌握情况尚可。',
-  STRONG_MASTERY: '当前掌握情况良好。',
-};
+import { MemoryCapsule } from '@/components/xiaolian/MemoryCapsule';
+import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
+import { XiaolianLearningPortrait } from '@/components/xiaolian/XiaolianLearningPortrait';
+import { XiaolianMemoryCard } from '@/components/xiaolian/XiaolianMemoryCard';
+import { ACTION_TYPE_LABEL, DIAGNOSIS_REASON_TEXT, DIAGNOSIS_STATUS_LABEL } from '@/domain';
+import type { KnowledgePointDiagnosis } from '@/domain';
+import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
+import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useLearningLoopStore } from '@/store';
 
 const SORT_ORDER: Record<string, number> = {
   weak: 0,
@@ -47,190 +25,234 @@ const SORT_ORDER: Record<string, number> = {
   unassessed: 5,
 };
 
-function statusBarClass(status: string): string {
-  switch (status) {
-    case 'mastered':
-      return 'bg-emerald-500';
-    case 'proficient':
-      return 'bg-emerald-400';
-    case 'developing':
-      return 'bg-blue-500';
-    case 'weak':
-      return 'bg-orange-400';
-    default:
-      return 'bg-gray-300';
-  }
+function KnowledgeMemory({ point }: { point: KnowledgePointDiagnosis }) {
+  const assessed = isAssessedDiagnosis(point.status);
+  const tone = getDiagnosisTone(point.status);
+
+  return (
+    <div className="rounded-[18px] border border-violet-100 bg-white/50 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <strong className="text-sm">{point.knowledgePointName}</strong>
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${tone.badge}`}>
+          {DIAGNOSIS_STATUS_LABEL[point.status]}
+        </span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-violet-50">
+        <div
+          className={`h-full rounded-full ${tone.node}`}
+          style={{ width: assessed ? `${Math.min(100, point.masteryScore * 100)}%` : '8%' }}
+        />
+      </div>
+      <p className="mt-2 text-xs text-[var(--em-muted-ink)]">
+        {assessed
+          ? `掌握度 ${formatDiagnosisPercent(point.masteryScore, true)} · ${point.evidenceCount} 条证据`
+          : '尚未评估，不代表薄弱'}
+      </p>
+    </div>
+  );
 }
 
-/**
- * 学习报告 / 学习档案 —— /#/archive（Phase 3-1 升级为 Current Plan 语义）。
- *
- * 数据全部真实：LearnerProfile + Diagnosis + Current StudyPlan + Recent Evidence。
- * 知识点状态分布用横向条展示（不引入 ECharts）。
- */
 export function ArchivePage() {
   const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const evidence = useRecentEvidence();
   const practiceEvaluationsByTask = useLearningLoopStore((state) => state.practiceEvaluations);
+  const reflectionResultsByTask = useLearningLoopStore((state) => state.reflectionResults);
 
   const reloadAll = () => {
-    profile.refetch();
-    diagnosis.refetch();
-    plan.refetch();
-    evidence.refetch();
+    void profile.refetch();
+    void diagnosis.refetch();
+    void plan.refetch();
+    void evidence.refetch();
   };
-
-  const loading =
-    plan.loading || (profile.loading && plan.summary == null);
-  const error =
-    (!plan.loading && plan.error && !plan.summary && !profile.error) ||
-    (profile.error && diagnosis.error && !profile.data);
-
-  const kps: KnowledgePointDiagnosis[] = profile.data?.knowledgePoints ?? [];
-  const sorted = [...kps].sort(
+  const sorted = [...(profile.data?.knowledgePoints ?? [])].sort(
     (a, b) => (SORT_ORDER[a.status] ?? 9) - (SORT_ORDER[b.status] ?? 9)
   );
   const knowledgeNames = Object.fromEntries(
-    kps.map((point) => [point.knowledgePointId, point.knowledgePointName])
+    (profile.data?.knowledgePoints ?? []).map((point) => [point.knowledgePointId, point.knowledgePointName])
   );
   const primary = diagnosis.data?.primaryFocus ?? null;
+  const reflectionResults = Object.entries(reflectionResultsByTask)
+    .filter(
+      ([taskId, result]) =>
+        result.taskId === taskId &&
+        result.learnerId === DEMO_LEARNER_ID &&
+        result.courseId === DEMO_COURSE_ID,
+    )
+    .map(([, result]) => result);
 
   return (
     <AppShell>
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <FolderOpen className="h-4 w-4" />
-            <span>学习档案</span>
+      <div className="space-y-6">
+        <GlassPanel className="relative overflow-hidden p-6 sm:p-8">
+          <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-pink-200/25 blur-3xl" />
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+                <FolderOpen className="h-4 w-4" />
+                GROWTH MEMORIES
+              </p>
+              <h1 className="mt-2 text-3xl font-bold">成长记忆</h1>
+              <p className="mt-2 text-sm text-[var(--em-muted-ink)]">
+                学习画像、诊断、当前计划和真实行为证据汇聚成你的成长轨迹。
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <XiaolianCharacter state="success" size="md" />
+              {!profile.loading && (
+                <Button variant="outline" size="sm" onClick={reloadAll} className="gap-2 rounded-xl">
+                  <RotateCw className="h-3.5 w-3.5" />
+                  刷新记忆
+                </Button>
+              )}
+            </div>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-[26px]">
-            学习报告
-          </h1>
-          <p className="mt-1.5 text-sm text-gray-500">
-            汇总当前学习画像、诊断、计划与近期学习行为。
-          </p>
-        </div>
-        {!loading && !error && (
-          <Button variant="outline" size="sm" onClick={reloadAll} className="gap-1.5 shrink-0">
-            <RotateCw className="h-3.5 w-3.5" />
-            刷新数据
-          </Button>
+        </GlassPanel>
+
+        {profile.loading && !profile.data && <LearningState kind="loading" title="正在读取学习画像" />}
+        {profile.error && !profile.data && (
+          <LearningState
+            kind="error"
+            title="暂时无法读取学习画像"
+            action={
+              <Button variant="outline" onClick={() => void profile.refetch()} className="gap-2">
+                <RotateCw className="h-4 w-4" />
+                重新加载
+              </Button>
+            }
+          />
         )}
-      </div>
 
-      {loading && (
-        <div className="flex items-center justify-center gap-2 py-24 text-gray-400">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>正在生成学习报告…</span>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex flex-col items-start gap-3 rounded-2xl border border-gray-100 bg-white p-8">
-          <div className="flex items-center gap-2 text-gray-500">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-            <span>暂时无法读取学习状态</span>
-          </div>
-          <Button variant="outline" onClick={reloadAll} className="gap-1.5">
-            <RotateCw className="h-4 w-4" />
-            重新加载
-          </Button>
-        </div>
-      )}
-
-      {!loading && !error && profile.data && (
-        <div className="space-y-6">
-          {/* 概览 */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <p className="text-xs text-gray-400">当前课程</p>
-            <p className="mt-0.5 text-lg font-bold text-gray-900">{profile.data.courseName}</p>
-            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <Metric
-                label="综合掌握度"
-                value={
-                  profile.data.insufficientData || profile.data.overallMastery == null
-                    ? '暂无足够数据'
-                    : pct(profile.data.overallMastery)
+        {profile.data && (
+          <>
+            {diagnosis.loading && !diagnosis.data && <LearningState kind="loading" title="正在读取学习诊断" />}
+            {diagnosis.error && !diagnosis.data && (
+              <LearningState
+                kind="error"
+                title="学习诊断暂时无法读取"
+                description="学习画像与其他成长记录仍可继续查看。"
+                action={
+                  <Button variant="outline" onClick={() => void diagnosis.refetch()} className="gap-2">
+                    <RotateCw className="h-4 w-4" />
+                    重新加载诊断
+                  </Button>
                 }
               />
-              <Metric
-                label="画像可信度"
-                value={pct(profile.data.overallConfidence)}
-              />
-              <Metric
-                label="诊断覆盖率"
-                value={pct(profile.data.coverage)}
-                hint={`${profile.data.assessedCount} / ${profile.data.totalKnowledgePoints} 个知识点`}
-              />
-            </div>
-          </div>
-
-          {/* 重点关注 */}
-          {primary && (
-            <div className="rounded-2xl border border-orange-100 bg-orange-50/40 p-6">
-              <div className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-orange-500" />
-                <h2 className="text-lg font-bold text-gray-900">重点关注</h2>
-              </div>
-              <div className="mt-3">
-                <span className="font-semibold text-gray-900">{primary.knowledgePointName}</span>
-                <span className="ml-2 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                  {DIAGNOSIS_STATUS_LABEL[primary.status]}
-                </span>
-                <p className="mt-1 text-sm text-gray-600">
-                  掌握度 {pct(primary.masteryScore)} ·{' '}
-                  {primary.reasonCodes.length > 0
-                    ? primary.reasonCodes
-                        .map((c) => REASON_MAP[c] ?? DIAGNOSIS_REASON_TEXT[c] ?? '')
-                        .filter(Boolean)
-                        .join(' ')
-                    : '当前掌握度偏低，建议优先补强。'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* 最新计划 */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">当前计划</h2>
-            </div>
-            {plan.plan && plan.plan.tasks.length > 0 ? (
-              <div className="mt-4 space-y-2">
-                {plan.plan.tasks.map((task, index) => (
-                  <div key={task.id} className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-xs font-bold text-blue-700">
-                      {index + 1}
-                    </span>
-                    <p className="flex-1 text-sm text-gray-800">{task.knowledgePointName}</p>
-                    <span className="text-xs text-gray-400">
-                      {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes}min
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-3 text-sm text-gray-500">尚未生成学习计划。</p>
             )}
-          </div>
+            {diagnosis.data && <LearningIdentityCard profile={profile.data} diagnosis={diagnosis.data} />}
+            {diagnosis.data && (
+              <div className="grid gap-6 lg:grid-cols-2">
+                <XiaolianLearningPortrait
+                  profile={profile.data}
+                  diagnosis={diagnosis.data}
+                />
+                <XiaolianMemoryCard
+                  profile={profile.data}
+                  diagnosis={diagnosis.data}
+                  evidence={evidence.data ?? []}
+                  reflectionResults={reflectionResults}
+                  learnerId={DEMO_LEARNER_ID}
+                  courseId={DEMO_COURSE_ID}
+                />
+              </div>
+            )}
+            <MemoryCapsule confirmedPreferences={[]} />
 
-          {/* 知识点状态分布 */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <GlassPanel className="p-5 sm:p-6">
+              <p className="text-xs text-[var(--em-muted-ink)]">当前课程</p>
+              <h2 className="mt-1 text-xl font-bold">{profile.data.courseName}</h2>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <GrowthMetric
+                  label="综合掌握度"
+                  value={profile.data.insufficientData ? '暂无足够数据' : formatDiagnosisPercent(profile.data.overallMastery, true)}
+                />
+                <GrowthMetric
+                  label="画像可信度"
+                  value={formatDiagnosisPercent(profile.data.overallConfidence, true)}
+                  tone="star"
+                />
+                <GrowthMetric
+                  label="诊断覆盖率"
+                  value={`${Math.round(profile.data.coverage * 100)}%`}
+                  hint={`${profile.data.assessedCount}/${profile.data.totalKnowledgePoints} 个知识点`}
+                  tone="accent"
+                />
+              </div>
+            </GlassPanel>
+
+            {primary && (
+              <GlassPanel className="p-6">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-companion" />
+                  <h2 className="text-lg font-bold">此刻最值得记住</h2>
+                </div>
+                <div className="mt-4 rounded-[20px] bg-gradient-to-r from-pink-50 to-violet-50 p-5">
+                  <strong>{primary.knowledgePointName}</strong>
+                  <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-xs text-fuchsia-700">
+                    {DIAGNOSIS_STATUS_LABEL[primary.status]}
+                  </span>
+                  <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">
+                    掌握度 {formatDiagnosisPercent(primary.masteryScore, true)} ·{' '}
+                    {primary.reasonCodes.map((code) => DIAGNOSIS_REASON_TEXT[code] ?? '').filter(Boolean).join(' ')}
+                  </p>
+                </div>
+              </GlassPanel>
+            )}
+
+            <GlassPanel className="p-6">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-star" />
+                <h2 className="text-lg font-bold">知识星点</h2>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {sorted.map((point) => <KnowledgeMemory key={point.knowledgePointId} point={point} />)}
+              </div>
+              {sorted.length === 0 && (
+                <p className="mt-4 text-sm text-[var(--em-muted-ink)]">
+                  暂无可展示的知识点。
+                </p>
+              )}
+            </GlassPanel>
+          </>
+        )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <GlassPanel className="p-6">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">知识点状态分布</h2>
+              <CalendarClock className="h-4 w-4 text-primary-500" />
+              <h2 className="text-lg font-bold">当前星轨</h2>
             </div>
-            <div className="mt-4 space-y-3">
-              {sorted.map((kp) => (
-                <KnowledgeBar key={kp.knowledgePointId} kp={kp} />
-              ))}
+            <div className="mt-4 space-y-2">
+              {plan.loading && !plan.plan && <p className="text-sm text-[var(--em-muted-ink)]">正在读取当前学习计划…</p>}
+              {!plan.loading && plan.error && !plan.plan && (
+                <div>
+                  <p className="text-sm text-amber-700">当前学习计划暂时无法读取。</p>
+                  <Button variant="outline" size="sm" onClick={() => void plan.refetch()} className="mt-3 gap-2">
+                    <RotateCw className="h-3.5 w-3.5" />
+                    重新加载计划
+                  </Button>
+                </div>
+              )}
+              {plan.plan?.tasks.length
+                ? plan.plan.tasks.map((task, index) => (
+                    <div key={task.id} className="flex items-center gap-3 rounded-[18px] bg-white/50 p-3">
+                      <span className="grid h-8 w-8 place-items-center rounded-xl bg-primary-50 text-xs font-bold text-primary-700">
+                        {index + 1}
+                      </span>
+                      <p className="min-w-0 flex-1 text-sm font-semibold">{task.knowledgePointName}</p>
+                      <span className="text-xs text-[var(--em-muted-ink)]">
+                        {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes}min
+                      </span>
+                    </div>
+                  ))
+                : !plan.loading && !plan.error && (
+                    <p className="text-sm text-[var(--em-muted-ink)]">尚未生成学习计划。</p>
+                  )}
             </div>
-          </div>
+          </GlassPanel>
 
-          <LearningJourneyTimeline
+          <LearningStoryTimeline
             evidence={evidence.data ?? []}
             plan={plan.plan}
             practiceEvaluations={Object.values(practiceEvaluationsByTask)}
@@ -241,59 +263,13 @@ export function ArchivePage() {
             error={evidence.error}
             onRetry={() => void evidence.refetch()}
           />
-
-          <p className="text-[11px] text-gray-300">
-            报告 = 学习画像 + 学习诊断 + 当前学习计划 + 最近学习行为 · 为后续重规划提供最新学习状态
-          </p>
         </div>
-      )}
-    </AppShell>
-  );
-}
 
-function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p
-        className={cn(
-          'mt-1.5 text-xl font-bold tracking-tight',
-          value === '暂无足够数据' || value === '--' ? 'text-gray-400' : 'text-blue-700'
-        )}
-      >
-        {value}
-      </p>
-      {hint && <p className="mt-1 text-[11px] text-gray-400">{hint}</p>}
-    </div>
-  );
-}
-
-function KnowledgeBar({ kp }: { kp: KnowledgePointDiagnosis }) {
-  const assessed =
-    kp.status === 'weak' ||
-    kp.status === 'developing' ||
-    kp.status === 'proficient' ||
-    kp.status === 'mastered';
-  return (
-    <div className="flex items-center gap-4">
-      <span className="w-24 shrink-0 text-sm font-medium text-gray-700">
-        {kp.knowledgePointName}
-      </span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-        <div
-          className={cn('h-full rounded-full', statusBarClass(kp.status))}
-          style={{
-            width: assessed ? `${Math.min(100, kp.masteryScore * 100)}%` : '4%',
-          }}
-        />
+        <p className="flex items-center gap-2 text-xs text-[var(--em-muted-ink)]">
+          <Sparkles className="h-3.5 w-3.5 text-companion" />
+          小涟的观察由真实学习画像、诊断、复述结果、当前计划与最近学习行为共同构成。
+        </p>
       </div>
-      {assessed ? (
-        <span className="w-14 shrink-0 text-right text-sm font-semibold text-gray-800">
-          {pct(kp.masteryScore)}
-        </span>
-      ) : (
-        <span className="w-14 shrink-0 text-right text-xs text-gray-400">尚未评估</span>
-      )}
-    </div>
+    </AppShell>
   );
 }

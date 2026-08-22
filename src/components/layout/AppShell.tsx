@@ -1,27 +1,33 @@
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AppSidebar } from './AppSidebar';
-import { XiaolianAssistant } from '@/components/xiaolian/XiaolianAssistant';
+import { NebulaBackground } from '@/components/design/NebulaBackground';
+import { PageTransition } from '@/components/design/PageTransition';
+import { LearningRail } from './LearningRail';
+import { TopCompanionBar } from './TopCompanionBar';
 
 interface AppShellProps {
   children: ReactNode;
+  companion?: ReactNode;
 }
 
-/**
- * 教育 Workspace 布局外壳：
- * 左侧工作台导航 + 右侧内容区 + 全局小涟悬浮入口。
- */
-export function AppShell({ children }: AppShellProps) {
+/** 星海学院应用外壳：陪伴状态栏、学习星轨与页面级小涟陪伴席。 */
+export function AppShell({ children, companion }: AppShellProps) {
   const location = useLocation();
   return (
-    <div className="flex min-h-screen bg-[#fafbfc] text-gray-900">
-      <AppSidebar currentPath={location.pathname} />
-      <main className="flex-1 overflow-x-hidden">
-        <div className="mx-auto w-full max-w-[1280px] px-4 py-6 md:px-8 md:py-8">
-          {children}
-        </div>
+    <div className="relative min-h-screen overflow-x-clip bg-[var(--em-canvas)] text-[var(--em-ink)]">
+      <NebulaBackground />
+      <TopCompanionBar />
+      <LearningRail currentPath={location.pathname} />
+      <main className="relative z-10 pb-28 pt-16 md:pb-10 md:pl-24">
+        <PageTransition className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 lg:px-10">
+          {companion ? (
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
+              <div className="min-w-0">{children}</div>
+              <aside className="xl:sticky xl:top-24">{companion}</aside>
+            </div>
+          ) : children}
+        </PageTransition>
       </main>
-      <XiaolianAssistant />
     </div>
   );
 }

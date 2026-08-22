@@ -18,6 +18,9 @@ import { Textarea } from '@/components/ui/textarea';
 import type { KnowledgePointContent } from '@/lib/educationApi';
 
 export interface ReflectionWorkspaceProps {
+  learnerId: string;
+  courseId: string;
+  taskId: string;
   knowledge: KnowledgePointContent;
   initialResult?: ReflectionResult | null;
   onComplete: (result: ReflectionResult) => void;
@@ -32,6 +35,9 @@ type ReflectionWorkspaceState =
 const ANALYZING_DELAY_MS = 500;
 
 export function ReflectionWorkspace({
+  learnerId,
+  courseId,
+  taskId,
   knowledge,
   initialResult = null,
   onComplete,
@@ -80,6 +86,9 @@ export function ReflectionWorkspace({
     setState('analyzing');
     analyzingTimer.current = setTimeout(() => {
       const nextResult = buildReflectionResult({
+        learnerId,
+        courseId,
+        taskId,
         knowledge,
         submittedText: trimmedInput,
         submittedAt: new Date().toISOString(),

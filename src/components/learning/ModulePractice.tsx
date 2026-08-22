@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   CheckCircle2,
   XCircle,
@@ -14,10 +14,15 @@ import type { DemoQuestion } from '@/content/learningContent';
 import { cn } from '@/lib/utils';
 
 interface ModulePracticeProps {
+  taskId: string;
   knowledgePointName: string;
   questions: DemoQuestion[];
   /** 练习成功后刷新 Profile / Diagnosis / Current Plan，并返回刷新是否成功。 */
   onPracticeComplete?: (replanning: ReplanningResult) => Promise<boolean> | boolean;
+  /** 将本次服务端评价完整结果交给页面展示，不做二次计算。 */
+  onEvaluationComplete?: (result: PracticeEvaluationResponse) => void;
+  /** 仅报告真实 Practice Evaluation 请求是否进行中。 */
+  onEvaluationPendingChange?: (pending: boolean) => void;
 }
 
 type ResultState =
@@ -34,24 +39,39 @@ function pct(value: number): string {
  * 知识点练习区 —— 本轮升级。
  *
  * 练习题本身属教学资源，允许前端集中保存（Demo Content）；
- * 但提交后**必须**调用真实 POST /api/practice/evaluate，掌握度变化
- * （before/after/confidence）由服务端计算并持久化，禁止前端 mastery += 5。
+ * 掌握度变化（before/after/confidence）由服务端计算并持久化，
+ * 前端只展示返回结果，不自行增加掌握度。
  */
 type RefreshStatus = 'idle' | 'refreshing' | 'done' | 'error';
 
 export function ModulePractice({
+  taskId,
   knowledgePointName,
   questions,
   onPracticeComplete,
+  onEvaluationComplete,
+  onEvaluationPendingChange,
 }: ModulePracticeProps) {
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [result, setResult] = useState<ResultState>({ status: 'idle' });
   const [refreshStatus, setRefreshStatus] = useState<RefreshStatus>('idle');
+  const requestGenerationRef = useRef(0);
+
+  useEffect(() => {
+    requestGenerationRef.current += 1;
+    setQIndex(0);
+    setSelected(null);
+    setResult({ status: 'idle' });
+    setRefreshStatus('idle');
+    return () => {
+      requestGenerationRef.current += 1;
+    };
+  }, [taskId]);
 
   if (questions.length === 0) {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[28px] border border-violet-100 bg-white/70 p-6 shadow-[0_24px_70px_rgba(87,73,151,0.10)] backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <FileQuestion className="h-4 w-4 text-blue-600" />
           <h2 className="text-lg font-bold text-gray-900">快速练习</h2>
@@ -70,8 +90,10 @@ export function ModulePractice({
 
   const submit = async () => {
     if (selected == null) return;
+    const requestGeneration = ++requestGenerationRef.current;
     const isCorrect = question.options[selected].correct;
     setResult({ status: 'loading' });
+    onEvaluationPendingChange?.(true);
     try {
       const data = await evaluatePractice({
         learnerId: DEMO_LEARNER_ID,
@@ -82,16 +104,23 @@ export function ModulePractice({
         score: isCorrect ? 1.0 : 0.0,
         difficulty: question.difficulty,
       });
+      if (requestGeneration !== requestGenerationRef.current) return;
       setResult({ status: 'done', correct: isCorrect, data });
+      onEvaluationComplete?.(data);
       if (onPracticeComplete) {
         setRefreshStatus('refreshing');
         const refreshed = await onPracticeComplete(data.replanning);
+        if (requestGeneration !== requestGenerationRef.current) return;
         setRefreshStatus(refreshed ? 'done' : 'error');
       } else {
         setRefreshStatus('done');
       }
     } catch {
-      setResult({ status: 'error', message: '暂时没能记录这次练习结果，请稍后再试。' });
+      if (requestGeneration === requestGenerationRef.current) {
+        setResult({ status: 'error', message: '暂时没能记录这次练习结果，请稍后再试。' });
+      }
+    } finally {
+      if (requestGeneration === requestGenerationRef.current) onEvaluationPendingChange?.(false);
     }
   };
 
@@ -108,7 +137,7 @@ export function ModulePractice({
   const after = result.status === 'done' ? result.data.masteryAfter : null;
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="rounded-[28px] border border-violet-100 bg-white/70 p-6 shadow-[0_24px_70px_rgba(87,73,151,0.10)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <FileQuestion className="h-4 w-4 text-blue-600" />

@@ -54,7 +54,6 @@ export function LearningSpacePage() {
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const [searchParams] = useSearchParams();
   const [evaluation, setEvaluation] = useState<TaskScopedValue<PracticeEvaluationResponse> | null>(null);
-  const [latestResponse, setLatestResponse] = useState<TaskScopedValue<AgentChatResponse> | null>(null);
   const [tutorPending, setTutorPending] = useState(false);
   const [evaluationPending, setEvaluationPending] = useState(false);
   const [completedRequest, setCompletedRequest] = useState(false);
@@ -102,6 +101,11 @@ export function LearningSpacePage() {
       ? state.practiceEvaluations[currentTaskId] ?? null
       : null,
   );
+  const storedTutorResponse = useLearningLoopStore((state) =>
+    currentTaskId
+      ? state.tutorResponses[currentTaskId] ?? null
+      : null,
+  );
   const currentLearningSessionId = useLearningLoopStore((state) =>
     currentTaskId
       ? state.learningSessionIds[currentTaskId] ?? null
@@ -110,10 +114,13 @@ export function LearningSpacePage() {
   const setPracticeEvaluation = useLearningLoopStore(
     (state) => state.setPracticeEvaluation,
   );
+  const setTutorResponse = useLearningLoopStore(
+    (state) => state.setTutorResponse,
+  );
   const localEvaluation =
     evaluation?.taskId === currentTaskId ? evaluation.data : null;
   const currentEvaluation = localEvaluation ?? storedPracticeEvaluation;
-  const currentTutorResponse = latestResponse?.taskId === currentTaskId ? latestResponse.data : null;
+  const currentTutorResponse = storedTutorResponse;
   const currentEvidence = useMemo(
     () =>
       currentTask
@@ -155,7 +162,6 @@ export function LearningSpacePage() {
 
   useEffect(() => {
     setEvaluation(null);
-    setLatestResponse(null);
     setTutorPending(false);
     setEvaluationPending(false);
     setCompletedRequest(false);
@@ -180,9 +186,9 @@ export function LearningSpacePage() {
   }, []);
   const handleTutorResponse = useCallback((response: AgentChatResponse) => {
     if (!currentTaskId) return;
-    setLatestResponse({ taskId: currentTaskId, data: response });
+    setTutorResponse(currentTaskId, response);
     setCompletedRequest(true);
-  }, [currentTaskId]);
+  }, [currentTaskId, setTutorResponse]);
   const handleEvaluationComplete = useCallback((result: PracticeEvaluationResponse) => {
     if (!currentTaskId) return;
     setEvaluation({ taskId: currentTaskId, data: result });

@@ -6,8 +6,12 @@ import { XiaolianPage } from '@/pages/XiaolianPage';
 import { LearningSpacePage } from '@/pages/LearningSpacePage';
 import { MyLearningPage } from '@/pages/MyLearningPage';
 import { ArchivePage } from '@/pages/ArchivePage';
+import { DemoPage } from '@/pages/DemoPage';
+import { ShowcasePage } from '@/pages/ShowcasePage';
+import { CapabilityPage } from '@/pages/CapabilityPage';
+import { ReflectionPage } from '@/pages/ReflectionPage';
+import { KnowledgePage } from '@/pages/KnowledgePage';
 import {
-  KnowledgePage,
   ResourcesPage,
   SettingsPage,
   AboutPage,
@@ -23,6 +27,14 @@ export const router = createHashRouter([
     element: <Home />,
   },
   {
+    path: '/showcase',
+    element: <ShowcasePage />,
+  },
+  {
+    path: '/demo',
+    element: <DemoPage />,
+  },
+  {
     path: '/xiaolian',
     element: <XiaolianPage />,
   },
@@ -33,6 +45,10 @@ export const router = createHashRouter([
   {
     path: '/space',
     element: <LearningSpacePage />,
+  },
+  {
+    path: '/reflection',
+    element: <ReflectionPage />,
   },
   {
     path: '/knowledge',
@@ -57,6 +73,10 @@ export const router = createHashRouter([
   {
     path: '/about',
     element: <AboutPage />,
+  },
+  {
+    path: '/about/capabilities',
+    element: <CapabilityPage />,
   },
   {
     path: '*',
