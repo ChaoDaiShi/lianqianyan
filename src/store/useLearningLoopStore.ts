@@ -5,7 +5,7 @@ import type { PracticeEvaluationResponse } from '@/lib/educationApi';
 export interface LearningLoopStore {
   reflectionResults: Record<string, ReflectionResult>;
   practiceEvaluations: Record<string, PracticeEvaluationResponse>;
-  setReflectionResult: (result: ReflectionResult) => void;
+  setReflectionResult: (taskId: string, result: ReflectionResult) => void;
   setPracticeEvaluation: (
     taskId: string,
     result: PracticeEvaluationResponse,
@@ -15,11 +15,11 @@ export interface LearningLoopStore {
 export const useLearningLoopStore = create<LearningLoopStore>((set) => ({
   reflectionResults: {},
   practiceEvaluations: {},
-  setReflectionResult: (result) =>
+  setReflectionResult: (taskId, result) =>
     set((state) => ({
       reflectionResults: {
         ...state.reflectionResults,
-        [result.knowledgePointId]: result,
+        [taskId]: result,
       },
     })),
   setPracticeEvaluation: (taskId, result) =>

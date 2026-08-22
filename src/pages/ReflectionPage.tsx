@@ -6,7 +6,11 @@ import { ReflectionWorkspace } from '@/components/learning/ReflectionWorkspace';
 import { getReflectionPageStatus } from '@/components/learning/reflectionPresentation';
 import { Button } from '@/components/ui/button';
 import { useKnowledgePoint } from '@/lib/hooks';
-import { DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
+import {
+  DEMO_COURSE_ID,
+  useLearningLoopStore,
+  useWorkspaceStore,
+} from '@/store';
 
 export function ReflectionPage() {
   const [searchParams] = useSearchParams();
@@ -14,14 +18,21 @@ export function ReflectionPage() {
     searchParams.get('knowledge_point_id')?.trim() ?? '';
   const knowledgePointName =
     searchParams.get('knowledge_point_name')?.trim() ?? '';
+  const taskIdParam = searchParams.get('task_id')?.trim() ?? '';
+  const workspaceTaskId = useWorkspaceStore((state) => state.taskId);
+  const workspaceKnowledgePointId = useWorkspaceStore(
+    (state) => state.knowledgePointId,
+  );
+  const taskId =
+    taskIdParam ||
+    (workspaceKnowledgePointId === knowledgePointId ? workspaceTaskId : '') ||
+    '';
   const knowledgeState = useKnowledgePoint(
     knowledgePointId || undefined,
     DEMO_COURSE_ID,
   );
   const storedResult = useLearningLoopStore((state) =>
-    knowledgePointId
-      ? state.reflectionResults[knowledgePointId] ?? null
-      : null,
+    taskId ? state.reflectionResults[taskId] ?? null : null,
   );
   const setReflectionResult = useLearningLoopStore(
     (state) => state.setReflectionResult,
@@ -104,10 +115,12 @@ export function ReflectionPage() {
   } else {
     content = (
       <ReflectionWorkspace
-        key={knowledge.knowledgePointId}
+        key={`${taskId}:${knowledge.knowledgePointId}`}
         knowledge={knowledge}
         initialResult={storedResult}
-        onComplete={setReflectionResult}
+        onComplete={(result) => {
+          if (taskId) setReflectionResult(taskId, result);
+        }}
       />
     );
   }

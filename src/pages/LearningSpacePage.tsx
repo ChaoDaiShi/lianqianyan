@@ -30,6 +30,7 @@ import {
   useXiaolianRuntimeStore,
 } from '@/store';
 import { getLearningModule } from '@/content/learningContent';
+import { selectLearningSpaceFeedback } from './learningSpacePresentation';
 
 interface TaskScopedValue<T> {
   taskId: string;
@@ -92,8 +93,8 @@ export function LearningSpacePage() {
   const pageAnalyzing = profile.loading || diagnosis.loading || evidence.loading || (Boolean(currentTask) && knowledge.loading);
   const currentTaskId = currentTask?.id ?? null;
   const storedReflectionResult = useLearningLoopStore((state) =>
-    currentTask
-      ? state.reflectionResults[currentTask.knowledgePointId] ?? null
+    currentTaskId
+      ? state.reflectionResults[currentTaskId] ?? null
       : null,
   );
   const storedPracticeEvaluation = useLearningLoopStore((state) =>
@@ -138,6 +139,13 @@ export function LearningSpacePage() {
   const allStagesComplete = stages.every(
     (stage) => stage.status === 'completed',
   );
+  const feedback = selectLearningSpaceFeedback({
+    allStagesComplete,
+    diagnosis: currentDiagnosis,
+    diagnosisGeneratedAt: diagnosis.data?.diagnosisGeneratedAt ?? null,
+    reflectionResult: storedReflectionResult,
+    practiceEvaluation: currentEvaluation,
+  });
 
   useEffect(() => {
     setEvaluation(null);
@@ -195,22 +203,7 @@ export function LearningSpacePage() {
         {!loading && currentTask && <>
           {plan && <LearningJourneyHeader plan={plan} currentTask={currentTask} />}
           <LearningStageProgress stages={stages} />
-          {allStagesComplete && currentDiagnosis ? (
-            <XiaolianFeedbackBubble
-              scenario="learning_completed"
-              diagnosis={currentDiagnosis}
-            />
-          ) : storedReflectionResult ? (
-            <XiaolianFeedbackBubble
-              scenario="reflection_completed"
-              result={storedReflectionResult}
-            />
-          ) : currentEvaluation ? (
-            <XiaolianFeedbackBubble
-              scenario="practice_completed"
-              evaluation={currentEvaluation}
-            />
-          ) : null}
+          {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
           <div className="grid gap-6 xl:grid-cols-[15rem_minmax(24rem,1fr)_20rem] xl:items-start">
             <div className="order-1 xl:order-2 xl:col-start-2 xl:row-start-1"><SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} /></div>
 

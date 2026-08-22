@@ -115,3 +115,105 @@ Result: exit code 0; no whitespace errors. Git emitted only the repository's exi
 
 - The template has no DOM component-rendering test harness. Automated coverage therefore targets the extracted deterministic filtering and feedback presentation helpers, while the React components remain thin typed projections.
 - Reflection results are session-store data rather than `LearningEvidence`; the Evidence card truthfully reports that the current Evidence contract has no returned reflection record.
+
+## Review Fixes
+
+### Implementation
+
+- Changed reflection session storage from knowledge-point keys to current task IDs, matching practice-evaluation scoping.
+- Updated `ReflectionPage` to resolve task identity from an explicit `task_id` or the matching workspace task context.
+- Included task identity in the `ReflectionWorkspace` React key so repeated tasks for the same knowledge point cannot retain prior local reflection state.
+- Updated `LearningSpacePage` to read reflection results only by the current task ID.
+- Added a deterministic page-level feedback selector.
+- `learning_completed` now requires a valid diagnosis generation timestamp strictly after the current practice evaluation evidence timestamp.
+- While diagnosis refresh is pending, stale, invalid, or failed, feedback remains reflection-first and then practice; stale diagnosis is never presented as a validation result.
+
+### TDD RED
+
+Cross-task reflection command:
+
+```text
+pnpm test --run src/store/useLearningLoopStore.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 1 of 2 tests failed.
+- The old setter treated the supplied task ID as the reflection result and wrote an `undefined` key, proving task-scoped storage was absent.
+
+Diagnosis freshness command:
+
+```text
+pnpm test --run src/pages/learningSpacePresentation.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- The suite could not load `learningSpacePresentation` because the deterministic page-level selector did not yet exist.
+
+### TDD GREEN
+
+Cross-task reflection command:
+
+```text
+pnpm test --run src/store/useLearningLoopStore.test.ts
+```
+
+Result: exit code 0; 1 file passed, 2 tests passed.
+
+Diagnosis freshness command:
+
+```text
+pnpm test --run src/pages/learningSpacePresentation.test.ts
+```
+
+Result: exit code 0; 1 file passed, 4 tests passed.
+
+- Covered stale diagnosis with reflection fallback.
+- Covered invalid or unavailable refreshed diagnosis with practice fallback.
+- Covered equal timestamps as insufficient freshness evidence.
+- Covered a diagnosis generated after practice as eligible for `learning_completed`.
+
+### Final Verification
+
+Focused covering command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts src/components/learning/reflectionPresentation.test.ts src/store/useLearningLoopStore.test.ts src/pages/learningSpacePresentation.test.ts
+```
+
+Result: exit code 0; 4 files passed, 23 tests passed, 0 failed.
+
+Required project gate:
+
+```text
+pnpm check
+```
+
+Result: exit code 0.
+
+- `tsc --noEmit` passed.
+- ESLint passed with `--max-warnings 0`.
+
+### Fix Files
+
+- `src/store/useLearningLoopStore.ts`
+- `src/store/useLearningLoopStore.test.ts`
+- `src/pages/ReflectionPage.tsx`
+- `src/pages/LearningSpacePage.tsx`
+- `src/pages/learningSpacePresentation.ts`
+- `src/pages/learningSpacePresentation.test.ts`
+- `.superpowers/sdd/task-3-report.md`
+
+### Fix Self-Review
+
+- Confirmed regenerated or repeated tasks sharing a knowledge point do not read each other's stored reflection.
+- Confirmed the reflection workspace remounts when task identity changes even if the knowledge point is unchanged.
+- Confirmed diagnosis freshness uses only source-backed timestamps from `DiagnosisResult` and `PracticeEvaluationResponse`.
+- Confirmed failed or unfinished diagnosis refresh leaves the earlier reflection/practice feedback intact.
+- Confirmed existing task-scoped Tutor/practice stale-response guards and unrelated UI baseline remain unchanged.
+- Confirmed no backend, API, database, Agent, MCP, or mock-learning-state changes.
+
+### Fix Concerns
+
+- There is no DOM rendering harness in the template. Page feedback branching is covered through the extracted typed selector, while component wiring is checked by TypeScript and ESLint.

@@ -54,15 +54,18 @@ describe('useLearningLoopStore', () => {
     expect(useLearningLoopStore.getState().practiceEvaluations).toEqual({});
   });
 
-  it('stores reflection and practice results under their contract keys', () => {
+  it('stores reflection and practice results under their task contract keys', () => {
     const store = useLearningLoopStore.getState();
 
-    store.setReflectionResult(reflectionResult);
+    store.setReflectionResult('task-1', reflectionResult);
     store.setPracticeEvaluation('task-1', practiceEvaluation);
 
     expect(useLearningLoopStore.getState().reflectionResults).toEqual({
-      'kp-deadlock': reflectionResult,
+      'task-1': reflectionResult,
     });
+    expect(
+      useLearningLoopStore.getState().reflectionResults['task-2'],
+    ).toBeUndefined();
     expect(useLearningLoopStore.getState().practiceEvaluations).toEqual({
       'task-1': practiceEvaluation,
     });
