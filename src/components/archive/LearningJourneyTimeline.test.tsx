@@ -100,6 +100,18 @@ function renderTimeline(
   );
 }
 
+function visibleTimestamp(occurredAt: string): string {
+  return new Date(occurredAt).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+}
+
 describe('LearningJourneyTimeline', () => {
   it('keeps Current Plan context visible when Evidence fails and offers retry', () => {
     const html = renderTimeline({ plan, error: true });
@@ -127,6 +139,8 @@ describe('LearningJourneyTimeline', () => {
     expect(html).toContain('PracticeEvaluationResponse');
     expect(html).toContain(`dateTime="${learningEvidence.occurredAt}"`);
     expect(html).toContain(`dateTime="${evaluation.evidence.occurredAt}"`);
+    expect(html).toContain(visibleTimestamp(learningEvidence.occurredAt));
+    expect(html).toContain(visibleTimestamp(evaluation.evidence.occurredAt));
   });
 
   it('shows an honest empty state when no journey events exist', () => {
@@ -134,5 +148,15 @@ describe('LearningJourneyTimeline', () => {
 
     expect(html).toContain('还没有可展示的学习旅程记录');
     expect(html).toContain('不会把计划任务当作已完成学习');
+  });
+
+  it('uses unframed rows or compact utility surfaces inside the outer panel', () => {
+    const renderedStates = [
+      renderTimeline({ plan, error: true }),
+      renderTimeline({ loading: true }),
+      renderTimeline(),
+    ].join('');
+
+    expect(renderedStates).not.toContain('rounded-[18px]');
   });
 });

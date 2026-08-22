@@ -85,12 +85,12 @@ export function LearningJourneyTimeline({
       </p>
 
       {loading && (
-        <p className="mt-4 rounded-[18px] border border-violet-100 bg-white/45 p-3 text-sm text-[var(--em-muted-ink)]">
+        <p className="mt-4 border-l-2 border-violet-200 py-1 pl-3 text-sm text-[var(--em-muted-ink)]">
           正在读取最近学习证据，当前计划上下文仍可查看。
         </p>
       )}
       {error && (
-        <div className="mt-4 rounded-[18px] border border-amber-200 bg-amber-50/70 p-3">
+        <div className="mt-4 border-l-2 border-amber-300 py-1 pl-3">
           <p className="text-sm text-amber-800">最近学习证据暂时无法读取，当前计划上下文仍可查看。</p>
           <Button
             type="button"
@@ -106,7 +106,7 @@ export function LearningJourneyTimeline({
       )}
 
       {!loading && !error && events.length === 0 && (
-        <div className="mt-5 rounded-[18px] border border-dashed border-violet-200 bg-white/40 p-5">
+        <div className="mt-5 border-t border-dashed border-violet-200 pt-4">
           <p className="text-sm font-semibold">还没有可展示的学习旅程记录。</p>
           <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">
             这里仅展示真实来源记录，也不会把计划任务当作已完成学习。
@@ -122,13 +122,13 @@ export function LearningJourneyTimeline({
 
             return (
               <li key={event.id} className="relative flex gap-3">
-                <div className="relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-violet-100 bg-white text-primary-600">
+                <div className="relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-md border border-violet-100 bg-white text-primary-600">
                   <Icon className="h-4 w-4" />
                 </div>
                 {index < events.length - 1 && (
                   <span className="absolute bottom-[-1rem] left-[17px] top-9 w-px bg-violet-100" />
                 )}
-                <article className="min-w-0 flex-1 rounded-[18px] border border-violet-100 bg-white/50 p-4">
+                <article className="min-w-0 flex-1 border-b border-violet-100 pb-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <strong className="text-sm">{event.title}</strong>
                     <time

@@ -153,3 +153,120 @@ including unrelated changes in `src/pages/ArchivePage.tsx` and untracked files
 under `src/components/archive`. The Task 4 commit must therefore use selective
 staging for the Archive integration hunks and explicit paths for the two new
 timeline files and this report.
+
+## Review Fix Wave (2026-08-22)
+
+### Scope
+
+This fix wave preserves the dirty UI-6A Archive baseline and does not modify
+or stage `src/pages/ArchivePage.tsx`. It adds a page-level guard around that
+final-worktree integration, strengthens timestamp coverage, and removes the
+nested card treatment inside `LearningJourneyTimeline`.
+
+The new `src/pages/ArchivePage.test.tsx` imports the actual current
+`ArchivePage.tsx` and uses focused SSR mocks only at its dependencies. It
+proves that:
+
+- `LearningIdentityCard` is still rendered when profile and diagnosis data
+  exist.
+- `LearningJourneyTimeline` is rendered and `GrowthTimeline` is absent.
+- The timeline receives the current Plan, real Evidence,
+  `Object.values(practiceEvaluations)`, and the learner/course ids.
+- Evidence error/loading state does not suppress the independent Current Plan
+  content or loading state.
+- The timeline's Evidence retry calls only `evidence.refetch`, not the Plan
+  retry.
+
+No renderer dependency was added. The node Vitest setup has SSR but no
+interactive React renderer, so retry wiring is tested by capturing the
+`onRetry` prop from the actual page render, invoking it, and asserting the
+Evidence refetch callback.
+
+### RED Evidence
+
+Command:
+
+```text
+pnpm test --run src/pages/ArchivePage.test.tsx src/components/archive/LearningJourneyTimeline.test.tsx
+```
+
+Exact result summary:
+
+```text
+✓ src/pages/ArchivePage.test.tsx (2 tests)
+❯ src/components/archive/LearningJourneyTimeline.test.tsx (4 tests | 1 failed)
+× LearningJourneyTimeline > uses unframed rows or compact utility surfaces inside the outer panel
+  → expected '<section class="em-glass rounded-[28p…' not to contain 'rounded-[18px]'
+
+Test Files  1 failed | 1 passed (2)
+Tests       1 failed | 5 passed (6)
+```
+
+The failure exposed the existing 18px loading, error, empty, and event-card
+surfaces inside the outer `GlassPanel`.
+
+### GREEN Evidence
+
+The minimal presentation change keeps `GlassPanel` as the sole outer surface.
+Loading and error states now use unframed left-border rows, the empty state
+uses a dashed top divider, event content uses an unframed bottom-divider row,
+and the icon utility surface uses `rounded-md`.
+
+Command:
+
+```text
+pnpm test --run src/pages/ArchivePage.test.tsx src/components/archive/LearningJourneyTimeline.test.tsx
+```
+
+Exact result:
+
+```text
+✓ src/pages/ArchivePage.test.tsx (2 tests) 20ms
+✓ src/components/archive/LearningJourneyTimeline.test.tsx (4 tests) 36ms
+
+Test Files  2 passed (2)
+Tests       6 passed (6)
+```
+
+The timeline source test now also asserts the visible timestamp text generated
+with `toLocaleString('zh-CN', ...)`, in addition to the source ISO value in
+`dateTime`.
+
+### Final Verification
+
+Focused Archive and learning-loop command:
+
+```text
+pnpm test --run src/pages/ArchivePage.test.tsx src/components/archive/LearningJourneyTimeline.test.tsx src/components/learning/learningLoop.test.ts src/store/useLearningLoopStore.test.ts
+```
+
+Exact result:
+
+```text
+✓ src/components/learning/learningLoop.test.ts (17 tests) 9ms
+✓ src/store/useLearningLoopStore.test.ts (3 tests) 4ms
+✓ src/pages/ArchivePage.test.tsx (2 tests) 14ms
+✓ src/components/archive/LearningJourneyTimeline.test.tsx (4 tests) 34ms
+
+Test Files  4 passed (4)
+Tests       26 passed (26)
+```
+
+Required repository gate:
+
+```text
+pnpm check
+$ pnpm run type-check && pnpm run lint
+$ tsc --noEmit
+$ eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0
+```
+
+Exit code: `0`.
+
+### Dirty-Baseline Integration Note
+
+The page-level test deliberately imports the actual final-worktree
+`src/pages/ArchivePage.tsx`. This guards the UI-6A dirty-baseline integration
+that a historical Task 4 commit-only diff cannot show. The predecessor page
+file remains unstaged; only the new fix-wave test, timeline test/component
+edits, and this report are included in the fix-wave commit.
