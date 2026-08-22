@@ -217,3 +217,100 @@ Result: exit code 0.
 ### Fix Concerns
 
 - There is no DOM rendering harness in the template. Page feedback branching is covered through the extracted typed selector, while component wiring is checked by TypeScript and ESLint.
+
+## Re-Review Fixes: Task Identity Handoff and Evidence Freshness
+
+### Implementation
+
+- Added `buildReflectionHref` as the typed route builder for reflection navigation.
+- Updated `LearningModulePanel` to pass the exact current `StudyTask.id` as `task_id`, along with the encoded knowledge-point identity and name.
+- Removed the workspace-task fallback from `ReflectionPage`; reflection persistence is enabled only when the route supplies an explicit non-empty `task_id`.
+- Extended `filterLearningEvidence` with an optional `learningStartedNotBefore` boundary.
+- When a boundary is supplied, only valid `learning_started` evidence at or after that timestamp is eligible; an invalid boundary conservatively returns no learning-start completion.
+- Wired `LearningSpacePage` to use the current real `StudyTask.createdAt` as the freshness boundary. Historical practice evidence remains read-only and available for its existing presentation.
+
+### TDD RED
+
+Reflection route command:
+
+```text
+pnpm test --run src/components/learning/reflectionPresentation.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 1 of 3 tests failed because `buildReflectionHref` did not exist.
+
+Evidence freshness command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: expected failure, exit code 1.
+
+- 2 of 16 tests failed because historical same-knowledge-point learning evidence was still accepted and invalid task boundaries were not handled conservatively.
+
+### TDD GREEN
+
+Reflection route command:
+
+```text
+pnpm test --run src/components/learning/reflectionPresentation.test.ts
+```
+
+Result: exit code 0; 1 file passed, 3 tests passed.
+
+Evidence freshness command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts
+```
+
+Result: exit code 0; 1 file passed, 16 tests passed.
+
+### Final Verification
+
+Focused covering command:
+
+```text
+pnpm test --run src/components/learning/learningLoop.test.ts src/components/learning/reflectionPresentation.test.ts src/store/useLearningLoopStore.test.ts src/pages/learningSpacePresentation.test.ts
+```
+
+Result: exit code 0; 4 files passed, 25 tests passed, 0 failed.
+
+Required project gate:
+
+```text
+pnpm check
+```
+
+Result: exit code 0.
+
+- `tsc --noEmit` passed.
+- ESLint passed with `--max-warnings 0`.
+
+### Re-Review Fix Files
+
+- `src/components/learning/LearningModulePanel.tsx`
+- `src/components/learning/reflectionPresentation.ts`
+- `src/components/learning/reflectionPresentation.test.ts`
+- `src/components/learning/learningLoop.ts`
+- `src/components/learning/learningLoop.test.ts`
+- `src/pages/ReflectionPage.tsx`
+- `src/pages/LearningSpacePage.tsx`
+- `.superpowers/sdd/task-3-report.md`
+
+### Re-Review Self-Review
+
+- Confirmed reflection navigation and persistence use the same explicit current task identity.
+- Confirmed `ReflectionPage` cannot silently persist against an unrelated workspace task.
+- Confirmed regenerated tasks do not inherit historical Understand completion merely because the learner, course, and knowledge point match.
+- Confirmed the freshness rule uses only the real `StudyTask.createdAt` and evidence `occurredAt` fields.
+- Confirmed prior task-scoped reflection, stale-response, and diagnosis-refresh protections remain intact.
+- Confirmed no backend, API, database, Agent, MCP, or mock-learning-state changes.
+
+### Re-Review Concerns
+
+- The template still has no DOM rendering harness. The route handoff is covered through the extracted route builder, with component wiring checked by TypeScript and ESLint.
+- `StudyTask.createdAt` is the conservative available boundary because the current frontend evidence contract does not expose a directly matchable task ID or session ID.

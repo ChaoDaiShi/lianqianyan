@@ -1,3 +1,4 @@
+import type { PersistedStudyTask } from '@/domain';
 import type { KnowledgePointContent } from '@/lib/educationApi';
 
 export const REFLECTION_FEEDBACK_DISCLAIMER =
@@ -9,6 +10,15 @@ export type ReflectionPageStatus =
   | 'error'
   | 'empty'
   | 'ready';
+
+export function buildReflectionHref(
+  task: Pick<
+    PersistedStudyTask,
+    'id' | 'knowledgePointId' | 'knowledgePointName'
+  >,
+): string {
+  return `/reflection?task_id=${encodeURIComponent(task.id)}&knowledge_point_id=${encodeURIComponent(task.knowledgePointId)}&knowledge_point_name=${encodeURIComponent(task.knowledgePointName)}`;
+}
 
 export function getReflectionPageStatus(input: {
   requestedKnowledgePointId: string;

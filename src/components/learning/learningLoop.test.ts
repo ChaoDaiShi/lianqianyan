@@ -224,14 +224,21 @@ describe('deriveLearningStages', () => {
 });
 
 describe('filterLearningEvidence', () => {
-  it('returns only matching learning-start and practice-evaluation evidence', () => {
+  it('excludes learning-start evidence created before the current task', () => {
     const matchingLearning = createEvidence({
       id: 'evidence-learning-1',
       evidenceType: 'learning_started',
+      occurredAt: '2026-08-22T10:00:00.000Z',
+    });
+    const historicalLearning = createEvidence({
+      id: 'evidence-learning-historical',
+      evidenceType: 'learning_started',
+      occurredAt: '2026-08-22T08:00:00.000Z',
     });
     const matchingPractice = createEvidence({
       id: 'evidence-practice-1',
       evidenceType: 'practice_answer_evaluated',
+      occurredAt: '2026-08-22T08:30:00.000Z',
     });
     const otherLearner = createEvidence({
       id: 'evidence-other-learner',
@@ -249,6 +256,7 @@ describe('filterLearningEvidence', () => {
       evidenceType: 'learning_started',
     });
     const evidence = [
+      historicalLearning,
       matchingLearning,
       otherLearner,
       matchingPractice,
@@ -261,6 +269,7 @@ describe('filterLearningEvidence', () => {
       learnerId: 'learner-1',
       courseId: 'course-1',
       knowledgePointId: 'kp-deadlock',
+      learningStartedNotBefore: '2026-08-22T09:00:00.000Z',
     });
 
     expect(result).toEqual({
@@ -268,12 +277,30 @@ describe('filterLearningEvidence', () => {
       practiceEvaluated: [matchingPractice],
     });
     expect(evidence).toEqual([
+      historicalLearning,
       matchingLearning,
       otherLearner,
       matchingPractice,
       otherCourse,
       otherKnowledgePoint,
     ]);
+  });
+
+  it('conservatively returns no learning-start evidence for an invalid task boundary', () => {
+    const matchingLearning = createEvidence({
+      evidenceType: 'learning_started',
+      occurredAt: '2026-08-22T10:00:00.000Z',
+    });
+
+    expect(
+      filterLearningEvidence({
+        evidence: [matchingLearning],
+        learnerId: 'learner-1',
+        courseId: 'course-1',
+        knowledgePointId: 'kp-deadlock',
+        learningStartedNotBefore: 'invalid',
+      }).learningStarted,
+    ).toEqual([]);
   });
 });
 

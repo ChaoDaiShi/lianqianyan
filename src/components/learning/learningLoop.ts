@@ -118,6 +118,7 @@ export function filterLearningEvidence(input: {
   learnerId: string;
   courseId: string;
   knowledgePointId: string;
+  learningStartedNotBefore?: string;
 }): FilteredLearningEvidence {
   const matchingEvidence = input.evidence.filter(
     (item) =>
@@ -125,10 +126,23 @@ export function filterLearningEvidence(input: {
       item.courseId === input.courseId &&
       item.knowledgePointId === input.knowledgePointId,
   );
+  const learningStartedBoundary =
+    input.learningStartedNotBefore === undefined
+      ? null
+      : Date.parse(input.learningStartedNotBefore);
 
   return {
     learningStarted: matchingEvidence.filter(
-      (item) => item.evidenceType === 'learning_started',
+      (item) => {
+        if (item.evidenceType !== 'learning_started') return false;
+        if (learningStartedBoundary === null) return true;
+        const occurredAt = Date.parse(item.occurredAt);
+        return (
+          Number.isFinite(learningStartedBoundary) &&
+          Number.isFinite(occurredAt) &&
+          occurredAt >= learningStartedBoundary
+        );
+      },
     ),
     practiceEvaluated: matchingEvidence.filter(
       (item) => item.evidenceType === 'practice_answer_evaluated',

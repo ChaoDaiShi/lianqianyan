@@ -117,6 +117,7 @@ export function LearningSpacePage() {
             learnerId: DEMO_LEARNER_ID,
             courseId: DEMO_COURSE_ID,
             knowledgePointId: currentTask.knowledgePointId,
+            learningStartedNotBefore: currentTask.createdAt,
           })
         : { learningStarted: [], practiceEvaluated: [] },
     [currentTask, evidence.data],

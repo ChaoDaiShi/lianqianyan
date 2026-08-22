@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import type { KnowledgePointContent } from '@/lib/educationApi';
 import {
+  buildReflectionHref,
   getReflectionPageStatus,
   REFLECTION_FEEDBACK_DISCLAIMER,
 } from './reflectionPresentation';
 
 describe('reflection presentation', () => {
+  it('carries the exact current task identity into the reflection route', () => {
+    expect(
+      buildReflectionHref({
+        id: 'task/retry 2',
+        knowledgePointId: 'kp/deadlock',
+        knowledgePointName: 'Deadlock & recovery',
+      }),
+    ).toBe(
+      '/reflection?task_id=task%2Fretry%202&knowledge_point_id=kp%2Fdeadlock&knowledge_point_name=Deadlock%20%26%20recovery',
+    );
+  });
+
   it('uses the exact required Chinese feedback disclaimer', () => {
     expect(REFLECTION_FEEDBACK_DISCLAIMER).toBe(
       '当前为前端教学反馈演示，不代表 AI 自动评分',
