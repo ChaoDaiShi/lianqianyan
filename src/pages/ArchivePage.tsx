@@ -5,10 +5,9 @@ import {
   Target,
   BookOpen,
   CalendarClock,
-  Activity,
   RotateCw,
-  TrendingUp,
 } from 'lucide-react';
+import { LearningJourneyTimeline } from '@/components/archive/LearningJourneyTimeline';
 import { AppShell } from '@/components/layout/AppShell';
 import {
   useLearnerProfile,
@@ -16,7 +15,7 @@ import {
   useCurrentPlan,
   useRecentEvidence,
 } from '@/lib/hooks';
-import { DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
+import { DEMO_LEARNER_ID, DEMO_COURSE_ID, useLearningLoopStore } from '@/store';
 import {
   DIAGNOSIS_STATUS_LABEL,
   DIAGNOSIS_REASON_TEXT,
@@ -31,30 +30,12 @@ function pct(value: number | null): string {
   return `${Math.round(value * 100)}%`;
 }
 
-function formatTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('zh-CN', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return '';
-  }
-}
-
 const REASON_MAP: Record<string, string> = {
   NO_EVIDENCE: '尚未完成有效评估。',
   LIMITED_EVIDENCE: '有效练习记录较少，判断可信度有限。',
   LOW_MASTERY: '当前掌握度偏低。',
   ADEQUATE_MASTERY: '当前掌握情况尚可。',
   STRONG_MASTERY: '当前掌握情况良好。',
-};
-
-const EVIDENCE_TYPE_LABEL: Record<string, string> = {
-  learning_started: '开始学习',
-  practice_answer_evaluated: '完成练习',
 };
 
 const SORT_ORDER: Record<string, number> = {
@@ -92,6 +73,7 @@ export function ArchivePage() {
   const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const evidence = useRecentEvidence();
+  const practiceEvaluationsByTask = useLearningLoopStore((state) => state.practiceEvaluations);
 
   const reloadAll = () => {
     profile.refetch();
@@ -109,6 +91,9 @@ export function ArchivePage() {
   const kps: KnowledgePointDiagnosis[] = profile.data?.knowledgePoints ?? [];
   const sorted = [...kps].sort(
     (a, b) => (SORT_ORDER[a.status] ?? 9) - (SORT_ORDER[b.status] ?? 9)
+  );
+  const knowledgeNames = Object.fromEntries(
+    kps.map((point) => [point.knowledgePointId, point.knowledgePointName])
   );
   const primary = diagnosis.data?.primaryFocus ?? null;
 
@@ -245,43 +230,17 @@ export function ArchivePage() {
             </div>
           </div>
 
-          {/* 最近学习行为 */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">最近学习行为</h2>
-            </div>
-            <div className="mt-4 space-y-2">
-              {evidence.loading && (
-                <p className="text-sm text-gray-400">正在读取学习记录…</p>
-              )}
-              {!evidence.loading && evidence.error && (
-                <p className="text-sm text-gray-400">暂时无法读取最近学习记录。</p>
-              )}
-              {!evidence.loading &&
-                evidence.data &&
-                evidence.data.length === 0 && (
-                  <p className="text-sm text-gray-400">还没有学习行为记录。</p>
-                )}
-              {!evidence.loading &&
-                evidence.data &&
-                evidence.data.slice(0, 8).map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-2.5 text-sm"
-                  >
-                    <TrendingUp className="h-4 w-4 text-blue-500" />
-                    <span className="text-gray-700">
-                      {EVIDENCE_TYPE_LABEL[ev.evidenceType] ?? ev.evidenceType}
-                      {ev.knowledgePointId ? ` · ${ev.knowledgePointId}` : ''}
-                    </span>
-                    <span className="ml-auto shrink-0 text-xs text-gray-400">
-                      {formatTime(ev.occurredAt)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
+          <LearningJourneyTimeline
+            evidence={evidence.data ?? []}
+            plan={plan.plan}
+            practiceEvaluations={Object.values(practiceEvaluationsByTask)}
+            knowledgeNames={knowledgeNames}
+            learnerId={DEMO_LEARNER_ID}
+            courseId={DEMO_COURSE_ID}
+            loading={evidence.loading}
+            error={evidence.error}
+            onRetry={() => void evidence.refetch()}
+          />
 
           <p className="text-[11px] text-gray-300">
             报告 = 学习画像 + 学习诊断 + 当前学习计划 + 最近学习行为 · 为后续重规划提供最新学习状态
