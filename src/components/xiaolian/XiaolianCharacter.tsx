@@ -2,6 +2,10 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { xiaolianCharacterAssets } from '@/assets/xiaolian/manifest';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
+import type {
+  XiaolianCompanionState,
+  XiaolianRuntimeState,
+} from '@/store/useXiaolianRuntimeStore';
 
 const SIZE = {
   sm: 'w-16',
@@ -23,31 +27,57 @@ const STATE_LABEL: Record<XiaolianCharacterState, string> = {
 
 export interface XiaolianCharacterProps {
   state?: XiaolianCharacterState;
+  runtimeState?: XiaolianRuntimeState;
+  companionState?: XiaolianCompanionState;
   size?: keyof typeof SIZE;
   message?: string;
   className?: string;
   priority?: boolean;
 }
 
+export function resolveXiaolianCharacterState(
+  runtimeState: XiaolianRuntimeState,
+  companionState: XiaolianCompanionState,
+): XiaolianCharacterState {
+  if (runtimeState === 'thinking') return 'thinking';
+  if (runtimeState === 'loading') return 'analyzing';
+
+  switch (companionState) {
+    case 'encouraging':
+      return 'encourage';
+    case 'reminding':
+      return 'teaching';
+    case 'celebrating':
+      return 'success';
+    case 'companion':
+      return 'idle';
+  }
+}
+
 export function XiaolianCharacter({
   state = 'idle',
+  runtimeState,
+  companionState = 'companion',
   size = 'md',
   message,
   className,
   priority = false,
 }: XiaolianCharacterProps) {
   const reduceMotion = useReducedMotion();
+  const displayState = runtimeState
+    ? resolveXiaolianCharacterState(runtimeState, companionState)
+    : state;
   return (
     <div className={cn('flex flex-col items-center', className)}>
       <motion.div
         className={cn('relative aspect-[24/31] shrink-0', SIZE[size])}
         variants={characterMotion}
-        animate={reduceMotion ? undefined : state}
+        animate={reduceMotion ? undefined : displayState}
       >
         <div className="absolute inset-x-[12%] bottom-[4%] h-[22%] rounded-full bg-primary-300/25 blur-2xl" />
         <img
-          src={xiaolianCharacterAssets[state]}
-          alt={STATE_LABEL[state]}
+          src={xiaolianCharacterAssets[displayState]}
+          alt={STATE_LABEL[displayState]}
           width="480"
           height="620"
           loading={priority ? 'eager' : 'lazy'}

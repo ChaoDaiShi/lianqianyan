@@ -1,20 +1,32 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { XiaolianDailyInsight } from '@/components/home/XiaolianDailyInsight';
-import { TodayPlanCard } from '@/components/home/TodayPlanCard';
+import { TodaysJourney } from '@/components/home/TodaysJourney';
+import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
 import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useXiaolianRuntimeStore } from '@/store';
 
 function Home() {
+  const [entryOpen, setEntryOpen] = useState(false);
   const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const evidence = useRecentEvidence();
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
-  const runtimeState = useXiaolianRuntimeStore((runtime) => runtime.state);
-  const setRuntimeState = useXiaolianRuntimeStore((runtime) => runtime.setState);
+  const runtimeState = useXiaolianRuntimeStore(
+    (runtime) => runtime.runtimeState,
+  );
+  const companionState = useXiaolianRuntimeStore(
+    (runtime) => runtime.companionState,
+  );
+  const setRuntimeState = useXiaolianRuntimeStore(
+    (runtime) => runtime.setRuntimeState,
+  );
+  const setCompanionState = useXiaolianRuntimeStore(
+    (runtime) => runtime.setCompanionState,
+  );
   const resetRuntime = useXiaolianRuntimeStore((runtime) => runtime.reset);
   const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === DEMO_LEARNER_ID && item.courseId === DEMO_COURSE_ID);
   const focus = diagnosis.data?.primaryFocus ?? null;
@@ -26,17 +38,20 @@ function Home() {
   const error = profile.error || diagnosis.error || plan.error || evidence.error;
 
   useEffect(() => {
-    if (plan.generating) setRuntimeState('planning');
-    else if (loading) setRuntimeState(plan.loading ? 'planning' : 'analyzing');
-    else if (!error && (focus || currentTask)) setRuntimeState('success');
+    if (plan.generating || loading) setRuntimeState('loading');
     else setRuntimeState('idle');
-  }, [currentTask, error, focus, loading, plan.generating, plan.loading, setRuntimeState]);
+  }, [loading, plan.generating, setRuntimeState]);
+  useEffect(() => {
+    if (!error && (focus || currentTask)) setCompanionState('reminding');
+    else setCompanionState('companion');
+  }, [currentTask, error, focus, setCompanionState]);
   useEffect(() => () => resetRuntime(), [resetRuntime]);
 
   return <AppShell><div className="space-y-6 lg:space-y-8">
-    <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} loading={loading} error={error} runtimeState={runtimeState} />
-    <XiaolianDailyInsight profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} loading={loading} error={error} />
-    <TodayPlanCard plan={plan.plan} task={currentTask} loading={plan.loading} error={plan.error} generating={plan.generating} starting={startingTaskId === currentTask?.id} startError={startError} onGenerate={() => void plan.generate()} onStart={() => { if (plan.plan && currentTask) void startTask(plan.plan, currentTask); }} onRetry={() => void plan.refetch()} />
+    <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} loading={loading} error={error} runtimeState={runtimeState} companionState={companionState} onPrepareTask={() => setEntryOpen(true)} />
+    <XiaolianDailyInsight profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} loading={loading} error={error} onPrepareTask={() => setEntryOpen(true)} />
+    <TodaysJourney plan={plan.plan} currentTaskId={currentTask?.id ?? null} loading={plan.loading} error={plan.error} generating={plan.generating} starting={startingTaskId === currentTask?.id} startError={startError} onGenerate={() => void plan.generate()} onPrepare={() => setEntryOpen(true)} onRetry={() => void plan.refetch()} />
+    <LearningEntryDialog open={entryOpen} onOpenChange={setEntryOpen} plan={plan.plan} task={currentTask} diagnosis={diagnosis.data} evidence={courseEvidence} dataLoading={diagnosis.loading || evidence.loading} diagnosisError={diagnosis.error} evidenceError={evidence.error} starting={startingTaskId === currentTask?.id} startError={startError} onConfirm={() => { if (plan.plan && currentTask) void startTask(plan.plan, currentTask); }} />
   </div></AppShell>;
 }
 

@@ -1,22 +1,33 @@
 import { create } from 'zustand';
 
-export type XiaolianRuntimeState =
-  | 'idle'
-  | 'thinking'
-  | 'analyzing'
-  | 'planning'
-  | 'teaching'
-  | 'evaluating'
-  | 'success';
+export type XiaolianRuntimeState = 'idle' | 'thinking' | 'loading';
+
+export type XiaolianCompanionState =
+  | 'companion'
+  | 'encouraging'
+  | 'reminding'
+  | 'celebrating';
 
 interface XiaolianRuntimeStore {
-  state: XiaolianRuntimeState;
-  setState: (state: XiaolianRuntimeState) => void;
+  runtimeState: XiaolianRuntimeState;
+  companionState: XiaolianCompanionState;
+  setRuntimeState: (state: XiaolianRuntimeState) => void;
+  setCompanionState: (state: XiaolianCompanionState) => void;
+  resetRuntime: () => void;
+  resetCompanion: () => void;
   reset: () => void;
 }
 
 export const useXiaolianRuntimeStore = create<XiaolianRuntimeStore>((set) => ({
-  state: 'idle',
-  setState: (state) => set({ state }),
-  reset: () => set({ state: 'idle' }),
+  runtimeState: 'idle',
+  companionState: 'companion',
+  setRuntimeState: (runtimeState) => set({ runtimeState }),
+  setCompanionState: (companionState) => set({ companionState }),
+  resetRuntime: () => set({ runtimeState: 'idle' }),
+  resetCompanion: () => set({ companionState: 'companion' }),
+  reset: () =>
+    set({
+      runtimeState: 'idle',
+      companionState: 'companion',
+    }),
 }));

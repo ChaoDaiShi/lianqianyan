@@ -6,7 +6,9 @@ import { GlassPanel } from '@/components/design/GlassPanel';
 import { QuestCard } from '@/components/design/QuestCard';
 import { LearningState } from '@/components/feedback/LearningState';
 import { EvidenceInsightCard } from '@/components/learning/EvidenceInsightCard';
+import { CompanionJourney } from '@/components/learning/CompanionJourney';
 import { LearningArtifactPanel } from '@/components/learning/LearningArtifactPanel';
+import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { LearningModulePanel } from '@/components/learning/LearningModulePanel';
 import { LearningJourneyHeader } from '@/components/learning/LearningJourneyHeader';
 import { LearningStageProgress } from '@/components/learning/LearningStageProgress';
@@ -14,8 +16,10 @@ import {
   deriveLearningStages,
   filterLearningEvidence,
 } from '@/components/learning/learningLoop';
+import { deriveCompanionJourney } from '@/components/learning/companionFlow';
 import { ModulePractice } from '@/components/learning/ModulePractice';
 import { SpaceTutor } from '@/components/learning/SpaceTutor';
+import { TutorExplanationCard } from '@/components/learning/TutorExplanationCard';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { Button } from '@/components/ui/button';
 import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
@@ -56,8 +60,14 @@ export function LearningSpacePage() {
   const [evaluation, setEvaluation] = useState<TaskScopedValue<PracticeEvaluationResponse> | null>(null);
   const [tutorPending, setTutorPending] = useState(false);
   const [evaluationPending, setEvaluationPending] = useState(false);
-  const [completedRequest, setCompletedRequest] = useState(false);
-  const setRuntimeState = useXiaolianRuntimeStore((state) => state.setState);
+  const [preparingTask, setPreparingTask] =
+    useState<PersistedStudyTask | null>(null);
+  const setRuntimeState = useXiaolianRuntimeStore(
+    (state) => state.setRuntimeState,
+  );
+  const setCompanionState = useXiaolianRuntimeStore(
+    (state) => state.setCompanionState,
+  );
   const resetRuntime = useXiaolianRuntimeStore((state) => state.reset);
   const taskIdParam = searchParams.get('task_id');
   const knowledgePointParam = searchParams.get('knowledge_point_id');
@@ -152,6 +162,14 @@ export function LearningSpacePage() {
   const allStagesComplete = stages.every(
     (stage) => stage.status === 'completed',
   );
+  const companionJourneyState = deriveCompanionJourney({
+    hasLearningStarted: currentEvidence.learningStarted.length > 0,
+    hasTutorResponse: currentTutorResponse !== null,
+    tutorPending,
+    hasPracticeEvaluation: currentEvaluation !== null,
+    hasReflectionResult: storedReflectionResult !== null,
+    allStagesComplete,
+  });
   const feedback = selectLearningSpaceFeedback({
     allStagesComplete,
     diagnosis: currentDiagnosis,
@@ -164,39 +182,38 @@ export function LearningSpacePage() {
     setEvaluation(null);
     setTutorPending(false);
     setEvaluationPending(false);
-    setCompletedRequest(false);
   }, [currentTask?.id]);
   useEffect(() => {
-    if (evaluationPending) setRuntimeState('evaluating');
-    else if (tutorPending) setRuntimeState('teaching');
-    else if (loading) setRuntimeState('planning');
-    else if (pageAnalyzing) setRuntimeState('analyzing');
-    else if (completedRequest) setRuntimeState('success');
+    if (tutorPending) setRuntimeState('thinking');
+    else if (evaluationPending || loading || pageAnalyzing)
+      setRuntimeState('loading');
     else setRuntimeState('idle');
-  }, [completedRequest, evaluationPending, loading, pageAnalyzing, setRuntimeState, tutorPending]);
+  }, [evaluationPending, loading, pageAnalyzing, setRuntimeState, tutorPending]);
+  useEffect(() => {
+    if (allStagesComplete) setCompanionState('celebrating');
+    else if (feedback) setCompanionState('encouraging');
+    else if (currentTask) setCompanionState('reminding');
+    else setCompanionState('companion');
+  }, [allStagesComplete, currentTask, feedback, setCompanionState]);
   useEffect(() => () => resetRuntime(), [resetRuntime]);
 
   const handleTutorPending = useCallback((pending: boolean) => {
     setTutorPending(pending);
-    if (pending) setCompletedRequest(false);
   }, []);
   const handleEvaluationPending = useCallback((pending: boolean) => {
     setEvaluationPending(pending);
-    if (pending) setCompletedRequest(false);
   }, []);
   const handleTutorResponse = useCallback((response: AgentChatResponse) => {
     if (!currentTaskId) return;
     setTutorResponse(currentTaskId, response);
-    setCompletedRequest(true);
   }, [currentTaskId, setTutorResponse]);
   const handleEvaluationComplete = useCallback((result: PracticeEvaluationResponse) => {
     if (!currentTaskId) return;
     setEvaluation({ taskId: currentTaskId, data: result });
     setPracticeEvaluation(currentTaskId, result);
-    setCompletedRequest(true);
   }, [currentTaskId, setPracticeEvaluation]);
   const handleStartTask = (task: PersistedStudyTask) => {
-    if (plan) void startTask(plan, task);
+    setPreparingTask(task);
   };
 
   return (
@@ -214,12 +231,13 @@ export function LearningSpacePage() {
 
         {!loading && currentTask && <>
           {plan && <LearningJourneyHeader plan={plan} currentTask={currentTask} />}
+          <CompanionJourney state={companionJourneyState} />
           <LearningStageProgress stages={stages} />
           {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
           <div className="grid gap-6 xl:grid-cols-[15rem_minmax(24rem,1fr)_20rem] xl:items-start">
             <div className="order-1 xl:order-2 xl:col-start-2 xl:row-start-1"><SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} /></div>
 
-            <div className="order-2 xl:order-1 xl:col-start-1 xl:row-start-1"><LearningModulePanel task={currentTask} taskCount={tasks.length} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
+            <div className="order-2 space-y-5 xl:order-1 xl:col-start-1 xl:row-start-1"><TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} /><LearningModulePanel task={currentTask} taskCount={tasks.length} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
 
             <div className="order-3 xl:col-start-3 xl:row-start-1 xl:sticky xl:top-24"><LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} /></div>
 
@@ -235,6 +253,24 @@ export function LearningSpacePage() {
             onRetry={() => void evidence.refetch()}
           />
         </>}
+        <LearningEntryDialog
+          open={preparingTask !== null}
+          onOpenChange={(open) => {
+            if (!open) setPreparingTask(null);
+          }}
+          plan={plan}
+          task={preparingTask}
+          diagnosis={diagnosis.data}
+          evidence={evidence.data ?? []}
+          dataLoading={diagnosis.loading || evidence.loading}
+          diagnosisError={diagnosis.error}
+          evidenceError={evidence.error}
+          starting={startingTaskId === preparingTask?.id}
+          startError={startError}
+          onConfirm={() => {
+            if (plan && preparingTask) void startTask(plan, preparingTask);
+          }}
+        />
       </div>
     </AppShell>
   );

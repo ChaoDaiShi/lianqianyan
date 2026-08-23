@@ -1,15 +1,25 @@
+import { useState } from 'react';
 import { ArrowLeft, RotateCw } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { LearningState } from '@/components/feedback/LearningState';
+import { findNextPlanTask } from '@/components/learning/companionFlow';
+import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
+import { ReflectionNextStepCard } from '@/components/learning/ReflectionNextStepCard';
 import { ReflectionWorkspace } from '@/components/learning/ReflectionWorkspace';
+import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import {
   buildLearningSpaceHref,
   getReflectionPageStatus,
   getReflectionTaskStatus,
 } from '@/components/learning/reflectionPresentation';
 import { Button } from '@/components/ui/button';
-import { useCurrentPlan, useKnowledgePoint } from '@/lib/hooks';
+import {
+  useCurrentPlan,
+  useDiagnosis,
+  useKnowledgePoint,
+  useRecentEvidence,
+} from '@/lib/hooks';
 import {
   DEMO_COURSE_ID,
   DEMO_LEARNER_ID,
@@ -17,6 +27,7 @@ import {
 } from '@/store';
 
 export function ReflectionPage() {
+  const [entryOpen, setEntryOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const knowledgePointId =
     searchParams.get('knowledge_point_id')?.trim() ?? '';
@@ -32,6 +43,9 @@ export function ReflectionPage() {
     DEMO_COURSE_ID,
   );
   const planState = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const diagnosisState = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const evidenceState = useRecentEvidence();
+  const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const storedResult = useLearningLoopStore((state) =>
     taskId ? state.reflectionResults[taskId] ?? null : null,
   );
@@ -55,6 +69,10 @@ export function ReflectionPage() {
     loading: planState.loading,
     error: planState.error,
   });
+  const nextTask =
+    storedResult && !planState.loading && !planState.error
+      ? findNextPlanTask(planState.plan, taskId)
+      : null;
 
   let content;
 
@@ -101,7 +119,21 @@ export function ReflectionPage() {
       />
     );
   } else if (taskStatus === 'mismatch') {
-    content = (
+    content = storedResult ? (
+      <>
+        <LearningState
+          kind="empty"
+          title="当前学习计划已调整"
+          description="本次复述结果仍保留，但原任务已不在当前计划中，因此不会开放新的复述提交。"
+        />
+        <ReflectionNextStepCard
+          result={storedResult}
+          nextTask={nextTask}
+          starting={startingTaskId === nextTask?.id}
+          onPrepareNext={() => setEntryOpen(true)}
+        />
+      </>
+    ) : (
       <LearningState
         kind="empty"
         title="学习任务与知识点不匹配"
@@ -172,17 +204,27 @@ export function ReflectionPage() {
     );
   } else {
     content = (
-      <ReflectionWorkspace
-        key={`${taskId}:${knowledge.knowledgePointId}`}
-        learnerId={DEMO_LEARNER_ID}
-        courseId={DEMO_COURSE_ID}
-        taskId={taskId}
-        knowledge={knowledge}
-        initialResult={storedResult}
-        onComplete={(result) => {
-          if (taskId) setReflectionResult(taskId, result);
-        }}
-      />
+      <>
+        <ReflectionWorkspace
+          key={`${taskId}:${knowledge.knowledgePointId}`}
+          learnerId={DEMO_LEARNER_ID}
+          courseId={DEMO_COURSE_ID}
+          taskId={taskId}
+          knowledge={knowledge}
+          initialResult={storedResult}
+          onComplete={(result) => {
+            if (taskId) setReflectionResult(taskId, result);
+          }}
+        />
+        {storedResult ? (
+          <ReflectionNextStepCard
+            result={storedResult}
+            nextTask={nextTask}
+            starting={startingTaskId === nextTask?.id}
+            onPrepareNext={() => setEntryOpen(true)}
+          />
+        ) : null}
+      </>
     );
   }
 
@@ -196,6 +238,24 @@ export function ReflectionPage() {
           </Link>
         </Button>
         {content}
+        <LearningEntryDialog
+          open={entryOpen}
+          onOpenChange={setEntryOpen}
+          plan={planState.plan}
+          task={nextTask}
+          diagnosis={diagnosisState.data}
+          evidence={evidenceState.data ?? []}
+          dataLoading={diagnosisState.loading || evidenceState.loading}
+          diagnosisError={diagnosisState.error}
+          evidenceError={evidenceState.error}
+          starting={startingTaskId === nextTask?.id}
+          startError={startError}
+          onConfirm={() => {
+            if (planState.plan && nextTask) {
+              void startTask(planState.plan, nextTask);
+            }
+          }}
+        />
       </div>
     </AppShell>
   );

@@ -19,7 +19,6 @@ import { cn } from '@/lib/utils';
 import {
   DEMO_COURSE_ID,
   DEMO_LEARNER_ID,
-  type XiaolianRuntimeState,
   useXiaolianRuntimeStore,
 } from '@/store';
 
@@ -36,13 +35,6 @@ const CONTEXT_LABELS: Record<string, string> = {
   study_plan: '学习计划',
   evidence: '最近学习记录',
 };
-const CAPABILITY_STATE: Record<AgentCapability, XiaolianRuntimeState> = {
-  diagnosis: 'analyzing',
-  planning: 'planning',
-  tutoring: 'teaching',
-  assessment: 'evaluating',
-};
-
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -68,8 +60,18 @@ export function XiaolianPage() {
   const [input, setInput] = useState('');
   const [selectedCapability, setSelectedCapability] = useState<AgentCapability | null>(null);
   const [pending, setPending] = useState(false);
-  const runtimeState = useXiaolianRuntimeStore((state) => state.state);
-  const setRuntimeState = useXiaolianRuntimeStore((state) => state.setState);
+  const runtimeState = useXiaolianRuntimeStore(
+    (state) => state.runtimeState,
+  );
+  const companionState = useXiaolianRuntimeStore(
+    (state) => state.companionState,
+  );
+  const setRuntimeState = useXiaolianRuntimeStore(
+    (state) => state.setRuntimeState,
+  );
+  const setCompanionState = useXiaolianRuntimeStore(
+    (state) => state.setCompanionState,
+  );
   const resetRuntime = useXiaolianRuntimeStore((state) => state.reset);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +87,8 @@ export function XiaolianPage() {
     setInput('');
     setMessages((previous) => [...previous, { id: crypto.randomUUID(), role: 'user', content: text }]);
     setPending(true);
-    setRuntimeState(requestedCapability ? CAPABILITY_STATE[requestedCapability] : 'thinking');
+    setRuntimeState('thinking');
+    setCompanionState('companion');
     try {
       const result: AgentChatResponse = await chatWithAgents({
         learnerId: DEMO_LEARNER_ID,
@@ -103,10 +106,12 @@ export function XiaolianPage() {
         provider: result.provider,
         model: result.model,
       })]);
-      setRuntimeState('success');
+      setRuntimeState('idle');
+      setCompanionState('encouraging');
     } catch {
       setMessages((previous) => [...previous, assistantMessage('小涟暂时无法连接，请稍后再试。')]);
       setRuntimeState('idle');
+      setCompanionState('companion');
     } finally {
       setPending(false);
     }
@@ -118,13 +123,13 @@ export function XiaolianPage() {
         <GlassPanel className="flex min-h-[720px] flex-col overflow-hidden">
           <div className="border-b border-violet-100 p-5">
             <div className="flex items-center gap-4">
-              <XiaolianCharacter state={runtimeState} size="sm" />
+              <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="sm" />
               <div>
                 <h1 className="text-xl font-bold">和小涟一起学习</h1>
                 <p className="mt-1 text-xs text-[var(--em-muted-ink)]">选择学习能力或直接提问；执行详情默认折叠，需要时再展开。</p>
               </div>
             </div>
-            <XiaolianMessage tone={pending ? 'observe' : runtimeState === 'success' ? 'encourage' : 'suggest'} compact className="mt-4">
+            <XiaolianMessage tone={pending ? 'observe' : companionState === 'encouraging' ? 'encourage' : 'suggest'} compact className="mt-4">
               {pending ? '我正在结合真实学习状态处理你的问题。' : '告诉我哪里卡住了，或者从下面选择一个学习方向。'}
             </XiaolianMessage>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
