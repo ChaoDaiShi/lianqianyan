@@ -1,46 +1,55 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import appdevDesignMode from '@xagi/vite-plugin-design-mode';
+import { resolveManualChunk } from './src/config/buildChunks';
+import { resolveDevIntegrations } from './src/config/devIntegrations';
+
+export { resolveDevIntegrations } from './src/config/devIntegrations';
+
+function devMonitorPlugin(monitorUrl: string): Plugin {
+  return {
+    name: 'optional-dev-monitor',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      if (html.includes('data-id="dev-inject-monitor"')) return html;
+      const source = JSON.stringify(monitorUrl);
+      return html.replace(
+        '</head>',
+        `<script data-id="dev-inject-monitor">
+          const script = document.createElement('script');
+          script.src = ${source};
+          script.dataset.id = 'dev-inject-monitor-script';
+          script.defer = true;
+          document.head.appendChild(script);
+        </script>
+        </head>`,
+      );
+    },
+  };
+}
+
+const devIntegrations = resolveDevIntegrations(process.env);
+const plugins: Plugin[] = [react()];
+
+if (devIntegrations.designMode) plugins.push(appdevDesignMode());
+if (devIntegrations.monitorUrl) {
+  plugins.push(devMonitorPlugin(devIntegrations.monitorUrl));
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    
-  // <!-- DEV-INJECT-START -->
-  {
-    name: 'dev-inject',
-    enforce: 'post', // 确保在 HTML 注入阶段最后执行
-    transformIndexHtml(html) {
-      if (!html.includes('data-id="dev-inject-monitor"')) {
-        return html.replace("</head>", `
-    <script data-id="dev-inject-monitor">
-      (function() {
-        const remote = "/sdk/dev-monitor.js";
-        const separator = remote.includes('?') ? '&' : '?';
-        const script = document.createElement('script');
-        script.src = remote + separator + 't=' + Date.now();
-        script.dataset.id = 'dev-inject-monitor-script';
-        script.defer = true;
-        // 防止重复注入
-        if (!document.querySelector('[data-id="dev-inject-monitor-script"]')) {
-          document.head.appendChild(script);
-        }
-      })();
-    </script>
-  \n</head>`);
-      }
-      return html;
-    }
-  },
-  // <!-- DEV-INJECT-END -->
-  
-    react(),
-      appdevDesignMode()
-  ],
+  plugins,
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: resolveManualChunk,
+      },
     },
   },
   server: {

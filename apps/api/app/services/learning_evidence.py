@@ -15,6 +15,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import EvidenceSource, EvidenceType, LearningEvidence, LearningEvidenceOut
 
 
@@ -43,7 +44,7 @@ class LearningEvidenceRepository:
         id 与 occurred_at 由服务端生成，客户端无法覆盖。
         仅加入会话（默认 autoflush），不 commit —— 由上层服务控制事务。
         """
-        now = occurred_at or datetime.utcnow()
+        now = occurred_at or utc_now()
         record = LearningEvidence(
             id=str(uuid.uuid4()),
             learner_id=learner_id,

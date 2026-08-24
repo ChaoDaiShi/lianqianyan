@@ -18,6 +18,8 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from app.core.time import utc_now
+
 
 class Base(DeclarativeBase):
     """SQLAlchemy 声明式基类。"""
@@ -92,7 +94,7 @@ class User(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     name: Mapped[str] = mapped_column(String(120))
     organization: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class Course(Base):
@@ -103,7 +105,7 @@ class Course(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     name: Mapped[str] = mapped_column(String(160))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class KnowledgePoint(Base):
@@ -116,7 +118,7 @@ class KnowledgePoint(Base):
     course_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     difficulty: Mapped[int] = mapped_column(Integer, default=1)
     content: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class LearningEvidence(Base):
@@ -143,7 +145,7 @@ class LearningEvidence(Base):
     session_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     mastery_delta: Mapped[float | None] = mapped_column(Float, nullable=True)
     payload: Mapped[str] = mapped_column(Text, default="{}")
-    occurred_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, index=True)
 
 
 class LearnerProfile(Base):
@@ -154,7 +156,7 @@ class LearnerProfile(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     user_id: Mapped[str] = mapped_column(String(36), index=True)
     overall_mastery: Mapped[float] = mapped_column(Float, default=0.0)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
 
 class StudyPlanStatus(str, Enum):
@@ -195,9 +197,9 @@ class StudyPlan(Base):
     generated_at: Mapped[datetime] = mapped_column(DateTime)
     source_diagnosis_generated_at: Mapped[datetime] = mapped_column(DateTime)
     reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=utc_now, onupdate=utc_now
     )
 
 
@@ -228,9 +230,9 @@ class StudyTask(Base):
     source_priority_score: Mapped[float] = mapped_column(Float)
     order: Mapped[int] = mapped_column(Integer)
     draft_key: Mapped[str] = mapped_column(String(160))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=utc_now, onupdate=utc_now
     )
 
 
@@ -254,9 +256,9 @@ class MasteryRecord(Base):
     mastery_score: Mapped[float] = mapped_column(Float, default=0.0)
     confidence: Mapped[float] = mapped_column(Float, default=0.0)
     evidence_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=utc_now, onupdate=utc_now
     )
 
 
@@ -298,7 +300,7 @@ class LearningEvidenceOut(BaseModel):
     session_id: str | None = None
     mastery_delta: float | None = None
     payload: dict[str, Any] = Field(default_factory=dict)
-    occurred_at: datetime = Field(default_factory=datetime.utcnow)
+    occurred_at: datetime = Field(default_factory=utc_now)
 
 
 class MessageResponse(BaseModel):

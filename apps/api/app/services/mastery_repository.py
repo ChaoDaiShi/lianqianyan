@@ -7,11 +7,11 @@ Repository 只做 add/query/update，不擅自 commit，由上层 Application Se
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import MasteryRecord
 
 
@@ -49,8 +49,8 @@ class MasteryRepository:
             mastery_score=mastery_score,
             confidence=confidence,
             evidence_count=evidence_count,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=utc_now(),
+            updated_at=utc_now(),
         )
         self._db.add(record)
         self._db.flush()
@@ -68,7 +68,7 @@ class MasteryRepository:
         record.mastery_score = mastery_score
         record.confidence = confidence
         record.evidence_count = evidence_count
-        record.updated_at = datetime.utcnow()
+        record.updated_at = utc_now()
         return record
 
     def get_or_create(

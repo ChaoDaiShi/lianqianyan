@@ -12,10 +12,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import (
     DiagnosisStatus,
     LearnerProfileOut,
@@ -120,7 +119,7 @@ class LearnerProfileService:
             unassessed_count=total - len(assessed),
             status_counts=status_counts,
             knowledge_points=kp_diagnoses,
-            updated_at=datetime.utcnow(),
+            updated_at=utc_now(),
         )
 
     def get_kp_mastery_state(self, learner_id: str, kp_id: str) -> MasteryStateOut | None:

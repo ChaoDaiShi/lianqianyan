@@ -237,6 +237,15 @@ export function ReflectionPage() {
             返回学习工作台
           </Link>
         </Button>
+        <header className="space-y-2">
+          <p className="text-sm font-medium text-primary">学习闭环 · 反思</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            学习复述与反思
+          </h1>
+          <p className="text-sm leading-6 text-muted-foreground">
+            围绕当前计划中的真实知识点完成复述，并据此确认下一步学习行动。
+          </p>
+        </header>
         {content}
         <LearningEntryDialog
           open={entryOpen}

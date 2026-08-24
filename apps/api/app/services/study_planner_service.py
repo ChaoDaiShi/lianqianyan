@@ -28,8 +28,7 @@ strengths / unassessed_points）互斥且完整覆盖全部知识点，按固定
 
 from __future__ import annotations
 
-from datetime import datetime
-
+from app.core.time import utc_now
 from app.domain import (
     DiagnosisResultOut,
     PlannerReasonCode,
@@ -80,7 +79,7 @@ class StudyPlannerService:
         return StudyPlanDraft(
             learner_id=learner_id,
             course_id=course_id,
-            generated_at=datetime.utcnow(),
+            generated_at=utc_now(),
             strategy=PlanStrategy.DIAGNOSIS_DRIVEN,
             tasks=tasks,
             reason_codes=plan_reason_codes,

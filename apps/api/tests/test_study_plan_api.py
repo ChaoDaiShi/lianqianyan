@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.routes import plans as plans_routes
 from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from app.core.time import utc_now
 from app.db.session import get_db
 from app.domain import (
     Base,
@@ -137,8 +138,8 @@ def _seed_all_mastered(testdb: _TestDB, learner_id: str) -> None:
                     mastery_score=0.96,
                     confidence=0.9,
                     evidence_count=6,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=utc_now(),
+                    updated_at=utc_now(),
                 )
             )
         s.commit()

@@ -173,6 +173,13 @@ beforeEach(() => {
 });
 
 describe('ReflectionPage', () => {
+  it('keeps a semantic page heading when the reflection workspace is unavailable', () => {
+    const markup = renderToStaticMarkup(<ReflectionPage />);
+
+    expect(markup).toContain('<h1');
+    expect(markup).toContain('学习复述与反思');
+  });
+
   it('continues from a stored reflection to the first task in a replacement plan', () => {
     renderToStaticMarkup(<ReflectionPage />);
 

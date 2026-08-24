@@ -11,7 +11,7 @@ const SIZE = {
   sm: 'w-16',
   md: 'w-28',
   lg: 'w-48 sm:w-56',
-  hero: 'w-64 sm:w-80 lg:w-[23rem]',
+  hero: 'w-52 sm:w-80 lg:w-[23rem]',
 } as const;
 
 const STATE_LABEL: Record<XiaolianCharacterState, string> = {

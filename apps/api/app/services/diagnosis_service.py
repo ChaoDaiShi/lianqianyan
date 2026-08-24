@@ -13,10 +13,9 @@ primary_focus 必须来自「最高可信 priority_score」的合格知识点（
 
 from __future__ import annotations
 
-from datetime import datetime
-
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import (
     DiagnosisReasonCode,
     DiagnosisResultOut,
@@ -103,5 +102,5 @@ class DiagnosisService:
             developing_points=developing,
             unassessed_points=unassessed,
             summary_codes=list(dict.fromkeys(summary_codes)),
-            diagnosis_generated_at=datetime.utcnow(),
+            diagnosis_generated_at=utc_now(),
         )

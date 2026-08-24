@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { api, extractApiData } from '@/lib/api';
 import type {
   DiagnosisResult,
@@ -432,14 +431,18 @@ export async function fetchPlanHistory(learnerId: string, courseId = 'course-os'
   return ((raw as Record<string, unknown>[]) ?? []).map(mapPlanSummary);
 }
 
+export function isCurrentPlanResponseStatus(status: number): boolean {
+  return (status >= 200 && status < 300) || status === 404;
+}
+
 export async function fetchCurrentPlan(learnerId: string, courseId = 'course-os'): Promise<PersistedStudyPlan | null> {
-  try {
-    const response = await api.get<Record<string, unknown>>('/api/plans/current', { params: { learner_id: learnerId, course_id: courseId } });
-    return mapPlanFromRaw(extractApiData(response));
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response?.status === 404) return null;
-    throw err;
-  }
+  const response = await api.get<Record<string, unknown>>('/api/plans/current', {
+    params: { learner_id: learnerId, course_id: courseId },
+    validateStatus: isCurrentPlanResponseStatus,
+  });
+  return response.status === 404
+    ? null
+    : mapPlanFromRaw(extractApiData(response));
 }
 
 export async function generatePlan(learnerId: string, courseId = 'course-os'): Promise<PersistedStudyPlan> {

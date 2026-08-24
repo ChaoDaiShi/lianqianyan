@@ -12,11 +12,11 @@ Repository 负责 StudyTaskDraft ↔ StudyTask 的表示转换
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import (
     DiagnosisStatus,
     PlannerActionType,
@@ -40,7 +40,7 @@ class StudyTaskRepository:
         每个任务的正式 `id` 由服务端 UUID 生成；`draft_key` 仅作来源追踪，
         不是主键替代。
         """
-        now = datetime.utcnow()
+        now = utc_now()
         records = [
             StudyTask(
                 id=str(uuid.uuid4()),

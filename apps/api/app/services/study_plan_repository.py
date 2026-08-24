@@ -17,6 +17,7 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain import (
     PlanStrategy,
     PlannerReasonCode,
@@ -51,7 +52,7 @@ class StudyPlanRepository:
 
         正式 `id` 由服务端 UUID 生成，调用方/Draft 不能控制。
         """
-        now = datetime.utcnow()
+        now = utc_now()
         plan = StudyPlan(
             id=str(uuid.uuid4()),
             learner_id=learner_id,
@@ -132,7 +133,7 @@ class StudyPlanRepository:
             )
             .values(
                 status=StudyPlanStatus.SUPERSEDED.value,
-                updated_at=datetime.utcnow(),
+                updated_at=utc_now(),
             )
         )
         if except_plan_id is not None:

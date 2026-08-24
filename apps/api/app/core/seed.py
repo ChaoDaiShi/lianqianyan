@@ -11,10 +11,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from app.core.time import utc_now
 from app.domain.models import Course, KnowledgePoint, MasteryRecord
 
 # 演示学习者（比赛 Demo 唯一用户）
@@ -71,7 +71,7 @@ def _seed_mastery_baseline(db: Session) -> None:
             MasteryRecord.knowledge_point_id == item["knowledge_point_id"],
         ).first()
         if existing is None:
-            now = datetime.utcnow()
+            now = utc_now()
             db.add(
                 MasteryRecord(
                     id=str(uuid.uuid4()),
