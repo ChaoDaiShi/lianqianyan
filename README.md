@@ -2,6 +2,41 @@
 
 > 基于学习画像、学习证据与个性化学习规划的 **AI 智能学习伙伴**。
 
+## Phase 3-6：Live2D 数字学姐与学习工坊
+
+当前学习主界面已把旧静态“小涟”形象替换为本地 Live2D 数字学姐，并在
+`/#/resources` 提供三个可实际操作的学习服务：
+
+- **课程资源生成**：按真实课程章节生成学习单、闪卡、测验、思维导图和学习计划，
+  返回来源章节与 UTF-8 Markdown 下载；当前明确标记为 `course_template`，不冒充外部
+  大模型创作。
+- **联网学习检索**：`POST /api/network/search` 实时访问中文或英文 Wikipedia，
+  返回摘要、来源域名和原文链接；外部结果只用于延伸阅读，不写入学习诊断、掌握度或
+  Learning Evidence。
+- **C 教学编译模拟**：`POST /api/lab/compile-simulate` 展示预处理、语法、语义、
+  链接和模拟运行五个阶段。它只解释受限 `c-edu` 子集，不调用系统编译器、不启动容器、
+  不执行用户代码或系统命令。
+- **数字人讲解**：小涟页和学习空间的回答支持显式播放/停止。语音由浏览器
+  Web Speech API 提供，Live2D 口型只在播放期间联动；浏览器不支持语音合成时会诚实
+  显示不可用状态。
+
+### 本地安装 Live2D（不进入 Git 或生产构建）
+
+模型版权文件与 Cubism Core 均保留在被 Git 忽略的 `.local/live2d/`，Vite 仅在
+**开发服务器**中通过 `/local-live2d/` 提供它们。仓库、提交和 `dist/` 不包含模型、
+纹理、`.moc3` 或 Cubism Core。安装脚本会限制 ZIP 路径、扩展名和解压体积，并校验
+模型清单引用：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-local-live2d.ps1 `
+  -ZipPath "E:\Eage Downloads\Cyrene1002_by_MomokaSono_aec2fc8eb7a411c7a8e3b8fb709eebc0.zip" `
+  -CubismCorePath "<Cubism SDK>\Core\live2dcubismcore.min.js"
+```
+
+附件 README 的版权与再分发限制优先适用于模型文件；因此本项目只支持本机预览，
+不会把该模型打包为可再分发的网站静态资源。未安装本地资源时页面保持可用，只隐藏
+Live2D 画布。
+
 ## Phase 3-5：Education Tools & MCP
 
 当前 Profile、Diagnosis、Current Plan、Course Knowledge、Recent Evidence、Plan Generation 与 Dynamic Replanning 已封装为七个共享 Education Tools：内部 Agent 和外部 stdio MCP Client 都通过同一个 `EducationToolRegistry` 直接调用既有 Application Service，不通过 HTTP 自调用，也不复制业务规则。
@@ -116,7 +151,7 @@ OpenAI-compatible / DeepSeek / Qwen）。
 │   ├── content/              # 集中 Demo 教学内容（非学习者状态 Mock）
 │   ├── store/                # Zustand 状态（小涟面板）
 │   ├── lib/                  # api 客户端 + 服务 + 工具
-│   ├── components/           # 侧边栏 / 卡片 / 小涟面板 / 占位页
+│   ├── components/           # 导航 / 卡片 / Live2D / 学习工坊
 │   └── pages/                # 路由页面
 ├── apps/api/                 # FastAPI 后端（Education API）
 ├── packages/                 # 共享包（预留）
@@ -252,7 +287,8 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
   - **请求级上下文**：不保存聊天历史、不建 Conversation 表（Memory System 未来接入）。
   - Web `/#/xiaolian`：小涟聊天窗口（loading / error / 上下文徽章 / 建议动作 /
     三个演示问题）。Demo：死锁问题引用诊断、今天学什么引用计划、PV 问题引用画像。
-- **FastAPI 最小骨架**：`/api/health` + 各业务路由占位 + 健康测试。
+- **FastAPI 学习服务**：健康检查、学习闭环、Agent、知识检索、联网检索、教学编译模拟
+  与课程资源生成路由均有请求/响应模型和测试，不再把学习工坊路由作为占位接口。
 - **统一 LLM Provider 抽象**（接口真实；当前演示使用 Mock Provider）。
 - **MCP Server**：真实 stdio Server、七个共享 Education Tools、`tools/list` / `tools/call` 与协议 smoke 已实现；不提供 `evaluate_practice`。
 
@@ -332,12 +368,14 @@ XiaolianPage / LearningSpace Tutor
   （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，
   见上文）。Phase 3-2 进一步提供确定性 Agent Router / Orchestrator 与 OpenAI-compatible Provider；
   无完整真实配置时仍使用 Mock Provider。**尚未实现**：聊天历史记忆持久化。
-- AI 自动出题 / AI 判题
+- LLM 自动出题 / AI 判题（当前测验资源由课程模板确定性整理）
 - 费曼复述 / 错题本
 - 知识图谱 / 向量数据库（当前仅有本地确定性课程检索）
 - 完整自主 Multi-Agent Runtime
-- 数字人 / TTS / 语音识别
-- 复杂考试系统 / 网络搜索 / PDF 解析 / 管理后台
+- 语音识别与服务端语音合成（当前已实现浏览器 TTS + Live2D 口型联动）
+- 任意网站通用搜索或网页抓取（当前联网范围固定为 Wikipedia）
+- 任意语言真实编译、容器沙箱或本机代码执行（当前仅提供安全的 C 教学模拟）
+- 复杂考试系统 / PDF 解析 / 管理后台
 
 > **算法描述必须真实**：当前 Mastery 使用**确定性基础更新策略**
 > （`MasteryUpdatePolicy`），Diagnosis 使用**可解释确定性规则**
