@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   CUBISM_CORE_URL,
   fitLive2dModel,
   live2dModelUrl,
+  registerLive2dTicker,
 } from './live2dRuntime';
 
 describe('Live2D runtime geometry and asset contract', () => {
@@ -32,5 +33,15 @@ describe('Live2D runtime geometry and asset contract', () => {
     [360, 460, 3600, Number.NaN],
   ])('rejects invalid dimensions %#', (width, height, modelWidth, modelHeight) => {
     expect(fitLive2dModel(width, height, modelWidth, modelHeight)).toBeNull();
+  });
+
+  it('registers the Pixi ticker before a model is created', () => {
+    const registerTicker = vi.fn();
+    const ticker = { shared: {} };
+
+    registerLive2dTicker({ registerTicker }, ticker);
+
+    expect(registerTicker).toHaveBeenCalledOnce();
+    expect(registerTicker).toHaveBeenCalledWith(ticker);
   });
 });

@@ -22,6 +22,13 @@ export function live2dModelUrl(): string {
   return LIVE2D_MODEL_URL;
 }
 
+export function registerLive2dTicker<TTicker>(
+  modelClass: { registerTicker: (tickerClass: TTicker) => void },
+  tickerClass: TTicker,
+): void {
+  modelClass.registerTicker(tickerClass);
+}
+
 export function fitLive2dModel(
   containerWidth: number,
   containerHeight: number,

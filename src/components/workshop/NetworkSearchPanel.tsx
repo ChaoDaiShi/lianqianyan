@@ -10,7 +10,7 @@ import {
 import { resultCountLabel } from './workshopPresentation';
 
 export function NetworkSearchPanel() {
-  const [query, setQuery] = useState('死锁四个必要条件');
+  const [query, setQuery] = useState('操作系统 死锁');
   const [language, setLanguage] = useState<'zh' | 'en'>('zh');
   const [response, setResponse] = useState<NetworkSearchResponse | null>(null);
   const [loading, setLoading] = useState(false);

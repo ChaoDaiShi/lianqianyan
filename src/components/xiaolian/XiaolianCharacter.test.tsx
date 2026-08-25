@@ -18,13 +18,14 @@ describe('XiaolianCharacter Live2D facade', () => {
     );
   });
 
-  it('renders the Live2D mount contract without the retired SVG artwork', () => {
+  it('renders a lightweight avatar until it owns the sole Live2D lease', () => {
     const html = renderToStaticMarkup(
       <XiaolianCharacter state="teaching" size="hero" priority speaking />,
     );
 
-    expect(html).toContain('data-live2d-character="true"');
+    expect(html).toContain('data-xiaolian-avatar="true"');
     expect(html).toContain('data-character-state="teaching"');
+    expect(html).not.toContain('data-live2d-character="true"');
     expect(html).not.toContain('.svg');
     expect(html).not.toContain('/xiaolian/');
   });

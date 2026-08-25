@@ -4,6 +4,7 @@ import {
   fitLive2dModel,
   live2dModelUrl,
   loadLive2dRuntime,
+  registerLive2dTicker,
 } from './live2dRuntime';
 
 type PixiApplication = import('pixi.js').Application;
@@ -130,11 +131,12 @@ export function Live2DCharacter({
 
     const setup = async () => {
       try {
-        const [{ Application }, { Live2DModel }] = await Promise.all([
+        const [{ Application, Ticker }, { Live2DModel }] = await Promise.all([
           import('pixi.js'),
           loadLive2dRuntime(),
         ]);
         if (cancelled) return;
+        registerLive2dTicker(Live2DModel, Ticker);
 
         const pixelRatio = Math.min(
           window.devicePixelRatio || 1,

@@ -1,5 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
+import { useLive2dLease } from '@/components/live2d/live2dLease';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
 import type {
@@ -36,6 +38,36 @@ export interface XiaolianCharacterProps {
   speaking?: boolean;
 }
 
+function XiaolianAvatar({
+  stateLabel,
+  characterState,
+  speaking,
+}: {
+  stateLabel: string;
+  characterState: XiaolianCharacterState;
+  speaking: boolean;
+}) {
+  return (
+    <div
+      role="img"
+      aria-label={stateLabel}
+      data-xiaolian-avatar="true"
+      data-character-state={characterState}
+      data-live2d-speaking={speaking}
+      className="relative grid h-full w-full place-items-center overflow-hidden rounded-[38%] bg-gradient-to-b from-violet-50/85 to-sky-50/65"
+    >
+      <span className="absolute inset-[13%] rounded-full border border-white/80 bg-white/30 shadow-[0_18px_50px_rgba(119,94,220,0.14)]" />
+      <span className="relative grid aspect-square w-[54%] place-items-center rounded-[38%] bg-gradient-to-br from-primary-500 via-violet-400 to-sky-400 text-white shadow-[0_16px_32px_rgba(119,94,220,0.28)]">
+        <Sparkles className="absolute left-[16%] top-[16%] h-[18%] w-[18%]" />
+        <strong className="text-2xl font-bold sm:text-4xl">涟</strong>
+        {speaking && (
+          <span className="absolute bottom-[12%] h-[6%] w-[32%] animate-pulse rounded-full bg-white/80" />
+        )}
+      </span>
+    </div>
+  );
+}
+
 export function resolveXiaolianCharacterState(
   runtimeState: XiaolianRuntimeState,
   companionState: XiaolianCompanionState,
@@ -66,6 +98,7 @@ export function XiaolianCharacter({
   speaking = false,
 }: XiaolianCharacterProps) {
   const reduceMotion = useReducedMotion();
+  const hasLive2dLease = useLive2dLease();
   const displayState = runtimeState
     ? resolveXiaolianCharacterState(runtimeState, companionState)
     : state;
@@ -77,13 +110,21 @@ export function XiaolianCharacter({
         animate={reduceMotion ? undefined : displayState}
       >
         <div className="absolute inset-x-[12%] bottom-[4%] h-[22%] rounded-full bg-primary-300/25 blur-2xl" />
-        <Live2DCharacter
-          stateLabel={STATE_LABEL[displayState]}
-          characterState={displayState}
-          speaking={speaking}
-          priority={priority}
-          className="relative drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
-        />
+        {hasLive2dLease ? (
+          <Live2DCharacter
+            stateLabel={STATE_LABEL[displayState]}
+            characterState={displayState}
+            speaking={speaking}
+            priority={priority}
+            className="relative drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
+          />
+        ) : (
+          <XiaolianAvatar
+            stateLabel={STATE_LABEL[displayState]}
+            characterState={displayState}
+            speaking={speaking}
+          />
+        )}
       </motion.div>
       {message && <p className="mt-2 max-w-sm text-center text-sm leading-6 text-[var(--em-muted-ink)]">{message}</p>}
     </div>
