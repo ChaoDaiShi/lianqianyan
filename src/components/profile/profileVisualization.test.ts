@@ -106,5 +106,24 @@ describe('profile visualization derivation', () => {
     ]);
     expect(view.statusTotal).toBe(2);
   });
-});
 
+  it('does not render unassessed knowledge as zero mastery', () => {
+    const unassessed: LearnerProfile = {
+      ...profile,
+      knowledgePoints: [
+        {
+          ...profile.knowledgePoints[0],
+          masteryScore: 0,
+          confidence: 0,
+          evidenceCount: 0,
+          status: 'unassessed',
+          reasonCodes: ['NO_EVIDENCE'],
+        },
+      ],
+    };
+
+    const view = buildProfileVisualization(unassessed, null);
+
+    expect(view.knowledge[0].mastery).toBeNull();
+  });
+});

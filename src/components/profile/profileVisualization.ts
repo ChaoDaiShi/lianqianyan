@@ -19,8 +19,8 @@ export interface ProfileRadarAxis {
 export interface KnowledgePerformanceRow {
   knowledgePointId: string;
   knowledgePointName: string;
-  mastery: number;
-  confidence: number;
+  mastery: number | null;
+  confidence: number | null;
   evidenceCount: number;
   status: DiagnosisStatus;
   examScore: number | null;
@@ -81,11 +81,15 @@ export function buildProfileVisualization(
     assessment: analytics,
     knowledge: profile.knowledgePoints.map((point) => {
       const exam = examByKnowledgePoint.get(point.knowledgePointId);
+      const assessed = ![
+        'unassessed',
+        'insufficient_evidence',
+      ].includes(point.status);
       return {
         knowledgePointId: point.knowledgePointId,
         knowledgePointName: point.knowledgePointName,
-        mastery: toPercentage(point.masteryScore) ?? 0,
-        confidence: toPercentage(point.confidence) ?? 0,
+        mastery: assessed ? toPercentage(point.masteryScore) : null,
+        confidence: assessed ? toPercentage(point.confidence) : null,
         evidenceCount: point.evidenceCount,
         status: point.status,
         examScore: exam ? toPercentage(exam.averageScoreRatio) : null,

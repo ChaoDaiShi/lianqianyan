@@ -37,10 +37,16 @@ export function KnowledgePerformanceBars({
               </div>
               <div className="mt-2 grid grid-cols-[44px_1fr_44px] items-center gap-2 text-[10px]">
                 <span className="text-[var(--em-muted-ink)]">画像</span>
-                <div className="h-2 overflow-hidden rounded-full bg-violet-100">
-                  <div className="h-full rounded-full bg-violet-500" style={{ width: `${row.mastery}%` }} />
-                </div>
-                <strong className="text-right">{row.mastery}%</strong>
+                {row.mastery === null ? (
+                  <div className="col-span-2 text-xs text-[var(--em-muted-ink)]">暂无画像证据</div>
+                ) : (
+                  <>
+                    <div className="h-2 overflow-hidden rounded-full bg-violet-100">
+                      <div className="h-full rounded-full bg-violet-500" style={{ width: `${row.mastery}%` }} />
+                    </div>
+                    <strong className="text-right">{row.mastery}%</strong>
+                  </>
+                )}
                 <span className="text-[var(--em-muted-ink)]">考试</span>
                 {row.examScore === null ? (
                   <div className="col-span-2 text-xs text-[var(--em-muted-ink)]">暂无考试样本</div>

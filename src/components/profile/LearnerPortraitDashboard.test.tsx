@@ -74,5 +74,23 @@ describe('LearnerPortraitDashboard', () => {
     expect(html).toContain('尚无已评分考试');
     expect(html).not.toContain('平均成绩 0%');
   });
-});
 
+  it('labels an unassessed knowledge point as missing instead of zero mastery', () => {
+    const unassessedPoint = {
+      ...point,
+      masteryScore: 0,
+      confidence: 0,
+      evidenceCount: 0,
+      status: 'unassessed' as const,
+      reasonCodes: ['NO_EVIDENCE' as const],
+    };
+    const unassessedProfile: LearnerProfile = {
+      ...profile,
+      knowledgePoints: [unassessedPoint],
+    };
+    const html = renderToStaticMarkup(<LearnerPortraitDashboard profile={unassessedProfile} diagnosis={{ ...diagnosis, primaryFocus: null }} analytics={null} analyticsLoading={false} analyticsError={false} onRetryAnalytics={() => undefined} />);
+
+    expect(html).toContain('暂无画像证据');
+    expect(html).not.toContain('style="width:0%"');
+  });
+});
