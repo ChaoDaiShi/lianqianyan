@@ -7,8 +7,10 @@ collection can never mutate the ignored runtime ``education.db`` files.
 
 from __future__ import annotations
 
+import gc
 import os
 import tempfile
+import time
 from pathlib import Path
 
 
@@ -21,12 +23,30 @@ os.environ["EDUCATION_DATABASE_URL"] = (
 
 
 def pytest_sessionfinish() -> None:
-    """Remove only the exact per-process database and SQLite sidecars."""
+    """Release SQLAlchemy handles, then remove the exact test DB and sidecars."""
     expected_parent = Path(tempfile.gettempdir()).resolve()
     if _TEST_DATABASE_PATH.parent != expected_parent:
         raise RuntimeError("refusing to clean a pytest database outside the temp directory")
-    for suffix in ("", "-journal", "-shm", "-wal"):
-        _TEST_DATABASE_PATH.with_name(_TEST_DATABASE_PATH.name + suffix).unlink(
-            missing_ok=True
-        )
 
+    # Legacy suites create sessions from the application-level SessionLocal helper and
+    # some do not close those sessions explicitly. On Windows an open SQLite handle
+    # prevents unlink, so close the global session registry and dispose its pool first.
+    from sqlalchemy.orm import close_all_sessions
+
+    from app.db.session import engine
+
+    close_all_sessions()
+    engine.dispose(close=True)
+    gc.collect()
+
+    for suffix in ("", "-journal", "-shm", "-wal"):
+        candidate = _TEST_DATABASE_PATH.with_name(_TEST_DATABASE_PATH.name + suffix)
+        for attempt in range(5):
+            try:
+                candidate.unlink(missing_ok=True)
+                break
+            except PermissionError:
+                if attempt == 4:
+                    raise
+                gc.collect()
+                time.sleep(0.05 * (attempt + 1))
