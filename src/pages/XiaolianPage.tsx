@@ -17,6 +17,8 @@ import type {
 import { useLlmStatus } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import { SpeechControls } from '@/components/digital-human/SpeechControls';
+import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
+import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
 import {
   DEMO_COURSE_ID,
@@ -61,6 +63,11 @@ export function XiaolianPage() {
     assistantMessage('你好，我是小涟。\n我会结合你的学习画像、诊断、计划与课程知识，陪你找到更适合的下一步。'),
   ]);
   const [input, setInput] = useState('');
+  const voice = useSpeechRecognition({
+    onFinalTranscript: (transcript) => {
+      setInput((current) => [current.trim(), transcript].filter(Boolean).join(' '));
+    },
+  });
   const [selectedCapability, setSelectedCapability] = useState<AgentCapability | null>(null);
   const [pending, setPending] = useState(false);
   const runtimeState = useXiaolianRuntimeStore(
@@ -86,6 +93,7 @@ export function XiaolianPage() {
   const handleSend = async (rawText?: string, capability?: AgentCapability | null) => {
     const text = (rawText ?? input).trim();
     if (!text || pending) return;
+    voice.stop();
     speech.stop();
     const requestedCapability = capability === undefined ? selectedCapability : capability;
     setInput('');
@@ -157,7 +165,8 @@ export function XiaolianPage() {
           <div className="border-t border-violet-100 p-4">
             <p className="mb-3 text-[10px] text-[var(--em-muted-ink)]">{llmStatus.loading ? '正在读取服务状态…' : llmStatus.data?.configured ? `Provider：${llmStatus.data.provider}${llmStatus.data.model ? ` · ${llmStatus.data.model}` : ''}` : '当前使用基础辅导模式'}</p>
             <div className="mb-3 flex flex-wrap gap-2">{QUICK_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-full border border-violet-200 bg-violet-50/65 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>
-            <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="向小涟提问，例如：为什么我总学不会死锁？" className="h-11 flex-1 rounded-2xl bg-white/70" disabled={pending} /><Button type="submit" disabled={pending || !input.trim()} size="icon" className="h-11 w-11 rounded-2xl bg-primary-500" aria-label="发送"><Send className="h-4 w-4" /></Button></form>
+            <form className="flex items-start gap-2" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="向小涟提问，例如：为什么我总学不会死锁？" className="h-11 flex-1 rounded-2xl bg-white/70" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" disabled={pending || !input.trim()} size="icon" className="h-11 w-11 shrink-0 rounded-2xl bg-primary-500" aria-label="发送"><Send className="h-4 w-4" /></Button></form>
+            <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">语音仅填入输入框，确认文字后再发送；音频不会上传到 EducationMind 后端。</p>
           </div>
         </GlassPanel>
       </div>

@@ -24,6 +24,18 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
   }),
 }));
 
+vi.mock('@/components/digital-human/useSpeechRecognition', () => ({
+  useSpeechRecognition: () => ({
+    supported: true,
+    listening: false,
+    interimTranscript: '',
+    error: null,
+    start: vi.fn(),
+    stop: vi.fn(),
+    resetError: vi.fn(),
+  }),
+}));
+
 const runtimeStore = {
   runtimeState: 'idle',
   companionState: 'companion',
@@ -46,6 +58,8 @@ describe('XiaolianPage digital-human speech', () => {
     const html = renderToStaticMarkup(<XiaolianPage />);
 
     expect(html).toContain('数字人讲解');
+    expect(html).toContain('语音输入');
+    expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('你好，我是小涟');
   });

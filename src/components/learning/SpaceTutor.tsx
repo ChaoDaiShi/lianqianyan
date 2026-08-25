@@ -11,6 +11,8 @@ import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import { XiaolianMessage } from '@/components/xiaolian/XiaolianMessage';
 import { TutorExplanationCard } from './TutorExplanationCard';
 import { SpeechControls } from '@/components/digital-human/SpeechControls';
+import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
+import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
 
 interface SpaceTutorProps {
@@ -50,6 +52,11 @@ export function SpaceTutor({
       : [],
   );
   const [input, setInput] = useState('');
+  const voice = useSpeechRecognition({
+    onFinalTranscript: (transcript) => {
+      setInput((current) => [current.trim(), transcript].filter(Boolean).join(' '));
+    },
+  });
   const speech = useSpeechSynthesis();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const requestGenerationRef = useRef(0);
@@ -58,6 +65,7 @@ export function SpaceTutor({
   useEffect(() => { onPendingChange?.(pending); }, [pending, onPendingChange]);
   useEffect(() => {
     requestGenerationRef.current += 1;
+    voice.stop();
     speech.stop();
     setInput('');
     if (knowledgePointName) {
@@ -68,7 +76,7 @@ export function SpaceTutor({
     return () => {
       requestGenerationRef.current += 1;
     };
-  }, [knowledgePointId, knowledgePointName, speech.stop]);
+  }, [knowledgePointId, knowledgePointName, speech.stop, voice.stop]);
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, pending]);
@@ -76,6 +84,7 @@ export function SpaceTutor({
   const handleSend = async (rawText?: string) => {
     const text = (rawText ?? input).trim();
     if (!text || pending) return;
+    voice.stop();
     speech.stop();
     const requestGeneration = ++requestGenerationRef.current;
     setInput('');
@@ -108,7 +117,7 @@ export function SpaceTutor({
       </div>
 
       {quickQuestions && quickQuestions.length > 0 && <div className="flex flex-wrap gap-1.5 border-t border-violet-100 px-4 py-3">{quickQuestions.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question)} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
-      <form className="flex gap-2 border-t border-violet-100 p-3" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={`问问小涟「${topic}」…`} className="h-9 rounded-xl bg-white/70 text-[13px]" disabled={pending} /><Button type="submit" size="icon" className="h-9 w-9 rounded-xl bg-primary-500" disabled={pending || !input.trim()} aria-label="发送"><Send className="h-3.5 w-3.5" /></Button></form>
+      <form className="flex items-start gap-2 border-t border-violet-100 p-3" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={`问问小涟「${topic}」…`} className="h-9 rounded-xl bg-white/70 text-[13px]" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" size="icon" className="h-9 w-9 shrink-0 rounded-xl bg-primary-500" disabled={pending || !input.trim()} aria-label="发送"><Send className="h-3.5 w-3.5" /></Button></form>
     </GlassPanel>
   );
 }

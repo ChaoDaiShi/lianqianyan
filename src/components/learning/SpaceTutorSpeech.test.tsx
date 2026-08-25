@@ -15,6 +15,18 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
   }),
 }));
 
+vi.mock('@/components/digital-human/useSpeechRecognition', () => ({
+  useSpeechRecognition: () => ({
+    supported: true,
+    listening: false,
+    interimTranscript: '',
+    error: null,
+    start: vi.fn(),
+    stop: vi.fn(),
+    resetError: vi.fn(),
+  }),
+}));
+
 describe('SpaceTutor digital-human speech', () => {
   it('offers speech for the assistant welcome and drives Live2D speaking state', () => {
     const html = renderToStaticMarkup(
@@ -25,6 +37,7 @@ describe('SpaceTutor digital-human speech', () => {
     );
 
     expect(html).toContain('数字人讲解');
+    expect(html).toContain('语音输入');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('你现在正在学习「死锁」');
   });
