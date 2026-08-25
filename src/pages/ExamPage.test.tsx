@@ -22,11 +22,12 @@ describe('ExamPage', () => {
     expect(html).toContain('命题与批阅');
     expect(html).toContain('服务端计时');
     expect(html).toContain('发布后锁定');
-    expect(html).toContain('单学习者演示');
+    expect(html).toContain('匿名学习档案');
+    expect(html).toContain('不构成账号权限或监考保证');
+    expect(html).not.toContain('单学习者演示');
     expect(html).toContain('catalog-panel');
     expect(html).toContain('history-panel');
     expect(html).toContain('question-bank-panel');
     expect(html).toContain('builder-panel');
   });
 });
-

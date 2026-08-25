@@ -30,6 +30,30 @@ describe('TutorExplanationCard knowledge mode', () => {
     expect(html).toContain('不替代真实 Tutor API 讲解');
   });
 
+  it('labels an unconfigured provider as grounded basic tutoring', () => {
+    const html = renderToStaticMarkup(
+      <TutorExplanationCard
+        knowledgePointName="死锁"
+        knowledge={null}
+        response={{
+          answer: '根据当前课程材料，先检查四个必要条件。',
+          selectedCapability: 'tutoring',
+          provider: 'unavailable',
+          model: null,
+          responseMode: 'fallback',
+          sources: [],
+          contextUsed: ['course_knowledge'],
+          suggestedActions: [],
+          agentTrace: [],
+        }}
+      />,
+    );
+
+    expect(html).toContain('基础辅导模式');
+    expect(html).toContain('Provider：unavailable · 基础辅导');
+    expect(html).not.toContain('本地演示');
+  });
+
   it('does not invent teaching content when knowledge content is unavailable', () => {
     const html = renderToStaticMarkup(
       <TutorExplanationCard

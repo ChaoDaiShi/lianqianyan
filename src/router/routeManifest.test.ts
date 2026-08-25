@@ -3,8 +3,7 @@ import { lazyRoutes } from './routeManifest';
 
 const EXPECTED_PATHS = [
   '/',
-  '/showcase',
-  '/demo',
+  '/agent',
   '/xiaolian',
   '/my-learning',
   '/space',
@@ -32,6 +31,11 @@ describe('route manifest', () => {
   it('contains every route exactly once', () => {
     const paths = currentPaths();
     expect(new Set(paths).size).toBe(paths.length);
+  });
+
+  it('does not expose retired competition routes', () => {
+    expect(currentPaths()).not.toContain('/demo');
+    expect(currentPaths()).not.toContain('/showcase');
   });
 
   it('loads every non-home page through a lazy route', () => {

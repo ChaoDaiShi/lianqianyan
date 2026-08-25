@@ -2,17 +2,10 @@ import type { RouteObject } from 'react-router-dom';
 
 export const lazyRoutes: RouteObject[] = [
   {
-    path: '/showcase',
+    path: '/agent',
     lazy: () =>
-      import('@/pages/ShowcasePage').then((module) => ({
-        Component: module.ShowcasePage,
-      })),
-  },
-  {
-    path: '/demo',
-    lazy: () =>
-      import('@/pages/DemoPage').then((module) => ({
-        Component: module.DemoPage,
+      import('@/pages/AgentPage').then((module) => ({
+        Component: module.AgentPage,
       })),
   },
   {

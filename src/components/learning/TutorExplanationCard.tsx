@@ -135,7 +135,7 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
       {response.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[10px] text-[var(--em-muted-ink)]">回答使用上下文：</span>{response.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] text-primary-700">{key}</span>)}</div>}
       <SourceReferences sources={response.sources} />
       <AgentToolTrace items={response.agentTrace} compact />
-      <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{response.provider}{response.model ? ` · ${response.model}` : ' · 本地演示'}</p>
+      <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{response.provider}{response.model ? ` · ${response.model}` : ' · 基础辅导'}</p>
     </article>
   );
 }

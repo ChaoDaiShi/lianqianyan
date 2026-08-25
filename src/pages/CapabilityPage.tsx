@@ -2,7 +2,7 @@ import { ArrowLeft, Code2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
-import { CapabilityCenter } from '@/components/showcase/CapabilityCenter';
+import { CapabilityCenter } from '@/components/capabilities/CapabilityCenter';
 import { Button } from '@/components/ui/button';
 
 export function CapabilityPage() {

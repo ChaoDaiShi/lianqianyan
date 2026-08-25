@@ -26,7 +26,7 @@ export function ExamPage() {
               从自定义题型和题库开始，完成组卷、发布、断点续答、自动评分、人工批阅与成绩复盘。考试结果会作为真实学习证据进入成长画像。
             </p>
             <div className="mt-5 grid gap-2 sm:grid-cols-3">{BOUNDARIES.map((item) => { const Icon = item.icon; return <div key={item.title} className="rounded-[18px] border border-white/70 bg-white/55 p-3"><Icon className="h-4 w-4 text-primary-600" /><p className="mt-2 text-xs font-bold">{item.title}</p><p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">{item.detail}</p></div>; })}</div>
-            <p className="mt-4 text-[10px] text-amber-700">当前为单学习者演示环境，命题端与学生端已做数据最小化隔离；正式多用户上线仍需接入账号与教师角色权限。</p>
+            <p className="mt-4 text-[10px] leading-5 text-amber-700">当前数据按匿名学习档案区分；该标识不构成账号权限或监考保证。无登录版本请勿录入敏感个人信息，公开部署时应由宿主平台限制命题与批阅入口。</p>
           </div>
         </GlassPanel>
 
@@ -48,4 +48,3 @@ export function ExamPage() {
     </AppShell>
   );
 }
-

@@ -56,7 +56,7 @@ function assistantMessage(content: string, extra?: Partial<ChatMessage>): ChatMe
   return { id: crypto.randomUUID(), role: 'assistant', content, ...extra };
 }
 
-export function XiaolianPage() {
+export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) {
   const llmStatus = useLlmStatus();
   const speech = useSpeechSynthesis();
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -130,9 +130,14 @@ export function XiaolianPage() {
   };
 
   return (
-    <AppShell>
-      <div className="mx-auto min-h-[calc(100vh-8rem)] max-w-5xl">
-        <GlassPanel className="flex min-h-[720px] flex-col overflow-hidden">
+      <div
+        data-agent-workspace={embedded ? 'embedded' : 'full'}
+        className={cn(
+          'mx-auto max-w-5xl',
+          embedded ? 'min-h-[calc(100vh-5.5rem)]' : 'min-h-[calc(100vh-8rem)]',
+        )}
+      >
+        <GlassPanel className={cn('flex flex-col overflow-hidden', embedded ? 'min-h-[calc(100vh-5.5rem)] rounded-[22px]' : 'min-h-[720px]')}>
           <div className="border-b border-violet-100 p-5">
             <div className="flex items-center gap-4">
               <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="md" speaking={speech.speaking} />
@@ -157,7 +162,7 @@ export function XiaolianPage() {
               {message.role === 'assistant' && message.contextUsed && message.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[11px] text-[var(--em-muted-ink)]">已参考：</span>{message.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] text-primary-700">{CONTEXT_LABELS[key] ?? key}</span>)}</div>}
               {message.role === 'assistant' && message.suggestedActions?.length ? <div className="mt-3 border-t border-violet-100 pt-2"><p className="text-[11px] font-semibold text-[var(--em-muted-ink)]">下一步建议</p>{message.suggestedActions.map((action) => <p key={action} className="mt-1 text-xs text-[var(--em-muted-ink)]">· {action}</p>)}</div> : null}
               {message.role === 'assistant' && (message.agentTrace || message.sources) && <AgentToolTrace items={message.agentTrace ?? []} sources={message.sources ?? []} />}
-              {message.role === 'assistant' && message.provider && <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{message.provider}{message.model ? ` · ${message.model}` : ' · 本地演示'}</p>}
+              {message.role === 'assistant' && message.provider && <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{message.provider}{message.model ? ` · ${message.model}` : ' · 基础辅导'}</p>}
             </div></div>)}
             {pending && <div className="rounded-[20px] border border-violet-100 bg-white/65 px-4 py-3 text-sm text-[var(--em-muted-ink)]">小涟正在协调学习能力…</div>}
           </div>
@@ -170,6 +175,13 @@ export function XiaolianPage() {
           </div>
         </GlassPanel>
       </div>
+  );
+}
+
+export function XiaolianPage() {
+  return (
+    <AppShell>
+      <XiaolianWorkspace />
     </AppShell>
   );
 }
