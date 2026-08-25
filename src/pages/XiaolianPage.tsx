@@ -16,6 +16,8 @@ import type {
 } from '@/lib/educationApi';
 import { useLlmStatus } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
+import { SpeechControls } from '@/components/digital-human/SpeechControls';
+import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
 import {
   DEMO_COURSE_ID,
   DEMO_LEARNER_ID,
@@ -54,6 +56,7 @@ function assistantMessage(content: string, extra?: Partial<ChatMessage>): ChatMe
 
 export function XiaolianPage() {
   const llmStatus = useLlmStatus();
+  const speech = useSpeechSynthesis();
   const [messages, setMessages] = useState<ChatMessage[]>([
     assistantMessage('你好，我是小涟。\n我会结合你的学习画像、诊断、计划与课程知识，陪你找到更适合的下一步。'),
   ]);
@@ -83,6 +86,7 @@ export function XiaolianPage() {
   const handleSend = async (rawText?: string, capability?: AgentCapability | null) => {
     const text = (rawText ?? input).trim();
     if (!text || pending) return;
+    speech.stop();
     const requestedCapability = capability === undefined ? selectedCapability : capability;
     setInput('');
     setMessages((previous) => [...previous, { id: crypto.randomUUID(), role: 'user', content: text }]);
@@ -123,7 +127,7 @@ export function XiaolianPage() {
         <GlassPanel className="flex min-h-[720px] flex-col overflow-hidden">
           <div className="border-b border-violet-100 p-5">
             <div className="flex items-center gap-4">
-              <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="sm" />
+              <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="md" speaking={speech.speaking} />
               <div>
                 <h1 className="text-xl font-bold">和小涟一起学习</h1>
                 <p className="mt-1 text-xs text-[var(--em-muted-ink)]">选择学习能力或直接提问；执行详情默认折叠，需要时再展开。</p>
@@ -141,6 +145,7 @@ export function XiaolianPage() {
             {messages.map((message) => <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}><div className={cn('max-w-[90%] rounded-[20px] px-4 py-3 text-sm leading-relaxed sm:max-w-[82%]', message.role === 'user' ? 'bg-primary-500 text-white' : 'border border-violet-100 bg-white/65 text-[var(--em-ink)]')}>
               {message.role === 'assistant' && <div className="mb-2 flex items-center gap-1.5 text-[11px] text-primary-600"><Sparkles className="h-3 w-3" />小涟{message.isFallback && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">基础辅导模式</span>}</div>}
               <p className="whitespace-pre-line">{message.content}</p>
+              {message.role === 'assistant' && <SpeechControls text={message.content} supported={speech.supported} speaking={speech.speaking} onSpeak={speech.speak} onStop={speech.stop} className="mt-3" />}
               {message.role === 'assistant' && message.contextUsed && message.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[11px] text-[var(--em-muted-ink)]">已参考：</span>{message.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] text-primary-700">{CONTEXT_LABELS[key] ?? key}</span>)}</div>}
               {message.role === 'assistant' && message.suggestedActions?.length ? <div className="mt-3 border-t border-violet-100 pt-2"><p className="text-[11px] font-semibold text-[var(--em-muted-ink)]">下一步建议</p>{message.suggestedActions.map((action) => <p key={action} className="mt-1 text-xs text-[var(--em-muted-ink)]">· {action}</p>)}</div> : null}
               {message.role === 'assistant' && (message.agentTrace || message.sources) && <AgentToolTrace items={message.agentTrace ?? []} sources={message.sources ?? []} />}

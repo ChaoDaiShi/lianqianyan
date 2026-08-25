@@ -201,6 +201,7 @@ export function Live2DCharacter({
       data-live2d-character="true"
       data-character-state={characterState}
       data-live2d-status={availability}
+      data-live2d-speaking={speaking}
       className={cn(
         'relative h-full w-full overflow-hidden',
         availability === 'loading' &&

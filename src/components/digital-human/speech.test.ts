@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { cleanSpeechText, pickChineseVoice } from './speech';
+import {
+  cleanSpeechText,
+  pickChineseVoice,
+  type SpeechVoice,
+} from './speech';
 
-function voice(name: string, lang: string): SpeechSynthesisVoice {
+function voice(name: string, lang: string): SpeechVoice {
   return {
     default: false,
     lang,
     localService: true,
     name,
     voiceURI: name,
-  } as SpeechSynthesisVoice;
+  };
 }
 
 describe('digital-human speech helpers', () => {
