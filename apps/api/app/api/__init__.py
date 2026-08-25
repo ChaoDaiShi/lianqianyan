@@ -8,6 +8,7 @@ from app.api.routes import (
     agents,
     assessment,
     diagnosis,
+    exams,
     health,
     knowledge,
     lab,
@@ -31,6 +32,7 @@ api_router.include_router(knowledge.router)
 api_router.include_router(network.router)
 api_router.include_router(lab.router)
 api_router.include_router(resources.router)
+api_router.include_router(exams.router)
 api_router.include_router(profile.router)
 api_router.include_router(diagnosis.router)
 api_router.include_router(plans.router)

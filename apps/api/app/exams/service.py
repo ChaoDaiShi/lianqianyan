@@ -8,7 +8,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -33,18 +33,22 @@ from app.exams.models import (
     AttemptResultOut,
     AttemptStatus,
     AttemptSummaryOut,
+    CatalogExamOut,
     ExamCreate,
     ExamItemCreate,
     ExamItemOut,
     ExamOut,
+    ExamAnalyticsOut,
     ExamStatus,
     GradingStrategy,
     ManualGradeRequest,
+    KnowledgeExamPerformanceOut,
     QuestionCreate,
     QuestionOut,
     QuestionResponseKind,
     QuestionTypeCreate,
     QuestionTypeOut,
+    QuestionTypeUpdate,
     QuestionUpdate,
     ReviewQueueItemOut,
     ExamUpdate,
@@ -106,6 +110,63 @@ class ExamService:
             raise ExamStateError("question type name already exists") from exc
         return self._type_out(record)
 
+    def list_question_types(self, *, include_archived: bool = False) -> list[QuestionTypeOut]:
+        statement = select(ExamQuestionType)
+        if not include_archived:
+            statement = statement.where(ExamQuestionType.is_archived.is_(False))
+        records = self._db.scalars(
+            statement.order_by(ExamQuestionType.is_builtin.desc(), ExamQuestionType.created_at.asc())
+        ).all()
+        return [self._type_out(record) for record in records]
+
+    def update_question_type(
+        self, question_type_id: str, payload: QuestionTypeUpdate
+    ) -> QuestionTypeOut:
+        record = self._require_type(question_type_id)
+        fields = payload.model_fields_set
+        structural_fields = {"name", "response_kind", "grading_strategy", "is_archived"}
+        if record.is_builtin and fields.intersection(structural_fields):
+            raise ExamStateError("builtin question type structure is immutable")
+        has_questions = self._db.scalar(
+            select(func.count(ExamQuestion.id)).where(
+                ExamQuestion.question_type_id == question_type_id
+            )
+        )
+        if has_questions and fields.intersection({"response_kind", "grading_strategy"}):
+            raise ExamStateError("question type is already used by questions")
+        merged = QuestionTypeCreate(
+            name=payload.name if "name" in fields and payload.name is not None else record.name,
+            description=(
+                payload.description
+                if "description" in fields and payload.description is not None
+                else record.description
+            ),
+            response_kind=(
+                payload.response_kind
+                if "response_kind" in fields and payload.response_kind is not None
+                else QuestionResponseKind(record.response_kind)
+            ),
+            grading_strategy=(
+                payload.grading_strategy
+                if "grading_strategy" in fields and payload.grading_strategy is not None
+                else GradingStrategy(record.grading_strategy)
+            ),
+        )
+        record.name = merged.name
+        record.name_key = normalize_text(merged.name)
+        record.description = merged.description
+        record.response_kind = merged.response_kind.value
+        record.grading_strategy = merged.grading_strategy.value
+        if "is_archived" in fields and payload.is_archived is not None:
+            record.is_archived = payload.is_archived
+        record.updated_at = self._now()
+        try:
+            self._db.commit()
+        except IntegrityError as exc:
+            self._db.rollback()
+            raise ExamStateError("question type name already exists") from exc
+        return self._type_out(record)
+
     def create_question(self, payload: QuestionCreate) -> QuestionOut:
         question_type = self._require_active_type(payload.question_type_id)
         self._validate_course_point(payload.course_id, payload.knowledge_point_id)
@@ -140,6 +201,21 @@ class ExamService:
             self._db.rollback()
             raise
         return self._question_out(record, question_type)
+
+    def list_questions(
+        self, *, course_id: str, include_archived: bool = False
+    ) -> list[QuestionOut]:
+        self._require_course(course_id)
+        statement = select(ExamQuestion).where(ExamQuestion.course_id == course_id)
+        if not include_archived:
+            statement = statement.where(ExamQuestion.is_archived.is_(False))
+        records = self._db.scalars(
+            statement.order_by(ExamQuestion.created_at.desc())
+        ).all()
+        return [self._question_out(record) for record in records]
+
+    def get_question(self, question_id: str) -> QuestionOut:
+        return self._question_out(self._require_question(question_id))
 
     def update_question(self, question_id: str, payload: QuestionUpdate) -> QuestionOut:
         record = self._require_question(question_id)
@@ -220,6 +296,18 @@ class ExamService:
             self._db.rollback()
             raise
         return self._exam_out(record)
+
+    def list_exams(self, *, course_id: str) -> list[ExamOut]:
+        self._require_course(course_id)
+        records = self._db.scalars(
+            select(Exam)
+            .where(Exam.course_id == course_id)
+            .order_by(Exam.created_at.desc())
+        ).all()
+        return [self._exam_out(record) for record in records]
+
+    def get_exam(self, exam_id: str) -> ExamOut:
+        return self._exam_out(self._require_exam(exam_id))
 
     def update_exam(self, exam_id: str, payload: ExamUpdate) -> ExamOut:
         record = self._require_exam(exam_id)
@@ -325,6 +413,159 @@ class ExamService:
             self._db.rollback()
             raise
         return self._attempt_out(attempt)
+
+    def list_catalog(self, *, course_id: str, learner_id: str) -> list[CatalogExamOut]:
+        self._require_course(course_id)
+        exams = self._db.scalars(
+            select(Exam)
+            .where(
+                Exam.course_id == course_id,
+                Exam.status == ExamStatus.PUBLISHED.value,
+            )
+            .order_by(Exam.published_at.desc())
+        ).all()
+        catalog: list[CatalogExamOut] = []
+        for exam in exams:
+            latest = self._db.scalar(
+                select(ExamAttempt)
+                .where(
+                    ExamAttempt.exam_id == exam.id,
+                    ExamAttempt.learner_id == learner_id,
+                )
+                .order_by(ExamAttempt.started_at.desc())
+                .limit(1)
+            )
+            if (
+                latest is not None
+                and latest.status == AttemptStatus.IN_PROGRESS.value
+                and self._now() >= latest.expires_at
+            ):
+                self._finalize_attempt(latest, self._now())
+                self._db.commit()
+            links = self._repo.list_exam_links(exam.id)
+            catalog.append(
+                CatalogExamOut(
+                    id=exam.id,
+                    course_id=exam.course_id,
+                    title=exam.title,
+                    description=exam.description,
+                    duration_minutes=exam.duration_minutes,
+                    pass_percentage=exam.pass_percentage,
+                    question_count=len(links),
+                    total_points=sum(link.points for link in links),
+                    published_at=exam.published_at or exam.updated_at,
+                    latest_attempt=self._summary_out(latest) if latest else None,
+                )
+            )
+        return catalog
+
+    def list_results(self, *, course_id: str, learner_id: str) -> list[AttemptSummaryOut]:
+        records = self._db.scalars(
+            select(ExamAttempt)
+            .join(Exam, Exam.id == ExamAttempt.exam_id)
+            .where(
+                Exam.course_id == course_id,
+                ExamAttempt.learner_id == learner_id,
+                ExamAttempt.status != AttemptStatus.IN_PROGRESS.value,
+            )
+            .order_by(ExamAttempt.submitted_at.desc())
+        ).all()
+        return [self._summary_out(record) for record in records]
+
+    def build_analytics(self, *, course_id: str, learner_id: str) -> ExamAnalyticsOut:
+        self._require_course(course_id)
+        attempts = list(
+            self._db.scalars(
+                select(ExamAttempt)
+                .join(Exam, Exam.id == ExamAttempt.exam_id)
+                .where(
+                    Exam.course_id == course_id,
+                    ExamAttempt.learner_id == learner_id,
+                    ExamAttempt.status != AttemptStatus.IN_PROGRESS.value,
+                )
+            ).all()
+        )
+        graded = [
+            attempt for attempt in attempts if attempt.status == AttemptStatus.GRADED.value
+        ]
+        attempt_ids = [attempt.id for attempt in attempts]
+        answers = (
+            list(
+                self._db.scalars(
+                    select(ExamAnswer).where(ExamAnswer.attempt_id.in_(attempt_ids))
+                ).all()
+            )
+            if attempt_ids
+            else []
+        )
+        pending_review_count = sum(
+            answer.grading_status == AnswerGradingStatus.PENDING_MANUAL.value
+            for answer in answers
+        )
+        objective_answers = [
+            answer
+            for answer in answers
+            if answer.grading_status == AnswerGradingStatus.AUTO.value
+            and self._has_answer(answer.user_answer)
+        ]
+        objective_accuracy = (
+            sum(bool(answer.is_correct) for answer in objective_answers)
+            / len(objective_answers)
+            if objective_answers
+            else None
+        )
+        performance: dict[str, dict[str, Any]] = {}
+        for answer in answers:
+            if answer.awarded_score is None or not self._has_answer(answer.user_answer):
+                continue
+            question = self._require_question(answer.question_id)
+            if not question.knowledge_point_id:
+                continue
+            point = self._db.get(KnowledgePoint, question.knowledge_point_id)
+            if point is None:
+                continue
+            bucket = performance.setdefault(
+                point.id,
+                {"name": point.name, "count": 0, "ratios": []},
+            )
+            bucket["count"] += 1
+            bucket["ratios"].append(
+                answer.awarded_score / answer.max_score if answer.max_score else 0.0
+            )
+        knowledge_points = [
+            KnowledgeExamPerformanceOut(
+                knowledge_point_id=point_id,
+                knowledge_point_name=values["name"],
+                answered_count=values["count"],
+                average_score_ratio=round(
+                    sum(values["ratios"]) / len(values["ratios"]), 4
+                ),
+            )
+            for point_id, values in sorted(performance.items())
+        ]
+        average = (
+            round(sum(attempt.percentage for attempt in graded) / len(graded), 2)
+            if graded
+            else None
+        )
+        return ExamAnalyticsOut(
+            learner_id=learner_id,
+            course_id=course_id,
+            submitted_count=len(attempts),
+            graded_count=len(graded),
+            average_percentage=average,
+            best_percentage=max((attempt.percentage for attempt in graded), default=None),
+            pass_rate=(
+                sum(attempt.passed is True for attempt in graded) / len(graded)
+                if graded
+                else None
+            ),
+            objective_accuracy=(
+                round(objective_accuracy, 4) if objective_accuracy is not None else None
+            ),
+            pending_review_count=pending_review_count,
+            knowledge_points=knowledge_points,
+        )
 
     def get_attempt(self, attempt_id: str, learner_id: str) -> AttemptOut:
         attempt = self._require_attempt(attempt_id, learner_id)
@@ -836,4 +1077,3 @@ class ExamService:
         if record is None or record.learner_id != learner_id:
             raise ExamNotFoundError("attempt not found")
         return record
-

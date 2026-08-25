@@ -300,6 +300,19 @@ class AttemptSummaryOut(BaseModel):
     passed: bool | None = None
 
 
+class CatalogExamOut(BaseModel):
+    id: str
+    course_id: str
+    title: str
+    description: str
+    duration_minutes: int
+    pass_percentage: float
+    question_count: int
+    total_points: float
+    published_at: datetime
+    latest_attempt: AttemptSummaryOut | None = None
+
+
 class AttemptResultAnswerOut(BaseModel):
     answer_id: str
     question_id: str
@@ -345,4 +358,44 @@ class ReviewQueueItemOut(BaseModel):
     reference_answer: Any = None
     points: float
     submitted_at: datetime
+
+
+class AttemptStartRequest(BaseModel):
+    learner_id: str = Field(min_length=1, max_length=80)
+
+    @field_validator("learner_id")
+    @classmethod
+    def _strip_start_learner(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("learner id must not be blank")
+        return value
+
+
+class AttemptActionRequest(AttemptStartRequest):
+    pass
+
+
+class AnswerSaveRequest(AttemptStartRequest):
+    answer: Any = None
+
+
+class KnowledgeExamPerformanceOut(BaseModel):
+    knowledge_point_id: str
+    knowledge_point_name: str
+    answered_count: int = Field(ge=0)
+    average_score_ratio: float = Field(ge=0.0, le=1.0)
+
+
+class ExamAnalyticsOut(BaseModel):
+    learner_id: str
+    course_id: str
+    submitted_count: int = Field(ge=0)
+    graded_count: int = Field(ge=0)
+    average_percentage: float | None = Field(default=None, ge=0.0, le=100.0)
+    best_percentage: float | None = Field(default=None, ge=0.0, le=100.0)
+    pass_rate: float | None = Field(default=None, ge=0.0, le=1.0)
+    objective_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
+    pending_review_count: int = Field(ge=0)
+    knowledge_points: list[KnowledgeExamPerformanceOut] = Field(default_factory=list)
 
