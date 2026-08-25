@@ -149,6 +149,67 @@ export interface ToolDefinition {
   inputSchema: Record<string, unknown>;
 }
 
+export interface NetworkSearchResult {
+  title: string;
+  summary: string;
+  url: string;
+  sourceDomain: string;
+}
+
+export interface NetworkSearchResponse {
+  provider: 'wikipedia';
+  query: string;
+  results: NetworkSearchResult[];
+}
+
+export type CompileStageName =
+  | 'preprocess'
+  | 'syntax'
+  | 'semantic'
+  | 'link'
+  | 'run';
+
+export interface CompileStage {
+  name: CompileStageName;
+  label: string;
+  status: 'passed' | 'failed' | 'skipped';
+}
+
+export interface CompileDiagnostic {
+  stage: CompileStageName;
+  severity: 'error' | 'warning';
+  line: number | null;
+  code: string;
+  message: string;
+}
+
+export interface CompileSimulationResponse {
+  success: boolean;
+  language: 'c-edu';
+  mode: 'simulation';
+  stages: CompileStage[];
+  diagnostics: CompileDiagnostic[];
+  stdout: string;
+  safetyNotice: string;
+}
+
+export type ResourceType =
+  | 'study_sheet'
+  | 'flashcards'
+  | 'quiz'
+  | 'mind_map'
+  | 'study_plan';
+
+export interface GeneratedResource {
+  title: string;
+  resourceType: ResourceType;
+  format: 'markdown';
+  content: string;
+  generationMode: 'course_template';
+  sourceSections: string[];
+  filename: string;
+}
+
 export type AgentCapability = 'diagnosis' | 'planning' | 'tutoring' | 'assessment';
 
 export interface AgentTraceItem {
@@ -265,6 +326,110 @@ export async function fetchLlmStatus(): Promise<LlmStatus> {
     model: (raw['model'] as string | null) ?? null,
     configured: raw['configured'] as boolean,
   };
+}
+
+export function mapNetworkSearch(
+  raw: Record<string, unknown>,
+): NetworkSearchResponse {
+  return {
+    provider: raw['provider'] as 'wikipedia',
+    query: raw['query'] as string,
+    results: ((raw['results'] as unknown[]) ?? []).map((item) => {
+      const result = item as Record<string, unknown>;
+      return {
+        title: result['title'] as string,
+        summary: result['summary'] as string,
+        url: result['url'] as string,
+        sourceDomain: result['source_domain'] as string,
+      };
+    }),
+  };
+}
+
+export async function searchNetwork(params: {
+  query: string;
+  limit?: number;
+  language?: 'zh' | 'en';
+}): Promise<NetworkSearchResponse> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/network/search',
+    {
+      query: params.query,
+      limit: params.limit ?? 4,
+      language: params.language ?? 'zh',
+    },
+  );
+  return mapNetworkSearch(extractApiData(response));
+}
+
+export function mapCompileSimulation(
+  raw: Record<string, unknown>,
+): CompileSimulationResponse {
+  return {
+    success: raw['success'] as boolean,
+    language: raw['language'] as 'c-edu',
+    mode: raw['mode'] as 'simulation',
+    stages: ((raw['stages'] as unknown[]) ?? []).map((item) => {
+      const stage = item as Record<string, unknown>;
+      return {
+        name: stage['name'] as CompileStageName,
+        label: stage['label'] as string,
+        status: stage['status'] as CompileStage['status'],
+      };
+    }),
+    diagnostics: ((raw['diagnostics'] as unknown[]) ?? []).map((item) => {
+      const diagnostic = item as Record<string, unknown>;
+      return {
+        stage: diagnostic['stage'] as CompileStageName,
+        severity: diagnostic['severity'] as CompileDiagnostic['severity'],
+        line: (diagnostic['line'] as number | null) ?? null,
+        code: diagnostic['code'] as string,
+        message: diagnostic['message'] as string,
+      };
+    }),
+    stdout: raw['stdout'] as string,
+    safetyNotice: raw['safety_notice'] as string,
+  };
+}
+
+export async function simulateCompile(
+  code: string,
+): Promise<CompileSimulationResponse> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/lab/compile-simulate',
+    { language: 'c-edu', code },
+  );
+  return mapCompileSimulation(extractApiData(response));
+}
+
+export function mapGeneratedResource(
+  raw: Record<string, unknown>,
+): GeneratedResource {
+  return {
+    title: raw['title'] as string,
+    resourceType: raw['resource_type'] as ResourceType,
+    format: raw['format'] as 'markdown',
+    content: raw['content'] as string,
+    generationMode: raw['generation_mode'] as 'course_template',
+    sourceSections: (raw['source_sections'] as string[]) ?? [],
+    filename: raw['filename'] as string,
+  };
+}
+
+export async function generateLearningResource(params: {
+  courseId: string;
+  knowledgePointId: string;
+  resourceType: ResourceType;
+}): Promise<GeneratedResource> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/resources/generate',
+    {
+      course_id: params.courseId,
+      knowledge_point_id: params.knowledgePointId,
+      resource_type: params.resourceType,
+    },
+  );
+  return mapGeneratedResource(extractApiData(response));
 }
 
 export async function searchKnowledge(params: {
