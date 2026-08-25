@@ -2,6 +2,31 @@
 
 > 基于学习画像、学习证据与个性化学习规划的 **AI 智能学习伙伴**。
 
+## Phase 3-7：考试闭环、双向语音与证据画像
+
+`/#/exams` 现已提供从命题到复盘的完整考试工作流，并把已评分结果接回学习证据与
+成长画像：
+
+- **自定义题型**：题型名称与说明可自定义；作答形态限定为单选、多选、判断、短文本、
+  长文本，评分策略限定为精确匹配、集合匹配、关键词评分或人工评分。用户输入不会作为
+  代码、正则或表达式执行。
+- **自定义题目与组卷**：支持关联课程知识点、选项/答案/关键词/解析、难度、默认分值，
+  并支持选题、排序、改分、草稿、发布和发布后锁定。
+- **可靠作答**：服务端截止时间、断点续答、700ms 自动保存、到期幂等交卷、稳定随机题序；
+  交卷前的学生接口不返回参考答案或解析。
+- **评分与复盘**：客观题自动评分、关键词部分评分、主观题人工批阅、待批状态、成绩历史、
+  单题反馈，以及带表格公式注入防护的 CSV 和 JSON 导出。
+- **学习闭环**：每道已评分且绑定知识点的答案生成 `exam_answer_evaluated` 证据，并经既有
+  `MasteryProjectionService` 更新掌握度；重复交卷/批阅不会重复投影同一答案。
+- **双向语音**：小涟、学习空间和考试文本题支持显式语音输入；数字人讲解支持显式播放与停止。
+  语音识别/合成依赖浏览器 Web Speech 能力与用户授权，本站后端不接收麦克风音频；具体浏览器
+  仍可能使用其厂商的在线语音服务。
+- **证据驱动画像**：学习档案加入可访问雷达图、证据覆盖环、知识点画像/考试对照和评测快照；
+  没有考试样本时显示“暂无”，绝不以 0 分代替缺失证据。
+
+当前仍是单学习者演示环境。正式多用户部署前必须补账号体系、教师/学生 RBAC、审计日志与迁移工具；
+这些边界会在界面中明确提示，不把演示能力宣传为生产级监考平台。
+
 ## Phase 3-6：Live2D 数字学姐与学习工坊
 
 当前学习主界面已把旧静态“小涟”形象替换为本地 Live2D 数字学姐，并在
@@ -87,7 +112,7 @@ Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`�
 ## 核心学习闭环
 
 ```text
-Learning Action（学习行为）
+Learning Action（开始学习 / 练习评价 / 已评分考试答案）
    ↓
 LearningEvidence（学习证据）← 核心数据
    ↓
@@ -102,8 +127,9 @@ Diagnosis（学习诊断）
 Education Web
 ```
 
-学习证据来源：学习知识点、回答问题、完成练习、提交考试、产生错题、向 AI 提问、
-完成费曼复述、完成代码任务、完成交互学习活动。
+当前会进入 MasteryProjection 的评价证据来源为练习评价与已评分考试答案；
+`learning_started` 只记录行为，不改变掌握度。聊天、联网搜索、资源下载、编译模拟和
+尚未服务端持久化的复述结果不会冒充掌握度证据。
 
 ---
 
@@ -195,7 +221,7 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 
 ---
 
-## 当前已实现功能（第一阶段）
+## 当前已实现功能
 
 > **可信性原则**：EducationMind 严格区分「尚未评估」与「真实薄弱」——
 > `mastery=0 且 evidence=0 ≠ 学生完全不会`，而是 **UNASSESSED（尚未评估）**。
@@ -205,7 +231,9 @@ uv run pytest              # 运行测试（至少覆盖 /api/health）
 - **我的学习**：展示当前学习计划、策略、生成时间与任务时间线；不在比赛 Web 中展开计划历史管理。
 - **智能学习空间**：任务上下文、集中 Demo 教学内容、内嵌小涟、固定高质量练习，以及真实 Mastery before → after 反馈。
 - **上下文感知 Tutor**：全局小涟页与学习空间共用 `POST /api/tutor/chat`，后端结合 Profile、Diagnosis、StudyPlan 与 Evidence 作答。
-- **学习报告**：汇总真实 Profile、Diagnosis、Current Plan 与 Recent Evidence，并以轻量横向条展示知识点状态。
+- **考试中心**：自定义安全题型、自定义题库、草稿组卷、发布锁定、限时作答、断点续答、自动保存、自动/人工评分、成绩复盘与导出。
+- **双向语音辅助**：小涟、学习空间和考试长短文本题支持显式语音输入；数字人回答与考试题干支持显式语音讲解。
+- **学习报告**：汇总真实 Profile、Diagnosis、Current Plan、Recent Evidence 与考试 Analytics，并以可访问雷达图、覆盖环和知识点双轨条展示证据。
 - **真实状态边界**：Profile、Diagnosis、StudyPlan、Tutor Answer、Practice Evaluation 与状态变化均来自 API；API 失败不会回退 Mock Learner State。
 - **静态内容边界**：课程讲解、固定练习题和快捷问题集中在 `src/content/`，只作为教学资源。
 - **领域模型基础类型**：TS（`src/domain`）与 Python（`apps/api/app/domain`）。
@@ -372,10 +400,10 @@ XiaolianPage / LearningSpace Tutor
 - 费曼复述 / 错题本
 - 知识图谱 / 向量数据库（当前仅有本地确定性课程检索）
 - 完整自主 Multi-Agent Runtime
-- 语音识别与服务端语音合成（当前已实现浏览器 TTS + Live2D 口型联动）
+- 服务端语音识别/合成、语音文件上传与长期保存（当前仅使用显式触发的浏览器 Web Speech）
 - 任意网站通用搜索或网页抓取（当前联网范围固定为 Wikipedia）
 - 任意语言真实编译、容器沙箱或本机代码执行（当前仅提供安全的 C 教学模拟）
-- 复杂考试系统 / PDF 解析 / 管理后台
+- 考试账号与教师/学生 RBAC、正式监考防作弊、批量题库导入、PDF 解析和独立管理后台
 
 > **算法描述必须真实**：当前 Mastery 使用**确定性基础更新策略**
 > （`MasteryUpdatePolicy`），Diagnosis 使用**可解释确定性规则**
@@ -389,7 +417,7 @@ XiaolianPage / LearningSpace Tutor
 
 MCP Server 已通过官方 Python SDK 提供 stdio 协议。七个真实 Tool 的目录、输入 schema、读写边界和错误契约见 `mcp/server/docs/tools.md`；内部 Agent 与 MCP Client 共享 `EducationToolRegistry`。本轮不提供 Agent Chat、`evaluate_practice`、OAuth/RBAC 或自主无限 Tool Calling。
 
-> **声明**：当前版本属于 EducationMind Phase 3-5，已实现真实学习状态驱动的轻量 Agent 编排、共享 Education Tool Registry、stdio MCP Tool 协议与可选 OpenAI-compatible Provider；**不宣称**已经实现完整自主 Agent Swarm、知识图谱或向量数据库。
+> **声明**：当前版本属于 EducationMind Phase 3-7，已实现真实学习状态驱动的轻量 Agent 编排、共享 Education Tool Registry、stdio MCP Tool 协议、可选 OpenAI-compatible Provider、考试闭环与浏览器语音辅助；**不宣称**已经实现完整自主 Agent Swarm、生产级监考、知识图谱或向量数据库。
 
 ## License
 

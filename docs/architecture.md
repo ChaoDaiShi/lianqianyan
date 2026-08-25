@@ -54,7 +54,7 @@ package，故本轮采用**双实现 + 契约一致**策略：
 当前已跑通的真实链路：
 
 ```text
-Learning Action（学习行为：开始学习 / 练习评价）
+Learning Action（开始学习 / 练习评价 / 已评分考试答案）
    ↓
 LearningEvidence（学习证据）← 核心数据
    ↓
@@ -69,8 +69,17 @@ Diagnosis（确定性规则）
 Education Web（/diagnosis 与首页「需要重点关注」）
 ```
 
-> `learning_started` 仅为行为证据，不改掌握度；只有 `practice_answer_evaluated`
-> 这类评价证据才投影更新 MasteryRecord，且「证据 + 掌握度更新」在同一业务事务内提交。
+> `learning_started` 仅为行为证据，不改掌握度；`practice_answer_evaluated` 与
+> `exam_answer_evaluated` 是当前会投影更新 MasteryRecord 的评价证据。考试答案只有在
+> 自动评分完成或人工批阅完成后才进入投影，并通过答案上的 `evidence_id` 保证不重复投影。
+
+考试域位于 `apps/api/app/exams/`，通过安全白名单定义作答形态与评分策略。试卷发布后
+题目结构锁定；学生作答接口与命题接口分离，交卷前不返回参考答案和解析。考试 Analytics
+作为只读聚合接入学习档案，缺失数据保持 `null`，不会伪造成 0 分。
+
+浏览器语音位于 `src/components/digital-human/`。识别和合成都需要用户显式触发；前端只把
+最终识别文本填入输入框，仍由用户确认后发送或交卷。本站 API 不接收麦克风音频，浏览器
+是否调用厂商在线语音服务取决于具体实现。
 
 「忆涟千言—教」区别于普通 AI 教育聊天机器人的核心：**页面只是表现层，
 Learning Evidence 才是核心数据。**
