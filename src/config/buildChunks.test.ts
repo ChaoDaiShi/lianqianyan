@@ -25,6 +25,13 @@ describe('resolveManualChunk', () => {
       'vendor-icons',
     );
     expect(resolve('/node_modules/zustand/index.js')).toBe('vendor-state');
+    expect(resolve('/node_modules/pixi.js/lib/index.js')).toBe('vendor-pixi');
+    expect(resolve('/node_modules/@pixi/core/lib/index.js')).toBe(
+      'vendor-pixi',
+    );
+    expect(
+      resolve('/node_modules/pixi-live2d-display/dist/cubism4.es.js'),
+    ).toBe('vendor-live2d');
     expect(resolve('/src/pages/Home.tsx')).toBeUndefined();
   });
 });

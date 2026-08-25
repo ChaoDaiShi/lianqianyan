@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { xiaolianCharacterAssets } from '@/assets/xiaolian/manifest';
+import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
 import type {
@@ -33,6 +33,7 @@ export interface XiaolianCharacterProps {
   message?: string;
   className?: string;
   priority?: boolean;
+  speaking?: boolean;
 }
 
 export function resolveXiaolianCharacterState(
@@ -62,6 +63,7 @@ export function XiaolianCharacter({
   message,
   className,
   priority = false,
+  speaking = false,
 }: XiaolianCharacterProps) {
   const reduceMotion = useReducedMotion();
   const displayState = runtimeState
@@ -75,13 +77,12 @@ export function XiaolianCharacter({
         animate={reduceMotion ? undefined : displayState}
       >
         <div className="absolute inset-x-[12%] bottom-[4%] h-[22%] rounded-full bg-primary-300/25 blur-2xl" />
-        <img
-          src={xiaolianCharacterAssets[displayState]}
-          alt={STATE_LABEL[displayState]}
-          width="480"
-          height="620"
-          loading={priority ? 'eager' : 'lazy'}
-          className="relative h-full w-full object-contain drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
+        <Live2DCharacter
+          stateLabel={STATE_LABEL[displayState]}
+          characterState={displayState}
+          speaking={speaking}
+          priority={priority}
+          className="relative drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
         />
       </motion.div>
       {message && <p className="mt-2 max-w-sm text-center text-sm leading-6 text-[var(--em-muted-ink)]">{message}</p>}
