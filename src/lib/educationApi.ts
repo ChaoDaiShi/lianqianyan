@@ -10,6 +10,29 @@ import type {
   PlanStrategy,
   PlannerActionType,
   PlannerReasonCode,
+  AnswerGradingStatus,
+  ExamAnalytics,
+  ExamAnswerValue,
+  ExamAttempt,
+  ExamAttemptStatus,
+  ExamAttemptSummary,
+  ExamCatalogItem,
+  ExamDefinition,
+  ExamDraftInput,
+  ExamQuestion,
+  ExamQuestionType,
+  ExamResult,
+  ExamResultAnswer,
+  ExamStatus,
+  ExamUpdateInput,
+  GradingStrategy,
+  KnowledgeExamPerformance,
+  QuestionCreateInput,
+  QuestionResponseKind,
+  QuestionTypeCreateInput,
+  QuestionTypeUpdateInput,
+  QuestionUpdateInput,
+  ReviewQueueItem,
 } from '@/domain';
 
 /** EducationMind —— 前端 API 客户端。 */
@@ -22,8 +45,8 @@ export interface HealthResponse {
 export interface LearningEvidence {
   id: string;
   learnerId: string;
-  evidenceType: 'learning_started' | 'practice_answer_evaluated';
-  source: 'current_study_plan' | 'recommended_path' | 'learning_space';
+  evidenceType: 'learning_started' | 'practice_answer_evaluated' | 'exam_answer_evaluated';
+  source: 'current_study_plan' | 'recommended_path' | 'learning_space' | 'exam_system';
   courseId?: string;
   knowledgePointId?: string;
   questionId?: string;
@@ -735,4 +758,456 @@ function mapKpDiagnosis(raw: Record<string, unknown>) {
     priorityScore: raw['priority_score'] as number,
     reasonCodes: raw['reason_codes'] as DiagnosisResult['summaryCodes'],
   };
+}
+
+export function mapQuestionType(raw: Record<string, unknown>): ExamQuestionType {
+  return {
+    id: raw['id'] as string,
+    name: raw['name'] as string,
+    description: (raw['description'] as string) ?? '',
+    responseKind: raw['response_kind'] as QuestionResponseKind,
+    gradingStrategy: raw['grading_strategy'] as GradingStrategy,
+    isBuiltin: raw['is_builtin'] as boolean,
+    isArchived: raw['is_archived'] as boolean,
+    createdAt: raw['created_at'] as string,
+    updatedAt: raw['updated_at'] as string,
+  };
+}
+
+export function mapQuestion(raw: Record<string, unknown>): ExamQuestion {
+  return {
+    id: raw['id'] as string,
+    courseId: raw['course_id'] as string,
+    knowledgePointId: (raw['knowledge_point_id'] as string | null) ?? null,
+    questionTypeId: raw['question_type_id'] as string,
+    questionTypeName: raw['question_type_name'] as string,
+    responseKind: raw['response_kind'] as QuestionResponseKind,
+    gradingStrategy: raw['grading_strategy'] as GradingStrategy,
+    prompt: raw['prompt'] as string,
+    options: (raw['options'] as string[]) ?? [],
+    correctAnswer: (raw['correct_answer'] as ExamAnswerValue) ?? null,
+    keywords: (raw['keywords'] as string[]) ?? [],
+    explanation: (raw['explanation'] as string) ?? '',
+    difficulty: raw['difficulty'] as number,
+    defaultScore: raw['default_score'] as number,
+    isArchived: raw['is_archived'] as boolean,
+    createdAt: raw['created_at'] as string,
+    updatedAt: raw['updated_at'] as string,
+  };
+}
+
+export function mapExam(raw: Record<string, unknown>): ExamDefinition {
+  return {
+    id: raw['id'] as string,
+    courseId: raw['course_id'] as string,
+    title: raw['title'] as string,
+    description: (raw['description'] as string) ?? '',
+    durationMinutes: raw['duration_minutes'] as number,
+    passPercentage: raw['pass_percentage'] as number,
+    shuffleQuestions: raw['shuffle_questions'] as boolean,
+    status: raw['status'] as ExamStatus,
+    items: ((raw['items'] as unknown[]) ?? []).map((item) => {
+      const value = item as Record<string, unknown>;
+      return {
+        id: value['id'] as string,
+        questionId: value['question_id'] as string,
+        points: value['points'] as number,
+        position: value['position'] as number,
+        question: mapQuestion(value['question'] as Record<string, unknown>),
+      };
+    }),
+    totalPoints: raw['total_points'] as number,
+    createdAt: raw['created_at'] as string,
+    updatedAt: raw['updated_at'] as string,
+    publishedAt: (raw['published_at'] as string | null) ?? null,
+  };
+}
+
+export function mapExamAttempt(raw: Record<string, unknown>): ExamAttempt {
+  return {
+    id: raw['id'] as string,
+    examId: raw['exam_id'] as string,
+    learnerId: raw['learner_id'] as string,
+    examTitle: raw['exam_title'] as string,
+    status: raw['status'] as ExamAttemptStatus,
+    startedAt: raw['started_at'] as string,
+    expiresAt: raw['expires_at'] as string,
+    submittedAt: (raw['submitted_at'] as string | null) ?? null,
+    questions: ((raw['questions'] as unknown[]) ?? []).map((item) => {
+      const value = item as Record<string, unknown>;
+      return {
+        questionId: value['question_id'] as string,
+        questionTypeName: value['question_type_name'] as string,
+        responseKind: value['response_kind'] as QuestionResponseKind,
+        prompt: value['prompt'] as string,
+        options: (value['options'] as string[]) ?? [],
+        points: value['points'] as number,
+        position: value['position'] as number,
+        userAnswer: (value['user_answer'] as ExamAnswerValue) ?? null,
+        savedAt: (value['saved_at'] as string | null) ?? null,
+      };
+    }),
+  };
+}
+
+export function mapExamAttemptSummary(
+  raw: Record<string, unknown>,
+): ExamAttemptSummary {
+  return {
+    id: raw['id'] as string,
+    examId: raw['exam_id'] as string,
+    learnerId: raw['learner_id'] as string,
+    examTitle: raw['exam_title'] as string,
+    status: raw['status'] as ExamAttemptStatus,
+    startedAt: raw['started_at'] as string,
+    expiresAt: raw['expires_at'] as string,
+    submittedAt: (raw['submitted_at'] as string | null) ?? null,
+    awardedScore: raw['awarded_score'] as number,
+    maxScore: raw['max_score'] as number,
+    pendingScore: raw['pending_score'] as number,
+    percentage: raw['percentage'] as number,
+    passed: (raw['passed'] as boolean | null) ?? null,
+  };
+}
+
+export function mapExamResult(raw: Record<string, unknown>): ExamResult {
+  const summary = mapExamAttemptSummary(raw);
+  return {
+    ...summary,
+    answers: ((raw['answers'] as unknown[]) ?? []).map((item) => {
+      const value = item as Record<string, unknown>;
+      return {
+        answerId: value['answer_id'] as string,
+        questionId: value['question_id'] as string,
+        questionTypeName: value['question_type_name'] as string,
+        responseKind: value['response_kind'] as QuestionResponseKind,
+        gradingStrategy: value['grading_strategy'] as GradingStrategy,
+        prompt: value['prompt'] as string,
+        options: (value['options'] as string[]) ?? [],
+        userAnswer: (value['user_answer'] as ExamAnswerValue) ?? null,
+        correctAnswer: (value['correct_answer'] as ExamAnswerValue) ?? null,
+        keywords: (value['keywords'] as string[]) ?? [],
+        explanation: (value['explanation'] as string) ?? '',
+        points: value['points'] as number,
+        awardedScore: (value['awarded_score'] as number | null) ?? null,
+        isCorrect: (value['is_correct'] as boolean | null) ?? null,
+        gradingStatus: value['grading_status'] as AnswerGradingStatus,
+        feedback: (value['feedback'] as string) ?? '',
+      } satisfies ExamResultAnswer;
+    }),
+  };
+}
+
+function mapCatalogExam(raw: Record<string, unknown>): ExamCatalogItem {
+  return {
+    id: raw['id'] as string,
+    courseId: raw['course_id'] as string,
+    title: raw['title'] as string,
+    description: (raw['description'] as string) ?? '',
+    durationMinutes: raw['duration_minutes'] as number,
+    passPercentage: raw['pass_percentage'] as number,
+    questionCount: raw['question_count'] as number,
+    totalPoints: raw['total_points'] as number,
+    publishedAt: raw['published_at'] as string,
+    latestAttempt: raw['latest_attempt']
+      ? mapExamAttemptSummary(raw['latest_attempt'] as Record<string, unknown>)
+      : null,
+  };
+}
+
+function mapReviewQueueItem(raw: Record<string, unknown>): ReviewQueueItem {
+  return {
+    answerId: raw['answer_id'] as string,
+    attemptId: raw['attempt_id'] as string,
+    examId: raw['exam_id'] as string,
+    examTitle: raw['exam_title'] as string,
+    learnerId: raw['learner_id'] as string,
+    questionId: raw['question_id'] as string,
+    prompt: raw['prompt'] as string,
+    userAnswer: (raw['user_answer'] as ExamAnswerValue) ?? null,
+    referenceAnswer: (raw['reference_answer'] as ExamAnswerValue) ?? null,
+    points: raw['points'] as number,
+    submittedAt: raw['submitted_at'] as string,
+  };
+}
+
+export function mapExamAnalytics(raw: Record<string, unknown>): ExamAnalytics {
+  return {
+    learnerId: raw['learner_id'] as string,
+    courseId: raw['course_id'] as string,
+    submittedCount: raw['submitted_count'] as number,
+    gradedCount: raw['graded_count'] as number,
+    averagePercentage: (raw['average_percentage'] as number | null) ?? null,
+    bestPercentage: (raw['best_percentage'] as number | null) ?? null,
+    passRate: (raw['pass_rate'] as number | null) ?? null,
+    objectiveAccuracy: (raw['objective_accuracy'] as number | null) ?? null,
+    pendingReviewCount: raw['pending_review_count'] as number,
+    knowledgePoints: ((raw['knowledge_points'] as unknown[]) ?? []).map((item) => {
+      const value = item as Record<string, unknown>;
+      return {
+        knowledgePointId: value['knowledge_point_id'] as string,
+        knowledgePointName: value['knowledge_point_name'] as string,
+        answeredCount: value['answered_count'] as number,
+        averageScoreRatio: value['average_score_ratio'] as number,
+      } satisfies KnowledgeExamPerformance;
+    }),
+  };
+}
+
+export async function fetchExamQuestionTypes(): Promise<ExamQuestionType[]> {
+  const response = await api.get<unknown[]>('/api/exams/question-types');
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapQuestionType,
+  );
+}
+
+export async function createExamQuestionType(
+  input: QuestionTypeCreateInput,
+): Promise<ExamQuestionType> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/exams/question-types',
+    {
+      name: input.name,
+      description: input.description ?? '',
+      response_kind: input.responseKind,
+      grading_strategy: input.gradingStrategy,
+    },
+  );
+  return mapQuestionType(extractApiData(response));
+}
+
+export async function updateExamQuestionType(
+  questionTypeId: string,
+  input: QuestionTypeUpdateInput,
+): Promise<ExamQuestionType> {
+  const response = await api.patch<Record<string, unknown>>(
+    `/api/exams/question-types/${questionTypeId}`,
+    {
+      name: input.name,
+      description: input.description,
+      response_kind: input.responseKind,
+      grading_strategy: input.gradingStrategy,
+      is_archived: input.isArchived,
+    },
+  );
+  return mapQuestionType(extractApiData(response));
+}
+
+export async function fetchExamQuestions(courseId: string): Promise<ExamQuestion[]> {
+  const response = await api.get<unknown[]>('/api/exams/questions', {
+    params: { course_id: courseId },
+  });
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapQuestion,
+  );
+}
+
+function questionPayload(input: QuestionCreateInput | QuestionUpdateInput) {
+  return {
+    course_id: 'courseId' in input ? input.courseId : undefined,
+    knowledge_point_id: input.knowledgePointId,
+    question_type_id: input.questionTypeId,
+    prompt: input.prompt,
+    options: input.options,
+    correct_answer: input.correctAnswer,
+    keywords: input.keywords,
+    explanation: input.explanation,
+    difficulty: input.difficulty,
+    default_score: input.defaultScore,
+    is_archived: 'isArchived' in input ? input.isArchived : undefined,
+  };
+}
+
+export async function createExamQuestion(
+  input: QuestionCreateInput,
+): Promise<ExamQuestion> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/exams/questions',
+    {
+      ...questionPayload(input),
+      knowledge_point_id: input.knowledgePointId ?? null,
+      options: input.options ?? [],
+      correct_answer: input.correctAnswer ?? null,
+      keywords: input.keywords ?? [],
+      explanation: input.explanation ?? '',
+    },
+  );
+  return mapQuestion(extractApiData(response));
+}
+
+export async function updateExamQuestion(
+  questionId: string,
+  input: QuestionUpdateInput,
+): Promise<ExamQuestion> {
+  const response = await api.patch<Record<string, unknown>>(
+    `/api/exams/questions/${questionId}`,
+    questionPayload(input),
+  );
+  return mapQuestion(extractApiData(response));
+}
+
+function examPayload(input: ExamDraftInput | ExamUpdateInput) {
+  return {
+    course_id: 'courseId' in input ? input.courseId : undefined,
+    title: input.title,
+    description: input.description,
+    duration_minutes: input.durationMinutes,
+    pass_percentage: input.passPercentage,
+    shuffle_questions: input.shuffleQuestions,
+    items: input.items?.map((item) => ({
+      question_id: item.questionId,
+      points: item.points,
+      position: item.position,
+    })),
+  };
+}
+
+export async function fetchExamDefinitions(courseId: string): Promise<ExamDefinition[]> {
+  const response = await api.get<unknown[]>('/api/exams', {
+    params: { course_id: courseId },
+  });
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapExam,
+  );
+}
+
+export async function createExamDefinition(
+  input: ExamDraftInput,
+): Promise<ExamDefinition> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/exams',
+    examPayload(input),
+  );
+  return mapExam(extractApiData(response));
+}
+
+export async function updateExamDefinition(
+  examId: string,
+  input: ExamUpdateInput,
+): Promise<ExamDefinition> {
+  const response = await api.patch<Record<string, unknown>>(
+    `/api/exams/${examId}`,
+    examPayload(input),
+  );
+  return mapExam(extractApiData(response));
+}
+
+export async function publishExam(examId: string): Promise<ExamDefinition> {
+  const response = await api.post<Record<string, unknown>>(
+    `/api/exams/${examId}/publish`,
+  );
+  return mapExam(extractApiData(response));
+}
+
+export async function fetchExamCatalog(
+  learnerId: string,
+  courseId: string,
+): Promise<ExamCatalogItem[]> {
+  const response = await api.get<unknown[]>('/api/exams/catalog', {
+    params: { learner_id: learnerId, course_id: courseId },
+  });
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapCatalogExam,
+  );
+}
+
+export async function startExamAttempt(
+  examId: string,
+  learnerId: string,
+): Promise<ExamAttempt> {
+  const response = await api.post<Record<string, unknown>>(
+    `/api/exams/${examId}/attempts`,
+    { learner_id: learnerId },
+  );
+  return mapExamAttempt(extractApiData(response));
+}
+
+export async function fetchExamAttempt(
+  attemptId: string,
+  learnerId: string,
+): Promise<ExamAttempt> {
+  const response = await api.get<Record<string, unknown>>(
+    `/api/exams/attempts/${attemptId}`,
+    { params: { learner_id: learnerId } },
+  );
+  return mapExamAttempt(extractApiData(response));
+}
+
+export async function saveExamAnswer(
+  attemptId: string,
+  questionId: string,
+  learnerId: string,
+  answer: ExamAnswerValue,
+): Promise<{ answerId: string; savedAt: string }> {
+  const response = await api.put<Record<string, unknown>>(
+    `/api/exams/attempts/${attemptId}/answers/${questionId}`,
+    { learner_id: learnerId, answer },
+  );
+  const raw = extractApiData(response);
+  return { answerId: raw['answer_id'] as string, savedAt: raw['saved_at'] as string };
+}
+
+export async function submitExamAttempt(
+  attemptId: string,
+  learnerId: string,
+): Promise<ExamAttemptSummary> {
+  const response = await api.post<Record<string, unknown>>(
+    `/api/exams/attempts/${attemptId}/submit`,
+    { learner_id: learnerId },
+  );
+  return mapExamAttemptSummary(extractApiData(response));
+}
+
+export async function fetchExamResult(
+  attemptId: string,
+  learnerId: string,
+): Promise<ExamResult> {
+  const response = await api.get<Record<string, unknown>>(
+    `/api/exams/attempts/${attemptId}/result`,
+    { params: { learner_id: learnerId } },
+  );
+  return mapExamResult(extractApiData(response));
+}
+
+export async function fetchExamResults(
+  learnerId: string,
+  courseId: string,
+): Promise<ExamAttemptSummary[]> {
+  const response = await api.get<unknown[]>('/api/exams/results', {
+    params: { learner_id: learnerId, course_id: courseId },
+  });
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapExamAttemptSummary,
+  );
+}
+
+export async function fetchExamReviewQueue(courseId: string): Promise<ReviewQueueItem[]> {
+  const response = await api.get<unknown[]>('/api/exams/review-queue', {
+    params: { course_id: courseId },
+  });
+  return (extractApiData<unknown[]>(response) as Record<string, unknown>[]).map(
+    mapReviewQueueItem,
+  );
+}
+
+export async function gradeExamAnswer(
+  answerId: string,
+  score: number,
+  feedback: string,
+): Promise<ExamAttemptSummary> {
+  const response = await api.patch<Record<string, unknown>>(
+    `/api/exams/answers/${answerId}/grade`,
+    { score, feedback },
+  );
+  return mapExamAttemptSummary(extractApiData(response));
+}
+
+export async function fetchExamAnalytics(
+  learnerId: string,
+  courseId: string,
+): Promise<ExamAnalytics> {
+  const response = await api.get<Record<string, unknown>>('/api/exams/analytics', {
+    params: { learner_id: learnerId, course_id: courseId },
+  });
+  return mapExamAnalytics(extractApiData(response));
 }

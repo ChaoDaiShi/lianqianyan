@@ -17,13 +17,15 @@ export type Timestamp = string;
 /** 学习证据类型 —— 描述「学习行为是什么」。 */
 export type EvidenceType =
   | 'learning_started'
-  | 'practice_answer_evaluated';
+  | 'practice_answer_evaluated'
+  | 'exam_answer_evaluated';
 
 /** 学习证据来源 —— 描述「学习行为从哪里产生」（与证据类型独立）。 */
 export type EvidenceSource =
   | 'current_study_plan'
   | 'recommended_path'
-  | 'learning_space';
+  | 'learning_space'
+  | 'exam_system';
 
 /** 学习证据的领域分类（是否影响掌握度由此决定）。 */
 export type EvidenceClassification = 'behavior' | 'assessment' | 'reflection';

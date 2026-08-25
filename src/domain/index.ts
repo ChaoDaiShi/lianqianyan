@@ -13,3 +13,4 @@ export * from './question';
 export * from './report';
 export * from './diagnosis';
 export * from './planApi';
+export * from './exam';
