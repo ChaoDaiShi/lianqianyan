@@ -10,11 +10,14 @@ from app.api.routes import (
     diagnosis,
     health,
     knowledge,
+    lab,
     learning,
+    network,
     plans,
     practice,
     profile,
     reports,
+    resources,
     system,
     tools,
     tutor,
@@ -25,6 +28,9 @@ api_router.include_router(health.router)
 api_router.include_router(system.router)
 api_router.include_router(tools.router)
 api_router.include_router(knowledge.router)
+api_router.include_router(network.router)
+api_router.include_router(lab.router)
+api_router.include_router(resources.router)
 api_router.include_router(profile.router)
 api_router.include_router(diagnosis.router)
 api_router.include_router(plans.router)
