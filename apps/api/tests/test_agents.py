@@ -195,7 +195,8 @@ def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:
     assert body["agent_trace"][1]["name"] == "get_learning_diagnosis"
     assert body["sources"]
     assert body["agent_trace"][-1]["status"] == "completed"
-    assert body["provider"] == "mock"
+    assert body["provider"] == "unavailable"
+    assert body["response_mode"] == "fallback"
 
 
 def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:

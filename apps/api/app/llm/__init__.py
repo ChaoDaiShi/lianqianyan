@@ -22,9 +22,9 @@ def get_llm_provider() -> BaseLLMProvider:
             settings.llm_timeout,
         )
 
-    from app.llm.mock_provider import MockTutorProvider
+    from app.llm.unavailable_provider import UnavailableLLMProvider
 
-    return MockTutorProvider()
+    return UnavailableLLMProvider()
 
 
 __all__ = [

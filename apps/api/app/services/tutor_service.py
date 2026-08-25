@@ -11,11 +11,11 @@
 
 约定：
 - **Provider 抽象**：只依赖 `BaseLLMProvider`（app/llm），不绑定 OpenAI / 任何具体厂商；
-  当前默认使用 MockTutorProvider（接口真实，确定性上下文感知）。
-- **Fallback（比赛演示稳定优先）**：LLM 调用失败 → 确定性兜底回答，
+  未配置外部模型时使用明确的 Unavailable Provider，不生成伪造模型回答。
+- **Fallback**：未配置或调用失败时，根据真实课程材料与学习状态生成确定性基础辅导，
   且 `source="fallback"` 诚实标记，绝不伪装成 LLM 输出。
 - **suggested_actions**：由 TutorContext 确定性生成（不是 LLM 自由发挥），
-  保证演示稳定可解释。
+  保持结果可解释。
 - **context_used**：来自 TutorContext（解释能力：本次用了哪些学习上下文）。
 - 不保存聊天历史（请求级 Context）。
 - 不依赖 FastAPI；可供 HTTP Route / 未来 MCP Tool / Agent Runtime 复用。
@@ -185,7 +185,7 @@ class TutorService:
                 f"\n课程知识提示（{first.title} · {first.section}）：{excerpt}"
             )
         return (
-            "（兜底回答 · 小涟暂时无法生成个性化分析，以下为基于你学习数据的确定性建议）\n"
+            "（基础辅导 · 外部模型未配置或暂时不可用，以下内容基于课程材料与真实学习记录生成）\n"
             + core
             + knowledge_note
         )

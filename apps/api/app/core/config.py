@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,8 +18,32 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_model: str | None = None
     llm_timeout: float = 20.0
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     model_config = SettingsConfigDict(env_prefix="EDUCATION_", env_file=".env", extra="ignore")
+
+    def allowed_cors_origins(self) -> list[str]:
+        """Return unique, absolute HTTP(S) origins from the environment allowlist."""
+        origins: list[str] = []
+        for raw_value in self.cors_origins.split(","):
+            candidate = raw_value.strip().rstrip("/")
+            if not candidate or candidate == "*":
+                continue
+            parsed = urlsplit(candidate)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.username
+                or parsed.password
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+            ):
+                continue
+            normalized = f"{parsed.scheme}://{parsed.netloc}"
+            if normalized not in origins:
+                origins.append(normalized)
+        return origins
 
 
 @lru_cache

@@ -19,7 +19,7 @@ def test_llm_status_is_safe_when_configuration_is_incomplete(monkeypatch) -> Non
 
     assert response.status_code == 200
     assert response.json() == {
-        "provider": "mock",
+        "provider": "unavailable",
         "model": None,
         "configured": False,
     }

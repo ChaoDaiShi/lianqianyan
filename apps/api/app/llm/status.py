@@ -26,4 +26,4 @@ def get_llm_status() -> LlmStatus:
             model=settings.llm_model.strip() if settings.llm_model else None,
             configured=True,
         )
-    return LlmStatus(provider="mock", configured=False)
+    return LlmStatus(provider="unavailable", configured=False)

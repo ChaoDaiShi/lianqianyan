@@ -76,11 +76,11 @@ def test_provider_reports_timeout_without_exposing_request_details():
     assert OpenAICompatibleProvider.endpoint_for("https://llm.test/v1/") == "https://llm.test/v1/chat/completions"
 
 
-def test_provider_selection_uses_mock_without_complete_config(monkeypatch):
+def test_provider_selection_is_unavailable_without_complete_config(monkeypatch):
     for key in ("EDUCATION_LLM_BASE_URL", "EDUCATION_LLM_API_KEY", "EDUCATION_LLM_MODEL"):
         monkeypatch.delenv(key, raising=False)
     get_settings.cache_clear()
-    assert get_llm_provider().name == "mock"
+    assert get_llm_provider().name == "unavailable"
 
 
 def test_provider_selection_uses_openai_compatible_with_complete_config(monkeypatch):

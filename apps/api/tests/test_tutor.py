@@ -232,7 +232,7 @@ def test_tutor_service_falls_back_on_llm_failure(testdb: _TestDB) -> None:
     response = _run_chat(service, knowledge=knowledge)
 
     assert response.source == "fallback"
-    assert "兜底" in response.answer
+    assert "基础辅导" in response.answer
     assert response.answer != ""
     assert response.suggested_actions
     assert "diagnosis" in response.context_used

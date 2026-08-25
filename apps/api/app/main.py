@@ -12,6 +12,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.core.config import get_settings
@@ -38,6 +39,13 @@ def create_app() -> FastAPI:
         description="基于学习画像、学习证据与动态学习规划的个性化 AI 学习伙伴 —— 第一阶段骨架",
         version=settings.app_version,
         lifespan=lifespan,
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.allowed_cors_origins(),
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     application.include_router(api_router)
     return application

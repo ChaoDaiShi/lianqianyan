@@ -13,6 +13,8 @@ import tempfile
 import time
 from pathlib import Path
 
+import pytest
+
 
 _TEST_DATABASE_PATH = (
     Path(tempfile.gettempdir()) / f"educationmind-pytest-{os.getpid()}.db"
@@ -20,6 +22,16 @@ _TEST_DATABASE_PATH = (
 os.environ["EDUCATION_DATABASE_URL"] = (
     f"sqlite:///{_TEST_DATABASE_PATH.as_posix()}"
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_settings_cache():
+    """Prevent one test's temporary environment from leaking through the cache."""
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 def pytest_sessionfinish() -> None:
