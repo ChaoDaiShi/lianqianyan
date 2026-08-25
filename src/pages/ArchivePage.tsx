@@ -1,60 +1,28 @@
-import { BookOpen, CalendarClock, FolderOpen, RotateCw, Sparkles, Target } from 'lucide-react';
+import { CalendarClock, FolderOpen, RotateCw, Sparkles } from 'lucide-react';
 import { LearningIdentityCard } from '@/components/archive/LearningIdentityCard';
 import { LearningStoryTimeline } from '@/components/archive/LearningStoryTimeline';
-import { formatDiagnosisPercent, getDiagnosisTone, isAssessedDiagnosis } from '@/components/diagnosis/diagnosisPresentation';
 import { GlassPanel } from '@/components/design/GlassPanel';
-import { GrowthMetric } from '@/components/design/GrowthMetric';
 import { LearningState } from '@/components/feedback/LearningState';
 import { AppShell } from '@/components/layout/AppShell';
+import { LearnerPortraitDashboard } from '@/components/profile/LearnerPortraitDashboard';
 import { Button } from '@/components/ui/button';
 import { MemoryCapsule } from '@/components/xiaolian/MemoryCapsule';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
-import { XiaolianLearningPortrait } from '@/components/xiaolian/XiaolianLearningPortrait';
 import { XiaolianMemoryCard } from '@/components/xiaolian/XiaolianMemoryCard';
-import { ACTION_TYPE_LABEL, DIAGNOSIS_REASON_TEXT, DIAGNOSIS_STATUS_LABEL } from '@/domain';
-import type { KnowledgePointDiagnosis } from '@/domain';
-import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
+import { ACTION_TYPE_LABEL } from '@/domain';
+import {
+  useCurrentPlan,
+  useDiagnosis,
+  useExamAnalytics,
+  useLearnerProfile,
+  useRecentEvidence,
+} from '@/lib/hooks';
 import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useLearningLoopStore } from '@/store';
-
-const SORT_ORDER: Record<string, number> = {
-  weak: 0,
-  developing: 1,
-  proficient: 2,
-  mastered: 3,
-  insufficient_evidence: 4,
-  unassessed: 5,
-};
-
-function KnowledgeMemory({ point }: { point: KnowledgePointDiagnosis }) {
-  const assessed = isAssessedDiagnosis(point.status);
-  const tone = getDiagnosisTone(point.status);
-
-  return (
-    <div className="rounded-[18px] border border-violet-100 bg-white/50 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <strong className="text-sm">{point.knowledgePointName}</strong>
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${tone.badge}`}>
-          {DIAGNOSIS_STATUS_LABEL[point.status]}
-        </span>
-      </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-violet-50">
-        <div
-          className={`h-full rounded-full ${tone.node}`}
-          style={{ width: assessed ? `${Math.min(100, point.masteryScore * 100)}%` : '8%' }}
-        />
-      </div>
-      <p className="mt-2 text-xs text-[var(--em-muted-ink)]">
-        {assessed
-          ? `掌握度 ${formatDiagnosisPercent(point.masteryScore, true)} · ${point.evidenceCount} 条证据`
-          : '尚未评估，不代表薄弱'}
-      </p>
-    </div>
-  );
-}
 
 export function ArchivePage() {
   const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const analytics = useExamAnalytics(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
   const evidence = useRecentEvidence();
   const practiceEvaluationsByTask = useLearningLoopStore((state) => state.practiceEvaluations);
@@ -63,16 +31,13 @@ export function ArchivePage() {
   const reloadAll = () => {
     void profile.refetch();
     void diagnosis.refetch();
+    void analytics.refetch();
     void plan.refetch();
     void evidence.refetch();
   };
-  const sorted = [...(profile.data?.knowledgePoints ?? [])].sort(
-    (a, b) => (SORT_ORDER[a.status] ?? 9) - (SORT_ORDER[b.status] ?? 9)
-  );
   const knowledgeNames = Object.fromEntries(
     (profile.data?.knowledgePoints ?? []).map((point) => [point.knowledgePointId, point.knowledgePointName])
   );
-  const primary = diagnosis.data?.primaryFocus ?? null;
   const reflectionResults = Object.entries(reflectionResultsByTask)
     .filter(
       ([taskId, result]) =>
@@ -142,11 +107,17 @@ export function ArchivePage() {
             )}
             {diagnosis.data && <LearningIdentityCard profile={profile.data} diagnosis={diagnosis.data} />}
             {diagnosis.data && (
+              <LearnerPortraitDashboard
+                profile={profile.data}
+                diagnosis={diagnosis.data}
+                analytics={analytics.data}
+                analyticsLoading={analytics.loading}
+                analyticsError={analytics.error}
+                onRetryAnalytics={() => void analytics.refetch()}
+              />
+            )}
+            {diagnosis.data && (
               <div className="grid gap-6 lg:grid-cols-2">
-                <XiaolianLearningPortrait
-                  profile={profile.data}
-                  diagnosis={diagnosis.data}
-                />
                 <XiaolianMemoryCard
                   profile={profile.data}
                   diagnosis={diagnosis.data}
@@ -155,65 +126,9 @@ export function ArchivePage() {
                   learnerId={DEMO_LEARNER_ID}
                   courseId={DEMO_COURSE_ID}
                 />
+                <MemoryCapsule confirmedPreferences={[]} />
               </div>
             )}
-            <MemoryCapsule confirmedPreferences={[]} />
-
-            <GlassPanel className="p-5 sm:p-6">
-              <p className="text-xs text-[var(--em-muted-ink)]">当前课程</p>
-              <h2 className="mt-1 text-xl font-bold">{profile.data.courseName}</h2>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <GrowthMetric
-                  label="综合掌握度"
-                  value={profile.data.insufficientData ? '暂无足够数据' : formatDiagnosisPercent(profile.data.overallMastery, true)}
-                />
-                <GrowthMetric
-                  label="画像可信度"
-                  value={formatDiagnosisPercent(profile.data.overallConfidence, true)}
-                  tone="star"
-                />
-                <GrowthMetric
-                  label="诊断覆盖率"
-                  value={`${Math.round(profile.data.coverage * 100)}%`}
-                  hint={`${profile.data.assessedCount}/${profile.data.totalKnowledgePoints} 个知识点`}
-                  tone="accent"
-                />
-              </div>
-            </GlassPanel>
-
-            {primary && (
-              <GlassPanel className="p-6">
-                <div className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-companion" />
-                  <h2 className="text-lg font-bold">此刻最值得记住</h2>
-                </div>
-                <div className="mt-4 rounded-[20px] bg-gradient-to-r from-pink-50 to-violet-50 p-5">
-                  <strong>{primary.knowledgePointName}</strong>
-                  <span className="ml-2 rounded-full bg-white/70 px-2 py-0.5 text-xs text-fuchsia-700">
-                    {DIAGNOSIS_STATUS_LABEL[primary.status]}
-                  </span>
-                  <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">
-                    掌握度 {formatDiagnosisPercent(primary.masteryScore, true)} ·{' '}
-                    {primary.reasonCodes.map((code) => DIAGNOSIS_REASON_TEXT[code] ?? '').filter(Boolean).join(' ')}
-                  </p>
-                </div>
-              </GlassPanel>
-            )}
-
-            <GlassPanel className="p-6">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-star" />
-                <h2 className="text-lg font-bold">知识星点</h2>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {sorted.map((point) => <KnowledgeMemory key={point.knowledgePointId} point={point} />)}
-              </div>
-              {sorted.length === 0 && (
-                <p className="mt-4 text-sm text-[var(--em-muted-ink)]">
-                  暂无可展示的知识点。
-                </p>
-              )}
-            </GlassPanel>
           </>
         )}
 

@@ -4,6 +4,7 @@ import {
   chatWithTutor,
   fetchCurrentPlan,
   fetchDiagnosis,
+  fetchExamAnalytics,
   fetchKnowledgePoint,
   fetchLearnerProfile,
   fetchLlmStatus,
@@ -20,6 +21,7 @@ import {
 } from '@/lib/educationApi';
 import type {
   DiagnosisResult,
+  ExamAnalytics,
   LearnerProfile,
   PersistedStudyPlan,
   PersistedStudyPlanSummary,
@@ -93,6 +95,17 @@ export function useDiagnosis(
   courseId: string
 ): AsyncState<DiagnosisResult> {
   return useAsync(() => fetchDiagnosis(learnerId, courseId), [learnerId, courseId]);
+}
+
+/** GET /api/exams/analytics —— 已提交考试的聚合评测证据。 */
+export function useExamAnalytics(
+  learnerId: string,
+  courseId: string,
+): AsyncState<ExamAnalytics> {
+  return useAsync(
+    () => fetchExamAnalytics(learnerId, courseId),
+    [learnerId, courseId],
+  );
 }
 
 export interface CurrentPlanState {

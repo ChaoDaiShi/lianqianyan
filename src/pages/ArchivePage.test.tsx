@@ -1,9 +1,15 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DiagnosisResult, LearnerProfile, PersistedStudyPlan } from '@/domain';
+import type {
+  DiagnosisResult,
+  ExamAnalytics,
+  LearnerProfile,
+  PersistedStudyPlan,
+} from '@/domain';
 import type { LearningStoryTimelineProps } from '@/components/archive/LearningStoryTimeline';
 import type { ReflectionResult } from '@/components/learning/learningLoop';
+import type { LearnerPortraitDashboardProps } from '@/components/profile/LearnerPortraitDashboard';
 import type { MemoryCapsuleProps } from '@/components/xiaolian/MemoryCapsule';
 import type { XiaolianMemoryCardProps } from '@/components/xiaolian/XiaolianMemoryCard';
 import type {
@@ -15,19 +21,24 @@ const fixtures = vi.hoisted(() => ({
   storyProps: null as LearningStoryTimelineProps | null,
   memoryProps: null as XiaolianMemoryCardProps | null,
   capsuleProps: null as MemoryCapsuleProps | null,
+  portraitProps: null as LearnerPortraitDashboardProps | null,
   profileRefetch: vi.fn(),
   diagnosisRefetch: vi.fn(),
   planRefetch: vi.fn(),
   evidenceRefetch: vi.fn(),
+  analyticsRefetch: vi.fn(),
   profile: null as LearnerProfile | null,
   diagnosis: null as DiagnosisResult | null,
   plan: null as PersistedStudyPlan | null,
   evidence: [] as LearningEvidence[],
+  analytics: null as ExamAnalytics | null,
   practiceEvaluations: {} as Record<string, PracticeEvaluationResponse>,
   reflectionResults: {} as Record<string, ReflectionResult>,
   planLoading: false,
   evidenceLoading: false,
   evidenceError: true,
+  analyticsLoading: false,
+  analyticsError: false,
 }));
 
 vi.mock('@/components/archive/LearningIdentityCard', () => ({
@@ -48,8 +59,11 @@ vi.mock('@/components/xiaolian/XiaolianMemoryCard', () => ({
   },
 }));
 
-vi.mock('@/components/xiaolian/XiaolianLearningPortrait', () => ({
-  XiaolianLearningPortrait: () => <div>xiaolian-learning-portrait</div>,
+vi.mock('@/components/profile/LearnerPortraitDashboard', () => ({
+  LearnerPortraitDashboard: (props: LearnerPortraitDashboardProps) => {
+    fixtures.portraitProps = props;
+    return <div>learner-portrait-dashboard {props.profile.courseName}</div>;
+  },
 }));
 
 vi.mock('@/components/xiaolian/MemoryCapsule', () => ({
@@ -115,6 +129,12 @@ vi.mock('@/lib/hooks', () => ({
     error: fixtures.evidenceError,
     refetch: fixtures.evidenceRefetch,
   }),
+  useExamAnalytics: () => ({
+    data: fixtures.analytics,
+    loading: fixtures.analyticsLoading,
+    error: fixtures.analyticsError,
+    refetch: fixtures.analyticsRefetch,
+  }),
 }));
 
 vi.mock('@/store', () => ({
@@ -172,13 +192,17 @@ beforeEach(() => {
   fixtures.storyProps = null;
   fixtures.memoryProps = null;
   fixtures.capsuleProps = null;
+  fixtures.portraitProps = null;
   fixtures.profileRefetch.mockReset();
   fixtures.diagnosisRefetch.mockReset();
   fixtures.planRefetch.mockReset();
   fixtures.evidenceRefetch.mockReset();
+  fixtures.analyticsRefetch.mockReset();
   fixtures.planLoading = false;
   fixtures.evidenceLoading = false;
   fixtures.evidenceError = true;
+  fixtures.analyticsLoading = false;
+  fixtures.analyticsError = false;
 
   const knowledgePoint = {
     knowledgePointId: 'kp-deadlock',
@@ -268,6 +292,25 @@ beforeEach(() => {
       occurredAt: '2026-08-22T08:00:00.000Z',
     },
   ];
+  fixtures.analytics = {
+    learnerId: 'learner-1',
+    courseId: 'course-1',
+    submittedCount: 2,
+    gradedCount: 1,
+    averagePercentage: 76,
+    bestPercentage: 76,
+    passRate: 1,
+    objectiveAccuracy: 0.75,
+    pendingReviewCount: 1,
+    knowledgePoints: [
+      {
+        knowledgePointId: 'kp-deadlock',
+        knowledgePointName: 'Deadlock',
+        answeredCount: 2,
+        averageScoreRatio: 0.75,
+      },
+    ],
+  };
   fixtures.practiceEvaluations = {
     'task-1': createEvaluation('practice-1', '2026-08-22T09:00:00.000Z'),
     'task-2': createEvaluation('practice-2', '2026-08-22T09:30:00.000Z'),
@@ -307,7 +350,7 @@ describe('ArchivePage Xiaolian memory integration', () => {
 
     expect(html).toContain('learning-identity-card');
     expect(html).toContain('xiaolian-memory-card');
-    expect(html).toContain('xiaolian-learning-portrait');
+    expect(html).toContain('learner-portrait-dashboard');
     expect(html).toContain('memory-capsule');
     expect(html).toContain('learning-story-timeline');
     expect(html).not.toContain('growth-timeline');
@@ -320,6 +363,11 @@ describe('ArchivePage Xiaolian memory integration', () => {
     expect(fixtures.memoryProps?.reflectionResults).toEqual(
       [fixtures.reflectionResults['task-1']],
     );
+    expect(fixtures.portraitProps?.profile).toBe(fixtures.profile);
+    expect(fixtures.portraitProps?.diagnosis).toBe(fixtures.diagnosis);
+    expect(fixtures.portraitProps?.analytics).toBe(fixtures.analytics);
+    expect(fixtures.portraitProps?.analyticsLoading).toBe(false);
+    expect(fixtures.portraitProps?.analyticsError).toBe(false);
     expect(fixtures.capsuleProps?.confirmedPreferences).toEqual([]);
     expect(storyProps).not.toBeNull();
     expect(storyProps?.plan).toBe(fixtures.plan);
@@ -336,6 +384,22 @@ describe('ArchivePage Xiaolian memory integration', () => {
 
     expect(fixtures.evidenceRefetch).toHaveBeenCalledOnce();
     expect(fixtures.planRefetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps exam analytics failure independent from the learning profile', () => {
+    fixtures.analytics = null;
+    fixtures.analyticsError = true;
+
+    const html = renderToStaticMarkup(<ArchivePage />);
+
+    expect(html).toContain('learner-portrait-dashboard');
+    expect(fixtures.portraitProps?.analytics).toBeNull();
+    expect(fixtures.portraitProps?.analyticsError).toBe(true);
+
+    fixtures.portraitProps?.onRetryAnalytics();
+
+    expect(fixtures.analyticsRefetch).toHaveBeenCalledOnce();
+    expect(fixtures.profileRefetch).not.toHaveBeenCalled();
   });
 
   it('keeps the journey Evidence state independent while the Current Plan is loading', () => {
@@ -362,8 +426,8 @@ describe('ArchivePage Xiaolian memory integration', () => {
       knowledgePoints: [],
     };
 
-    const html = renderToStaticMarkup(<ArchivePage />);
+    renderToStaticMarkup(<ArchivePage />);
 
-    expect(html).toContain('暂无可展示的知识点');
+    expect(fixtures.portraitProps?.profile.knowledgePoints).toEqual([]);
   });
 });
