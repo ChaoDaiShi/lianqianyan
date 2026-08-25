@@ -34,6 +34,7 @@ class EvidenceType(str, Enum):
 
     LEARNING_STARTED = "learning_started"
     PRACTICE_ANSWER_EVALUATED = "practice_answer_evaluated"
+    EXAM_ANSWER_EVALUATED = "exam_answer_evaluated"
 
 
 class EvidenceSource(str, Enum):
@@ -45,6 +46,7 @@ class EvidenceSource(str, Enum):
     CURRENT_STUDY_PLAN = "current_study_plan"
     RECOMMENDED_PATH = "recommended_path"
     LEARNING_SPACE = "learning_space"
+    EXAM_SYSTEM = "exam_system"
 
 
 class EvidenceClassification(str, Enum):

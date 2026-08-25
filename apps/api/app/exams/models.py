@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -67,4 +69,280 @@ class GradeOutcome(BaseModel):
     pending_manual: bool = False
     matched_keywords: list[str] = Field(default_factory=list)
     missing_keywords: list[str] = Field(default_factory=list)
+
+
+class ExamStatus(str, Enum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class AttemptStatus(str, Enum):
+    IN_PROGRESS = "in_progress"
+    NEEDS_REVIEW = "needs_review"
+    GRADED = "graded"
+
+
+class AnswerGradingStatus(str, Enum):
+    UNGRADED = "ungraded"
+    AUTO = "auto"
+    PENDING_MANUAL = "pending_manual"
+    MANUAL = "manual"
+
+
+class QuestionTypeUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=60)
+    description: str | None = Field(default=None, max_length=500)
+    response_kind: QuestionResponseKind | None = None
+    grading_strategy: GradingStrategy | None = None
+    is_archived: bool | None = None
+
+    @field_validator("name", "description")
+    @classmethod
+    def _strip_optional_text(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+
+class QuestionTypeOut(BaseModel):
+    id: str
+    name: str
+    description: str
+    response_kind: QuestionResponseKind
+    grading_strategy: GradingStrategy
+    is_builtin: bool
+    is_archived: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class QuestionCreate(BaseModel):
+    course_id: str = Field(min_length=1, max_length=80)
+    knowledge_point_id: str | None = Field(default=None, max_length=80)
+    question_type_id: str = Field(min_length=1, max_length=36)
+    prompt: str = Field(min_length=1, max_length=4_000)
+    options: list[str] = Field(default_factory=list, max_length=12)
+    correct_answer: Any = None
+    keywords: list[str] = Field(default_factory=list, max_length=12)
+    explanation: str = Field(default="", max_length=4_000)
+    difficulty: float = Field(default=0.5, ge=0.0, le=1.0)
+    default_score: float = Field(default=5.0, gt=0.0, le=1_000.0)
+
+    @field_validator("course_id", "knowledge_point_id", "question_type_id", "prompt", "explanation")
+    @classmethod
+    def _strip_question_text(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+
+class QuestionUpdate(BaseModel):
+    knowledge_point_id: str | None = Field(default=None, max_length=80)
+    question_type_id: str | None = Field(default=None, min_length=1, max_length=36)
+    prompt: str | None = Field(default=None, min_length=1, max_length=4_000)
+    options: list[str] | None = Field(default=None, max_length=12)
+    correct_answer: Any = None
+    keywords: list[str] | None = Field(default=None, max_length=12)
+    explanation: str | None = Field(default=None, max_length=4_000)
+    difficulty: float | None = Field(default=None, ge=0.0, le=1.0)
+    default_score: float | None = Field(default=None, gt=0.0, le=1_000.0)
+    is_archived: bool | None = None
+
+    @field_validator("knowledge_point_id", "question_type_id", "prompt", "explanation")
+    @classmethod
+    def _strip_question_update_text(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+
+class QuestionOut(BaseModel):
+    id: str
+    course_id: str
+    knowledge_point_id: str | None
+    question_type_id: str
+    question_type_name: str
+    response_kind: QuestionResponseKind
+    grading_strategy: GradingStrategy
+    prompt: str
+    options: list[str]
+    correct_answer: Any = None
+    keywords: list[str]
+    explanation: str
+    difficulty: float
+    default_score: float
+    is_archived: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class ExamItemCreate(BaseModel):
+    question_id: str = Field(min_length=1, max_length=36)
+    points: float = Field(gt=0.0, le=1_000.0)
+    position: int = Field(ge=1, le=1_000)
+
+
+class ExamCreate(BaseModel):
+    course_id: str = Field(min_length=1, max_length=80)
+    title: str = Field(min_length=1, max_length=160)
+    description: str = Field(default="", max_length=2_000)
+    duration_minutes: int = Field(default=30, ge=1, le=480)
+    pass_percentage: float = Field(default=60.0, ge=0.0, le=100.0)
+    shuffle_questions: bool = False
+    items: list[ExamItemCreate] = Field(default_factory=list, max_length=200)
+
+    @field_validator("course_id", "title", "description")
+    @classmethod
+    def _strip_exam_text(cls, value: str) -> str:
+        return value.strip()
+
+    @model_validator(mode="after")
+    def _unique_items(self) -> "ExamCreate":
+        question_ids = [item.question_id for item in self.items]
+        positions = [item.position for item in self.items]
+        if len(set(question_ids)) != len(question_ids):
+            raise ValueError("exam question ids must be unique")
+        if len(set(positions)) != len(positions):
+            raise ValueError("exam positions must be unique")
+        return self
+
+
+class ExamUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=160)
+    description: str | None = Field(default=None, max_length=2_000)
+    duration_minutes: int | None = Field(default=None, ge=1, le=480)
+    pass_percentage: float | None = Field(default=None, ge=0.0, le=100.0)
+    shuffle_questions: bool | None = None
+    items: list[ExamItemCreate] | None = Field(default=None, max_length=200)
+
+    @field_validator("title", "description")
+    @classmethod
+    def _strip_exam_update_text(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+    @model_validator(mode="after")
+    def _unique_updated_items(self) -> "ExamUpdate":
+        if self.items is None:
+            return self
+        question_ids = [item.question_id for item in self.items]
+        positions = [item.position for item in self.items]
+        if len(set(question_ids)) != len(question_ids):
+            raise ValueError("exam question ids must be unique")
+        if len(set(positions)) != len(positions):
+            raise ValueError("exam positions must be unique")
+        return self
+
+
+class ExamItemOut(BaseModel):
+    id: str
+    question_id: str
+    points: float
+    position: int
+    question: QuestionOut
+
+
+class ExamOut(BaseModel):
+    id: str
+    course_id: str
+    title: str
+    description: str
+    duration_minutes: int
+    pass_percentage: float
+    shuffle_questions: bool
+    status: ExamStatus
+    items: list[ExamItemOut]
+    total_points: float
+    created_at: datetime
+    updated_at: datetime
+    published_at: datetime | None = None
+
+
+class AttemptQuestionOut(BaseModel):
+    question_id: str
+    question_type_name: str
+    response_kind: QuestionResponseKind
+    prompt: str
+    options: list[str]
+    points: float
+    position: int
+    user_answer: Any = None
+    saved_at: datetime | None = None
+
+
+class AttemptOut(BaseModel):
+    id: str
+    exam_id: str
+    learner_id: str
+    exam_title: str
+    status: AttemptStatus
+    started_at: datetime
+    expires_at: datetime
+    submitted_at: datetime | None = None
+    questions: list[AttemptQuestionOut]
+
+
+class AnswerSaveOut(BaseModel):
+    answer_id: str
+    attempt_id: str
+    question_id: str
+    user_answer: Any = None
+    saved_at: datetime
+
+
+class AttemptSummaryOut(BaseModel):
+    id: str
+    exam_id: str
+    learner_id: str
+    exam_title: str
+    status: AttemptStatus
+    started_at: datetime
+    expires_at: datetime
+    submitted_at: datetime | None = None
+    awarded_score: float
+    max_score: float
+    pending_score: float
+    percentage: float
+    passed: bool | None = None
+
+
+class AttemptResultAnswerOut(BaseModel):
+    answer_id: str
+    question_id: str
+    question_type_name: str
+    response_kind: QuestionResponseKind
+    grading_strategy: GradingStrategy
+    prompt: str
+    options: list[str]
+    user_answer: Any = None
+    correct_answer: Any = None
+    keywords: list[str]
+    explanation: str
+    points: float
+    awarded_score: float | None = None
+    is_correct: bool | None = None
+    grading_status: AnswerGradingStatus
+    feedback: str
+
+
+class AttemptResultOut(AttemptSummaryOut):
+    answers: list[AttemptResultAnswerOut]
+
+
+class ManualGradeRequest(BaseModel):
+    score: float = Field(ge=0.0, le=1_000.0)
+    feedback: str = Field(default="", max_length=2_000)
+
+    @field_validator("feedback")
+    @classmethod
+    def _strip_feedback(cls, value: str) -> str:
+        return value.strip()
+
+
+class ReviewQueueItemOut(BaseModel):
+    answer_id: str
+    attempt_id: str
+    exam_id: str
+    exam_title: str
+    learner_id: str
+    question_id: str
+    prompt: str
+    user_answer: Any
+    reference_answer: Any = None
+    points: float
+    submitted_at: datetime
 

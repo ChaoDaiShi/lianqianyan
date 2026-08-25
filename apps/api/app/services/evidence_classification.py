@@ -13,6 +13,7 @@ from app.domain import EvidenceClassification, EvidenceType
 _CLASSIFICATION: dict[EvidenceType, EvidenceClassification] = {
     EvidenceType.LEARNING_STARTED: EvidenceClassification.BEHAVIOR,
     EvidenceType.PRACTICE_ANSWER_EVALUATED: EvidenceClassification.ASSESSMENT,
+    EvidenceType.EXAM_ANSWER_EVALUATED: EvidenceClassification.ASSESSMENT,
 }
 
 # 允许影响掌握度的分类
