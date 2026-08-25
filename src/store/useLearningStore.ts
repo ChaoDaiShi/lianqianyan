@@ -3,9 +3,7 @@ import {
   startLearning,
   type LearningStartResult,
 } from '@/lib/educationApi';
-
-/** 当前演示学习者（比赛 Demo 固定，未来从登录态获取）。 */
-export const DEMO_LEARNER_ID = 'demo-user-001';
+import { ACTIVE_LEARNER_ID } from '@/config/learnerContext';
 
 interface StartParams {
   source: 'current_study_plan' | 'recommended_path';
@@ -33,7 +31,7 @@ export const useLearningStore = create<LearningState>((set) => ({
     set({ starting: true, error: null });
     try {
       const result = await startLearning({
-        learnerId: DEMO_LEARNER_ID,
+        learnerId: ACTIVE_LEARNER_ID,
         ...params,
       });
       set({ starting: false, lastResult: result });

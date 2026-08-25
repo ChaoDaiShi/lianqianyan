@@ -6,13 +6,13 @@ import { TodaysJourney } from '@/components/home/TodaysJourney';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useXiaolianRuntimeStore } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID, useXiaolianRuntimeStore } from '@/store';
 
 function Home() {
   const [entryOpen, setEntryOpen] = useState(false);
-  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const plan = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const runtimeState = useXiaolianRuntimeStore(
@@ -28,7 +28,7 @@ function Home() {
     (runtime) => runtime.setCompanionState,
   );
   const resetRuntime = useXiaolianRuntimeStore((runtime) => runtime.reset);
-  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === DEMO_LEARNER_ID && item.courseId === DEMO_COURSE_ID);
+  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === ACTIVE_LEARNER_ID && item.courseId === ACTIVE_COURSE_ID);
   const focus = diagnosis.data?.primaryFocus ?? null;
   const currentTask = useMemo(() => {
     const ordered = [...(plan.plan?.tasks ?? [])].sort((a, b) => a.order - b.order);

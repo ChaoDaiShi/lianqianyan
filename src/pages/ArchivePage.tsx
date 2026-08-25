@@ -17,13 +17,13 @@ import {
   useLearnerProfile,
   useRecentEvidence,
 } from '@/lib/hooks';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID, useLearningLoopStore } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID, useLearningLoopStore } from '@/store';
 
 export function ArchivePage() {
-  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const analytics = useExamAnalytics(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const analytics = useExamAnalytics(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const plan = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const practiceEvaluationsByTask = useLearningLoopStore((state) => state.practiceEvaluations);
   const reflectionResultsByTask = useLearningLoopStore((state) => state.reflectionResults);
@@ -42,8 +42,8 @@ export function ArchivePage() {
     .filter(
       ([taskId, result]) =>
         result.taskId === taskId &&
-        result.learnerId === DEMO_LEARNER_ID &&
-        result.courseId === DEMO_COURSE_ID,
+        result.learnerId === ACTIVE_LEARNER_ID &&
+        result.courseId === ACTIVE_COURSE_ID,
     )
     .map(([, result]) => result);
 
@@ -123,8 +123,8 @@ export function ArchivePage() {
                   diagnosis={diagnosis.data}
                   evidence={evidence.data ?? []}
                   reflectionResults={reflectionResults}
-                  learnerId={DEMO_LEARNER_ID}
-                  courseId={DEMO_COURSE_ID}
+                  learnerId={ACTIVE_LEARNER_ID}
+                  courseId={ACTIVE_COURSE_ID}
                 />
                 <MemoryCapsule confirmedPreferences={[]} />
               </div>
@@ -172,8 +172,8 @@ export function ArchivePage() {
             plan={plan.plan}
             practiceEvaluations={Object.values(practiceEvaluationsByTask)}
             knowledgeNames={knowledgeNames}
-            learnerId={DEMO_LEARNER_ID}
-            courseId={DEMO_COURSE_ID}
+            learnerId={ACTIVE_LEARNER_ID}
+            courseId={ACTIVE_COURSE_ID}
             loading={evidence.loading}
             error={evidence.error}
             onRetry={() => void evidence.refetch()}

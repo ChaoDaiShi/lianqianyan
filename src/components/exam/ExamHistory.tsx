@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Eye, RotateCw } from 'lucide-react';
 import type { ExamAttemptSummary, ExamResult } from '@/domain';
 import { fetchExamResult, fetchExamResults } from '@/lib/educationApi';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { LearningState } from '@/components/feedback/LearningState';
@@ -18,7 +18,7 @@ export function ExamHistory() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(false);
-    try { setItems(await fetchExamResults(DEMO_LEARNER_ID, DEMO_COURSE_ID)); }
+    try { setItems(await fetchExamResults(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID)); }
     catch { setError(true); }
     finally { setLoading(false); }
   }, []);
@@ -39,7 +39,7 @@ export function ExamHistory() {
             <p className="mt-1 text-sm text-[var(--em-muted-ink)]">{formatExamScore(item.awardedScore, item.maxScore, item.pendingScore)} · {item.status === 'needs_review' ? '等待人工批阅' : item.passed ? '已通过' : '未通过'}</p>
             <p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">提交于 {item.submittedAt ? new Date(`${item.submittedAt}Z`).toLocaleString('zh-CN') : '未知时间'}</p>
           </div>
-          <Button type="button" variant="outline" className="gap-2 rounded-xl" disabled={opening === item.id} onClick={() => { setOpening(item.id); void fetchExamResult(item.id, DEMO_LEARNER_ID).then(setResult).catch(() => setError(true)).finally(() => setOpening(null)); }}><Eye className="h-4 w-4" />{opening === item.id ? '读取中…' : '查看复盘'}</Button>
+          <Button type="button" variant="outline" className="gap-2 rounded-xl" disabled={opening === item.id} onClick={() => { setOpening(item.id); void fetchExamResult(item.id, ACTIVE_LEARNER_ID).then(setResult).catch(() => setError(true)).finally(() => setOpening(null)); }}><Eye className="h-4 w-4" />{opening === item.id ? '读取中…' : '查看复盘'}</Button>
         </GlassPanel>
       ))}
     </div>

@@ -97,8 +97,8 @@ vi.mock('@/lib/hooks', () => ({
 }));
 
 vi.mock('@/store', () => ({
-  DEMO_LEARNER_ID: 'learner-1',
-  DEMO_COURSE_ID: 'course-1',
+  ACTIVE_LEARNER_ID: 'learner-1',
+  ACTIVE_COURSE_ID: 'course-1',
   useLearningLoopStore: (
     selector: (state: {
       reflectionResults: Record<string, ReflectionResult>;

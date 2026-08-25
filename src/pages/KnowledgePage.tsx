@@ -3,7 +3,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { KnowledgeGalaxy } from '@/components/knowledge/KnowledgeGalaxy';
 import { useDiagnosis, useLearnerProfile } from '@/lib/hooks';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 
 const LEGEND = [
   ['MASTERED', '掌握'],
@@ -14,8 +14,8 @@ const LEGEND = [
 ];
 
 export function KnowledgePage() {
-  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const reload = () => { void profile.refetch(); void diagnosis.refetch(); };
 
   return (

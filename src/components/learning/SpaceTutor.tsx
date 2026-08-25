@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, Send, Sparkles } from 'lucide-react';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { useAgentChat } from '@/lib/hooks';
 import type { AgentChatResponse, KnowledgePointContent } from '@/lib/educationApi';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export function SpaceTutor({
   onPendingChange,
   onResponse,
 }: SpaceTutorProps) {
-  const { send, pending } = useAgentChat(DEMO_LEARNER_ID, DEMO_COURSE_ID, knowledgePointId);
+  const { send, pending } = useAgentChat(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID, knowledgePointId);
   const [messages, setMessages] = useState<Msg[]>(() =>
     knowledgePointName
       ? [

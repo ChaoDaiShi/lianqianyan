@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { useCurrentPlan, useDiagnosis, useRecentEvidence } from '@/lib/hooks';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 
 function formatTime(iso: string) { try { return new Date(iso).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
 const STRATEGY_LABEL: Record<string, string> = { diagnosis_driven: '诊断驱动' };
@@ -17,12 +17,12 @@ const STRATEGY_LABEL: Record<string, string> = { diagnosis_driven: '诊断驱动
 export function MyLearningPage() {
   const [preparingTaskId, setPreparingTaskId] = useState<string | null>(null);
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
-  const { summary, plan, loading, error, refetch, generate, generating } = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const { summary, plan, loading, error, refetch, generate, generating } = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const tasks = plan?.tasks ?? [];
   const preparingTask = tasks.find((task) => task.id === preparingTaskId) ?? null;
-  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === DEMO_LEARNER_ID && item.courseId === DEMO_COURSE_ID);
+  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === ACTIVE_LEARNER_ID && item.courseId === ACTIVE_COURSE_ID);
   return <AppShell><div className="space-y-6">
     <GlassPanel className="relative overflow-hidden p-6 sm:p-8"><div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-violet-200/30 blur-3xl" /><div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="flex items-center gap-2 text-xs font-semibold text-primary-700"><GraduationCap className="h-4 w-4" />GROWTH ROUTE</p><h1 className="mt-2 text-3xl font-bold">我的成长路线</h1><p className="mt-2 text-sm text-[var(--em-muted-ink)]">小涟根据真实诊断与当前计划，为你连接下一步学习星轨。</p></div><XiaolianCharacter state="encourage" size="md" /></div></GlassPanel>
     {loading && <LearningState kind="loading" title="正在读取当前成长路线" />}

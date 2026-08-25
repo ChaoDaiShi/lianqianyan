@@ -21,8 +21,8 @@ import {
   useRecentEvidence,
 } from '@/lib/hooks';
 import {
-  DEMO_COURSE_ID,
-  DEMO_LEARNER_ID,
+  ACTIVE_COURSE_ID,
+  ACTIVE_LEARNER_ID,
   useLearningLoopStore,
 } from '@/store';
 
@@ -40,10 +40,10 @@ export function ReflectionPage() {
   });
   const knowledgeState = useKnowledgePoint(
     knowledgePointId || undefined,
-    DEMO_COURSE_ID,
+    ACTIVE_COURSE_ID,
   );
-  const planState = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosisState = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const planState = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosisState = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidenceState = useRecentEvidence();
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const storedResult = useLearningLoopStore((state) =>
@@ -207,8 +207,8 @@ export function ReflectionPage() {
       <>
         <ReflectionWorkspace
           key={`${taskId}:${knowledge.knowledgePointId}`}
-          learnerId={DEMO_LEARNER_ID}
-          courseId={DEMO_COURSE_ID}
+          learnerId={ACTIVE_LEARNER_ID}
+          courseId={ACTIVE_COURSE_ID}
           taskId={taskId}
           knowledge={knowledge}
           initialResult={storedResult}

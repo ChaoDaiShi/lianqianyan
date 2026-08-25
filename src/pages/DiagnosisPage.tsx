@@ -9,7 +9,7 @@ import { buildDiagnosisAdvice, diagnosisReasons, formatDiagnosisPercent, getDiag
 import { Button } from '@/components/ui/button';
 import { fetchDiagnosis, fetchLearnerProfile } from '@/lib/educationApi';
 import type { DiagnosisResult, KnowledgePointDiagnosis, LearnerProfile } from '@/domain';
-import { DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_LEARNER_ID } from '@/store';
 
 const COURSE_ID = 'course-os';
 type ViewState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'empty' } | { status: 'ready'; profile: LearnerProfile; diagnosis: DiagnosisResult };
@@ -21,8 +21,8 @@ function FocusDetail({ point }: { point: KnowledgePointDiagnosis }) {
 
 export default function DiagnosisPage() {
   const [view, setView] = useState<ViewState>({ status: 'loading' });
-  const load = () => { setView({ status: 'loading' }); return Promise.all([fetchLearnerProfile(DEMO_LEARNER_ID, COURSE_ID), fetchDiagnosis(DEMO_LEARNER_ID, COURSE_ID)]).then(([profile, diagnosis]) => { if (!profile.totalKnowledgePoints) setView({ status: 'empty' }); else setView({ status: 'ready', profile, diagnosis }); }).catch(() => setView({ status: 'error', message: '暂时无法生成学习诊断，请稍后再试。' })); };
-  useEffect(() => { let cancelled = false; setView({ status: 'loading' }); Promise.all([fetchLearnerProfile(DEMO_LEARNER_ID, COURSE_ID), fetchDiagnosis(DEMO_LEARNER_ID, COURSE_ID)]).then(([profile, diagnosis]) => { if (cancelled) return; if (!profile.totalKnowledgePoints) setView({ status: 'empty' }); else setView({ status: 'ready', profile, diagnosis }); }).catch(() => { if (!cancelled) setView({ status: 'error', message: '暂时无法生成学习诊断，请稍后再试。' }); }); return () => { cancelled = true; }; }, []);
+  const load = () => { setView({ status: 'loading' }); return Promise.all([fetchLearnerProfile(ACTIVE_LEARNER_ID, COURSE_ID), fetchDiagnosis(ACTIVE_LEARNER_ID, COURSE_ID)]).then(([profile, diagnosis]) => { if (!profile.totalKnowledgePoints) setView({ status: 'empty' }); else setView({ status: 'ready', profile, diagnosis }); }).catch(() => setView({ status: 'error', message: '暂时无法生成学习诊断，请稍后再试。' })); };
+  useEffect(() => { let cancelled = false; setView({ status: 'loading' }); Promise.all([fetchLearnerProfile(ACTIVE_LEARNER_ID, COURSE_ID), fetchDiagnosis(ACTIVE_LEARNER_ID, COURSE_ID)]).then(([profile, diagnosis]) => { if (cancelled) return; if (!profile.totalKnowledgePoints) setView({ status: 'empty' }); else setView({ status: 'ready', profile, diagnosis }); }).catch(() => { if (!cancelled) setView({ status: 'error', message: '暂时无法生成学习诊断，请稍后再试。' }); }); return () => { cancelled = true; }; }, []);
   const ready = view.status === 'ready' ? view : null;
   const focus = ready?.diagnosis.primaryFocus ?? null;
   const companion = <CompanionPanel state={view.status === 'loading' ? 'analyzing' : focus ? 'encourage' : 'idle'} eyebrow={view.status === 'loading' ? '小涟正在分析' : focus ? '小涟发现' : '小涟说明'} title={focus ? `优先关注「${focus.knowledgePointName}」` : '诊断只依据真实证据'} message={view.status === 'error' ? '画像与诊断没有成功加载，因此不展示模拟结论。' : focus ? buildDiagnosisAdvice(ready!.diagnosis)[0] ?? '当前诊断已形成。' : '没有足够证据时，我会保持未知，而不是把它当作薄弱。'} details={ready && <div className="space-y-2 text-xs text-[var(--em-muted-ink)]"><p>覆盖：{ready.profile.assessedCount}/{ready.profile.totalKnowledgePoints} 个知识点</p><p>综合掌握：{ready.profile.insufficientData ? '数据不足' : formatDiagnosisPercent(ready.profile.overallMastery, true)}</p></div>} />;

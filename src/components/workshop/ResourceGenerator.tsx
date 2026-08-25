@@ -13,7 +13,7 @@ import {
   type GeneratedResource,
   type ResourceType,
 } from '@/lib/educationApi';
-import { DEMO_COURSE_ID } from '@/store';
+import { ACTIVE_COURSE_ID } from '@/store';
 import {
   downloadMarkdown,
   RESOURCE_TYPES,
@@ -40,7 +40,7 @@ export function ResourceGenerator() {
     setResource(null);
     try {
       const generated = await generateLearningResource({
-        courseId: DEMO_COURSE_ID,
+        courseId: ACTIVE_COURSE_ID,
         knowledgePointId,
         resourceType,
       });

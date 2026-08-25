@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { DIAGNOSIS_REASON_TEXT } from '@/domain';
 import type { PracticeEvaluationResponse } from '@/lib/educationApi';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { getLearningModule } from '@/content/learningContent';
 
 function requestStatus(loading: boolean, hasData: boolean): DemoStoryStatus {
@@ -41,9 +41,9 @@ function percent(value: number | null | undefined) {
 }
 
 export function DemoPage() {
-  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const plan = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const plan = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
   const [entryOpen, setEntryOpen] = useState(false);
@@ -53,7 +53,7 @@ export function DemoPage() {
   const module = currentTask ? getLearningModule(currentTask.knowledgePointId) : null;
   const focus = diagnosis.data?.primaryFocus ?? null;
   const reason = focus?.reasonCodes.map((code) => DIAGNOSIS_REASON_TEXT[code]).filter(Boolean).join(' ') ?? '';
-  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === DEMO_LEARNER_ID && item.courseId === DEMO_COURSE_ID);
+  const courseEvidence = (evidence.data ?? []).filter((item) => item.learnerId === ACTIVE_LEARNER_ID && item.courseId === ACTIVE_COURSE_ID);
   const hasLearningStarted = courseEvidence.some((item) => item.evidenceType === 'learning_started');
   const loading = profile.loading || diagnosis.loading || plan.loading || evidence.loading;
   const error = profile.error || diagnosis.error || plan.error || evidence.error;

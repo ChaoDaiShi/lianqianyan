@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BookOpenCheck, Plus, RotateCw } from 'lucide-react';
 import type { ExamAnswerValue, ExamQuestion, ExamQuestionType } from '@/domain';
 import { createExamQuestion, fetchExamQuestions, fetchExamQuestionTypes } from '@/lib/educationApi';
-import { DEMO_COURSE_ID } from '@/store';
+import { ACTIVE_COURSE_ID } from '@/store';
 import { WORKSHOP_KNOWLEDGE_POINTS } from '@/components/workshop/workshopPresentation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,7 @@ export function QuestionBank() {
     try {
       const [nextTypes, nextQuestions] = await Promise.all([
         fetchExamQuestionTypes(),
-        fetchExamQuestions(DEMO_COURSE_ID),
+        fetchExamQuestions(ACTIVE_COURSE_ID),
       ]);
       setTypes(nextTypes);
       setQuestions(nextQuestions);
@@ -67,7 +67,7 @@ export function QuestionBank() {
     setFormError(false);
     try {
       const created = await createExamQuestion({
-        courseId: DEMO_COURSE_ID,
+        courseId: ACTIVE_COURSE_ID,
         knowledgePointId,
         questionTypeId: selectedType.id,
         prompt,

@@ -45,8 +45,8 @@ const runtimeStore = {
 };
 
 vi.mock('@/store', () => ({
-  DEMO_COURSE_ID: 'course-os',
-  DEMO_LEARNER_ID: 'demo-user-001',
+  ACTIVE_COURSE_ID: 'course-os',
+  ACTIVE_LEARNER_ID: 'anon:test-learner',
   useXiaolianRuntimeStore: (selector: (state: typeof runtimeStore) => unknown) =>
     selector(runtimeStore),
 }));

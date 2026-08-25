@@ -37,6 +37,3 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   clearContext: () =>
     set({ planId: null, taskId: null, knowledgePointId: null }),
 }));
-
-/** Demo 常量（与后端 Seed 保持一致）。 */
-export const DEMO_COURSE_ID = 'course-os';

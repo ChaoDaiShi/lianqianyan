@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { evaluatePractice, type PracticeEvaluationResponse, type ReplanningResult } from '@/lib/educationApi';
-import { DEMO_LEARNER_ID, DEMO_COURSE_ID } from '@/store';
+import { ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID } from '@/store';
 import type { DemoQuestion } from '@/content/learningContent';
 import { cn } from '@/lib/utils';
 
@@ -96,8 +96,8 @@ export function ModulePractice({
     onEvaluationPendingChange?.(true);
     try {
       const data = await evaluatePractice({
-        learnerId: DEMO_LEARNER_ID,
-        courseId: DEMO_COURSE_ID,
+        learnerId: ACTIVE_LEARNER_ID,
+        courseId: ACTIVE_COURSE_ID,
         knowledgePointId: question.knowledgePointId,
         questionId: question.id,
         isCorrect,

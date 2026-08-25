@@ -27,8 +27,8 @@ import type { DiagnosisResult, KnowledgePointDiagnosis, PersistedStudyTask } fro
 import type { AgentChatResponse, PracticeEvaluationResponse } from '@/lib/educationApi';
 import { useCurrentPlan, useDiagnosis, useKnowledgePoint, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
 import {
-  DEMO_COURSE_ID,
-  DEMO_LEARNER_ID,
+  ACTIVE_COURSE_ID,
+  ACTIVE_LEARNER_ID,
   useLearningLoopStore,
   useWorkspaceStore,
   useXiaolianRuntimeStore,
@@ -73,9 +73,9 @@ export function LearningSpacePage() {
   const knowledgePointParam = searchParams.get('knowledge_point_id');
   const workspaceTaskId = useWorkspaceStore((state) => state.taskId);
   const workspaceKnowledgePointId = useWorkspaceStore((state) => state.knowledgePointId);
-  const { plan, loading, error, refetch } = useCurrentPlan(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const profile = useLearnerProfile(DEMO_LEARNER_ID, DEMO_COURSE_ID);
-  const diagnosis = useDiagnosis(DEMO_LEARNER_ID, DEMO_COURSE_ID);
+  const { plan, loading, error, refetch } = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
+  const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const tasks = plan?.tasks ?? [];
   const activeKnowledgePointId = knowledgePointParam ?? workspaceKnowledgePointId;
@@ -94,7 +94,7 @@ export function LearningSpacePage() {
     [currentTask, diagnosis.data]
   );
   const module = currentTask ? getLearningModule(currentTask.knowledgePointId) : null;
-  const knowledge = useKnowledgePoint(currentTask?.knowledgePointId, DEMO_COURSE_ID);
+  const knowledge = useKnowledgePoint(currentTask?.knowledgePointId, ACTIVE_COURSE_ID);
   const currentKnowledge = knowledge.data?.knowledgePointId === currentTask?.knowledgePointId
     ? knowledge.data
     : null;
@@ -136,8 +136,8 @@ export function LearningSpacePage() {
       currentTask
         ? filterLearningEvidence({
             evidence: evidence.data ?? [],
-            learnerId: DEMO_LEARNER_ID,
-            courseId: DEMO_COURSE_ID,
+            learnerId: ACTIVE_LEARNER_ID,
+            courseId: ACTIVE_COURSE_ID,
             knowledgePointId: currentTask.knowledgePointId,
             learningSessionId: currentLearningSessionId,
           })
@@ -245,8 +245,8 @@ export function LearningSpacePage() {
           </div>
           <EvidenceInsightCard
             evidence={evidence.data ?? []}
-            learnerId={DEMO_LEARNER_ID}
-            courseId={DEMO_COURSE_ID}
+            learnerId={ACTIVE_LEARNER_ID}
+            courseId={ACTIVE_COURSE_ID}
             knowledgePointId={currentTask.knowledgePointId}
             loading={evidence.loading}
             error={evidence.error}

@@ -5,7 +5,7 @@ import {
   evaluatePractice,
   type PracticeEvaluationResponse,
 } from '@/lib/educationApi';
-import { DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_LEARNER_ID } from '@/store';
 import { cn } from '@/lib/utils';
 
 /** 本轮固定的一道演示题。 */
@@ -48,7 +48,7 @@ export function PracticeCard() {
     setResult({ status: 'loading' });
     try {
       const data = await evaluatePractice({
-        learnerId: DEMO_LEARNER_ID,
+        learnerId: ACTIVE_LEARNER_ID,
         courseId: FIXED_QUESTION.courseId,
         knowledgePointId: FIXED_QUESTION.knowledgePointId,
         questionId: FIXED_QUESTION.id,

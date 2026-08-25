@@ -8,7 +8,7 @@ import {
   fetchExamReviewQueue,
   publishExam,
 } from '@/lib/educationApi';
-import { DEMO_COURSE_ID } from '@/store';
+import { ACTIVE_COURSE_ID } from '@/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,9 +39,9 @@ export function ExamBuilder() {
     setError(false);
     try {
       const [nextQuestions, nextExams, nextQueue] = await Promise.all([
-        fetchExamQuestions(DEMO_COURSE_ID),
-        fetchExamDefinitions(DEMO_COURSE_ID),
-        fetchExamReviewQueue(DEMO_COURSE_ID),
+        fetchExamQuestions(ACTIVE_COURSE_ID),
+        fetchExamDefinitions(ACTIVE_COURSE_ID),
+        fetchExamReviewQueue(ACTIVE_COURSE_ID),
       ]);
       setQuestions(nextQuestions);
       setExams(nextExams);
@@ -67,7 +67,7 @@ export function ExamBuilder() {
     });
   };
   const draft = {
-    courseId: DEMO_COURSE_ID,
+    courseId: ACTIVE_COURSE_ID,
     title,
     description,
     durationMinutes: duration,

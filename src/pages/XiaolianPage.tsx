@@ -21,8 +21,8 @@ import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
 import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
 import {
-  DEMO_COURSE_ID,
-  DEMO_LEARNER_ID,
+  ACTIVE_COURSE_ID,
+  ACTIVE_LEARNER_ID,
   useXiaolianRuntimeStore,
 } from '@/store';
 
@@ -103,8 +103,8 @@ export function XiaolianPage() {
     setCompanionState('companion');
     try {
       const result: AgentChatResponse = await chatWithAgents({
-        learnerId: DEMO_LEARNER_ID,
-        courseId: DEMO_COURSE_ID,
+        learnerId: ACTIVE_LEARNER_ID,
+        courseId: ACTIVE_COURSE_ID,
         message: text,
         capability: requestedCapability,
       });

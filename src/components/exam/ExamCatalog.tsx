@@ -6,7 +6,7 @@ import {
   fetchExamResult,
   startExamAttempt,
 } from '@/lib/educationApi';
-import { DEMO_COURSE_ID, DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { LearningState } from '@/components/feedback/LearningState';
@@ -25,7 +25,7 @@ export function ExamCatalog() {
     setLoading(true);
     setError(false);
     try {
-      setCatalog(await fetchExamCatalog(DEMO_LEARNER_ID, DEMO_COURSE_ID));
+      setCatalog(await fetchExamCatalog(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID));
     } catch {
       setError(true);
     } finally {
@@ -40,10 +40,10 @@ export function ExamCatalog() {
     setError(false);
     try {
       if (exam.latestAttempt && exam.latestAttempt.status !== 'in_progress') {
-        setResult(await fetchExamResult(exam.latestAttempt.id, DEMO_LEARNER_ID));
+        setResult(await fetchExamResult(exam.latestAttempt.id, ACTIVE_LEARNER_ID));
         return;
       }
-      setAttempt(await startExamAttempt(exam.id, DEMO_LEARNER_ID));
+      setAttempt(await startExamAttempt(exam.id, ACTIVE_LEARNER_ID));
     } catch {
       setError(true);
     } finally {
@@ -57,7 +57,7 @@ export function ExamCatalog() {
         attempt={attempt}
         onExit={() => { setAttempt(null); void load(); }}
         onSubmitted={(summary) => {
-          void fetchExamResult(summary.id, DEMO_LEARNER_ID)
+          void fetchExamResult(summary.id, ACTIVE_LEARNER_ID)
             .then((nextResult) => { setAttempt(null); setResult(nextResult); })
             .catch(() => setError(true));
         }}

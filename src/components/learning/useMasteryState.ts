@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchMastery, type MasteryState } from '@/lib/educationApi';
-import { DEMO_LEARNER_ID } from '@/store';
+import { ACTIVE_LEARNER_ID } from '@/store';
 
 interface UseMasteryStateResult {
   state: MasteryState | null;
@@ -24,7 +24,7 @@ export function useMasteryState(
     let cancelled = false;
     setLoading(true);
     setError(false);
-    fetchMastery(DEMO_LEARNER_ID, knowledgePointId)
+    fetchMastery(ACTIVE_LEARNER_ID, knowledgePointId)
       .then((data) => {
         if (!cancelled) setState(data);
       })
