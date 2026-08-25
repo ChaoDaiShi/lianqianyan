@@ -18,7 +18,7 @@ from app.agents import (
     PlannerAgent,
     RouteDecision,
 )
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base
 from app.main import create_app
@@ -42,7 +42,7 @@ class _TestDB:
 def testdb(tmp_path: Path) -> _TestDB:
     db = _TestDB(str(tmp_path / "agents_test.db"))
     with db.session() as session:
-        seed_demo_data(session)
+        seed_test_data(session)
     yield db
     db.engine.dispose()
 
@@ -64,7 +64,7 @@ def client(testdb: _TestDB) -> TestClient:
 
 def request(message: str, capability: AgentCapability | None = None) -> AgentRequest:
     return AgentRequest(
-        learner_id=DEMO_LEARNER_ID,
+        learner_id=TEST_LEARNER_ID,
         course_id=COURSE_OS,
         message=message,
         capability=capability,
@@ -75,7 +75,7 @@ def agent_chat(client: TestClient, message: str, capability: str | None = None):
     return client.post(
         "/api/agents/chat",
         json={
-            "learner_id": DEMO_LEARNER_ID,
+            "learner_id": TEST_LEARNER_ID,
             "course_id": COURSE_OS,
             "message": message,
             "capability": capability,
@@ -138,12 +138,12 @@ def test_assessment_agent_explains_real_projection_without_writing_mastery(testd
 
     session = testdb.session()
     before = MasteryRepository(session).get_by_learner_and_knowledge_point(
-        DEMO_LEARNER_ID, "kp-pv"
+        TEST_LEARNER_ID, "kp-pv"
     )
     assert before is not None
     response = PracticeEvaluationService(session).evaluate(
         PracticeEvaluateRequest(
-            learner_id=DEMO_LEARNER_ID,
+            learner_id=TEST_LEARNER_ID,
             course_id=COURSE_OS,
             knowledge_point_id="kp-pv",
             question_id="q-assessment-agent",
@@ -153,7 +153,7 @@ def test_assessment_agent_explains_real_projection_without_writing_mastery(testd
         )
     )
     after_practice = MasteryRepository(session).get_by_learner_and_knowledge_point(
-        DEMO_LEARNER_ID, "kp-pv"
+        TEST_LEARNER_ID, "kp-pv"
     )
     assert after_practice is not None
     assessment = AssessmentAgent(session).run(request("分析一下我刚才的练习"))
@@ -165,7 +165,7 @@ def test_assessment_agent_explains_real_projection_without_writing_mastery(testd
     before_chat = (after_practice.mastery_score, after_practice.evidence_count)
     assessment_again = AssessmentAgent(session).run(request("分析一下我刚才的练习"))
     after_chat = MasteryRepository(session).get_by_learner_and_knowledge_point(
-        DEMO_LEARNER_ID, "kp-pv"
+        TEST_LEARNER_ID, "kp-pv"
     )
     assert after_chat is not None
     assert (after_chat.mastery_score, after_chat.evidence_count) == before_chat
@@ -253,7 +253,7 @@ def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB
     session = testdb.session()
     PracticeEvaluationService(session).evaluate(
         PracticeEvaluateRequest(
-            learner_id=DEMO_LEARNER_ID,
+            learner_id=TEST_LEARNER_ID,
             course_id=COURSE_OS,
             knowledge_point_id="kp-deadlock",
             question_id="q-deadlock-grounding",
@@ -263,7 +263,7 @@ def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB
         )
     )
     mastery = MasteryRepository(session).get_by_learner_and_knowledge_point(
-        DEMO_LEARNER_ID, "kp-deadlock"
+        TEST_LEARNER_ID, "kp-deadlock"
     )
     assert mastery is not None
     before_chat = (mastery.mastery_score, mastery.evidence_count)
@@ -286,7 +286,7 @@ def test_assessment_with_real_evidence_is_grounded_and_read_only(testdb: _TestDB
     ]
     assert response.sources
     after_chat = MasteryRepository(session).get_by_learner_and_knowledge_point(
-        DEMO_LEARNER_ID, "kp-deadlock"
+        TEST_LEARNER_ID, "kp-deadlock"
     )
     assert after_chat is not None
     assert (after_chat.mastery_score, after_chat.evidence_count) == before_chat
@@ -302,7 +302,7 @@ def test_orchestrator_has_no_agent_loop(testdb: _TestDB) -> None:
 
 def test_learning_space_context_retrieves_implicit_deadlock_question(testdb: _TestDB) -> None:
     grounded_request = AgentRequest(
-        learner_id=DEMO_LEARNER_ID,
+        learner_id=TEST_LEARNER_ID,
         course_id=COURSE_OS,
         knowledge_point_id="kp-deadlock",
         message="四个条件怎么记？",

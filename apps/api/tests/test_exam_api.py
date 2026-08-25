@@ -7,14 +7,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base
 from app.exams import seed_exam_data
 from app.main import create_app
 
 COURSE_ID = "course-os"
-LEARNER_ID = DEMO_LEARNER_ID
+LEARNER_ID = TEST_LEARNER_ID
 
 
 @pytest.fixture()
@@ -26,7 +26,7 @@ def client(tmp_path: Path) -> TestClient:
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
     with factory() as db:
-        seed_demo_data(db)
+        seed_test_data(db)
         seed_exam_data(db)
 
     app = create_app()

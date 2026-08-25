@@ -17,7 +17,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.domain import (
     Base,
     DiagnosisStatus,
@@ -419,15 +419,15 @@ def test_plan_strategy_roundtrip(db: Session) -> None:
 
 def test_real_demo_diagnosis_to_persisted_plan(db: Session) -> None:
     # Test O：不构造手写 Draft，跑真实闭环，验证第一条任务 = primary_focus 规划任务
-    seed_demo_data(db)
+    seed_test_data(db)
     result = DiagnosisService(db).diagnose_learner_course(
-        DEMO_LEARNER_ID, "course-os", "course-os"
+        TEST_LEARNER_ID, "course-os", "course-os"
     )
     assert result.primary_focus is not None
     assert result.primary_focus.knowledge_point_id == "kp-deadlock"
 
     draft = StudyPlannerService().generate_from_diagnosis(
-        DEMO_LEARNER_ID, "course-os", result
+        TEST_LEARNER_ID, "course-os", result
     )
     persisted = StudyPlanPersistenceService(db).persist(draft)
 
@@ -435,7 +435,7 @@ def test_real_demo_diagnosis_to_persisted_plan(db: Session) -> None:
     # ① 死锁 WEAK → REMEDIATE 35min（PRIMARY_FOCUS）
     # ② 进程调度 UNASSESSED → ASSESS 15min
     # ③ 进程同步 DEVELOPING → STRENGTHEN 25min
-    assert persisted.learner_id == DEMO_LEARNER_ID
+    assert persisted.learner_id == TEST_LEARNER_ID
     assert persisted.course_id == "course-os"
     assert persisted.status == StudyPlanStatus.ACTIVE
     assert persisted.strategy == PlanStrategy.DIAGNOSIS_DRIVEN
@@ -470,6 +470,6 @@ def test_real_demo_diagnosis_to_persisted_plan(db: Session) -> None:
 
     # Plan History 查询能力可用
     history = StudyPlanRepository(db).list_by_learner_and_course(
-        DEMO_LEARNER_ID, "course-os"
+        TEST_LEARNER_ID, "course-os"
     )
     assert [p.id for p in history] == [persisted.id]

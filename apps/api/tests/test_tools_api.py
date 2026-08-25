@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base
 from app.main import create_app
@@ -25,7 +25,7 @@ def api_context(tmp_path: Path):
     Base.metadata.create_all(bind=engine)
     factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
     with factory() as session:
-        seed_demo_data(session)
+        seed_test_data(session)
 
     app = create_app()
 
@@ -57,13 +57,13 @@ def test_tools_catalog_is_backed_by_registry(api_context) -> None:
 def test_diagnosis_tool_matches_http_application_service_result(api_context) -> None:
     client, factory = api_context
     http = client.get(
-        f"/api/diagnosis/{DEMO_LEARNER_ID}",
+        f"/api/diagnosis/{TEST_LEARNER_ID}",
         params={"course_id": COURSE_OS},
     ).json()
     with factory() as db:
         tool = build_tool_registry(db).execute(
             "get_learning_diagnosis",
-            {"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS},
+            {"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS},
         )
 
     assert tool.success is True

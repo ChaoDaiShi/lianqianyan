@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import SessionLocal, engine
 from app.domain import Base, DiagnosisStatus
 from app.domain.models import MasteryRecord
@@ -16,7 +16,7 @@ from app.services.knowledge_diagnosis_policy import KnowledgeDiagnosisPolicy
 from app.services.learner_profile_service import LearnerProfileService
 from app.services.priority_policy import PriorityPolicy
 
-LEARNER = DEMO_LEARNER_ID
+LEARNER = TEST_LEARNER_ID
 COURSE = "course-os"
 
 
@@ -40,7 +40,7 @@ def client() -> TestClient:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_test_data(db)
     with TestClient(create_app()) as c:
         yield c
 

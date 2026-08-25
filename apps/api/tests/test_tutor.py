@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base
 from app.domain.tutor import TutorConversationRequest
@@ -53,7 +53,7 @@ class _TestDB:
 def testdb(tmp_path: Path) -> _TestDB:
     db = _TestDB(str(tmp_path / "tutor_test.db"))
     with db.session() as s:
-        seed_demo_data(s)
+        seed_test_data(s)
     yield db
     db.engine.dispose()
 
@@ -77,7 +77,7 @@ def client(testdb: _TestDB) -> TestClient:
 def _chat(
     client: TestClient,
     *,
-    learner_id: str = DEMO_LEARNER_ID,
+    learner_id: str = TEST_LEARNER_ID,
     course_id: str = COURSE_OS,
     message: str = DEMO_MESSAGE,
 ):
@@ -91,7 +91,7 @@ def _generate_plan(client: TestClient) -> str:
     """为 demo learner 生成一份真实 StudyPlan，返回 plan_id。"""
     response = client.post(
         "/api/plans/generate",
-        json={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS},
+        json={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS},
     )
     assert response.status_code == 201
     return response.json()["id"]
@@ -103,7 +103,7 @@ def _generate_plan(client: TestClient) -> str:
 
 
 def test_context_builder_reads_profile(testdb: _TestDB) -> None:
-    context = TutorContextBuilder(testdb.session()).build(DEMO_LEARNER_ID, COURSE_OS)
+    context = TutorContextBuilder(testdb.session()).build(TEST_LEARNER_ID, COURSE_OS)
 
     assert context.profile is not None
     assert context.profile.total_knowledge_points == 5  # course-os 五知识点
@@ -121,7 +121,7 @@ def test_context_builder_reads_profile(testdb: _TestDB) -> None:
 
 
 def test_context_builder_reads_diagnosis(testdb: _TestDB) -> None:
-    context = TutorContextBuilder(testdb.session()).build(DEMO_LEARNER_ID, COURSE_OS)
+    context = TutorContextBuilder(testdb.session()).build(TEST_LEARNER_ID, COURSE_OS)
 
     assert context.diagnosis is not None
     assert context.diagnosis.primary_focus is not None
@@ -138,7 +138,7 @@ def test_context_builder_reads_diagnosis(testdb: _TestDB) -> None:
 
 def test_context_builder_reads_study_plan(client: TestClient, testdb: _TestDB) -> None:
     _generate_plan(client)
-    context = TutorContextBuilder(testdb.session()).build(DEMO_LEARNER_ID, COURSE_OS)
+    context = TutorContextBuilder(testdb.session()).build(TEST_LEARNER_ID, COURSE_OS)
 
     assert context.plan.has_plan is True
     assert context.plan.plan_id is not None
@@ -158,7 +158,7 @@ def test_context_builder_reads_study_plan(client: TestClient, testdb: _TestDB) -
 
 def test_context_builder_works_without_plan(client: TestClient, testdb: _TestDB) -> None:
     # 不生成任何计划
-    context = TutorContextBuilder(testdb.session()).build(DEMO_LEARNER_ID, COURSE_OS)
+    context = TutorContextBuilder(testdb.session()).build(TEST_LEARNER_ID, COURSE_OS)
 
     assert context.plan.has_plan is False
     assert context.plan.plan_id is None
@@ -279,7 +279,7 @@ def test_empty_learner_id_returns_422(client: TestClient) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test I：真实 Demo —— demo-user-001 + course-os + 死锁问题 → 含 diagnosis context
+# Test I：真实 Demo —— test-learner-001 + course-os + 死锁问题 → 含 diagnosis context
 # ---------------------------------------------------------------------------
 
 
@@ -302,7 +302,7 @@ def _run_chat(service: TutorService, knowledge=None, assessment=None):
     import asyncio
 
     request = TutorConversationRequest(
-        learner_id=DEMO_LEARNER_ID, course_id=COURSE_OS, message=DEMO_MESSAGE
+        learner_id=TEST_LEARNER_ID, course_id=COURSE_OS, message=DEMO_MESSAGE
     )
     return asyncio.run(
         service.chat(request, knowledge=knowledge, assessment=assessment)

@@ -15,7 +15,7 @@ from fastapi import FastAPI
 
 from app.api import api_router
 from app.core.config import get_settings
-from app.core.seed import seed_demo_data
+from app.core.seed import seed_catalog_data
 from app.db.session import SessionLocal, engine
 from app.domain import Base
 from app.exams import seed_exam_data
@@ -23,10 +23,10 @@ from app.exams import seed_exam_data
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 启动时创建表（不写死 SQLite 特性）+ 写入演示 Seed。
+    # Startup creates schema plus shared catalog metadata only.
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_catalog_data(db)
         seed_exam_data(db)
     yield
 

@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.domain import Base, LearningEvidence, MasteryRecord
 from app.exams import (
     AttemptStatus,
@@ -25,7 +25,7 @@ from app.exams import (
 )
 
 COURSE_ID = "course-os"
-LEARNER_ID = DEMO_LEARNER_ID
+LEARNER_ID = TEST_LEARNER_ID
 
 
 class MutableClock:
@@ -45,7 +45,7 @@ def service_context(tmp_path: Path):
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, expire_on_commit=False)
     with factory() as seed_session:
-        seed_demo_data(seed_session)
+        seed_test_data(seed_session)
     clock = MutableClock()
     with factory() as db:
         yield ExamService(db, now_provider=clock), db, clock

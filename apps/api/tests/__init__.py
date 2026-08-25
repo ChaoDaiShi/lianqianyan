@@ -1,0 +1,1 @@
+"""EducationMind API test package."""

@@ -32,7 +32,7 @@ async def test_mcp_stdio_initialize_list_and_call_diagnosis(tmp_path: Path) -> N
             listed = await session.list_tools()
             called = await session.call_tool(
                 "get_learning_diagnosis",
-                {"learner_id": "demo-user-001", "course_id": "course-os"},
+                {"learner_id": "test-learner-001", "course_id": "course-os"},
             )
 
     assert initialized.serverInfo.name == "educationmind-tools"

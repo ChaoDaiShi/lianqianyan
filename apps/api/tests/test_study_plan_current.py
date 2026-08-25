@@ -20,7 +20,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.routes import plans as plans_routes
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.core.time import utc_now
 from app.db.session import get_db
 from app.domain import (
@@ -37,7 +37,7 @@ from app.services import StudyPlanApplicationService
 from app.services.study_task_repository import StudyTaskRepository
 
 COURSE_OS = "course-os"
-DEMO_KP_IDS = [
+TEST_KP_IDS = [
     "kp-process-concept",
     "kp-process-sync",
     "kp-pv",
@@ -68,7 +68,7 @@ class _TestDB:
 def testdb(tmp_path: Path) -> _TestDB:
     db = _TestDB(str(tmp_path / "plans_current_test.db"))
     with db.session() as s:
-        seed_demo_data(s)
+        seed_test_data(s)
     yield db
     db.engine.dispose()
 
@@ -100,7 +100,7 @@ def client(testdb: _TestDB) -> TestClient:
 # ---------------------------------------------------------------------------
 
 
-def _generate(client: TestClient, *, learner_id: str = DEMO_LEARNER_ID) -> dict:
+def _generate(client: TestClient, *, learner_id: str = TEST_LEARNER_ID) -> dict:
     resp = client.post(
         "/api/plans/generate", json={"learner_id": learner_id, "course_id": COURSE_OS}
     )
@@ -108,13 +108,13 @@ def _generate(client: TestClient, *, learner_id: str = DEMO_LEARNER_ID) -> dict:
     return resp.json()
 
 
-def _current(client: TestClient, *, learner_id: str = DEMO_LEARNER_ID):
+def _current(client: TestClient, *, learner_id: str = TEST_LEARNER_ID):
     return client.get(
         "/api/plans/current", params={"learner_id": learner_id, "course_id": COURSE_OS}
     )
 
 
-def _history(client: TestClient, *, learner_id: str = DEMO_LEARNER_ID):
+def _history(client: TestClient, *, learner_id: str = TEST_LEARNER_ID):
     return client.get(
         "/api/plans", params={"learner_id": learner_id, "course_id": COURSE_OS}
     )
@@ -152,7 +152,7 @@ def _insert_plan(
 def _seed_all_mastered(testdb: _TestDB, learner_id: str) -> None:
     """把某 learner 的全部课程知识点置为 MASTERED（构造 Empty Plan 场景）。"""
     with testdb.session() as s:
-        for kp_id in DEMO_KP_IDS:
+        for kp_id in TEST_KP_IDS:
             s.add(
                 MasteryRecord(
                     id=str(uuid.uuid4()),
@@ -181,7 +181,7 @@ def test_current_returns_latest_generated_plan(client: TestClient) -> None:
     body = resp.json()
     assert body["id"] == generated["id"]
     assert body["status"] == StudyPlanStatus.ACTIVE.value
-    assert body["learner_id"] == DEMO_LEARNER_ID
+    assert body["learner_id"] == TEST_LEARNER_ID
     assert body["course_id"] == COURSE_OS
     assert len(body["tasks"]) == len(generated["tasks"])
     for g_task, c_task in zip(generated["tasks"], body["tasks"]):
@@ -226,7 +226,7 @@ def test_current_404_when_no_plan(client: TestClient) -> None:
     assert resp.status_code == 404
     assert resp.json()["detail"] == "no current study plan"
     # 纯读取：404 不产生任何计划（GET 绝不制造 DB 副作用）
-    assert client.get("/api/plans", params={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS}).json() == []
+    assert client.get("/api/plans", params={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS}).json() == []
 
 
 # ---------------------------------------------------------------------------
@@ -254,13 +254,13 @@ def test_current_picks_newest_when_legacy_multiple_active(testdb: _TestDB) -> No
     # 模拟 Phase 3-1 之前遗留：同一 learner/course 存在两个 ACTIVE 计划
     older = _insert_plan(
         testdb,
-        learner_id=DEMO_LEARNER_ID,
+        learner_id=TEST_LEARNER_ID,
         generated_at=datetime(2026, 8, 15, 8, 0, 0),
         status=StudyPlanStatus.ACTIVE,
     )
     newer = _insert_plan(
         testdb,
-        learner_id=DEMO_LEARNER_ID,
+        learner_id=TEST_LEARNER_ID,
         generated_at=datetime(2026, 8, 16, 8, 0, 0),
         status=StudyPlanStatus.ACTIVE,
     )
@@ -279,7 +279,7 @@ def test_current_picks_newest_when_legacy_multiple_active(testdb: _TestDB) -> No
 
 
 def test_empty_plan_supersedes_previous(client: TestClient, testdb: _TestDB) -> None:
-    # 独立 learner（seed 只给 demo-user-001 建基线，避免 mastery_records UNIQUE 冲突）
+    # 独立 learner（seed 只给 test-learner-001 建基线，避免 mastery_records UNIQUE 冲突）
     learner = "empty-plan-learner"
     first = _generate(client, learner_id=learner)
     assert len(first["tasks"]) == 3  # 全 UNASSESSED → 3 个 ASSESS 任务（MAX_TASKS 截断）
@@ -326,7 +326,7 @@ def test_persist_failure_keeps_previous_plan_active(testdb: _TestDB) -> None:
     app = _make_app(testdb, plans_service_factory=failing_service)
     client = TestClient(app, raise_server_exceptions=False)
     resp = client.post(
-        "/api/plans/generate", json={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS}
+        "/api/plans/generate", json={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS}
     )
     assert resp.status_code == 500
 
@@ -350,7 +350,7 @@ def test_current_route_not_shadowed_by_plan_id(client: TestClient) -> None:
 
     # 带合法参数但无计划 → current 专属 404 detail
     no_plan = client.get(
-        "/api/plans/current", params={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS}
+        "/api/plans/current", params={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS}
     )
     assert no_plan.status_code == 404
     assert no_plan.json()["detail"] == "no current study plan"
@@ -367,7 +367,7 @@ def test_current_route_not_shadowed_by_plan_id(client: TestClient) -> None:
 
 
 def test_current_is_scoped_per_learner(client: TestClient) -> None:
-    _generate(client)  # 为 DEMO_LEARNER_ID 生成计划
+    _generate(client)  # 为 TEST_LEARNER_ID 生成计划
 
     # 另一个从未生成过计划的 learner → 404
     other = client.get(

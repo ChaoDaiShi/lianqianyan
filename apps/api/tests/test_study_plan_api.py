@@ -21,7 +21,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.routes import plans as plans_routes
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.core.time import utc_now
 from app.db.session import get_db
 from app.domain import (
@@ -42,7 +42,7 @@ from app.services import StudyPlanApplicationService
 from app.services.study_task_repository import StudyTaskRepository
 
 COURSE_OS = "course-os"
-DEMO_KP_IDS = [
+TEST_KP_IDS = [
     "kp-process-concept",
     "kp-process-sync",
     "kp-pv",
@@ -78,7 +78,7 @@ class _TestDB:
 def testdb(tmp_path: Path) -> _TestDB:
     db = _TestDB(str(tmp_path / "plans_test.db"))
     with db.session() as s:
-        seed_demo_data(s)
+        seed_test_data(s)
     yield db
     db.engine.dispose()
 
@@ -115,13 +115,13 @@ def client(testdb: _TestDB) -> TestClient:
 
 
 def _generate(
-    client: TestClient, *, learner_id: str = DEMO_LEARNER_ID, course_id: str = COURSE_OS
+    client: TestClient, *, learner_id: str = TEST_LEARNER_ID, course_id: str = COURSE_OS
 ):
     return client.post("/api/plans/generate", json={"learner_id": learner_id, "course_id": course_id})
 
 
 def _history(
-    client: TestClient, *, learner_id: str = DEMO_LEARNER_ID, course_id: str = COURSE_OS
+    client: TestClient, *, learner_id: str = TEST_LEARNER_ID, course_id: str = COURSE_OS
 ):
     return client.get("/api/plans", params={"learner_id": learner_id, "course_id": course_id})
 
@@ -129,7 +129,7 @@ def _history(
 def _seed_all_mastered(testdb: _TestDB, learner_id: str) -> None:
     """把某 learner 的全部课程知识点置为 MASTERED（构造 Empty Plan 场景）。"""
     with testdb.session() as s:
-        for kp_id in DEMO_KP_IDS:
+        for kp_id in TEST_KP_IDS:
             s.add(
                 MasteryRecord(
                     id=str(uuid.uuid4()),
@@ -161,7 +161,7 @@ def test_generate_returns_201_with_complete_plan(client: TestClient) -> None:
     assert response.status_code == 201
     body = response.json()
     assert body["id"]
-    assert body["learner_id"] == DEMO_LEARNER_ID
+    assert body["learner_id"] == TEST_LEARNER_ID
     assert body["course_id"] == COURSE_OS
     assert body["strategy"] == PlanStrategy.DIAGNOSIS_DRIVEN.value
     assert body["status"] == StudyPlanStatus.ACTIVE.value
@@ -214,7 +214,7 @@ def test_generate_writes_plan_and_tasks_to_db(client: TestClient, testdb: _TestD
 
 def test_generate_response_core_fields(client: TestClient) -> None:
     body = _generate(client).json()
-    assert body["learner_id"] == DEMO_LEARNER_ID
+    assert body["learner_id"] == TEST_LEARNER_ID
     assert body["course_id"] == COURSE_OS
     assert body["strategy"] == "diagnosis_driven"
     assert body["status"] == "active"
@@ -248,7 +248,7 @@ def test_get_plan_returns_complete_plan(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == plan_id
-    assert body["learner_id"] == DEMO_LEARNER_ID
+    assert body["learner_id"] == TEST_LEARNER_ID
     assert len(body["tasks"]) == 3
     assert [t["order"] for t in body["tasks"]] == [1, 2, 3]
 
@@ -344,7 +344,7 @@ def test_generate_and_detail_agree(client: TestClient) -> None:
 
 
 def test_first_task_respects_diagnosis_primary_focus(client: TestClient) -> None:
-    focus_kp = _diagnosis_primary_focus(client, DEMO_LEARNER_ID)
+    focus_kp = _diagnosis_primary_focus(client, TEST_LEARNER_ID)
     assert focus_kp == "kp-deadlock"  # Demo Seed：死锁 WEAK
 
     body = _generate(client).json()
@@ -382,7 +382,7 @@ def test_empty_learner_id_returns_422(client: TestClient) -> None:
 
 def test_empty_course_id_returns_422(client: TestClient) -> None:
     response = client.post(
-        "/api/plans/generate", json={"learner_id": DEMO_LEARNER_ID, "course_id": ""}
+        "/api/plans/generate", json={"learner_id": TEST_LEARNER_ID, "course_id": ""}
     )
     assert response.status_code == 422
 
@@ -511,7 +511,7 @@ def test_persistence_failure_returns_server_error_and_no_half_plan(testdb: _Test
     client = TestClient(app, raise_server_exceptions=False)
 
     response = client.post(
-        "/api/plans/generate", json={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS}
+        "/api/plans/generate", json={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS}
     )
     assert response.status_code == 500
     # 同一事务已回滚：Plan 与 Tasks 都无残留

@@ -14,7 +14,7 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import SessionLocal, engine
 from app.domain import (
     Base,
@@ -31,7 +31,7 @@ from app.services.diagnosis_service import DiagnosisService
 from app.services.study_planner_policy import PlannerConfig, StudyPlannerPolicy
 from app.services.study_planner_service import StudyPlannerService
 
-LEARNER = DEMO_LEARNER_ID
+LEARNER = TEST_LEARNER_ID
 COURSE = "course-os"
 
 
@@ -40,7 +40,7 @@ def client() -> TestClient:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_test_data(db)
     with TestClient(create_app()) as c:
         yield c
 

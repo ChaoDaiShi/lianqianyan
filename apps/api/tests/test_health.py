@@ -9,13 +9,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import SessionLocal, engine
 from app.domain import Base
 from app.main import create_app
 
 # 固定演示学习者
-LEARNER = DEMO_LEARNER_ID
+LEARNER = TEST_LEARNER_ID
 
 
 @pytest.fixture()
@@ -24,7 +24,7 @@ def client() -> TestClient:
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_test_data(db)
     with TestClient(create_app()) as c:
         yield c
 
@@ -67,7 +67,7 @@ def test_health_endpoint(client: TestClient) -> None:
 
 
 def test_demo_seed_exists(client: TestClient) -> None:
-    """Demo Seed：demo-user-001 + kp-pv 初始掌握度应为 0.58。"""
+    """Demo Seed：test-learner-001 + kp-pv 初始掌握度应为 0.58。"""
     body = fetch_mastery(client, LEARNER, "kp-pv")
     assert body["mastery_score"] == 0.58
     assert body["confidence"] == pytest.approx(0.25)

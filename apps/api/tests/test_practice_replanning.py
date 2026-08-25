@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.api.routes import practice as practice_routes
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base, LearningEvidence, MasteryRecord, StudyPlan, StudyPlanStatus
 from app.main import create_app
@@ -29,14 +29,14 @@ def factory(tmp_path: Path):
     Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
     with session_factory() as db:
-        seed_demo_data(db)
+        seed_test_data(db)
     yield session_factory
     engine.dispose()
 
 
 def _payload() -> dict:
     return {
-        "learner_id": DEMO_LEARNER_ID,
+        "learner_id": TEST_LEARNER_ID,
         "course_id": COURSE_OS,
         "knowledge_point_id": "kp-deadlock",
         "question_id": "q-deadlock-threshold",
@@ -61,7 +61,7 @@ def _client(factory, service_factory=None, *, raise_server_exceptions: bool = Fa
 
 def test_practice_crosses_threshold_and_replans_current(factory) -> None:
     with factory() as db:
-        old_plan = StudyPlanApplicationService(db).generate_plan(DEMO_LEARNER_ID, COURSE_OS)
+        old_plan = StudyPlanApplicationService(db).generate_plan(TEST_LEARNER_ID, COURSE_OS)
         assert old_plan.tasks[0].knowledge_point_id == "kp-deadlock"
         assert old_plan.tasks[0].action_type.value == "remediate"
 
@@ -79,7 +79,7 @@ def test_practice_crosses_threshold_and_replans_current(factory) -> None:
 
     with factory() as db:
         old = db.get(StudyPlan, old_plan.id)
-        current = StudyPlanApplicationService(db).get_current(DEMO_LEARNER_ID, COURSE_OS)
+        current = StudyPlanApplicationService(db).get_current(TEST_LEARNER_ID, COURSE_OS)
         assert old is not None and old.status == StudyPlanStatus.SUPERSEDED.value
         assert current is not None and current.id == body["replanning"]["new_plan"]["id"]
         deadlock = next(task for task in current.tasks if task.knowledge_point_id == "kp-deadlock")
@@ -101,7 +101,7 @@ class _FailingReplanningService(DynamicReplanningService):
 
 def test_replanning_failure_keeps_practice_committed(factory) -> None:
     with factory() as db:
-        old_plan = StudyPlanApplicationService(db).generate_plan(DEMO_LEARNER_ID, COURSE_OS)
+        old_plan = StudyPlanApplicationService(db).generate_plan(TEST_LEARNER_ID, COURSE_OS)
 
     def failing_service(db: Session = Depends(get_db)):
         return PracticeEvaluationService(db, replanning_service=_FailingReplanningService(db))
@@ -114,7 +114,7 @@ def test_replanning_failure_keeps_practice_committed(factory) -> None:
 
     with factory() as db:
         mastery = db.query(MasteryRecord).filter_by(
-            learner_id=DEMO_LEARNER_ID, knowledge_point_id="kp-deadlock"
+            learner_id=TEST_LEARNER_ID, knowledge_point_id="kp-deadlock"
         ).one()
         assert mastery.mastery_score == pytest.approx(0.515)
         assert db.query(LearningEvidence).filter_by(question_id="q-deadlock-threshold").count() == 1

@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.seed import DEMO_LEARNER_ID, seed_demo_data
+from tests.seed_fixtures import TEST_LEARNER_ID, seed_test_data
 from app.db.session import get_db
 from app.domain import Base, ReplanningReasonCode, StudyPlan, StudyPlanStatus
 from app.main import create_app
@@ -23,14 +23,14 @@ def session(tmp_path: Path) -> Session:
     Base.metadata.create_all(engine)
     factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
     db = factory()
-    seed_demo_data(db)
+    seed_test_data(db)
     yield db
     db.close()
     engine.dispose()
 
 
 def test_no_active_plan_returns_no_active_and_does_not_create(session: Session) -> None:
-    result = DynamicReplanningService(session).replan(DEMO_LEARNER_ID, COURSE_OS)
+    result = DynamicReplanningService(session).replan(TEST_LEARNER_ID, COURSE_OS)
     assert result.performed is False
     assert result.reason_codes == [ReplanningReasonCode.NO_ACTIVE_PLAN]
     assert session.query(StudyPlan).count() == 0
@@ -38,8 +38,8 @@ def test_no_active_plan_returns_no_active_and_does_not_create(session: Session) 
 
 def test_unchanged_candidate_keeps_current_plan(session: Session) -> None:
     application = StudyPlanApplicationService(session)
-    current = application.generate_plan(DEMO_LEARNER_ID, COURSE_OS)
-    result = DynamicReplanningService(session).replan(DEMO_LEARNER_ID, COURSE_OS)
+    current = application.generate_plan(TEST_LEARNER_ID, COURSE_OS)
+    result = DynamicReplanningService(session).replan(TEST_LEARNER_ID, COURSE_OS)
     assert result.performed is False
     assert result.reason_codes == [ReplanningReasonCode.NO_MATERIAL_CHANGE]
     assert result.previous_plan_id == current.id
@@ -47,7 +47,7 @@ def test_unchanged_candidate_keeps_current_plan(session: Session) -> None:
 
 
 def test_explicit_replan_api_returns_contract(session: Session) -> None:
-    StudyPlanApplicationService(session).generate_plan(DEMO_LEARNER_ID, COURSE_OS)
+    StudyPlanApplicationService(session).generate_plan(TEST_LEARNER_ID, COURSE_OS)
     app = create_app()
 
     def override_get_db():
@@ -57,7 +57,7 @@ def test_explicit_replan_api_returns_contract(session: Session) -> None:
     client = TestClient(app, raise_server_exceptions=False)
     response = client.post(
         "/api/plans/replan",
-        json={"learner_id": DEMO_LEARNER_ID, "course_id": COURSE_OS},
+        json={"learner_id": TEST_LEARNER_ID, "course_id": COURSE_OS},
     )
     assert response.status_code == 200
     body = response.json()
