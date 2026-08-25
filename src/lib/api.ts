@@ -5,6 +5,7 @@ import axios, {
   AxiosError,
   InternalAxiosRequestConfig,
 } from 'axios';
+import { getRuntimeConfig } from '@/config/runtime';
 
 class ApiClient {
   private instance: AxiosInstance;
@@ -84,7 +85,7 @@ class ApiClient {
   }
 }
 // Default shared client
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient(getRuntimeConfig().apiBaseUrl);
 // Thin wrappers — return full AxiosResponse; callers shape `response.data`
 export const api = {
   get: <T = any>(url: string, config?: AxiosRequestConfig) =>
