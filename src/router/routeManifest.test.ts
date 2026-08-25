@@ -11,6 +11,7 @@ const EXPECTED_PATHS = [
   '/reflection',
   '/knowledge',
   '/diagnosis',
+  '/exams',
   '/resources',
   '/archive',
   '/settings',

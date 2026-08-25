@@ -58,6 +58,13 @@ export const lazyRoutes: RouteObject[] = [
       })),
   },
   {
+    path: '/exams',
+    lazy: () =>
+      import('@/pages/ExamPage').then((module) => ({
+        Component: module.ExamPage,
+      })),
+  },
+  {
     path: '/resources',
     lazy: () =>
       import('@/pages/ResourcesPage').then((module) => ({

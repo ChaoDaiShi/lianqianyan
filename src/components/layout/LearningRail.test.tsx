@@ -25,22 +25,28 @@ vi.mock('react-router-dom', () => ({
   },
 }));
 
-describe('LearningRail workshop entry', () => {
-  it('contains one discoverable learning workshop destination', () => {
+describe('LearningRail assessment and workshop entries', () => {
+  it('contains discoverable exam and learning workshop destinations', () => {
     expect(
       learningRailItems.filter(
         (item) => item.label === '学习工坊' && item.to === '/resources',
       ),
     ).toHaveLength(1);
-    expect(learningRailItems).toHaveLength(6);
+    expect(
+      learningRailItems.filter(
+        (item) => item.label === '考试中心' && item.to === '/exams',
+      ),
+    ).toHaveLength(1);
+    expect(learningRailItems).toHaveLength(7);
   });
 
-  it('uses a six-column mobile rail and keeps the workshop label visible', () => {
+  it('uses a horizontally scrollable mobile rail and keeps labels visible', () => {
     const html = renderToStaticMarkup(
       <LearningRail currentPath="/resources" />,
     );
 
-    expect(html).toContain('grid-cols-6');
+    expect(html).toContain('overflow-x-auto');
+    expect(html).toContain('考试中心');
     expect(html).toContain('学习工坊');
     expect(html).toContain('href="/resources"');
   });
