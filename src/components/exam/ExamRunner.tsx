@@ -14,7 +14,10 @@ import { SpeechControls } from '@/components/digital-human/SpeechControls';
 import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
 import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
-import { answerIsComplete } from './examPresentation';
+import {
+  answerIsComplete,
+  shouldSyncAnswersBeforeSubmit,
+} from './examPresentation';
 
 interface ExamRunnerProps {
   attempt: ExamAttempt;
@@ -154,6 +157,7 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
   const [submitError, setSubmitError] = useState(false);
   const [voiceQuestionId, setVoiceQuestionId] = useState<string | null>(null);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const expiredSubmissionStarted = useRef(false);
   const speech = useSpeechSynthesis();
   const voice = useSpeechRecognition({
     onFinalTranscript: (transcript) => {
@@ -198,21 +202,23 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
     [commitAnswer],
   );
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (syncAnswers: boolean) => {
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(false);
     Object.values(saveTimers.current).forEach(clearTimeout);
     saveTimers.current = {};
-    const saved = await Promise.all(
-      Object.entries(answers).map(([questionId, value]) =>
-        commitAnswer(questionId, value),
-      ),
-    );
-    if (saved.some((success) => !success)) {
-      setSubmitError(true);
-      setSubmitting(false);
-      return;
+    if (syncAnswers) {
+      const saved = await Promise.all(
+        Object.entries(answers).map(([questionId, value]) =>
+          commitAnswer(questionId, value),
+        ),
+      );
+      if (saved.some((success) => !success)) {
+        setSubmitError(true);
+        setSubmitting(false);
+        return;
+      }
     }
     try {
       const summary = await submitExamAttempt(attempt.id, attempt.learnerId);
@@ -234,7 +240,14 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
     return () => window.clearInterval(timer);
   }, []);
   useEffect(() => {
-    if (remaining <= 0 && !submitting) void handleSubmit();
+    if (
+      remaining <= 0 &&
+      !submitting &&
+      !expiredSubmissionStarted.current
+    ) {
+      expiredSubmissionStarted.current = true;
+      void handleSubmit(false);
+    }
   }, [handleSubmit, remaining, submitting]);
   useEffect(
     () => () => {
@@ -323,11 +336,15 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
           </p>
           {submitError && <p className="mt-2 text-xs text-rose-700" role="alert">保存或交卷失败，请检查连接后重试。</p>}
         </div>
-        <Button type="button" onClick={() => void handleSubmit()} disabled={submitting} className="gap-2 rounded-2xl bg-primary-500 px-6">
+        <Button
+          type="button"
+          onClick={() => void handleSubmit(shouldSyncAnswersBeforeSubmit(remaining))}
+          disabled={submitting}
+          className="gap-2 rounded-2xl bg-primary-500 px-6"
+        >
           <Send className="h-4 w-4" />{submitting ? '正在交卷…' : '交卷'}
         </Button>
       </GlassPanel>
     </div>
   );
 }
-

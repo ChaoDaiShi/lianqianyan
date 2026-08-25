@@ -6,6 +6,7 @@ import {
   formatExamScore,
   gradingStrategyLabel,
   responseKindLabel,
+  shouldSyncAnswersBeforeSubmit,
   validateExamDraft,
 } from './examPresentation';
 
@@ -27,6 +28,12 @@ describe('exam presentation helpers', () => {
   it('formats points and pending score honestly', () => {
     expect(formatExamScore(8, 10, 0)).toBe('8 / 10 分');
     expect(formatExamScore(8, 20, 10)).toBe('已得 8 分 · 10 分待批');
+  });
+
+  it('does not try to save answers after the server deadline', () => {
+    expect(shouldSyncAnswersBeforeSubmit(1)).toBe(true);
+    expect(shouldSyncAnswersBeforeSubmit(0)).toBe(false);
+    expect(shouldSyncAnswersBeforeSubmit(-1)).toBe(false);
   });
 
   it('validates the full publishable draft instead of only the title', () => {
@@ -93,4 +100,3 @@ describe('exam presentation helpers', () => {
     expect(csv).toContain('"解释,""互斥"""');
   });
 });
-

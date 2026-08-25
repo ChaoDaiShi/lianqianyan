@@ -36,6 +36,13 @@ export function answerIsComplete(answer: ExamAnswerValue): boolean {
   return typeof answer === 'boolean';
 }
 
+/**
+ * 截止前交卷先同步本地答案；截止后服务端可能已经封卷，继续写答案只会得到冲突响应。
+ */
+export function shouldSyncAnswersBeforeSubmit(remainingMilliseconds: number): boolean {
+  return remainingMilliseconds > 0;
+}
+
 function displayNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, '');
 }
@@ -103,4 +110,3 @@ export function buildResultCsv(result: ExamResult): string {
   ];
   return `\uFEFF${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
 }
-
