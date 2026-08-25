@@ -1,11 +1,10 @@
-import { ArrowRight, Code2, Hammer, Info, Presentation, Settings, Sparkles } from 'lucide-react';
+import { ArrowRight, Code2, Info, Presentation, Settings, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { PlaceholderPage } from '@/components/PlaceholderPage';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 
-export function ResourcesPage() { return <AppShell><PlaceholderPage title="资源工坊" description="这个学习空间仍在准备中。当前练习资源请从具体学习任务进入。" icon={Hammer} feature="资源空间仍在汇聚中" /></AppShell>; }
 export function SettingsPage() { return <AppShell><PlaceholderPage title="设置" description="偏好设置界面仍在整理中；当前不会展示或保存尚未实现的配置项。" icon={Settings} feature="设置空间仍在汇聚中" /></AppShell>; }
 
 const EXTRA_LINKS = [

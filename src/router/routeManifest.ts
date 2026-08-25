@@ -60,7 +60,7 @@ export const lazyRoutes: RouteObject[] = [
   {
     path: '/resources',
     lazy: () =>
-      import('@/pages/PlaceholderPages').then((module) => ({
+      import('@/pages/ResourcesPage').then((module) => ({
         Component: module.ResourcesPage,
       })),
   },

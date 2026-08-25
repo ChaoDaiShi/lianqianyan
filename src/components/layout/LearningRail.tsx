@@ -1,4 +1,4 @@
-import { BookOpen, FolderOpen, GraduationCap, Home, Stethoscope, type LucideIcon } from 'lucide-react';
+import { BookOpen, FolderOpen, GraduationCap, Home, Stethoscope, WandSparkles, type LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ export const learningRailItems: RailItem[] = [
   { label: '我的学习', to: '/my-learning', icon: GraduationCap },
   { label: '学习诊断', to: '/diagnosis', icon: Stethoscope },
   { label: '知识空间', to: '/knowledge', icon: BookOpen },
+  { label: '学习工坊', to: '/resources', icon: WandSparkles },
   { label: '学习档案', to: '/archive', icon: FolderOpen },
 ];
 
@@ -24,7 +25,7 @@ function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string 
       end={item.to === '/'}
       aria-label={item.label}
       className={({ isActive }) => cn(
-        'group flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold transition duration-200 md:flex-none md:px-2 md:py-3',
+        'group flex min-w-0 flex-1 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[9px] font-semibold transition duration-200 sm:text-[10px] md:flex-none md:px-2 md:py-3 md:text-[10px]',
         isActive || currentPath === item.to
           ? 'bg-white text-primary-700 shadow-[0_10px_30px_rgba(139,124,246,0.18)]'
           : 'text-[var(--em-muted-ink)] hover:bg-white/60 hover:text-primary-700'
@@ -43,7 +44,7 @@ function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string 
 export function LearningRail({ currentPath }: { currentPath?: string }) {
   return (
     <>
-      <nav aria-label="学习星轨" className="em-glass fixed bottom-0 left-0 right-0 z-40 grid w-full grid-cols-5 items-center gap-1 rounded-t-[28px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:bottom-auto md:left-3 md:right-auto md:top-1/2 md:w-[76px] md:-translate-y-1/2 md:flex md:flex-col md:rounded-[28px] md:px-2 md:py-3">
+      <nav aria-label="学习星轨" className="em-glass fixed bottom-0 left-0 right-0 z-40 grid w-full grid-cols-6 items-center gap-1 rounded-t-[28px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:bottom-auto md:left-3 md:right-auto md:top-1/2 md:w-[76px] md:-translate-y-1/2 md:flex md:flex-col md:rounded-[28px] md:px-2 md:py-3">
         {learningRailItems.map((item) => <RailLink key={item.to} item={item} currentPath={currentPath} />)}
       </nav>
     </>
