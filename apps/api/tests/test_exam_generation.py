@@ -90,3 +90,38 @@ def test_generate_exam_rejects_unknown_knowledge_point_without_partial_writes(
     assert response.status_code == 404
     listed = client.get("/api/exams/questions", params={"course_id": "course-os"})
     assert listed.json() == []
+
+
+@pytest.mark.parametrize("question_count", [4, 5])
+def test_generated_text_graders_accept_their_own_grounded_reference_answers(
+    client: TestClient, question_count: int
+) -> None:
+    response = client.post(
+        "/api/exams/generate",
+        json={
+            "course_id": "course-os",
+            "knowledge_point_ids": ["kp-deadlock"],
+            "purpose": "practice",
+            "title": f"判卷契约验证 {question_count}",
+            "question_count": question_count,
+            "difficulty": 0.6,
+            "duration_minutes": 20,
+            "publish_immediately": True,
+            "include_ai_review_question": True,
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    text_questions = [
+        item["question"]
+        for item in response.json()["exam"]["items"]
+        if item["question"]["grading_strategy"] in {"keyword", "ai_semantic"}
+    ]
+    assert text_questions
+    for question in text_questions:
+        assert isinstance(question["correct_answer"], str)
+        assert question["keywords"]
+        assert any(
+            keyword.casefold() in question["correct_answer"].casefold()
+            for keyword in question["keywords"]
+        )

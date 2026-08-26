@@ -164,7 +164,7 @@ def test_resource_generation_endpoint_returns_404_without_fabricated_content() -
     assert response.json() == {"detail": "course knowledge point not found"}
 
 
-def test_resource_generation_endpoint_rejects_unknown_resource_type() -> None:
+def test_resource_generation_endpoint_returns_structured_presentation() -> None:
     response = TestClient(create_app()).post(
         "/api/resources/generate",
         json={
@@ -174,4 +174,9 @@ def test_resource_generation_endpoint_rejects_unknown_resource_type() -> None:
         },
     )
 
-    assert response.status_code == 422
+    assert response.status_code == 200
+    body = response.json()
+    assert body["format"] == "presentation"
+    assert body["filename"] == "kp-deadlock-presentation.pptx"
+    assert len(body["slides"]) >= 5
+    assert body["slides"][0]["layout"] == "title"

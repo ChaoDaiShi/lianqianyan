@@ -1,8 +1,13 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { KnowledgeGraph } from './KnowledgeGraph';
+import { graphCanvasWidth, KnowledgeGraph } from './KnowledgeGraph';
 
 describe('KnowledgeGraph', () => {
+  it('widens the graph canvas when a knowledge point has many sections', () => {
+    expect(graphCanvasWidth(3)).toBe(1000);
+    expect(graphCanvasWidth(9)).toBeGreaterThanOrEqual(1305);
+  });
+
   it('renders real nodes, relations and provenance', () => {
     const html = renderToStaticMarkup(
       <KnowledgeGraph
@@ -13,6 +18,8 @@ describe('KnowledgeGraph', () => {
             { id: 'course:course-os', label: '操作系统', kind: 'course', knowledgePointId: null, sourceSections: ['死锁 · 定义'] },
             { id: 'point:kp-deadlock', label: '死锁', kind: 'knowledge_point', knowledgePointId: 'kp-deadlock', sourceSections: ['死锁 · 定义'] },
             { id: 'section:kp-deadlock:1', label: '定义', kind: 'section', knowledgePointId: 'kp-deadlock', sourceSections: ['死锁 · 定义'] },
+            { id: 'point:kp-process', label: '进程基础', kind: 'knowledge_point', knowledgePointId: 'kp-process', sourceSections: ['进程基础 · 隐藏章节'] },
+            { id: 'section:kp-process:1', label: '隐藏章节', kind: 'section', knowledgePointId: 'kp-process', sourceSections: ['进程基础 · 隐藏章节'] },
           ],
           edges: [
             { id: 'e1', source: 'course:course-os', target: 'point:kp-deadlock', relation: 'contains', sourceSections: ['死锁 · 定义'] },
@@ -32,5 +39,7 @@ describe('KnowledgeGraph', () => {
     expect(html).toContain('包含');
     expect(html).toContain('解释');
     expect(html).toContain('死锁 · 定义');
+    expect(html).toContain('点击知识点展开其课程章节');
+    expect(html).not.toContain('aria-label="隐藏章节，section"');
   });
 });

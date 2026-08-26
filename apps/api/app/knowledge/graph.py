@@ -13,7 +13,9 @@ class KnowledgeGraphGenerator:
     def __init__(self, repository: KnowledgeRepository | None = None) -> None:
         self._repository = repository or KnowledgeRepository()
 
-    def generate(self, course_id: str) -> KnowledgeGraphOut:
+    def generate(
+        self, course_id: str, *, course_label: str | None = None
+    ) -> KnowledgeGraphOut:
         documents = self._repository.list_by_course(course_id)
         if not documents:
             return KnowledgeGraphOut(course_id=course_id)
@@ -22,7 +24,7 @@ class KnowledgeGraphGenerator:
         nodes = [
             KnowledgeGraphNode(
                 id=course_node_id,
-                label=course_id,
+                label=(course_label or course_id).strip() or course_id,
                 kind="course",
                 source_sections=[],
             )

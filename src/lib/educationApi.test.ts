@@ -117,6 +117,7 @@ describe('learning workshop API mappings', () => {
       generationMode: 'course_template',
       sourceSections: ['定义', '条件'],
       filename: 'kp-deadlock-study_sheet.md',
+      slides: [],
     });
   });
 });

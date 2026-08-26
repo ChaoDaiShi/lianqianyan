@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.db.session import get_db
+from app.domain import Course
 
 from app.knowledge import (
     KnowledgePointContent,
@@ -27,8 +31,15 @@ def search(payload: KnowledgeSearchRequest) -> KnowledgeSearchResponse:
 
 
 @router.get("/graph", response_model=KnowledgeGraphOut)
-def graph(course_id: str = Query(default="course-os", min_length=1)) -> KnowledgeGraphOut:
-    return KnowledgeGraphGenerator().generate(course_id)
+def graph(
+    course_id: str = Query(default="course-os", min_length=1),
+    db: Session = Depends(get_db),
+) -> KnowledgeGraphOut:
+    course = db.get(Course, course_id)
+    return KnowledgeGraphGenerator().generate(
+        course_id,
+        course_label=course.name if course is not None else course_id,
+    )
 
 
 @router.get("/points/{knowledge_point_id}", response_model=KnowledgePointContent)

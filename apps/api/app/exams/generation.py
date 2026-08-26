@@ -69,6 +69,20 @@ class _GeneratedQuestion(BaseModel):
 _FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
 
 
+def _reference_keywords(reference_answer: str, *contexts: str) -> list[str]:
+    """Choose a compact grading keyword that is guaranteed to be in the reference."""
+    normalized = " ".join(reference_answer.split())
+    for context in contexts:
+        for candidate in re.findall(r"「([^」]{2,40})」", context):
+            if candidate.casefold() in normalized.casefold():
+                return [candidate]
+    pieces = [piece.strip() for piece in re.split(r"[，。；：、\s]+", normalized)]
+    for piece in pieces:
+        if len(piece) >= 2:
+            return [piece[:24]]
+    return [normalized[:24]]
+
+
 class ExamGenerationService:
     def __init__(
         self,
@@ -104,11 +118,24 @@ class ExamGenerationService:
 
         if request.include_ai_review_question and drafts:
             last = drafts[-1]
+            reference_answer = (
+                last.correct_answer
+                if isinstance(last.correct_answer, str)
+                else last.explanation
+            )
+            prompt = (
+                last.prompt
+                if isinstance(last.correct_answer, str)
+                else f"请结合课程材料解释判断依据：{last.prompt}"
+            )
             drafts[-1] = last.model_copy(
                 update={
                     "kind": "ai_short",
+                    "prompt": prompt,
                     "options": [],
-                    "keywords": last.keywords or [last.prompt[:40]],
+                    "correct_answer": reference_answer,
+                    "keywords": last.keywords
+                    or _reference_keywords(reference_answer, last.prompt, last.explanation),
                 }
             )
 
@@ -249,7 +276,7 @@ class ExamGenerationService:
                         kind="short_text",
                         knowledge_point_id=point_id,
                         prompt=f"请用自己的话说明「{section_title}」的核心含义。",
-                        correct_answer=excerpt,
+                        correct_answer=f"{section_title}：{excerpt}",
                         keywords=[section_title],
                         explanation=f"参考课程材料：{excerpt}",
                         points=10,
