@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_model: str | None = None
     llm_timeout: float = 20.0
+    tts_provider: str = "gpt_sovits"
     tts_base_url: str | None = None
     tts_reference_audio_path: str | None = None
     tts_reference_text: str | None = None
@@ -51,7 +52,7 @@ class Settings(BaseSettings):
         return origins
 
     def normalized_tts_base_url(self) -> str | None:
-        """Return a safe absolute GPT-SOVITS service URL from server config."""
+        """Return a safe absolute TTS service URL from server config."""
         candidate = (self.tts_base_url or "").strip().rstrip("/")
         if not candidate:
             return None
@@ -68,10 +69,15 @@ class Settings(BaseSettings):
         return candidate
 
     def tts_configured(self) -> bool:
-        """Require every server-owned value needed by GPT-SOVITS V2."""
+        """Require the server-owned values needed by the selected TTS provider."""
+        if not self.normalized_tts_base_url():
+            return False
+        if self.tts_provider == "genie":
+            return True
+        if self.tts_provider != "gpt_sovits":
+            return False
         return bool(
-            self.normalized_tts_base_url()
-            and (self.tts_reference_audio_path or "").strip()
+            (self.tts_reference_audio_path or "").strip()
             and (self.tts_reference_text or "").strip()
         )
 

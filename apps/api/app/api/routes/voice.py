@@ -3,12 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 
 from app.core.config import Settings, get_settings
-from app.voice.gpt_sovits import (
-    GPTSoVITSProvider,
-    VoiceNotConfiguredError,
-    VoiceProviderError,
-)
+from app.voice.gpt_sovits import VoiceNotConfiguredError, VoiceProviderError
 from app.voice.models import VoiceStatus, VoiceSynthesisRequest
+from app.voice.provider import VoiceSynthesisProvider, create_voice_provider
 from app.voice.status import get_voice_status
 
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -16,8 +13,8 @@ router = APIRouter(prefix="/voice", tags=["voice"])
 
 def get_voice_provider(
     settings: Settings = Depends(get_settings),
-) -> GPTSoVITSProvider:
-    return GPTSoVITSProvider(settings)
+) -> VoiceSynthesisProvider:
+    return create_voice_provider(settings)
 
 
 @router.get("/status", response_model=VoiceStatus)
@@ -28,7 +25,7 @@ def voice_status(settings: Settings = Depends(get_settings)) -> VoiceStatus:
 @router.post("/synthesize")
 async def synthesize_voice(
     request: VoiceSynthesisRequest,
-    provider: GPTSoVITSProvider = Depends(get_voice_provider),
+    provider: VoiceSynthesisProvider = Depends(get_voice_provider),
 ) -> Response:
     try:
         audio = await provider.synthesize(request.text)
@@ -48,6 +45,6 @@ async def synthesize_voice(
         media_type=audio.media_type,
         headers={
             "Cache-Control": "no-store",
-            "X-Voice-Provider": "gpt-sovits",
+            "X-Voice-Provider": provider.provider_name.replace("_", "-"),
         },
     )

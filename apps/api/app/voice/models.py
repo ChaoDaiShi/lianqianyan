@@ -12,7 +12,7 @@ VOICE_ATTRIBUTION = (
 
 
 class VoiceStatus(BaseModel):
-    provider: Literal["gpt_sovits", "unavailable"]
+    provider: Literal["genie_tts", "gpt_sovits", "unavailable"]
     voice: Literal["cyrene"] = "cyrene"
     configured: bool
     fallback: Literal["browser_speech"] = "browser_speech"
@@ -35,3 +35,11 @@ class VoiceSynthesisRequest(BaseModel):
 class SynthesizedVoiceAudio:
     content: bytes
     media_type: str
+
+
+def has_wav_signature(content: bytes) -> bool:
+    return (
+        len(content) >= 12
+        and content[:4] == b"RIFF"
+        and content[8:12] == b"WAVE"
+    )
