@@ -25,9 +25,16 @@ from app.llm.provider import BaseLLMProvider, LLMMessage, LLMResult
 from app.main import create_app
 from app.knowledge import KnowledgeContextBuilder
 from app.services import TutorContextBuilder, TutorService
+from app.services.tutor_prompt import SYSTEM_PROMPT
 
 COURSE_OS = "course-os"
 DEMO_MESSAGE = "为什么我总学不会死锁？"
+
+
+def test_tutor_system_prompt_uses_instructor_contract() -> None:
+    assert "AI 教官" in SYSTEM_PROMPT
+    assert "本次目标" in SYSTEM_PROMPT
+    assert "检查理解" in SYSTEM_PROMPT
 
 
 # ---------------------------------------------------------------------------

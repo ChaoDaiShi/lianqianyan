@@ -47,7 +47,7 @@ export function TodaysJourney({
         <Route className="h-4 w-4 text-primary-600" />
         <p className="text-xs font-bold text-primary-700">TODAY&apos;S JOURNEY</p>
       </div>
-      <h2 className="mt-2 text-2xl font-bold">今天，小涟陪你沿当前计划前进</h2>
+      <h2 className="mt-2 text-2xl font-bold">今天，跟随昔涟教官完成真实学习任务</h2>
       <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">
         这里直接展示 CurrentPlan 中已有的任务，不创建新的任务系统。
       </p>
@@ -126,9 +126,9 @@ export function TodaysJourney({
       ) : (
         <div className="mt-5 rounded-lg border border-dashed border-violet-200 bg-white/45 p-7 text-center">
           <Sparkles className="mx-auto h-7 w-7 text-primary-400" />
-          <p className="mt-3 text-sm font-semibold">当前还没有学习计划</p>
+          <p className="mt-3 text-sm font-semibold">选择学习目标</p>
           <p className="mt-1 text-xs text-[var(--em-muted-ink)]">
-            只有你点击后，才会请求生成真实计划。
+            当前没有默认学习进度。只有你主动选择后，才会基于诊断生成真实计划。
           </p>
           <Button
             className="mt-4 bg-primary-500"
@@ -141,7 +141,7 @@ export function TodaysJourney({
                 正在生成…
               </>
             ) : (
-              '生成学习计划'
+              '请昔涟教官生成诊断计划'
             )}
           </Button>
         </div>

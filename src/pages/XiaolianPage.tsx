@@ -61,7 +61,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
   const llmStatus = useLlmStatus();
   const speech = useSpeechSynthesis();
   const [messages, setMessages] = useState<ChatMessage[]>([
-    assistantMessage('你好，我是小涟。\n我会结合你的学习画像、诊断、计划与课程知识，陪你找到更适合的下一步。'),
+    assistantMessage('你好，我是昔涟教官。\n我会结合真实学习证据，为你明确目标、讲清知识、组织训练并完成复盘。'),
   ]);
   const [input, setInput] = useState('');
   const voice = useSpeechRecognition({
@@ -143,12 +143,12 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
             <div className="flex items-center gap-4">
               <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="md" speaking={speech.speaking} />
               <div>
-                <h1 className="text-xl font-bold">和小涟一起学习</h1>
-                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">选择学习能力或直接提问；执行详情默认折叠，需要时再展开。</p>
+                <h1 className="text-xl font-bold">AI 教官工作台</h1>
+                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">让昔涟教官讲解、训练、考核或复盘；执行详情默认折叠，需要时再展开。</p>
               </div>
             </div>
             <XiaolianMessage tone={pending ? 'observe' : companionState === 'encouraging' ? 'encourage' : 'suggest'} compact className="mt-4">
-              {pending ? '我正在结合真实学习状态处理你的问题。' : '告诉我哪里卡住了，或者从下面选择一个学习方向。'}
+              {pending ? '我正在结合真实学习状态制定教学响应。' : '先告诉我目标或卡点，我会给出讲解、检查理解与下一步任务。'}
             </XiaolianMessage>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {CAPABILITIES.map((item) => <button key={item.capability} type="button" disabled={pending} onClick={() => { setSelectedCapability(item.capability); setInput(item.question); }} className={cn('rounded-[16px] border px-3 py-2 text-left text-xs transition disabled:opacity-50', selectedCapability === item.capability ? 'border-primary-300 bg-violet-50 text-primary-700' : 'border-violet-100 bg-white/55 text-[var(--em-muted-ink)] hover:border-primary-200')}><strong>{item.label}</strong><span className="mt-0.5 block text-[9px]">点击预填问题</span></button>)}

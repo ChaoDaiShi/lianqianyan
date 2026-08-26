@@ -49,6 +49,26 @@ const plan: PersistedStudyPlan = {
 };
 
 describe('TodaysJourney', () => {
+  it('presents an explicit goal choice before a learner has a plan', () => {
+    const html = renderToStaticMarkup(
+      <TodaysJourney
+        plan={null}
+        currentTaskId={null}
+        loading={false}
+        error={false}
+        generating={false}
+        starting={false}
+        onGenerate={vi.fn()}
+        onPrepare={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('选择学习目标');
+    expect(html).toContain('请昔涟教官生成诊断计划');
+    expect(html).not.toContain('继续默认学习');
+  });
+
   it('does not mark available CurrentPlan tasks as completed', () => {
     const html = renderToStaticMarkup(
       <TodaysJourney
