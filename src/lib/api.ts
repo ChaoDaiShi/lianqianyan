@@ -8,7 +8,12 @@ import axios, {
 import { getRuntimeConfig } from '@/config/runtime';
 
 export function shouldReportApiError(error: AxiosError): boolean {
-  return error.code !== 'ERR_CANCELED' && !axios.isCancel(error);
+  if (error.code === 'ERR_CANCELED' || axios.isCancel(error)) return false;
+
+  const isHandledVoiceFallback =
+    error.config?.url === '/api/voice/synthesize' &&
+    (error.response?.status === 502 || error.response?.status === 503);
+  return !isHandledVoiceFallback;
 }
 
 class ApiClient {
