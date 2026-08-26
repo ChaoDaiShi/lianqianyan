@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:cyrene": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/start-cyrene-web.ps1",
     "build": "tsc && vite build",
     "build:production": "NODE_ENV=production vite build",
     "preview": "vite preview",

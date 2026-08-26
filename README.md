@@ -50,6 +50,22 @@ $env:EDUCATION_API_URL = 'http://127.0.0.1:8000'
 pnpm dev
 ```
 
+`pnpm dev` 只启动前端，不会加载昔涟模型。当前 Windows 工作站要直接运行带真实昔涟语音的完整网站，使用 PowerShell 7 和一键入口：
+
+```powershell
+pnpm dev:cyrene
+```
+
+该命令会先校验 9 个 ONNX/二进制模型文件、中文运行资源和固定参考音频，再按就绪条件依次启动 `127.0.0.1:9881` 的 Genie-TTS 侧车、`127.0.0.1:8000` 的 Education API 和 `127.0.0.1:5173` 的 Vite 网站。看到 `CYRENE_WEB_READY` 后打开 `http://127.0.0.1:5173/#/agent`，点击回答旁的“昔涟讲解”即可生成并播放当前文字对应的语音。
+
+只检查环境而不启动进程：
+
+```powershell
+pnpm dev:cyrene -ValidateOnly
+```
+
+一键入口把匿名学习记录持久化到被 Git 忽略的 `.local/runtime/education.db`，不会覆盖仓库根目录或 `apps/api` 下的现有 SQLite。API 与侧车日志写入 `.logs/`。按 Ctrl+C 时，Windows Job Object 会终止本轮创建的完整子进程树；端口已被其他程序占用时则直接拒绝启动，不会停止未知进程。
+
 ### 后端
 
 ```powershell
@@ -137,6 +153,8 @@ Live2D 加载失败时页面不会显示旧形象回退。构建通过并不代�
 ## 昔涟 Genie-TTS / GPT-SoVITS 语音
 
 当前推荐链路使用本机 [High-Logic/Genie-TTS](https://github.com/High-Logic/Genie-TTS) 2.0.2 和已经转换的昔涟 V2ProPlus ONNX 模型；旧的 GPT-SoVITS V2 HTTP 链路继续作为部署兼容选项。两条链路都只能由 Education API 访问，网页最多提交 600 个清洗后的字符，不能指定模型、上游地址、参考音频、保存路径或推理参数。未配置或调用失败时，界面会明确显示“浏览器语音（非昔涟音色）”，不会把系统语音冒充为昔涟。
+
+当前机器优先使用前文的 `pnpm dev:cyrene` 启动完整网站。下面的分步命令用于部署、迁移和单独排障，不是日常试听所必需的三个手工步骤。
 
 ### 1. 安装经审计的参考音频
 

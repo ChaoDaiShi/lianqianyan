@@ -9,6 +9,15 @@ uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+仅启动 API 不会加载昔涟模型。当前 Windows 工作站需要在网站中直接播放昔涟语音时，回到仓库根目录使用一键入口：
+
+```powershell
+Set-Location ..\..
+pnpm dev:cyrene
+```
+
+它会校验并托管 Genie-TTS 侧车、当前 API 与 Vite，待三个端点都就绪后输出 `CYRENE_WEB_READY`。只读校验使用 `pnpm dev:cyrene -ValidateOnly`。运行数据库固定为被 Git 忽略的 `.local/runtime/education.db`，退出时只清理该入口创建并纳入 Windows Job Object 的进程树；不会按端口终止未知服务。
+
 默认数据库为当前目录下的 `education.db`。正式部署请设置绝对 `EDUCATION_DATABASE_URL`，并备份后再迁移。
 
 ## 环境变量
