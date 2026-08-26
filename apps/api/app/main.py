@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
 from app.core.config import get_settings
@@ -47,6 +48,13 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     application.include_router(api_router)
+    web_dist_dir = settings.existing_web_dist_dir()
+    if web_dist_dir is not None:
+        application.mount(
+            "/",
+            StaticFiles(directory=web_dist_dir, html=True),
+            name="educationmind-web",
+        )
     return application
 
 

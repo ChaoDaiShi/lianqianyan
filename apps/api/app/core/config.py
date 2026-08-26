@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +26,7 @@ class Settings(BaseSettings):
     tts_timeout: float = 60.0
     tts_max_audio_bytes: int = 20_000_000
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    web_dist_dir: str | None = None
 
     model_config = SettingsConfigDict(env_prefix="EDUCATION_", env_file=".env", extra="ignore")
 
@@ -80,6 +82,18 @@ class Settings(BaseSettings):
             (self.tts_reference_audio_path or "").strip()
             and (self.tts_reference_text or "").strip()
         )
+
+    def existing_web_dist_dir(self) -> Path | None:
+        """Return an explicitly configured static build directory when it exists."""
+        candidate = (self.web_dist_dir or "").strip()
+        if not candidate:
+            return None
+        directory = Path(candidate)
+        if not directory.is_absolute() or not directory.is_dir():
+            return None
+        if not (directory / "index.html").is_file():
+            return None
+        return directory.resolve()
 
 
 @lru_cache

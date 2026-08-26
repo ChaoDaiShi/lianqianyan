@@ -32,6 +32,27 @@ localStorage 只保存随机匿名标识，不保存姓名、手机号或邮箱�
 
 `/demo` 和 `/showcase` 已撤除，不再注册路由。
 
+## 正式发布包
+
+先运行完整质量门禁，再生成平台静态导入包和 Windows 完整服务包：
+
+```powershell
+pnpm check
+pnpm test -- --run
+Set-Location apps\api
+uv run pytest -q
+Set-Location ..\..
+pnpm release
+```
+
+产物写入被 Git 忽略的 `release/`：
+
+- `EducationMind-Platform-Web-1.3.0.zip`：`index.html` 位于压缩包根目录，可用于仅接受 ZIP 的静态平台；不包含模型、参考音频、API、数据库或密钥。平台必须把同域 `/api/*` 转发到 Education API。
+- `EducationMind-Windows-Full-1.3.0.zip`：包含静态网站、Education API、Genie-TTS 必需源码、GenieData、昔涟 ONNX 模型与固定参考音频；不包含任何开发数据库、历史学习记录、日志、密钥或现有 `.venv`。
+- `EducationMind-1.3.0-SHA256.txt`：上述正式包的 SHA-256 清单。
+
+发布脚本同时保留 `release/staging/` 下的正式部署目录，使用白名单复制和 .NET `ZipArchive`，ZIP 成员使用 `/` 分隔且没有 `./` 前缀。Windows 完整包解压后按包内 `README.md` 执行 `install.ps1` 与 `start.ps1`；首次启动只会新建空白业务库。
+
 ## 本地运行
 
 ### 前端

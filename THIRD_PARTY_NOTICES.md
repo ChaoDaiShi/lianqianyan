@@ -1,6 +1,6 @@
 # Third-party notices
 
-本文件记录 EducationMind 昔涟语音功能使用或对接的第三方项目与资产来源。仓库不分发昔涟参考音频全集、模型权重、GenieData、Genie-TTS 运行环境或 GPT-SoVITS 推理程序；部署方应分别确认这些材料在目标使用场景中的授权条件。
+本文件记录 EducationMind 昔涟语音功能使用或对接的第三方项目与资产来源。Git 源码仓库不跟踪昔涟参考音频全集、模型权重、GenieData、Genie-TTS 运行环境或 GPT-SoVITS 推理程序；由项目所有者在本机明确生成的 Windows 完整交付包会迁移运行所需的固定参考音频、ONNX 模型、GenieData 与 Genie-TTS 源码。部署方仍应分别确认这些材料在目标使用场景中的授权条件。
 
 ## Genie-TTS
 
@@ -19,7 +19,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-EducationMind 只提交自己的安全侧车与适配代码；运行时从部署者指定的外部 Genie-TTS 环境加载，不把该环境、资源和模型复制到本仓库。侧车固定模型和参考音频、限制回环地址与单 worker，并将 Genie 的文件输出验证为标准 WAV 后再交给 Education API。
+EducationMind 在 Git 中只提交自己的安全侧车与适配代码；完整交付包会把外部 Genie-TTS 的必要资产复制到包内的受控运行目录，但不会反向提交到源码仓库。侧车固定模型和参考音频、限制回环地址与单 worker，并将 Genie 的文件输出验证为标准 WAV 后再交给 Education API。
 
 ## 昔涟 GPT-SoVITS 语音
 
