@@ -16,7 +16,7 @@ from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 
-from app.core.seed import seed_demo_data
+from app.core.seed import seed_catalog_data
 from app.db.session import SessionLocal, engine
 from app.domain import Base
 from app.tools import ToolError, ToolResult, build_tool_registry
@@ -30,7 +30,7 @@ server = Server("educationmind-tools", version="1.0.0")
 def initialize_database() -> None:
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
-        seed_demo_data(db)
+        seed_catalog_data(db)
 
 
 def list_registry_tools() -> list[types.Tool]:

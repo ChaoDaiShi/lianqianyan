@@ -53,7 +53,13 @@ async def test_mcp_stdio_initialize_list_and_call_diagnosis(tmp_path: Path) -> N
     assert called.isError is False
     assert called.structuredContent is not None
     assert called.structuredContent["success"] is True
-    assert called.structuredContent["data"]["primary_focus"]["knowledge_point_id"] == "kp-deadlock"
+    diagnosis_data = called.structuredContent["data"]
+    assert diagnosis_data["primary_focus"] is None
+    assert diagnosis_data["weak_points"] == []
+    assert len(diagnosis_data["unassessed_points"]) == 5
+    assert {
+        point["status"] for point in diagnosis_data["unassessed_points"]
+    } == {"unassessed"}
     assert json.loads(called.content[0].text)["success"] is True
 
 
