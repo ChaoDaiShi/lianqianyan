@@ -9,6 +9,7 @@ vi.mock('@/components/exam/ExamCatalog', () => ({ ExamCatalog: () => <div>catalo
 vi.mock('@/components/exam/ExamHistory', () => ({ ExamHistory: () => <div>history-panel</div> }));
 vi.mock('@/components/exam/QuestionBank', () => ({ QuestionBank: () => <div>question-bank-panel</div> }));
 vi.mock('@/components/exam/ExamBuilder', () => ({ ExamBuilder: () => <div>builder-panel</div> }));
+vi.mock('@/components/exam/ExamGenerator', () => ({ ExamGenerator: () => <div>generator-panel</div> }));
 
 import { ExamPage } from './ExamPage';
 
@@ -20,6 +21,7 @@ describe('ExamPage', () => {
     expect(html).toContain('我的结果');
     expect(html).toContain('题库与题型');
     expect(html).toContain('命题与批阅');
+    expect(html).toContain('AI 智能组卷');
     expect(html).toContain('服务端计时');
     expect(html).toContain('发布后锁定');
     expect(html).toContain('匿名学习档案');
@@ -29,5 +31,6 @@ describe('ExamPage', () => {
     expect(html).toContain('history-panel');
     expect(html).toContain('question-bank-panel');
     expect(html).toContain('builder-panel');
+    expect(html).toContain('generator-panel');
   });
 });

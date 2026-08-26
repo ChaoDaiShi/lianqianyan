@@ -4,11 +4,31 @@ import {
   mapExamAnalytics,
   mapExamAttempt,
   mapExamResult,
+  mapExamGenerationResult,
   mapQuestion,
   mapQuestionType,
 } from './educationApi';
 
 describe('exam API mappings', () => {
+  it('maps generated exam provenance and warnings', () => {
+    const result = mapExamGenerationResult({
+      exam: {
+        id: 'exam-generated', course_id: 'course-os', title: '死锁专项练习',
+        description: '', duration_minutes: 20, pass_percentage: 60,
+        shuffle_questions: true, status: 'published', items: [], total_points: 0,
+        created_at: '2026-08-26T08:00:00', updated_at: '2026-08-26T08:00:00',
+        published_at: '2026-08-26T08:00:00',
+      },
+      generation_mode: 'course_grounded', provider: null, model: null,
+      source_sections: ['死锁 · 必要条件'], warnings: ['课程材料降级'],
+    });
+
+    expect(result.exam.title).toBe('死锁专项练习');
+    expect(result.generationMode).toBe('course_grounded');
+    expect(result.sourceSections).toEqual(['死锁 · 必要条件']);
+    expect(result.warnings).toEqual(['课程材料降级']);
+  });
+
   it('maps a custom question type and authoring question', () => {
     expect(
       mapQuestionType({
@@ -198,4 +218,3 @@ describe('exam API mappings', () => {
     expect(analytics.objectiveAccuracy).toBeNull();
   });
 });
-

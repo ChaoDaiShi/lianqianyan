@@ -16,6 +16,7 @@ describe('exam presentation helpers', () => {
     expect(responseKindLabel('long_text')).toBe('长文本');
     expect(gradingStrategyLabel('keyword')).toBe('关键词部分评分');
     expect(gradingStrategyLabel('manual')).toBe('人工评分');
+    expect(gradingStrategyLabel('ai_semantic')).toBe('AI 语义自动判卷');
   });
 
   it('detects complete answers without treating false as empty', () => {

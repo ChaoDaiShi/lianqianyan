@@ -46,6 +46,13 @@ BUILTIN_QUESTION_TYPES = (
         QuestionResponseKind.LONG_TEXT,
         GradingStrategy.MANUAL,
     ),
+    (
+        "type-ai-semantic-short",
+        "AI 语义简答题",
+        "由昔涟教官按课程参考答案与评分关键词自动判卷",
+        QuestionResponseKind.SHORT_TEXT,
+        GradingStrategy.AI_SEMANTIC,
+    ),
 )
 
 
@@ -69,4 +76,3 @@ def seed_exam_data(db: Session) -> None:
             )
         )
     db.commit()
-

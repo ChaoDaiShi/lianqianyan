@@ -18,6 +18,8 @@ import type {
   ExamAttemptSummary,
   ExamCatalogItem,
   ExamDefinition,
+  ExamGenerationInput,
+  ExamGenerationResult,
   ExamDraftInput,
   ExamQuestion,
   ExamQuestionType,
@@ -823,6 +825,19 @@ export function mapExam(raw: Record<string, unknown>): ExamDefinition {
   };
 }
 
+export function mapExamGenerationResult(
+  raw: Record<string, unknown>,
+): ExamGenerationResult {
+  return {
+    exam: mapExam(raw['exam'] as Record<string, unknown>),
+    generationMode: raw['generation_mode'] as ExamGenerationResult['generationMode'],
+    provider: (raw['provider'] as string | null) ?? null,
+    model: (raw['model'] as string | null) ?? null,
+    sourceSections: (raw['source_sections'] as string[]) ?? [],
+    warnings: (raw['warnings'] as string[]) ?? [],
+  };
+}
+
 export function mapExamAttempt(raw: Record<string, unknown>): ExamAttempt {
   return {
     id: raw['id'] as string,
@@ -1079,6 +1094,26 @@ export async function createExamDefinition(
     examPayload(input),
   );
   return mapExam(extractApiData(response));
+}
+
+export async function generateExam(
+  input: ExamGenerationInput,
+): Promise<ExamGenerationResult> {
+  const response = await api.post<Record<string, unknown>>(
+    '/api/exams/generate',
+    {
+      course_id: input.courseId,
+      knowledge_point_ids: input.knowledgePointIds,
+      purpose: input.purpose,
+      title: input.title,
+      question_count: input.questionCount,
+      difficulty: input.difficulty,
+      duration_minutes: input.durationMinutes,
+      publish_immediately: input.publishImmediately,
+      include_ai_review_question: input.includeAiReviewQuestion,
+    },
+  );
+  return mapExamGenerationResult(extractApiData(response));
 }
 
 export async function updateExamDefinition(

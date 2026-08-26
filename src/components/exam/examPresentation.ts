@@ -19,6 +19,7 @@ const GRADING_LABELS: Record<GradingStrategy, string> = {
   set_exact: '选项集合匹配',
   keyword: '关键词部分评分',
   manual: '人工评分',
+  ai_semantic: 'AI 语义自动判卷',
 };
 
 export function responseKindLabel(kind: QuestionResponseKind): string {

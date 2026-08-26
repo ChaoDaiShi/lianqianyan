@@ -45,9 +45,19 @@ from app.exams.models import (
 )
 from app.exams.seed import BUILTIN_QUESTION_TYPES, seed_exam_data
 from app.exams.service import ExamNotFoundError, ExamService, ExamStateError
+from app.exams.generation import (
+    ExamGenerationRequest,
+    ExamGenerationResult,
+    ExamGenerationService,
+    GenerationSourceNotFound,
+)
+from app.exams.ai_grading import AIAnswerGrader, AIGradeResult, AIReviewItem
 
 __all__ = [
     "AnswerGradingStatus",
+    "AIAnswerGrader",
+    "AIGradeResult",
+    "AIReviewItem",
     "AnswerSaveOut",
     "AnswerSaveRequest",
     "AttemptActionRequest",
@@ -68,6 +78,9 @@ __all__ = [
     "ExamAnalyticsOut",
     "ExamItemCreate",
     "ExamItemOut",
+    "ExamGenerationRequest",
+    "ExamGenerationResult",
+    "ExamGenerationService",
     "ExamNotFoundError",
     "ExamOut",
     "ExamQuestion",
@@ -79,6 +92,7 @@ __all__ = [
     "ExamUpdate",
     "GradeOutcome",
     "GradingStrategy",
+    "GenerationSourceNotFound",
     "ManualGradeRequest",
     "KnowledgeExamPerformanceOut",
     "QuestionCreate",

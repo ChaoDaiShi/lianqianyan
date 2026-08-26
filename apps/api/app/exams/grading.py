@@ -90,7 +90,7 @@ def validate_question_content(
         if not isinstance(correct_answer, str) or not normalize_text(correct_answer):
             raise ValueError("exact text answer must not be blank")
 
-    if grading_strategy is GradingStrategy.KEYWORD:
+    if grading_strategy in {GradingStrategy.KEYWORD, GradingStrategy.AI_SEMANTIC}:
         normalized_keywords = _normalized_strings(raw_keywords)
         if (
             not 1 <= len(raw_keywords) <= 12
@@ -114,6 +114,9 @@ def grade_answer(
     """对一次作答给出 0..1 的确定性评分，人工题返回待批状态。"""
     if grading_strategy is GradingStrategy.MANUAL:
         return GradeOutcome(pending_manual=True)
+
+    if grading_strategy is GradingStrategy.AI_SEMANTIC:
+        return GradeOutcome(pending_ai=True)
 
     if grading_strategy is GradingStrategy.KEYWORD:
         normalized_submission = (
@@ -157,4 +160,3 @@ def grade_answer(
         return GradeOutcome(score_ratio=0.0, is_correct=False)
     correct = normalize_text(submitted_answer) == normalize_text(correct_answer)
     return GradeOutcome(score_ratio=1.0 if correct else 0.0, is_correct=correct)
-

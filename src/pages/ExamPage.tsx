@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardCheck, FileQuestion, LockKeyhole, ShieldCheck, TimerReset } from 'lucide-react';
+import { BarChart3, Bot, ClipboardCheck, FileQuestion, LockKeyhole, ShieldCheck, TimerReset } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,6 +6,7 @@ import { ExamCatalog } from '@/components/exam/ExamCatalog';
 import { ExamHistory } from '@/components/exam/ExamHistory';
 import { QuestionBank } from '@/components/exam/QuestionBank';
 import { ExamBuilder } from '@/components/exam/ExamBuilder';
+import { ExamGenerator } from '@/components/exam/ExamGenerator';
 
 const BOUNDARIES = [
   { icon: TimerReset, title: '服务端计时', detail: '刷新后继续，过期自动结卷' },
@@ -32,17 +33,19 @@ export function ExamPage() {
 
         <Tabs defaultValue="catalog" className="space-y-5">
           <div className="overflow-x-auto pb-1">
-            <TabsList className="h-auto min-w-[680px] rounded-[20px] border border-violet-100 bg-white/70 p-1.5 shadow-sm">
+            <TabsList className="h-auto min-w-[820px] rounded-[20px] border border-violet-100 bg-white/70 p-1.5 shadow-sm">
               <TabsTrigger value="catalog" className="h-11 flex-1 gap-2 rounded-[15px] data-[state=active]:bg-violet-50 data-[state=active]:text-primary-700"><ClipboardCheck className="h-4 w-4" />考试中心</TabsTrigger>
               <TabsTrigger value="results" className="h-11 flex-1 gap-2 rounded-[15px] data-[state=active]:bg-sky-50 data-[state=active]:text-sky-700"><BarChart3 className="h-4 w-4" />我的结果</TabsTrigger>
               <TabsTrigger value="questions" className="h-11 flex-1 gap-2 rounded-[15px] data-[state=active]:bg-fuchsia-50 data-[state=active]:text-fuchsia-700"><FileQuestion className="h-4 w-4" />题库与题型</TabsTrigger>
               <TabsTrigger value="builder" className="h-11 flex-1 gap-2 rounded-[15px] data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700"><LockKeyhole className="h-4 w-4" />命题与批阅</TabsTrigger>
+              <TabsTrigger value="generator" className="h-11 flex-1 gap-2 rounded-[15px] data-[state=active]:bg-violet-50 data-[state=active]:text-primary-700"><Bot className="h-4 w-4" />AI 智能组卷</TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="catalog" forceMount className="mt-0 data-[state=inactive]:hidden"><ExamCatalog /></TabsContent>
           <TabsContent value="results" forceMount className="mt-0 data-[state=inactive]:hidden"><ExamHistory /></TabsContent>
           <TabsContent value="questions" forceMount className="mt-0 data-[state=inactive]:hidden"><QuestionBank /></TabsContent>
           <TabsContent value="builder" forceMount className="mt-0 data-[state=inactive]:hidden"><ExamBuilder /></TabsContent>
+          <TabsContent value="generator" forceMount className="mt-0 data-[state=inactive]:hidden"><ExamGenerator /></TabsContent>
         </Tabs>
       </div>
     </AppShell>

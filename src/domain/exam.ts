@@ -7,10 +7,22 @@ export type QuestionResponseKind =
   | 'short_text'
   | 'long_text';
 
-export type GradingStrategy = 'exact' | 'set_exact' | 'keyword' | 'manual';
+export type GradingStrategy =
+  | 'exact'
+  | 'set_exact'
+  | 'keyword'
+  | 'manual'
+  | 'ai_semantic';
 export type ExamStatus = 'draft' | 'published' | 'archived';
 export type ExamAttemptStatus = 'in_progress' | 'needs_review' | 'graded';
-export type AnswerGradingStatus = 'ungraded' | 'auto' | 'pending_manual' | 'manual';
+export type AnswerGradingStatus =
+  | 'ungraded'
+  | 'auto'
+  | 'pending_manual'
+  | 'manual'
+  | 'pending_ai'
+  | 'ai'
+  | 'auto_fallback';
 export type ExamAnswerValue = string | string[] | boolean | null;
 
 export interface ExamQuestionType {
@@ -245,3 +257,26 @@ export interface ExamAnalytics {
   knowledgePoints: KnowledgeExamPerformance[];
 }
 
+export type ExamGenerationPurpose = 'exam' | 'practice';
+export type ExamGenerationMode = 'llm' | 'course_grounded';
+
+export interface ExamGenerationInput {
+  courseId: string;
+  knowledgePointIds: string[];
+  purpose: ExamGenerationPurpose;
+  title: string;
+  questionCount: number;
+  difficulty: number;
+  durationMinutes: number;
+  publishImmediately: boolean;
+  includeAiReviewQuestion: boolean;
+}
+
+export interface ExamGenerationResult {
+  exam: ExamDefinition;
+  generationMode: ExamGenerationMode;
+  provider: string | null;
+  model: string | null;
+  sourceSections: string[];
+  warnings: string[];
+}

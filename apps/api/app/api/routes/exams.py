@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.exams.ai_grading import AIAnswerGrader
 from app.exams import (
     AnswerSaveOut,
     AnswerSaveRequest,
@@ -19,11 +20,15 @@ from app.exams import (
     CatalogExamOut,
     ExamAnalyticsOut,
     ExamCreate,
+    ExamGenerationRequest,
+    ExamGenerationResult,
+    ExamGenerationService,
     ExamNotFoundError,
     ExamOut,
     ExamService,
     ExamStateError,
     ExamUpdate,
+    GenerationSourceNotFound,
     ManualGradeRequest,
     QuestionCreate,
     QuestionOut,
@@ -51,6 +56,23 @@ def _raise_http(exc: Exception) -> NoReturn:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)
         ) from exc
     raise exc
+
+
+@router.post(
+    "/generate",
+    response_model=ExamGenerationResult,
+    status_code=status.HTTP_201_CREATED,
+)
+async def generate_exam(
+    payload: ExamGenerationRequest,
+    db: Session = Depends(get_db),
+) -> ExamGenerationResult:
+    try:
+        return await ExamGenerationService(db).generate(payload)
+    except GenerationSourceNotFound as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (ExamNotFoundError, ExamStateError, ValueError) as exc:
+        _raise_http(exc)
 
 
 @router.get("/question-types", response_model=list[QuestionTypeOut])
@@ -220,13 +242,23 @@ def save_answer(
 
 
 @router.post("/attempts/{attempt_id}/submit", response_model=AttemptSummaryOut)
-def submit_attempt(
+async def submit_attempt(
     attempt_id: str,
     payload: AttemptActionRequest,
     service: ExamService = Depends(_service),
 ) -> AttemptSummaryOut:
     try:
-        return service.submit_attempt(attempt_id, payload.learner_id)
+        summary = service.submit_attempt(attempt_id, payload.learner_id)
+        grader = AIAnswerGrader()
+        for item in service.list_ai_review_items(attempt_id):
+            grade = await grader.grade(
+                prompt=item.prompt,
+                reference_answer=item.reference_answer,
+                keywords=item.keywords,
+                student_answer=item.student_answer,
+            )
+            summary = service.grade_ai_answer(item.answer_id, grade)
+        return summary
     except (ExamNotFoundError, ExamStateError) as exc:
         _raise_http(exc)
 

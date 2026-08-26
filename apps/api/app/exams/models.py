@@ -26,6 +26,7 @@ class GradingStrategy(str, Enum):
     SET_EXACT = "set_exact"
     KEYWORD = "keyword"
     MANUAL = "manual"
+    AI_SEMANTIC = "ai_semantic"
 
 
 COMPATIBLE_GRADING: dict[QuestionResponseKind, frozenset[GradingStrategy]] = {
@@ -33,10 +34,15 @@ COMPATIBLE_GRADING: dict[QuestionResponseKind, frozenset[GradingStrategy]] = {
     QuestionResponseKind.MULTIPLE_CHOICE: frozenset({GradingStrategy.SET_EXACT}),
     QuestionResponseKind.BOOLEAN: frozenset({GradingStrategy.EXACT}),
     QuestionResponseKind.SHORT_TEXT: frozenset(
-        {GradingStrategy.EXACT, GradingStrategy.KEYWORD, GradingStrategy.MANUAL}
+        {
+            GradingStrategy.EXACT,
+            GradingStrategy.KEYWORD,
+            GradingStrategy.MANUAL,
+            GradingStrategy.AI_SEMANTIC,
+        }
     ),
     QuestionResponseKind.LONG_TEXT: frozenset(
-        {GradingStrategy.KEYWORD, GradingStrategy.MANUAL}
+        {GradingStrategy.KEYWORD, GradingStrategy.MANUAL, GradingStrategy.AI_SEMANTIC}
     ),
 }
 
@@ -67,6 +73,7 @@ class GradeOutcome(BaseModel):
     score_ratio: float | None = Field(default=None, ge=0.0, le=1.0)
     is_correct: bool | None = None
     pending_manual: bool = False
+    pending_ai: bool = False
     matched_keywords: list[str] = Field(default_factory=list)
     missing_keywords: list[str] = Field(default_factory=list)
 
@@ -88,6 +95,9 @@ class AnswerGradingStatus(str, Enum):
     AUTO = "auto"
     PENDING_MANUAL = "pending_manual"
     MANUAL = "manual"
+    PENDING_AI = "pending_ai"
+    AI = "ai"
+    AUTO_FALLBACK = "auto_fallback"
 
 
 class QuestionTypeUpdate(BaseModel):
@@ -398,4 +408,3 @@ class ExamAnalyticsOut(BaseModel):
     objective_accuracy: float | None = Field(default=None, ge=0.0, le=1.0)
     pending_review_count: int = Field(ge=0)
     knowledge_points: list[KnowledgeExamPerformanceOut] = Field(default_factory=list)
-

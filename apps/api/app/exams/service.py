@@ -24,6 +24,7 @@ from app.exams.entities import (
     ExamQuestionType,
 )
 from app.exams.grading import grade_answer, normalize_text, validate_question_content
+from app.exams.ai_grading import AIGradeResult, AIReviewItem
 from app.exams.models import (
     AnswerGradingStatus,
     AnswerSaveOut,
@@ -629,6 +630,50 @@ class ExamService:
             raise
         return self._summary_out(attempt)
 
+    def list_ai_review_items(self, attempt_id: str) -> list[AIReviewItem]:
+        items: list[AIReviewItem] = []
+        for answer in self._repo.list_attempt_answers(attempt_id):
+            if answer.grading_status != AnswerGradingStatus.PENDING_AI.value:
+                continue
+            question = self._require_question(answer.question_id)
+            items.append(
+                AIReviewItem(
+                    answer_id=answer.id,
+                    prompt=question.prompt,
+                    reference_answer=question.correct_answer,
+                    keywords=list(question.keywords or []),
+                    student_answer=answer.user_answer,
+                )
+            )
+        return items
+
+    def grade_ai_answer(self, answer_id: str, result: AIGradeResult) -> AttemptSummaryOut:
+        answer = self._db.get(ExamAnswer, answer_id)
+        if answer is None:
+            raise ExamNotFoundError("answer not found")
+        if answer.grading_status != AnswerGradingStatus.PENDING_AI.value:
+            raise ExamStateError("answer is not awaiting ai grading")
+        attempt = self._repo.get_attempt(answer.attempt_id)
+        if attempt is None:
+            raise ExamNotFoundError("attempt not found")
+        answer.awarded_score = round(answer.max_score * result.score_ratio, 4)
+        answer.is_correct = result.is_correct
+        answer.feedback = result.feedback
+        answer.grading_status = (
+            AnswerGradingStatus.AI.value
+            if result.grading_mode == "ai"
+            else AnswerGradingStatus.AUTO_FALLBACK.value
+        )
+        answer.graded_at = self._now()
+        try:
+            self._project_answer_evidence(attempt, answer)
+            self._recalculate_attempt(attempt)
+            self._db.commit()
+        except Exception:
+            self._db.rollback()
+            raise
+        return self._summary_out(attempt)
+
     def get_result(self, attempt_id: str, learner_id: str) -> AttemptResultOut:
         attempt = self._require_attempt(attempt_id, learner_id)
         if attempt.status == AttemptStatus.IN_PROGRESS.value:
@@ -719,6 +764,12 @@ class ExamService:
                 answer.grading_status = AnswerGradingStatus.PENDING_MANUAL.value
                 answer.feedback = "等待人工批阅"
                 continue
+            if outcome.pending_ai:
+                answer.awarded_score = None
+                answer.is_correct = None
+                answer.grading_status = AnswerGradingStatus.PENDING_AI.value
+                answer.feedback = "等待昔涟教官自动判卷"
+                continue
             ratio = outcome.score_ratio or 0.0
             answer.awarded_score = round(answer.max_score * ratio, 4)
             answer.is_correct = outcome.is_correct
@@ -784,7 +835,11 @@ class ExamService:
             sum(
                 answer.max_score
                 for answer in answers
-                if answer.grading_status == AnswerGradingStatus.PENDING_MANUAL.value
+                if answer.grading_status
+                in {
+                    AnswerGradingStatus.PENDING_MANUAL.value,
+                    AnswerGradingStatus.PENDING_AI.value,
+                }
             ),
             4,
         )
