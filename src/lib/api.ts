@@ -7,6 +7,10 @@ import axios, {
 } from 'axios';
 import { getRuntimeConfig } from '@/config/runtime';
 
+export function shouldReportApiError(error: AxiosError): boolean {
+  return error.code !== 'ERR_CANCELED' && !axios.isCancel(error);
+}
+
 class ApiClient {
   private instance: AxiosInstance;
   constructor(baseURL: string = '') {
@@ -35,6 +39,7 @@ class ApiClient {
         return response;
       },
       (error: AxiosError) => {
+        if (!shouldReportApiError(error)) return Promise.reject(error);
         if (error.response) {
           // HTTP error status from server
           const { status } = error.response;
