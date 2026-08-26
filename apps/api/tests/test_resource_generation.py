@@ -48,14 +48,27 @@ def test_all_resource_types_are_deterministic_and_source_grounded(
 
     assert first == second
     assert first.resource_type == resource_type
-    assert first.format == "markdown"
+    assert first.format == (
+        "presentation" if resource_type is ResourceType.PRESENTATION else "markdown"
+    )
     assert first.generation_mode == "course_template"
     assert first.source_sections == ["定义与判断", "解决思路"]
-    assert first.filename == f"kp-deadlock-{resource_type.value}.md"
+    expected_extension = "pptx" if resource_type is ResourceType.PRESENTATION else "md"
+    assert first.filename == f"kp-deadlock-{resource_type.value}.{expected_extension}"
     assert "死锁入门" in first.title
     assert "定义与判断" in first.content
     assert "解决思路" in first.content
     assert "基于课程材料" in first.content
+
+
+def test_presentation_contains_real_structured_slide_content() -> None:
+    presentation = generate(ResourceType.PRESENTATION)
+
+    assert presentation.format == "presentation"
+    assert len(presentation.slides) >= 5
+    assert presentation.slides[0].layout == "title"
+    assert presentation.slides[-1].title == "课程来源"
+    assert presentation.slides[-1].bullets == ["定义与判断", "解决思路"]
 
 
 def test_study_sheet_uses_full_sections_and_checklist() -> None:

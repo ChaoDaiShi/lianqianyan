@@ -13,6 +13,8 @@ describe('ResourceGenerator presentation', () => {
     expect(html).toContain('章节自测');
     expect(html).toContain('思维导图');
     expect(html).toContain('学习计划');
+    expect(html).toContain('课堂 PPT');
+    expect(html).toContain('真实 .pptx');
     expect(html).toContain('基于课程材料模板生成');
     expect(html).toContain('生成学习资源');
     expect(html).not.toContain('AI 自动生成');

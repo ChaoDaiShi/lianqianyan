@@ -10,7 +10,7 @@ import {
 } from './workshopPresentation';
 
 describe('learning workshop presentation model', () => {
-  it('uses the five backend knowledge points and five unique resource types', () => {
+  it('uses the five backend knowledge points and six unique resource types', () => {
     expect(WORKSHOP_KNOWLEDGE_POINTS.map((item) => item.id)).toEqual([
       'kp-process-concept',
       'kp-process-sync',
@@ -18,7 +18,8 @@ describe('learning workshop presentation model', () => {
       'kp-deadlock',
       'kp-scheduling',
     ]);
-    expect(new Set(RESOURCE_TYPES.map((item) => item.value)).size).toBe(5);
+    expect(new Set(RESOURCE_TYPES.map((item) => item.value)).size).toBe(6);
+    expect(RESOURCE_TYPES.some((item) => item.value === 'presentation')).toBe(true);
   });
 
   it('provides one successful and one intentionally broken compiler example', () => {
@@ -47,6 +48,7 @@ describe('learning workshop presentation model', () => {
       generationMode: 'course_template',
       sourceSections: ['定义'],
       filename: 'kp-deadlock-study_sheet.md',
+      slides: [],
     };
     const click = vi.fn();
     const remove = vi.fn();

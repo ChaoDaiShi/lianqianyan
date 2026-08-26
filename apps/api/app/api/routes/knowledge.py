@@ -7,6 +7,8 @@ from app.knowledge import (
     KnowledgeRepository,
     KnowledgeSearchRequest,
     KnowledgeSearchResponse,
+    KnowledgeGraphGenerator,
+    KnowledgeGraphOut,
     LexicalKnowledgeRetriever,
 )
 
@@ -22,6 +24,11 @@ def search(payload: KnowledgeSearchRequest) -> KnowledgeSearchResponse:
         payload.top_k,
     )
     return KnowledgeSearchResponse(results=results)
+
+
+@router.get("/graph", response_model=KnowledgeGraphOut)
+def graph(course_id: str = Query(default="course-os", min_length=1)) -> KnowledgeGraphOut:
+    return KnowledgeGraphGenerator().generate(course_id)
 
 
 @router.get("/points/{knowledge_point_id}", response_model=KnowledgePointContent)

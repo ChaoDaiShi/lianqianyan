@@ -5,6 +5,7 @@ import re
 from app.knowledge import KnowledgePointContent, KnowledgeRepository
 from app.resources.models import (
     GeneratedResource,
+    PresentationSlide,
     ResourceGenerationRequest,
     ResourceType,
 )
@@ -15,6 +16,7 @@ _TYPE_LABELS: dict[ResourceType, str] = {
     ResourceType.QUIZ: "章节自测",
     ResourceType.MIND_MAP: "思维导图",
     ResourceType.STUDY_PLAN: "章节学习计划",
+    ResourceType.PRESENTATION: "课堂演示文稿",
 }
 _SOURCE_NOTICE = (
     "> 生成说明：本资源基于课程材料模板生成，只整理下列来源章节，不补充外部事实。"
@@ -41,7 +43,8 @@ def _excerpt(text: str, limit: int = 240) -> str:
 
 def _filename(knowledge_point_id: str, resource_type: ResourceType) -> str:
     safe_id = _SAFE_FILENAME.sub("-", knowledge_point_id).strip("-") or "resource"
-    return f"{safe_id}-{resource_type.value}.md"
+    extension = "pptx" if resource_type is ResourceType.PRESENTATION else "md"
+    return f"{safe_id}-{resource_type.value}.{extension}"
 
 
 class ResourceGenerationService:
@@ -62,14 +65,26 @@ class ResourceGenerationService:
             ResourceType.QUIZ: self._quiz,
             ResourceType.MIND_MAP: self._mind_map,
             ResourceType.STUDY_PLAN: self._study_plan,
+            ResourceType.PRESENTATION: self._presentation_preview,
         }
         label = _TYPE_LABELS[request.resource_type]
+        slides = (
+            self._presentation_slides(point)
+            if request.resource_type is ResourceType.PRESENTATION
+            else []
+        )
         return GeneratedResource(
             title=f"{point.title} · {label}",
             resource_type=request.resource_type,
             content=renderers[request.resource_type](point, label),
+            format=(
+                "presentation"
+                if request.resource_type is ResourceType.PRESENTATION
+                else "markdown"
+            ),
             source_sections=[section.title for section in point.sections],
             filename=_filename(request.knowledge_point_id, request.resource_type),
+            slides=slides,
         )
 
     @staticmethod
@@ -141,3 +156,66 @@ class ResourceGenerationService:
                 ]
             )
         return "\n".join(lines).rstrip() + "\n"
+
+    def _presentation_preview(self, point: KnowledgePointContent, label: str) -> str:
+        lines = self._header(point, label)
+        for index, slide in enumerate(self._presentation_slides(point), start=1):
+            lines.extend([f"## 幻灯片 {index} · {slide.title}", ""])
+            if slide.subtitle:
+                lines.extend([slide.subtitle, ""])
+            lines.extend(f"- {bullet}" for bullet in slide.bullets)
+            lines.append("")
+        return "\n".join(lines).rstrip() + "\n"
+
+    def _presentation_slides(self, point: KnowledgePointContent) -> list[PresentationSlide]:
+        slides = [
+            PresentationSlide(
+                layout="title",
+                title=point.title,
+                subtitle="昔涟教官 · 课程材料驱动课堂演示",
+                speaker_notes="本演示仅重组已加载的课程材料。",
+            ),
+            PresentationSlide(
+                layout="content",
+                title="学习目标",
+                bullets=[f"理解「{section.title}」" for section in point.sections],
+                speaker_notes="先说明本节课完成标准。",
+            ),
+        ]
+        for section in point.sections:
+            sentences = [
+                _normalize(sentence)
+                for sentence in _SENTENCE_BOUNDARY.split(section.content)
+                if _normalize(sentence)
+            ][:5]
+            slides.append(
+                PresentationSlide(
+                    layout="content",
+                    title=section.title,
+                    bullets=sentences or [_excerpt(section.content)],
+                    speaker_notes=f"来源章节：{section.title}",
+                )
+            )
+        slides.extend(
+            [
+                PresentationSlide(
+                    layout="question",
+                    title="课堂检查",
+                    bullets=[f"请用自己的话解释「{section.title}」。" for section in point.sections[:3]],
+                    speaker_notes="让学生先回答，再展示课程材料要点。",
+                ),
+                PresentationSlide(
+                    layout="summary",
+                    title="总结与下一步",
+                    bullets=[f"复述：{section.title}" for section in point.sections],
+                    speaker_notes="根据回答结果安排练习或考试。",
+                ),
+                PresentationSlide(
+                    layout="sources",
+                    title="课程来源",
+                    bullets=[section.title for section in point.sections],
+                    speaker_notes="所有内容均来自这些课程章节。",
+                ),
+            ]
+        )
+        return slides

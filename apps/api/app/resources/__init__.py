@@ -2,6 +2,7 @@ from app.resources.models import (
     GeneratedResource,
     ResourceGenerationRequest,
     ResourceType,
+    PresentationSlide,
 )
 from app.resources.service import (
     KnowledgeResourceNotFound,
@@ -14,4 +15,5 @@ __all__ = [
     "ResourceGenerationRequest",
     "ResourceGenerationService",
     "ResourceType",
+    "PresentationSlide",
 ]

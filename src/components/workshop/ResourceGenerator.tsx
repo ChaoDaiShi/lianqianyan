@@ -14,6 +14,7 @@ import {
   type ResourceType,
 } from '@/lib/educationApi';
 import { ACTIVE_COURSE_ID } from '@/store';
+import { downloadPresentation } from '@/lib/presentationExport';
 import {
   downloadMarkdown,
   RESOURCE_TYPES,
@@ -63,6 +64,19 @@ export function ResourceGenerator() {
     } catch {
       setCopyStatus('failed');
     }
+  };
+
+  const downloadResource = async () => {
+    if (!resource) return;
+    if (resource.format === 'presentation') {
+      try {
+        await downloadPresentation(resource);
+      } catch {
+        setCopyStatus('failed');
+      }
+      return;
+    }
+    downloadMarkdown(resource);
   };
 
   return (
@@ -149,13 +163,13 @@ export function ResourceGenerator() {
                     基于课程材料模板生成
                   </span>
                   <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-primary-700">
-                    Markdown
+                    {resource.format === 'presentation' ? 'PPTX' : 'Markdown'}
                   </span>
                 </div>
                 <h3 className="mt-3 text-xl font-bold">{resource.title}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button
+                {resource.format === 'markdown' && <Button
                   type="button"
                   size="sm"
                   variant="outline"
@@ -163,15 +177,15 @@ export function ResourceGenerator() {
                   className="gap-1.5 rounded-xl bg-white/70"
                 >
                   <Copy className="h-3.5 w-3.5" />复制 Markdown
-                </Button>
+                </Button>}
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
-                  onClick={() => downloadMarkdown(resource)}
+                  onClick={() => void downloadResource()}
                   className="gap-1.5 rounded-xl bg-white/70"
                 >
-                  <Download className="h-3.5 w-3.5" />下载 .md
+                  <Download className="h-3.5 w-3.5" />{resource.format === 'presentation' ? '下载真实 .pptx' : '下载 .md'}
                 </Button>
               </div>
             </div>

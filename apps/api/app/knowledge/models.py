@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -63,3 +65,27 @@ class KnowledgePointContent(BaseModel):
     knowledge_point_id: str
     title: str
     sections: list[KnowledgeSection] = Field(default_factory=list)
+
+
+class KnowledgeGraphNode(BaseModel):
+    id: str
+    label: str
+    kind: Literal["course", "knowledge_point", "section"]
+    knowledge_point_id: str | None = None
+    source_sections: list[str] = Field(default_factory=list)
+
+
+class KnowledgeGraphEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+    relation: Literal["contains", "explains", "precedes"]
+    source_sections: list[str] = Field(default_factory=list)
+
+
+class KnowledgeGraphOut(BaseModel):
+    course_id: str
+    generation_mode: Literal["course_grounded"] = "course_grounded"
+    nodes: list[KnowledgeGraphNode] = Field(default_factory=list)
+    edges: list[KnowledgeGraphEdge] = Field(default_factory=list)
+    sources: list[str] = Field(default_factory=list)

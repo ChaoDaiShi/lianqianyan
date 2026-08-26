@@ -22,6 +22,7 @@ export const RESOURCE_TYPES: ReadonlyArray<{
   { value: 'quiz', label: '章节自测', description: '开放题与来源要点' },
   { value: 'mind_map', label: '思维导图', description: '课程章节层级梳理' },
   { value: 'study_plan', label: '学习计划', description: '按章节推进的任务表' },
+  { value: 'presentation', label: '课堂 PPT', description: '生成结构化预览与真实 .pptx' },
 ];
 
 export const COMPILER_EXAMPLES = [

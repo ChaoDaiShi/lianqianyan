@@ -223,16 +223,50 @@ export type ResourceType =
   | 'flashcards'
   | 'quiz'
   | 'mind_map'
-  | 'study_plan';
+  | 'study_plan'
+  | 'presentation';
+
+export interface PresentationSlide {
+  layout: 'title' | 'content' | 'question' | 'summary' | 'sources';
+  title: string;
+  subtitle: string;
+  bullets: string[];
+  speakerNotes: string;
+}
 
 export interface GeneratedResource {
   title: string;
   resourceType: ResourceType;
-  format: 'markdown';
+  format: 'markdown' | 'presentation';
   content: string;
   generationMode: 'course_template';
   sourceSections: string[];
   filename: string;
+  slides: PresentationSlide[];
+}
+
+export interface KnowledgeGraphNode {
+  id: string;
+  label: string;
+  kind: 'course' | 'knowledge_point' | 'section';
+  knowledgePointId: string | null;
+  sourceSections: string[];
+}
+
+export interface KnowledgeGraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  relation: 'contains' | 'explains' | 'precedes';
+  sourceSections: string[];
+}
+
+export interface KnowledgeGraphData {
+  courseId: string;
+  generationMode: 'course_grounded';
+  nodes: KnowledgeGraphNode[];
+  edges: KnowledgeGraphEdge[];
+  sources: string[];
 }
 
 export type AgentCapability = 'diagnosis' | 'planning' | 'tutoring' | 'assessment';
@@ -433,11 +467,21 @@ export function mapGeneratedResource(
   return {
     title: raw['title'] as string,
     resourceType: raw['resource_type'] as ResourceType,
-    format: raw['format'] as 'markdown',
+    format: raw['format'] as GeneratedResource['format'],
     content: raw['content'] as string,
     generationMode: raw['generation_mode'] as 'course_template',
     sourceSections: (raw['source_sections'] as string[]) ?? [],
     filename: raw['filename'] as string,
+    slides: ((raw['slides'] as unknown[]) ?? []).map((item) => {
+      const slide = item as Record<string, unknown>;
+      return {
+        layout: slide['layout'] as PresentationSlide['layout'],
+        title: slide['title'] as string,
+        subtitle: (slide['subtitle'] as string) ?? '',
+        bullets: (slide['bullets'] as string[]) ?? [],
+        speakerNotes: (slide['speaker_notes'] as string) ?? '',
+      };
+    }),
   };
 }
 
@@ -483,6 +527,40 @@ export async function searchKnowledge(params: {
       source: value['source'] as string,
     };
   });
+}
+
+export async function fetchKnowledgeGraph(
+  courseId: string,
+): Promise<KnowledgeGraphData> {
+  const response = await api.get<Record<string, unknown>>('/api/knowledge/graph', {
+    params: { course_id: courseId },
+  });
+  const raw = extractApiData(response);
+  return {
+    courseId: raw['course_id'] as string,
+    generationMode: raw['generation_mode'] as 'course_grounded',
+    nodes: ((raw['nodes'] as unknown[]) ?? []).map((item) => {
+      const node = item as Record<string, unknown>;
+      return {
+        id: node['id'] as string,
+        label: node['label'] as string,
+        kind: node['kind'] as KnowledgeGraphNode['kind'],
+        knowledgePointId: (node['knowledge_point_id'] as string | null) ?? null,
+        sourceSections: (node['source_sections'] as string[]) ?? [],
+      };
+    }),
+    edges: ((raw['edges'] as unknown[]) ?? []).map((item) => {
+      const edge = item as Record<string, unknown>;
+      return {
+        id: edge['id'] as string,
+        source: edge['source'] as string,
+        target: edge['target'] as string,
+        relation: edge['relation'] as KnowledgeGraphEdge['relation'],
+        sourceSections: (edge['source_sections'] as string[]) ?? [],
+      };
+    }),
+    sources: (raw['sources'] as string[]) ?? [],
+  };
 }
 
 export async function fetchKnowledgePoint(
