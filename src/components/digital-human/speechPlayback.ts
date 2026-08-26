@@ -1,3 +1,8 @@
+import type {
+  RemoteVoiceProvider,
+  VoiceOutputProvider,
+} from '@/lib/voiceApi';
+
 export type VoiceMode = 'cyrene' | 'browser_fallback' | 'unavailable';
 
 export interface VoicePlaybackResult {
@@ -19,6 +24,15 @@ export function selectVoiceMode(
 ): VoiceMode {
   if (cyreneConfigured) return 'cyrene';
   return browserSupported ? 'browser_fallback' : 'unavailable';
+}
+
+export function selectOutputProvider(
+  mode: VoiceMode,
+  remoteProvider: RemoteVoiceProvider | null,
+): VoiceOutputProvider {
+  if (mode === 'cyrene') return remoteProvider ?? 'unavailable';
+  if (mode === 'browser_fallback') return 'browser_speech';
+  return 'unavailable';
 }
 
 function isAbortError(error: unknown): boolean {

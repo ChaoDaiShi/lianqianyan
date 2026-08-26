@@ -281,7 +281,7 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
         <p className="mt-3 text-[10px] text-[var(--em-muted-ink)]">
           服务端截止时间：{new Date(expiresAt).toLocaleString('zh-CN')}。页面倒计时仅作提示，刷新后可继续未过期作答。
         </p>
-        <VoiceAttributionNotice mode={speech.mode} error={speech.error} className="mt-3" />
+        <VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} className="mt-3" />
       </GlassPanel>
 
       {attempt.questions.map((question) => {

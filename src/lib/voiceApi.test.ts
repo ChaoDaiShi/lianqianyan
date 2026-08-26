@@ -41,6 +41,23 @@ describe('voice API', () => {
     });
   });
 
+  it('maps the local Genie-TTS sidecar status', async () => {
+    getMock.mockResolvedValue({
+      data: {
+        provider: 'genie_tts',
+        voice: 'cyrene',
+        configured: true,
+        fallback: 'browser_speech',
+        attribution: 'required attribution',
+      },
+    } as never);
+
+    await expect(fetchVoiceStatus()).resolves.toMatchObject({
+      provider: 'genie_tts',
+      configured: true,
+    });
+  });
+
   it('requests a WAV blob without sending reference paths to the browser', async () => {
     const signal = new AbortController().signal;
     const wav = new Blob(['RIFF-test'], { type: 'audio/wav' });

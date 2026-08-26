@@ -118,7 +118,7 @@ export function SpaceTutor({
       </div>
 
       {quickQuestions && quickQuestions.length > 0 && <div className="flex flex-wrap gap-1.5 border-t border-violet-100 px-4 py-3">{quickQuestions.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question)} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
-      <VoiceAttributionNotice mode={speech.mode} error={speech.error} className="mx-3 mb-3" />
+      <VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} className="mx-3 mb-3" />
       <form className="flex items-start gap-2 border-t border-violet-100 p-3" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={`问问小涟「${topic}」…`} className="h-9 rounded-xl bg-white/70 text-[13px]" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" size="icon" className="h-9 w-9 shrink-0 rounded-xl bg-primary-500" disabled={pending || !input.trim()} aria-label="发送"><Send className="h-3.5 w-3.5" /></Button></form>
     </GlassPanel>
   );

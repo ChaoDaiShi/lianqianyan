@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   playSpeechWithFallback,
+  selectOutputProvider,
   selectVoiceMode,
 } from './speechPlayback';
 
@@ -16,6 +17,18 @@ describe('selectVoiceMode', () => {
       expect(selectVoiceMode(configured, browserSupported)).toBe(expected);
     },
   );
+});
+
+describe('selectOutputProvider', () => {
+  it.each([
+    ['cyrene', 'genie_tts', 'genie_tts'],
+    ['cyrene', 'gpt_sovits', 'gpt_sovits'],
+    ['cyrene', null, 'unavailable'],
+    ['browser_fallback', 'genie_tts', 'browser_speech'],
+    ['unavailable', 'genie_tts', 'unavailable'],
+  ] as const)('maps mode=%s remote=%s to %s', (mode, remote, expected) => {
+    expect(selectOutputProvider(mode, remote)).toBe(expected);
+  });
 });
 
 describe('playSpeechWithFallback', () => {

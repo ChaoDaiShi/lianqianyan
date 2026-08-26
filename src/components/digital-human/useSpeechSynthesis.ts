@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchVoiceStatus, synthesizeCyreneSpeech } from '@/lib/voiceApi';
+import {
+  fetchVoiceStatus,
+  synthesizeCyreneSpeech,
+  type RemoteVoiceProvider,
+  type VoiceOutputProvider,
+} from '@/lib/voiceApi';
 import { cleanSpeechText, pickChineseVoice } from './speech';
 import {
   playSpeechWithFallback,
+  selectOutputProvider,
   selectVoiceMode,
   type VoiceMode,
 } from './speechPlayback';
@@ -11,6 +17,7 @@ export interface SpeechSynthesisController {
   supported: boolean;
   speaking: boolean;
   mode: VoiceMode;
+  provider: VoiceOutputProvider;
   error: string | null;
   speak: (text: string) => void;
   stop: () => void;
@@ -27,6 +34,11 @@ function browserSupportsSpeech(): boolean {
 export function useSpeechSynthesis(): SpeechSynthesisController {
   const [browserSupported] = useState(browserSupportsSpeech);
   const [cyreneConfigured, setCyreneConfigured] = useState(false);
+  const [remoteProvider, setRemoteProvider] =
+    useState<RemoteVoiceProvider | null>(null);
+  const [provider, setProvider] = useState<VoiceOutputProvider>(() =>
+    browserSupportsSpeech() ? 'browser_speech' : 'unavailable',
+  );
   const [mode, setMode] = useState<VoiceMode>(() =>
     selectVoiceMode(false, browserSupportsSpeech()),
   );
@@ -68,11 +80,20 @@ export function useSpeechSynthesis(): SpeechSynthesisController {
       .then((status) => {
         setCyreneConfigured(status.configured);
         setMode(selectVoiceMode(status.configured, browserSupported));
+        if (status.configured && status.provider !== 'unavailable') {
+          setRemoteProvider(status.provider);
+          setProvider(status.provider);
+        } else {
+          setRemoteProvider(null);
+          setProvider(browserSupported ? 'browser_speech' : 'unavailable');
+        }
       })
       .catch(() => {
         if (controller.signal.aborted) return;
         setCyreneConfigured(false);
+        setRemoteProvider(null);
         setMode(selectVoiceMode(false, browserSupported));
+        setProvider(browserSupported ? 'browser_speech' : 'unavailable');
         setError('无法读取昔涟语音服务状态，已按本机能力降级。');
       });
     return () => controller.abort();
@@ -143,6 +164,7 @@ export function useSpeechSynthesis(): SpeechSynthesisController {
         .then((result) => {
           if (generation !== generationRef.current) return;
           setMode(result.mode);
+          setProvider(selectOutputProvider(result.mode, remoteProvider));
           setError(result.error);
           if (result.mode === 'unavailable') setSpeaking(false);
         })
@@ -155,6 +177,7 @@ export function useSpeechSynthesis(): SpeechSynthesisController {
       browserSupported,
       cyreneConfigured,
       releaseRemoteAudio,
+      remoteProvider,
       stop,
     ],
   );
@@ -176,6 +199,7 @@ export function useSpeechSynthesis(): SpeechSynthesisController {
     supported: mode !== 'unavailable',
     speaking,
     mode,
+    provider,
     error,
     speak,
     stop,

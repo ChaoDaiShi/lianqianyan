@@ -11,6 +11,7 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
     supported: true,
     speaking: true,
     mode: 'cyrene',
+    provider: 'genie_tts',
     error: null,
     speak: vi.fn(),
     stop: vi.fn(),
@@ -39,7 +40,7 @@ describe('SpaceTutor digital-human speech', () => {
     );
 
     expect(html).toContain('昔涟讲解');
-    expect(html).toContain('当前输出：昔涟 GPT-SoVITS');
+    expect(html).toContain('当前输出：昔涟 Genie-TTS');
     expect(html).toContain('推理包作者为红血球AE3803和白菜工厂1145号员工');
     expect(html).toContain('语音输入');
     expect(html).toContain('data-live2d-speaking="true"');

@@ -8,6 +8,7 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
     supported: true,
     speaking: false,
     mode: 'cyrene',
+    provider: 'genie_tts',
     error: null,
     speak: vi.fn(),
     stop: vi.fn(),
@@ -73,7 +74,7 @@ describe('ExamRunner', () => {
     expect(html).toContain('死锁的必要条件是');
     expect(html).toContain('解释死锁避免');
     expect(html).toContain('昔涟讲解');
-    expect(html).toContain('当前输出：昔涟 GPT-SoVITS');
+    expect(html).toContain('当前输出：昔涟 Genie-TTS');
     expect(html).toContain('自练作者为KearDawn');
     expect(html).toContain('语音输入');
     expect(html).toContain('确认文字后再交卷');
