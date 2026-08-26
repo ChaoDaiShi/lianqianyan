@@ -22,6 +22,7 @@ from app.api.routes import (
     system,
     tools,
     tutor,
+    voice,
 )
 
 api_router = APIRouter(prefix="/api")
@@ -42,3 +43,4 @@ api_router.include_router(agents.router)
 api_router.include_router(assessment.router)
 api_router.include_router(reports.router)
 api_router.include_router(tutor.router)
+api_router.include_router(voice.router)

@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     llm_api_key: str | None = None
     llm_model: str | None = None
     llm_timeout: float = 20.0
+    tts_base_url: str | None = None
+    tts_reference_audio_path: str | None = None
+    tts_reference_text: str | None = None
+    tts_timeout: float = 60.0
+    tts_max_audio_bytes: int = 20_000_000
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     model_config = SettingsConfigDict(env_prefix="EDUCATION_", env_file=".env", extra="ignore")
@@ -44,6 +49,31 @@ class Settings(BaseSettings):
             if normalized not in origins:
                 origins.append(normalized)
         return origins
+
+    def normalized_tts_base_url(self) -> str | None:
+        """Return a safe absolute GPT-SOVITS service URL from server config."""
+        candidate = (self.tts_base_url or "").strip().rstrip("/")
+        if not candidate:
+            return None
+        parsed = urlsplit(candidate)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+        ):
+            return None
+        return candidate
+
+    def tts_configured(self) -> bool:
+        """Require every server-owned value needed by GPT-SOVITS V2."""
+        return bool(
+            self.normalized_tts_base_url()
+            and (self.tts_reference_audio_path or "").strip()
+            and (self.tts_reference_text or "").strip()
+        )
 
 
 @lru_cache
