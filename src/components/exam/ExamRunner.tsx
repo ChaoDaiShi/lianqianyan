@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { SpeechControls } from '@/components/digital-human/SpeechControls';
+import { VoiceAttributionNotice } from '@/components/digital-human/VoiceAttributionNotice';
 import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
 import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
@@ -280,6 +281,7 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
         <p className="mt-3 text-[10px] text-[var(--em-muted-ink)]">
           服务端截止时间：{new Date(expiresAt).toLocaleString('zh-CN')}。页面倒计时仅作提示，刷新后可继续未过期作答。
         </p>
+        <VoiceAttributionNotice mode={speech.mode} error={speech.error} className="mt-3" />
       </GlassPanel>
 
       {attempt.questions.map((question) => {
@@ -299,6 +301,7 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
                     text={question.prompt}
                     supported={speech.supported}
                     speaking={speech.speaking}
+                    mode={speech.mode}
                     onSpeak={speech.speak}
                     onStop={speech.stop}
                   />

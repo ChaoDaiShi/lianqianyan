@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { fetchVoiceStatus, synthesizeCyreneSpeech } from '@/lib/voiceApi';
 import { cleanSpeechText, pickChineseVoice } from './speech';
+import {
+  playSpeechWithFallback,
+  selectVoiceMode,
+  type VoiceMode,
+} from './speechPlayback';
 
 export interface SpeechSynthesisController {
   supported: boolean;
   speaking: boolean;
+  mode: VoiceMode;
+  error: string | null;
   speak: (text: string) => void;
   stop: () => void;
 }
@@ -17,54 +25,159 @@ function browserSupportsSpeech(): boolean {
 }
 
 export function useSpeechSynthesis(): SpeechSynthesisController {
-  const [supported] = useState(browserSupportsSpeech);
+  const [browserSupported] = useState(browserSupportsSpeech);
+  const [cyreneConfigured, setCyreneConfigured] = useState(false);
+  const [mode, setMode] = useState<VoiceMode>(() =>
+    selectVoiceMode(false, browserSupportsSpeech()),
+  );
+  const [error, setError] = useState<string | null>(null);
   const [speaking, setSpeaking] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const generationRef = useRef(0);
+
+  const releaseRemoteAudio = useCallback(() => {
+    const audio = audioRef.current;
+    audioRef.current = null;
+    if (audio) {
+      audio.onended = null;
+      audio.onerror = null;
+      audio.pause();
+    }
+    const audioUrl = audioUrlRef.current;
+    audioUrlRef.current = null;
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+  }, []);
 
   const stop = useCallback(() => {
-    if (!supported) return;
+    generationRef.current += 1;
+    requestRef.current?.abort();
+    requestRef.current = null;
+    releaseRemoteAudio();
     const ownedUtterance = utteranceRef.current;
     utteranceRef.current = null;
-    if (ownedUtterance) window.speechSynthesis.cancel();
+    if (ownedUtterance && browserSupported) window.speechSynthesis.cancel();
     setSpeaking(false);
-  }, [supported]);
+  }, [browserSupported, releaseRemoteAudio]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchVoiceStatus(controller.signal)
+      .then((status) => {
+        setCyreneConfigured(status.configured);
+        setMode(selectVoiceMode(status.configured, browserSupported));
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setCyreneConfigured(false);
+        setMode(selectVoiceMode(false, browserSupported));
+        setError('无法读取昔涟语音服务状态，已按本机能力降级。');
+      });
+    return () => controller.abort();
+  }, [browserSupported]);
 
   const speak = useCallback(
     (text: string) => {
-      if (!supported) return;
       const spokenText = cleanSpeechText(text);
       if (!spokenText) return;
 
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(spokenText);
-      utterance.lang = 'zh-CN';
-      utterance.rate = 0.98;
-      utterance.pitch = 1.04;
-      const voice = pickChineseVoice(window.speechSynthesis.getVoices());
-      if (voice) utterance.voice = voice;
+      stop();
+      const generation = generationRef.current;
+      setError(null);
+      setSpeaking(true);
 
       const finish = () => {
-        if (utteranceRef.current !== utterance) return;
+        if (generation !== generationRef.current) return;
+        releaseRemoteAudio();
         utteranceRef.current = null;
         setSpeaking(false);
       };
-      utterance.onend = finish;
-      utterance.onerror = finish;
-      utteranceRef.current = utterance;
-      setSpeaking(true);
-      window.speechSynthesis.speak(utterance);
+
+      const playCyrene = async (value: string) => {
+        const controller = new AbortController();
+        requestRef.current = controller;
+        try {
+          const audioBlob = await synthesizeCyreneSpeech(value, controller.signal);
+          if (generation !== generationRef.current) {
+            throw new DOMException('Speech request was stopped', 'AbortError');
+          }
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audioUrlRef.current = audioUrl;
+          audioRef.current = audio;
+          audio.onended = finish;
+          audio.onerror = finish;
+          await audio.play();
+        } catch (playbackError) {
+          releaseRemoteAudio();
+          throw playbackError;
+        } finally {
+          if (requestRef.current === controller) requestRef.current = null;
+        }
+      };
+
+      const playBrowser = (value: string) => {
+        if (!browserSupported) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(value);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.98;
+        utterance.pitch = 1.04;
+        const voice = pickChineseVoice(window.speechSynthesis.getVoices());
+        if (voice) utterance.voice = voice;
+        utterance.onend = finish;
+        utterance.onerror = finish;
+        utteranceRef.current = utterance;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      void playSpeechWithFallback({
+        text: spokenText,
+        cyreneConfigured,
+        browserSupported,
+        playCyrene,
+        playBrowser,
+      })
+        .then((result) => {
+          if (generation !== generationRef.current) return;
+          setMode(result.mode);
+          setError(result.error);
+          if (result.mode === 'unavailable') setSpeaking(false);
+        })
+        .catch(() => {
+          if (generation !== generationRef.current) return;
+          setSpeaking(false);
+        });
     },
-    [supported],
+    [
+      browserSupported,
+      cyreneConfigured,
+      releaseRemoteAudio,
+      stop,
+    ],
   );
 
   useEffect(
     () => () => {
-      if (!utteranceRef.current || !supported) return;
-      utteranceRef.current = null;
-      window.speechSynthesis.cancel();
+      generationRef.current += 1;
+      requestRef.current?.abort();
+      releaseRemoteAudio();
+      if (utteranceRef.current && browserSupported) {
+        utteranceRef.current = null;
+        window.speechSynthesis.cancel();
+      }
     },
-    [supported],
+    [browserSupported, releaseRemoteAudio],
   );
 
-  return { supported, speaking, speak, stop };
+  return {
+    supported: mode !== 'unavailable',
+    speaking,
+    mode,
+    error,
+    speak,
+    stop,
+  };
 }

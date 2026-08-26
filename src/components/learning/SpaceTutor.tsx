@@ -11,6 +11,7 @@ import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import { XiaolianMessage } from '@/components/xiaolian/XiaolianMessage';
 import { TutorExplanationCard } from './TutorExplanationCard';
 import { SpeechControls } from '@/components/digital-human/SpeechControls';
+import { VoiceAttributionNotice } from '@/components/digital-human/VoiceAttributionNotice';
 import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
 import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
@@ -111,12 +112,13 @@ export function SpaceTutor({
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((message) => <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}><div className={cn('max-w-[92%] rounded-[18px] px-3 py-2.5 text-[13px] leading-relaxed', message.role === 'user' ? 'bg-primary-500 text-white' : 'border border-violet-100 bg-white/65 text-[var(--em-ink)]')}>
           {message.response ? <TutorExplanationCard response={message.response} knowledge={knowledge ?? null} knowledgePointName={topic} /> : <>{message.role === 'assistant' && <div className="mb-1 flex items-center gap-1 text-[10px] text-primary-600"><Sparkles className="h-2.5 w-2.5" />小涟</div>}<p className="whitespace-pre-line">{message.content}</p></>}
-          {message.role === 'assistant' && <SpeechControls text={message.content} supported={speech.supported} speaking={speech.speaking} onSpeak={speech.speak} onStop={speech.stop} className="mt-2" />}
+          {message.role === 'assistant' && <SpeechControls text={message.content} supported={speech.supported} speaking={speech.speaking} mode={speech.mode} onSpeak={speech.speak} onStop={speech.stop} className="mt-2" />}
         </div></div>)}
         {pending && <div className="flex items-center gap-2 rounded-2xl bg-white/65 px-3 py-2 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />小涟正在协调学习能力…</div>}
       </div>
 
       {quickQuestions && quickQuestions.length > 0 && <div className="flex flex-wrap gap-1.5 border-t border-violet-100 px-4 py-3">{quickQuestions.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question)} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
+      <VoiceAttributionNotice mode={speech.mode} error={speech.error} className="mx-3 mb-3" />
       <form className="flex items-start gap-2 border-t border-violet-100 p-3" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={`问问小涟「${topic}」…`} className="h-9 rounded-xl bg-white/70 text-[13px]" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" size="icon" className="h-9 w-9 shrink-0 rounded-xl bg-primary-500" disabled={pending || !input.trim()} aria-label="发送"><Send className="h-3.5 w-3.5" /></Button></form>
     </GlassPanel>
   );

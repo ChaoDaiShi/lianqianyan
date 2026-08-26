@@ -12,6 +12,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import { ACTIVE_LEARNER_CONTEXT } from '@/config/learnerContext';
+import { VOICE_ATTRIBUTION } from '@/components/digital-human/voiceAttribution';
 
 export function SettingsPage() {
   const identityLabel =
@@ -43,7 +44,10 @@ export function SettingsPage() {
             <ShieldCheck className="h-5 w-5 text-emerald-700" />
             <h2 className="mt-3 text-base font-bold">隐私边界</h2>
             <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
-              不保存姓名、手机号或邮箱。语音只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到 EducationMind 后端。
+              不保存姓名、手机号或邮箱。语音输入只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到 EducationMind 后端。语音输出文字会发送到部署方配置的 GPT-SoVITS 服务，浏览器不会获得模型权重或参考音频路径。
+            </p>
+            <p className="mt-2 text-[10px] leading-5 text-[var(--em-muted-ink)]">
+              语音技术来源：{VOICE_ATTRIBUTION}
             </p>
           </GlassPanel>
         </div>

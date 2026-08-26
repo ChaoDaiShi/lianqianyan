@@ -37,6 +37,8 @@ describe('formal anonymous information pages', () => {
     expect(html).toContain('保存在当前浏览器中的匿名档案');
     expect(html).toContain('不代表账号认证');
     expect(html).toContain('原始音频不会上传');
+    expect(html).toContain('语音输出文字会发送到部署方配置的 GPT-SoVITS 服务');
+    expect(html).toContain('GPT-SOVITS项目作者为花儿不哭');
   });
 
   it('links to the embed page without competition routes', async () => {

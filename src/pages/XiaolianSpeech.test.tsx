@@ -19,6 +19,8 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
   useSpeechSynthesis: () => ({
     supported: true,
     speaking: true,
+    mode: 'cyrene',
+    error: null,
     speak: vi.fn(),
     stop: vi.fn(),
   }),
@@ -57,7 +59,9 @@ describe('XiaolianPage digital-human speech', () => {
   it('offers speech for assistant answers and drives Live2D speaking state', () => {
     const html = renderToStaticMarkup(<XiaolianPage />);
 
-    expect(html).toContain('数字人讲解');
+    expect(html).toContain('昔涟讲解');
+    expect(html).toContain('当前输出：昔涟 GPT-SoVITS');
+    expect(html).toContain('GPT-SOVITS项目作者为花儿不哭');
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
