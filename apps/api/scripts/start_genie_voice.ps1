@@ -78,8 +78,9 @@ $env:GENIE_SIDECAR_HOST = $normalizedHost
 $env:GENIE_SIDECAR_PORT = [string]$Port
 $env:GENIE_SIDECAR_MAX_AUDIO_BYTES = [string]$MaxAudioBytes
 
+$baseUrlHost = if ($normalizedHost -eq '::1') { '[::1]' } else { $normalizedHost }
 $env:EDUCATION_TTS_PROVIDER = 'genie'
-$env:EDUCATION_TTS_BASE_URL = "http://${normalizedHost}:$Port"
+$env:EDUCATION_TTS_BASE_URL = "http://${baseUrlHost}:$Port"
 $env:EDUCATION_TTS_TIMEOUT = '60'
 $env:EDUCATION_TTS_MAX_AUDIO_BYTES = [string]$MaxAudioBytes
 

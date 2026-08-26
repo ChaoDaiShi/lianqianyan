@@ -24,6 +24,7 @@ def test_launcher_is_loopback_single_worker_and_path_configurable() -> None:
     assert "127.0.0.1" in content
     assert "localhost" in content
     assert "::1" in content
+    assert "[::1]" in content
     assert "--workers" in content
     assert "'1'" in content or '"1"' in content
     assert "EDUCATION_TTS_PROVIDER" in content
