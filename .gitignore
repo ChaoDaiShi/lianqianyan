@@ -148,3 +148,4 @@ __pycache__/
 # SQLite (backend phase-1)
 *.db
 *.sqlite3
+*.db.pre-anonymous-*.bak

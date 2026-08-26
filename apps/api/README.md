@@ -1,49 +1,42 @@
-# Education API（忆涟千言—教）
+# EducationMind API
 
-「忆涟千言—教」EducationMind 的 FastAPI 后端（Education API），与 Web 前端分离。
+FastAPI 后端为无登录匿名学习站和 `/#/agent` 独立智能体页提供课程目录、学习证据、画像、诊断、计划、辅导、考试、网络检索、编译模拟与资源生成接口。
 
-## 技术栈
+## 启动
 
-- Python 3.11+
-- FastAPI + Pydantic v2
-- SQLAlchemy 2.0
-- 依赖管理：`uv`
-
-## 快速启动
-
-```bash
-cd apps/api
+```powershell
 uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-交互式文档：`http://localhost:8000/docs`
+默认数据库为当前目录下的 `education.db`。正式部署请设置绝对 `EDUCATION_DATABASE_URL`，并备份后再迁移。
+
+## 环境变量
+
+| 变量 | 作用 |
+| --- | --- |
+| `EDUCATION_DATABASE_URL` | SQLAlchemy 数据库 URL |
+| `EDUCATION_CORS_ORIGINS` | 逗号分隔的 HTTP(S) 宿主 Origin allowlist |
+| `EDUCATION_LLM_BASE_URL` | OpenAI-compatible 服务地址 |
+| `EDUCATION_LLM_API_KEY` | 外部模型密钥 |
+| `EDUCATION_LLM_MODEL` | 外部模型名 |
+| `EDUCATION_LLM_TIMEOUT` | 外部模型超时秒数 |
+
+模型三项配置不完整时 Provider 为 `unavailable`，导师服务只返回有 `fallback` 标记的课程/学习记录基础辅导，不模拟外部模型。
 
 ## 测试
 
-```bash
-uv run pytest
+```powershell
+.venv\Scripts\python.exe -m pytest tests -q
 ```
 
-## 目录结构
+全局测试边界会把应用数据库切到系统临时目录，并在结束时清理 SQLite 文件和 sidecar。
 
-```text
-apps/api/
-├── pyproject.toml
-├── tests/test_health.py
-└── app/
-    ├── main.py               # 应用入口
-    ├── core/config.py        # 配置（数据库 URL 等）
-    ├── api/                  # 路由
-    │   ├── __init__.py       # 路由聚合
-    │   └── routes/           # health / profile / diagnosis / plans / learning / practice / assessment / reports
-    ├── domain/models.py      # 领域模型（Pydantic 出入参 + SQLAlchemy 实体）
-    ├── db/session.py         # SQLAlchemy 会话
-    └── llm/                  # 统一 LLM Provider 抽象（未来接入）
+## 旧固定学习者清理
+
+```powershell
+uv run python scripts\remove_legacy_demo_learner.py --database 'D:\absolute\education.db'
+uv run python scripts\remove_legacy_demo_learner.py --database 'D:\absolute\education.db' --apply
 ```
 
-## 领域原则
-
-- **LearningEvidence（学习证据）是核心数据**；`POST /api/learning/evidence` 是核心概念入口。
-- 数据库层统一使用 SQLAlchemy，第一阶段 SQLite，未来迁移 PostgreSQL/MySQL 仅需覆盖 `EDUCATION_DATABASE_URL`。
-- LLM 仅保留抽象契约（`app/llm/provider.py`），未来接入 OpenAI-compatible / DeepSeek / Qwen。
+第一条只读盘点。第二条仅在存在精确 `demo-user-001` 关联行时先备份、后删除；不会删除课程目录或其他 learner ID。

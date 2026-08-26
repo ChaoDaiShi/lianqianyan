@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import { createReadStream, existsSync, statSync } from 'node:fs';
+import { cpSync, createReadStream, existsSync, lstatSync, statSync } from 'node:fs';
 import path from 'path';
 import appdevDesignMode from '@xagi/vite-plugin-design-mode';
 import { resolveManualChunk } from './src/config/buildChunks';
@@ -42,6 +42,7 @@ const LOCAL_ASSET_MIME: Readonly<Record<string, string>> = {
 function localLive2dPlugin(): Plugin {
   const root = path.resolve(__dirname, '.local/live2d');
   const rootPrefix = `${root}${path.sep}`;
+  const buildTarget = path.resolve(__dirname, 'dist/local-live2d');
 
   return {
     name: 'local-live2d-assets',
@@ -71,6 +72,13 @@ function localLive2dPlugin(): Plugin {
         const stream = createReadStream(absolute);
         stream.on('error', next);
         stream.pipe(response);
+      });
+    },
+    closeBundle() {
+      if (!existsSync(root)) return;
+      cpSync(root, buildTarget, {
+        recursive: true,
+        filter: (source) => !lstatSync(source).isSymbolicLink(),
       });
     },
   };

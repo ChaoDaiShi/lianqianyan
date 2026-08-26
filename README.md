@@ -1,424 +1,174 @@
-# 忆涟千言—教 · EducationMind
+# 忆涟千言—教 EducationMind
 
-> 基于学习画像、学习证据与个性化学习规划的 **AI 智能学习伙伴**。
+EducationMind 是一个无登录、以真实学习证据为核心的教育智能体应用。完整站点提供学习诊断、动态计划、知识空间、数字人讲解、练习与考试、网络检索、编译模拟、资源生成和学习档案；`/#/agent` 提供可嵌入 iframe 或 WebView 的独立小涟页面。
 
-## Phase 3-7：考试闭环、双向语音与证据画像
+当前版本不再使用比赛展示页、固定公共学习者、预置掌握度或 Mock LLM。课程与知识点属于共享目录；画像、证据、计划、练习和考试结果只会由当前匿名档案的真实操作产生。
 
-`/#/exams` 现已提供从命题到复盘的完整考试工作流，并把已评分结果接回学习证据与
-成长画像：
+## 无登录匿名模式
 
-- **自定义题型**：题型名称与说明可自定义；作答形态限定为单选、多选、判断、短文本、
-  长文本，评分策略限定为精确匹配、集合匹配、关键词评分或人工评分。用户输入不会作为
-  代码、正则或表达式执行。
-- **自定义题目与组卷**：支持关联课程知识点、选项/答案/关键词/解析、难度、默认分值，
-  并支持选题、排序、改分、草稿、发布和发布后锁定。
-- **可靠作答**：服务端截止时间、断点续答、700ms 自动保存、到期幂等交卷、稳定随机题序；
-  交卷前的学生接口不返回参考答案或解析。
-- **评分与复盘**：客观题自动评分、关键词部分评分、主观题人工批阅、待批状态、成绩历史、
-  单题反馈，以及带表格公式注入防护的 CSV 和 JSON 导出。
-- **学习闭环**：每道已评分且绑定知识点的答案生成 `exam_answer_evaluated` 证据，并经既有
-  `MasteryProjectionService` 更新掌握度；重复交卷/批阅不会重复投影同一答案。
-- **双向语音**：小涟、学习空间和考试文本题支持显式语音输入；数字人讲解支持显式播放与停止。
-  语音识别/合成依赖浏览器 Web Speech 能力与用户授权，本站后端不接收麦克风音频；具体浏览器
-  仍可能使用其厂商的在线语音服务。
-- **证据驱动画像**：学习档案加入可访问雷达图、证据覆盖环、知识点画像/考试对照和评测快照；
-  没有考试样本时显示“暂无”，绝不以 0 分代替缺失证据。
+页面启动时按以下顺序解析学习上下文：
 
-当前仍是单学习者演示环境。正式多用户部署前必须补账号体系、教师/学生 RBAC、审计日志与迁移工具；
-这些边界会在界面中明确提示，不把演示能力宣传为生产级监考平台。
+1. 部署方在页面脚本加载前提供的 `window.__EDUCATIONMIND_CONFIG__`；
+2. 当前浏览器 localStorage 中的随机匿名标识；
+3. 首次访问时生成的 `anon:<uuid>`。
 
-## Phase 3-6：Live2D 数字学姐与学习工坊
+匿名标识是数据分区键，不是认证或授权凭据。它不提供账号找回、跨设备同步、教师/学生权限隔离、监考或防作弊保证。公开互联网部署必须由宿主网关限制访问范围、写接口和请求速率，不应让不受信任的访客直接访问命题与批阅能力。
 
-当前学习主界面已把旧静态“小涟”形象替换为本地 Live2D 数字学姐，并在
-`/#/resources` 提供三个可实际操作的学习服务：
+localStorage 只保存随机匿名标识，不保存姓名、手机号或邮箱。语音识别由浏览器完成，用户确认后的文字才会发送；原始音频不会上传到 EducationMind API。
 
-- **课程资源生成**：按真实课程章节生成学习单、闪卡、测验、思维导图和学习计划，
-  返回来源章节与 UTF-8 Markdown 下载；当前明确标记为 `course_template`，不冒充外部
-  大模型创作。
-- **联网学习检索**：`POST /api/network/search` 实时访问中文或英文 Wikipedia，
-  返回摘要、来源域名和原文链接；外部结果只用于延伸阅读，不写入学习诊断、掌握度或
-  Learning Evidence。
-- **C 教学编译模拟**：`POST /api/lab/compile-simulate` 展示预处理、语法、语义、
-  链接和模拟运行五个阶段。它只解释受限 `c-edu` 子集，不调用系统编译器、不启动容器、
-  不执行用户代码或系统命令。
-- **数字人讲解**：小涟页和学习空间的回答支持显式播放/停止。语音由浏览器
-  Web Speech API 提供，Live2D 口型只在播放期间联动；浏览器不支持语音合成时会诚实
-  显示不可用状态。
+## 主要入口
 
-### 本地安装 Live2D（不进入 Git 或生产构建）
+| Hash 路由 | 用途 |
+| --- | --- |
+| `/#/` | 完整学习首页 |
+| `/#/agent` | 跨平台独立智能体页，无完整站点导航 |
+| `/#/xiaolian` | 完整站点内的小涟工作区 |
+| `/#/diagnosis` | 基于真实证据的学习诊断 |
+| `/#/my-learning` | 当前计划与学习任务 |
+| `/#/space` | 课程内容、辅导、练习和反思 |
+| `/#/exams` | 自定义题型、题库、组卷、作答、评分与复盘 |
+| `/#/resources` | 网络搜索、编译模拟和资源生成 |
+| `/#/archive` | 学习画像、证据、计划与考试成长记录 |
 
-模型版权文件与 Cubism Core 均保留在被 Git 忽略的 `.local/live2d/`，Vite 仅在
-**开发服务器**中通过 `/local-live2d/` 提供它们。仓库、提交和 `dist/` 不包含模型、
-纹理、`.moc3` 或 Cubism Core。安装脚本会限制 ZIP 路径、扩展名和解压体积，并校验
-模型清单引用：
+`/demo` 和 `/showcase` 已撤除，不再注册路由。
+
+## 本地运行
+
+### 前端
+
+项目契约只使用 pnpm：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/install-local-live2d.ps1 `
-  -ZipPath "E:\Eage Downloads\Cyrene1002_by_MomokaSono_aec2fc8eb7a411c7a8e3b8fb709eebc0.zip" `
-  -CubismCorePath "<Cubism SDK>\Core\live2dcubismcore.min.js"
-```
-
-附件 README 的版权与再分发限制优先适用于模型文件；因此本项目只支持本机预览，
-不会把该模型打包为可再分发的网站静态资源。未安装本地资源时页面保持可用，只隐藏
-Live2D 画布。
-
-## Phase 3-5：Education Tools & MCP
-
-当前 Profile、Diagnosis、Current Plan、Course Knowledge、Recent Evidence、Plan Generation 与 Dynamic Replanning 已封装为七个共享 Education Tools：内部 Agent 和外部 stdio MCP Client 都通过同一个 `EducationToolRegistry` 直接调用既有 Application Service，不通过 HTTP 自调用，也不复制业务规则。
-
-```text
-Internal Agent → Tool Registry → Application Service
-MCP Client → MCP Tool → Tool Registry → Application Service
-```
-
-- `GET /api/tools` 返回真实 Tool Definition、Pydantic input schema 与只读/可写边界；小涟页的“能力工具箱”直接消费该目录。
-- Agent Trace 区分 Agent 能力卡和真实 Tool 胶囊，只显示实际执行节点。
-- MCP Server 使用官方 Python SDK 与 stdio transport，支持 initialize、tools/list、tools/call、structuredContent、30 秒超时和清理后的错误；协议 stdout 不写普通日志。
-- 写工具只有 `generate_study_plan` 与 `replan_study_plan`；不暴露 `evaluate_practice` 或 Agent Chat MCP Tool。
-
-协议 smoke：`uv run --project apps/api python mcp/server/smoke.py`。
-
-「忆涟千言—教」不是普通 AI 聊天机器人。核心目标是把“学生现在会什么、不会什么、
-接下来应该学什么”持续地判断出来，并形成完整学习闭环：
-
-```text
-学习目标 → 学习诊断 → 个性化规划 → 学习执行 → AI 辅导
-   → 练习反馈 → 学习状态更新 → 为后续重规划提供最新学习状态
-```
-
-> **页面只是学习过程的表现层，Learning Evidence 才是 EducationMind 的核心数据。**
-
----
-
-## Current Course RAG
-
-当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `search_course_knowledge`。检索按 `course_id` 隔离，使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
-
-Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
-
-新增只读接口：
-
-- `POST /api/knowledge/search`
-- `GET /api/knowledge/points/{knowledge_point_id}?course_id=course-os`
-- `GET /api/system/llm`
-
-`POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使缺少关键词的问题仍能检索当前课程材料。
-
-- 用户对外只看到一个 AI：**小涟**（Education Agent）。
-- **Diagnosis / Planner / Tutor / Assessment Agent**：Phase 3-2 已将这些能力包装为真正执行的轻量 Agent 模块，由确定性 Orchestrator 编排；这不是完全自主 Agent Swarm。
-
----
-
-## 核心学习闭环
-
-```text
-Learning Action（开始学习 / 练习评价 / 已评分考试答案）
-   ↓
-LearningEvidence（学习证据）← 核心数据
-   ↓
-MasteryProjection
-   ↓
-MasteryRecord
-   ↓
-LearnerProfile（学习画像 · Derived Read Model）
-   ↓
-Diagnosis（学习诊断）
-   ↓
-Education Web
-```
-
-当前会进入 MasteryProjection 的评价证据来源为练习评价与已评分考试答案；
-`learning_started` 只记录行为，不改变掌握度。聊天、联网搜索、资源下载、编译模拟和
-尚未服务端持久化的复述结果不会冒充掌握度证据。
-
----
-
-## 技术架构
-
-```text
-                       EducationMind
-                            │
-            ┌───────────────┼───────────────┐
-            │               │               │
-           Web             API          MCP Server
-            │               │               │
-            └───────────────┼───────────────┘
-                            ↓
-                    Education Domain
-                            │
-        ┌───────────────────┼────────────────────┐
-        │          │        │        │           │
-     Profile    Diagnosis  Planner   Tutor    Assessment
-        │          │        │        │           │
-        └───────────────────┼────────────────────┘
-                            ↓
-                     Learning Evidence
-```
-
-| 边界 | 位置 | 技术 |
-| --- | --- | --- |
-| Web UI | `src/` | React 18 + TypeScript + Vite + React Router（hash）+ Zustand + Tailwind + Lucide |
-| Education API | `apps/api/` | Python + FastAPI + Pydantic + SQLAlchemy（uv） |
-| Education Domain | `src/domain`（TS）· `apps/api/app/domain`（Python） | 双实现、契约一致 |
-| MCP Server | `mcp/server/` | official Python MCP SDK + stdio + shared Education Tool Registry |
-
-数据库第一阶段 SQLite，保持迁移能力（SQLAlchemy 统一抽象，未来 PostgreSQL/MySQL
-仅改 `EDUCATION_DATABASE_URL`）。AI 层保留统一 LLM Provider 抽象（支持未来
-OpenAI-compatible / DeepSeek / Qwen）。
-
----
-
-## 项目目录
-
-```text
-├── src/                      # Web 前端（React Workspace 本体）
-│   ├── domain/               # 领域模型（TS）
-│   ├── mock/                 # 旧版展示数据（核心学习状态页面不再使用）
-│   ├── content/              # 集中 Demo 教学内容（非学习者状态 Mock）
-│   ├── store/                # Zustand 状态（小涟面板）
-│   ├── lib/                  # api 客户端 + 服务 + 工具
-│   ├── components/           # 导航 / 卡片 / Live2D / 学习工坊
-│   └── pages/                # 路由页面
-├── apps/api/                 # FastAPI 后端（Education API）
-├── packages/                 # 共享包（预留）
-├── mcp/server/               # stdio MCP Server（共享 Education Tool Registry）
-├── docs/                     # 架构文档
-└── README.md
-```
-
----
-
-## 快速启动
-
-### Frontend（Web）
-
-依赖与命令使用 **pnpm**：
-
-```bash
 pnpm install
-pnpm dev              # 开发服务器（默认地址见终端输出）
-pnpm build            # 生产构建
-pnpm check            # 质量门禁：tsc 类型检查 + eslint
+pnpm dev
 ```
 
-默认首页 `/#/` 即**学习首页**（忆涟千言—教 教育工作台）。
+Vite 默认监听 `http://localhost:5173`，并把 `/api` 代理到 `http://localhost:8000`。如需改变开发代理目标：
 
-### Backend（API）
+```powershell
+$env:EDUCATION_API_URL = 'http://127.0.0.1:8000'
+pnpm dev
+```
 
-依赖与虚拟环境使用 **uv**：
+### 后端
 
-```bash
-cd apps/api
-uv sync                    # 安装依赖
+```powershell
+Set-Location apps\api
+uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-交互式文档：`http://localhost:8000/docs`
+API 文档：`http://localhost:8000/docs`。
 
-```bash
-uv run pytest              # 运行测试（至少覆盖 /api/health）
+默认数据库为后端工作目录下的 `education.db`。部署时应使用绝对数据库 URL：
+
+```powershell
+$env:EDUCATION_DATABASE_URL = 'sqlite:///D:/educationmind-data/education.db'
 ```
 
----
+不要把生产 SQLite、备份、密钥或 `.env` 提交到 Git。
 
-## 当前已实现功能
+## 嵌入其他平台
 
-> **可信性原则**：EducationMind 严格区分「尚未评估」与「真实薄弱」——
-> `mastery=0 且 evidence=0 ≠ 学生完全不会`，而是 **UNASSESSED（尚未评估）**。
-> 这是前后端共同遵守的可信性原则，绝不把「未知」伪装成「0 分」或「薄弱」。
+### 直接 iframe
 
-- **学习首页 Dashboard**：真实展示课程、学习画像、诊断重点与当前学习计划；支持显式生成计划和从任务进入学习空间。
-- **我的学习**：展示当前学习计划、策略、生成时间与任务时间线；不在比赛 Web 中展开计划历史管理。
-- **智能学习空间**：任务上下文、集中 Demo 教学内容、内嵌小涟、固定高质量练习，以及真实 Mastery before → after 反馈。
-- **上下文感知 Tutor**：全局小涟页与学习空间共用 `POST /api/tutor/chat`，后端结合 Profile、Diagnosis、StudyPlan 与 Evidence 作答。
-- **考试中心**：自定义安全题型、自定义题库、草稿组卷、发布锁定、限时作答、断点续答、自动保存、自动/人工评分、成绩复盘与导出。
-- **双向语音辅助**：小涟、学习空间和考试长短文本题支持显式语音输入；数字人回答与考试题干支持显式语音讲解。
-- **学习报告**：汇总真实 Profile、Diagnosis、Current Plan、Recent Evidence 与考试 Analytics，并以可访问雷达图、覆盖环和知识点双轨条展示证据。
-- **真实状态边界**：Profile、Diagnosis、StudyPlan、Tutor Answer、Practice Evaluation 与状态变化均来自 API；API 失败不会回退 Mock Learner State。
-- **静态内容边界**：课程讲解、固定练习题和快捷问题集中在 `src/content/`，只作为教学资源。
-- **领域模型基础类型**：TS（`src/domain`）与 Python（`apps/api/app/domain`）。
-- **学习证据真实链路（已打通）**：首页「继续学习 / 开始这段学习」→ 前端 `startLearning()`
-   经 Vite 代理 → `POST /api/learning/start` → `LearningEvidenceService`/`Repository` → 持久化
-   SQLite（`learning_started` 作为行为证据**真实落盘**：该路由作为写操作业务事务边界统一提交，
-   只记录行为、不改掌握度）→ 返回 evidence id → 跳转学习空间并提示「小涟已记录本次学习开始」。
-- **掌握度投影（Phase 2B）**：真实链路从「学习行为 → LearningEvidence」升级为
-  「学习行为 → LearningEvidence → **Mastery Projection** → MasteryRecord」：
-  - `learning_started` 只是**行为证据**，不改变掌握度；
-  - `practice_answer_evaluated` 属于**评价证据**，可影响掌握度（仅这类证据计入
-    assessment `evidence_count`）；
-  - `/space` 提供「PV 操作 · 快速练习」真实练习，提交后调用
-    `POST /api/practice/evaluate`，由 `MasteryProjectionService` + `MasteryUpdatePolicy`
-    计算新掌握度并持久化到 SQLite，前端展示 before → after 与置信度；
-  - `GET /api/profile/mastery/{kp}` 读取真实掌握状态；Demo 初始 `demo-user-001 + kp-pv`
-    掌握度 `0.58` 通过 Seed 建立。
-  - **当前算法仅为基础、确定性 Mastery Update Policy**（非 AI Knowledge Tracing / BKT / DKT）。
-- **学习诊断（Phase 2C）**：真实链路从「MasteryRecord」升级为
-  「MasteryRecord + KnowledgePoint → **LearnerProfile**（Derived Read Model）→ **Diagnosis**」：
-  - `LearnerProfile` 是**请求时动态计算**的投影（Derived Read Model），**Source of Truth 是
-    MasteryRecord**，避免状态漂移；`GET /api/profile/{learner_id}?course_id=course-os`。
-  - `DiagnosisService` 由确定性 `KnowledgeDiagnosisPolicy` + `PriorityPolicy` 生成结构化诊断
-    （**不使用 LLM** 判断学生能力状态）；`GET /api/diagnosis/{learner_id}?course_id=course-os`。
-  - **严格区分「尚未评估」与「薄弱」**：`evidence_count=0` 判 `UNASSESSED`，绝不会判为 `WEAK`；
-    证据不足判 `INSUFFICIENT_EVIDENCE`。只有足够有效 assessment evidence 才判定
-    WEAK / DEVELOPING / PROFICIENT / MASTERED（阈值集中在 `DiagnosisThresholds`）。
-  - `primary_focus` 来自最高可信 `priority_score`（`priority=(1-mastery)×confidence`）；
-    未评估知识点不会成为高优先级弱点。
-  - `overall_mastery` 只聚合有足够证据的知识点（confidence 加权），UNASSESSED 不作为 0 拉低平均；
-    数据不足时返回 `null`。
-  - 前端 `/#/diagnosis` 升级为**真实学习诊断页**（状态概览 / 重点关注 / 知识点列表 / 尚未评估 /
-    小涟建议，含 loading / error / empty 状态）。
-  - 首页「需要重点关注」**完全由真实 Diagnosis 驱动**：展示 `priority_interventions` Top 3
-    （顺序沿用后端 `priority_score DESC`，前端不重排、不新造排序）；小涟建议由结构化
-    `primary_focus` 确定性生成（不调用 LLM）。严格处理 loading / ready / error / empty 四种状态：
-    **API 失败时不回退 Mock 薄弱点冒充真实诊断**，改为展示「暂时无法读取最新学习诊断 + 重新加载」；
-    未评估知识点显示「尚未评估 / --」，**绝不显示 0%**。首页只消费 `DiagnosisResult`，
-    **不在前端重新诊断**（无 `if (mastery < 0.5) weakPoints.push(...)` 之类逻辑），
-    也不突出工程 priority 数值（面向学生显示「优先关注 / 建议优先巩固」）。
-  - Demo：`course-os` 五知识点 Seed（进程基础/进程同步/PV 操作/死锁/进程调度），
-    Demo Baseline（MasteryRecord）与真实 LearningEvidence 语义分离，不伪造历史行为。
-- **诊断驱动学习计划（Phase 2D）**：真实链路从「Diagnosis」升级为
-  「Diagnosis → **StudyPlanner** → **StudyPlanDraft** → **StudyPlanPersistence** →
-  SQLite（Plan + Tasks 同一事务）」：
-  - **Planner 确定性规划**（`StudyPlannerService` + `StudyPlannerPolicy`）：
-    输入必须是结构化 DiagnosisResult（绝不自行读 Mastery 再判断）；状态 → 动作映射
-    （UNASSESSED/INSUFFICIENT_EVIDENCE → ASSESS，**未知 ≠ 薄弱，绝不 REMEDIATE**；
-    WEAK → REMEDIATE；DEVELOPING → STRENGTHEN；PROFICIENT → REVIEW；MASTERED 不进入
-    短期计划）；Action Tier（REMEDIATE < ASSESS < STRENGTHEN < REVIEW）+ primary_focus
-    优先 + priority_score 降序 + 稳定序排序；MAX_TASKS=3；时长集中配置（15/35/25/15 min）。
-    相同 Diagnosis 输入 → 相同 Plan（确定性，无 LLM）。
-  - **计划持久化**（`StudyPlanPersistenceService`）：`POST /api/plans/generate` 显式生成
-    并落库（客户端只提交 learner_id/course_id，Diagnosis/Tasks 全部服务端生成）；
-    Plan + N Tasks 同一事务，任何失败全回滚（绝不半成功）；Empty Plan
-    （全部 MASTERED → `tasks=[]` + `NO_IMMEDIATE_INTERVENTION`）是合法规划结果。
-  - **计划读取**：`GET /api/plans/{plan_id}` 返回完整 Plan + 按 order 排序的 Tasks
-    （不存在 → 404）；`GET /api/plans?learner_id=&course_id=` 返回 Plan History
-    摘要（generated_at DESC 最新在前，含 task_count，不展开全部 Tasks）。
-    读取无副作用（不自动生成/不 refresh Diagnosis/不 supersede/不写 DB）。
-  - **Provenance**：strategy / generated_at / source_diagnosis_generated_at /
-    reason_codes / action_type / source_status / source_priority_score / priority /
-    order / draft_key 全部持久化，未来 Mastery 变化后仍可解释旧计划为何这样生成。
-  - **当前计划（Phase 3-1）**：正式实现 Active 唯一性 —— `POST /api/plans/generate`
-    在**同一事务**内先 supersede 旧 ACTIVE 再落新计划，任意时刻至多一个 ACTIVE；
-    `GET /api/plans/current?learner_id=&course_id=` 读取当前 ACTIVE 计划（完整
-    Plan + Tasks；无 → 404，GET 绝不自动生成）。Web 侧 `/#/my-learning` 展示
-    **当前计划**（任务 Timeline + 「重新规划」按钮；比赛 Web 不展示历史计划管理）；首页「今日学习计划」、`/#/space`、`/#/archive`
-    全部读取 current 语义。显式 `POST /api/plans/generate` 会原子替换旧 Active 计划；练习提交后还会经过确定性的 Dynamic Replanning Policy，只有 Material Change 才自动替换当前计划。
-- **学习上下文驱动 AI Tutor（Phase 3-0）**：真实链路从「Diagnosis/Plan」升级为
-  「学生提问 → **TutorContextBuilder**（Profile / Diagnosis / StudyPlan / 最近证据，
-  全部复用既有服务，禁止重复计算）→ **集中 Prompt** → **LLM Provider 抽象** →
-  个性化回答」：
-  - `POST /api/tutor/chat`（learner_id / course_id / message）→ `TutorResponse`
-    （answer / **context_used** 解释能力 / suggested_actions / source）。
-  - **LLM Provider 抽象**：复用 `BaseLLMProvider`，当前默认 `MockTutorProvider`
-    （接口真实、确定性、上下文感知；无真实 API Key 时不绑定 OpenAI）；
-    LLM 失败 → **确定性 fallback**（`source="fallback"` 诚实标记，不伪装 LLM）。
-  - **请求级上下文**：不保存聊天历史、不建 Conversation 表（Memory System 未来接入）。
-  - Web `/#/xiaolian`：小涟聊天窗口（loading / error / 上下文徽章 / 建议动作 /
-    三个演示问题）。Demo：死锁问题引用诊断、今天学什么引用计划、PV 问题引用画像。
-- **FastAPI 学习服务**：健康检查、学习闭环、Agent、知识检索、联网检索、教学编译模拟
-  与课程资源生成路由均有请求/响应模型和测试，不再把学习工坊路由作为占位接口。
-- **统一 LLM Provider 抽象**（接口真实；当前演示使用 Mock Provider）。
-- **MCP Server**：真实 stdio Server、七个共享 Education Tools、`tools/list` / `tools/call` 与协议 smoke 已实现；不提供 `evaluate_practice`。
+不需要宿主身份映射时，可以直接使用浏览器匿名档案：
 
----
-
-## Phase 3-3 Historical Snapshot
-
-当前 Tutor/Agent 链路支持原创 `course-os` 课程材料的本地确定性检索。检索不是第五个 Agent，而是 Tutor/Assessment 前的工具步骤；响应会返回实际进入 Prompt 的课程来源，并在 trace 中标记 `search_course_knowledge`。课程知识按 `course_id` 隔离，当前使用标题、中文 n-gram 和知识点上下文 boost，不引入向量数据库、Embedding API 或网络抓取。
-
-Provider 配置仍只来自 `EDUCATION_LLM_BASE_URL`、`EDUCATION_LLM_API_KEY`、`EDUCATION_LLM_MODEL`。配置不完整时使用确定性的本地 Mock；完整配置时选择 OpenAI-compatible Provider。`GET /api/system/llm` 只返回 provider、model、configured，不返回 Key、Authorization 或 Base URL。
-
-新增只读接口：
-
-- `POST /api/knowledge/search`
-- `GET /api/knowledge/points/{knowledge_point_id}?course_id=course-os`
-- `GET /api/system/llm`
-
-`POST /api/agents/chat` 支持可选 `knowledge_point_id`，返回 `sources`、安全模型元数据和工具 trace。LearningSpace 会把当前任务知识点传给 Tutor，使“这四个条件怎么记？”等缺少关键词的问题仍能检索当前课程材料。
-
-## Phase 3-4：Dynamic Replanning & Active Plan Lifecycle
-
-Phase 3-4 closes the evidence-driven learning loop without adding an LLM call or a new Agent:
-
-```text
-Practice Evidence → Mastery Projection → Diagnosis → Candidate Plan
-  → deterministic ReplanningPolicy → keep Current or atomically replace Active Plan
+```html
+<iframe
+  src="https://learning.example.com/#/agent"
+  title="忆涟千言教育智能体"
+  style="width:100%;min-height:760px;border:0"
+  allow="microphone"
+></iframe>
 ```
 
-- `GET /api/plans/current` is the only Current Plan read model. It returns the newest Active plan, warns on legacy duplicate Active rows without mutating them, and returns 404 when none exists.
-- `POST /api/plans/replan` is an explicit deterministic replan endpoint. Practice uses the same service after its Evidence + Mastery transaction commits.
-- Practice and replanning are independent transactions. A replanning failure returns `replanning.status=failed` while preserving the committed practice evidence and mastery update.
-- Material changes are machine-readable through `PRIMARY_FOCUS_CHANGED`, `TASK_ACTION_CHANGED`, `TASK_SET_CHANGED`, `TASK_ORDER_CHANGED`, `TOP_TASK_RESOLVED`, `NO_MATERIAL_CHANGE`, and `NO_ACTIVE_PLAN`.
-- The Web Learning Space refreshes Profile, Diagnosis, and Current Plan after practice and distinguishes performed, not-needed, and failed replanning feedback.
+跨站 iframe 可能受到浏览器第三方存储策略影响。需要稳定的平台身份映射时，宿主应部署或代理同一前端，并在应用模块脚本之前注入一个不含个人信息的 opaque ID：
 
-Phase 3-2 已将教育能力组织为轻量、确定性编排的 Agent Layer：
-
-```text
-Learner State Layer
-  Mastery / Profile / Diagnosis / StudyPlan / Evidence
-                       ↓
-Education Agent Layer
-  Diagnosis Agent · Planner Agent · Tutor Agent · Assessment Agent
-                       ↓
-EducationAgentOrchestrator
-                       ↓
-XiaolianPage / LearningSpace Tutor
+```html
+<script>
+  window.__EDUCATIONMIND_CONFIG__ = {
+    learnerId: 'platform:user-42',
+    courseId: 'course-os',
+    apiBaseUrl: 'https://education-api.example.com'
+  };
+</script>
 ```
 
-- **Diagnosis Agent**：包装 `LearnerProfileService` 与 `DiagnosisService`，不复制诊断算法。
-- **Planner Agent**：普通问题读取 Current Plan；只有明确生成/重新规划时才调用 `generate_plan()`。
-- **Tutor Agent**：复用 `TutorService`、请求级 Tutor Context 和集中 Prompt，负责最终自然语言表达。
-- **Assessment Agent**：读取最近真实练习 Evidence，只解释结果，不修改 Mastery。
-- **Router**：显式 capability 优先；未指定时按确定性关键词路由，未知问题默认辅导。
-- **Orchestrator**：协作问题按 `Diagnosis → Planner → Tutor` DAG 执行；Diagnosis/Planner 使用结构化服务，最终最多一次 LLM 调用。Trace 只记录真实执行的 Agent。
+ID 允许字母、数字、点、下划线、冒号和连字符，长度为 3–128；不要放入姓名、邮箱或手机号。`apiBaseUrl` 只接受同源绝对路径或 HTTP(S) 地址。
 
-新增 `POST /api/agents/chat`，旧 `POST /api/tutor/chat` 保持兼容。Provider 配置完整时使用 OpenAI-compatible HTTP Provider，否则使用稳定的 Mock Provider：
+### 跨域 API
 
-- `EDUCATION_LLM_BASE_URL`
-- `EDUCATION_LLM_API_KEY`
-- `EDUCATION_LLM_MODEL`
-- `EDUCATION_LLM_TIMEOUT`
+后端只向明确列出的宿主 Origin 返回 CORS 许可：
 
-新 API 明确区分 `provider: mock|openai_compatible` 与 `response_mode: provider|fallback`，不再把 Mock 调用宣传为真实外部 LLM。API Key 只来自环境变量，异常日志不记录完整 Key。
+```powershell
+$env:EDUCATION_CORS_ORIGINS = 'https://portal.example.com,https://learning.example.com'
+```
 
-本阶段实现的是围绕教育能力边界封装的 Agent 模块，由统一 Orchestrator 确定性编排；不宣称完全自主 Agent Swarm。
+默认仅允许 `http://localhost:5173` 与 `http://127.0.0.1:5173`。通配符和非 HTTP(S) Origin 会被忽略。
 
----
+### 生产 API 地址
 
-## 未实现（明确不在本轮范围）
+同域部署可保持空地址，让浏览器调用 `/api`。分离部署时在构建前配置：
 
-以下能力当前**尚未实现**，不提前宣传：
+```powershell
+$env:VITE_EDUCATION_API_URL = 'https://education-api.example.com'
+pnpm build
+```
 
-- 计划历史管理 UI（后端保留 `GET /api/plans` History 能力，比赛 Web 只展示当前计划）
-- 时间轴 / deadline 驱动的定时重规划（Practice 触发的证据驱动 Dynamic Replanning 已在 Phase 3-4 实现）
-- 更多课程内容与练习题型（当前 `/space` 已提供当前计划任务 + 学习内容 + 快速练习 + 小涟助手）
-- **AI Tutor 已具备基础（Phase 3-0）**：已支持「学习上下文驱动 AI Tutor」
-  （Profile/Diagnosis/Plan 上下文 + 集中 Prompt + LLM Provider 抽象 + 确定性 fallback，
-  见上文）。Phase 3-2 进一步提供确定性 Agent Router / Orchestrator 与 OpenAI-compatible Provider；
-  无完整真实配置时仍使用 Mock Provider。**尚未实现**：聊天历史记忆持久化。
-- LLM 自动出题 / AI 判题（当前测验资源由课程模板确定性整理）
-- 费曼复述 / 错题本
-- 知识图谱 / 向量数据库（当前仅有本地确定性课程检索）
-- 完整自主 Multi-Agent Runtime
-- 服务端语音识别/合成、语音文件上传与长期保存（当前仅使用显式触发的浏览器 Web Speech）
-- 任意网站通用搜索或网页抓取（当前联网范围固定为 Wikipedia）
-- 任意语言真实编译、容器沙箱或本机代码执行（当前仅提供安全的 C 教学模拟）
-- 考试账号与教师/学生 RBAC、正式监考防作弊、批量题库导入、PDF 解析和独立管理后台
+## 外部模型
 
-> **算法描述必须真实**：当前 Mastery 使用**确定性基础更新策略**
-> （`MasteryUpdatePolicy`），Diagnosis 使用**可解释确定性规则**
-> （`KnowledgeDiagnosisPolicy` + `PriorityPolicy`），LearnerProfile 是
-> 基于 MasteryRecord 动态聚合的 **Derived Read Model**。本系统**不使用**
-> AI Knowledge Tracing / BKT / DKT / LLM 诊断 / 智能精准画像算法。
+只有三项配置都完整时才调用真实 OpenAI-compatible 服务：
 
----
+```powershell
+$env:EDUCATION_LLM_BASE_URL = 'https://llm.example.com/v1'
+$env:EDUCATION_LLM_API_KEY = '<secret>'
+$env:EDUCATION_LLM_MODEL = 'your-model'
+```
 
-## MCP 集成
+未配置时，`GET /api/system/llm` 返回 `provider: unavailable`。小涟不会伪造模型输出，而是把真实课程检索结果、画像和计划组织成确定性的基础辅导，并在 API 与界面中标记为 `fallback`。状态接口不会返回 Key、Authorization 或内部 Base URL。
 
-MCP Server 已通过官方 Python SDK 提供 stdio 协议。七个真实 Tool 的目录、输入 schema、读写边界和错误契约见 `mcp/server/docs/tools.md`；内部 Agent 与 MCP Client 共享 `EducationToolRegistry`。本轮不提供 Agent Chat、`evaluate_practice`、OAuth/RBAC 或自主无限 Tool Calling。
+## Live2D 资源
 
-> **声明**：当前版本属于 EducationMind Phase 3-7，已实现真实学习状态驱动的轻量 Agent 编排、共享 Education Tool Registry、stdio MCP Tool 协议、可选 OpenAI-compatible Provider、考试闭环与浏览器语音辅助；**不宣称**已经实现完整自主 Agent Swarm、生产级监考、知识图谱或向量数据库。
+昔涟模型和 Cubism Core 位于被 Git 忽略的 `.local/live2d/`，源文件不会进入仓库。开发服务器将其只读挂载到 `/local-live2d/`；执行 `pnpm build` 时，如果本地目录存在，构建插件会拒绝符号链接并把普通文件复制到 `dist/local-live2d/`。交付 `dist` 前仍须确认模型与 Cubism 授权允许目标平台使用。
 
-## License
+Live2D 加载失败时页面不会显示旧形象回退。构建通过并不代表模型可用，最终交付必须在真实浏览器检查模型请求、Cubism Core、可见尺寸、口型和抖动。
 
-MIT License
+## 数据初始化与旧数据退出
+
+应用启动只创建共享课程目录、知识点和内置考试元数据，不创建任何学习者掌握度、证据、计划或考试结果。
+
+先盘点旧固定学习者数据，命令必须使用绝对路径：
+
+```powershell
+Set-Location apps\api
+uv run python scripts\remove_legacy_demo_learner.py --database 'D:\educationmind-data\education.db'
+```
+
+确认输出只命中 `demo-user-001` 后再应用：
+
+```powershell
+uv run python scripts\remove_legacy_demo_learner.py --database 'D:\educationmind-data\education.db' --apply
+```
+
+apply 会先创建 `*.pre-anonymous-<UTC>.bak`，再按依赖顺序删除该 ID 的考试作答、计划任务、证据、掌握度、档案和用户行。没有匹配行时不会备份或改写数据库；其他 learner ID 和课程目录不会被删除。
+
+## 质量门禁
+
+```powershell
+pnpm test --run
+pnpm check
+pnpm build
+apps\api\.venv\Scripts\python.exe -m pytest apps/api/tests -q
+```
+
+`pnpm check` 是必需门禁，包含 TypeScript 与 ESLint。pytest 在会话开始前把应用数据库指向系统临时目录，测试结束后释放 SQLite 句柄并删除临时文件，不能触碰仓库中的运行库。
+
+## 真实能力边界
+
+- 画像、诊断、计划、练习、考试和学习档案来自 API 持久化数据；证据不足保持未知。
+- 网络搜索返回实际 Provider 状态和来源；失败不补造结果。
+- 编译实验是受约束的语义模拟器，不执行任意用户代码。
+- 资源生成基于真实课程材料与显式输入，失败不返回伪造资源。
+- 无登录版本没有账号权限；匿名 ID 不应被用作敏感信息访问控制。
+- 历史开发规格可以保留为工程记录，但不代表当前运行时能力；以现有代码、测试和浏览器验证为准。
