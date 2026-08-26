@@ -1,18 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Menu, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 export function TopCompanionBar() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-white/60 bg-white/55 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1536px] items-center justify-between px-4 sm:px-6 lg:px-10">
         <Link to="/" className="flex items-center gap-3 rounded-2xl" aria-label="返回学习首页">
-          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-primary-500 to-star text-white shadow-md"><Sparkles className="h-5 w-5" /></span>
-          <span><strong className="block text-sm text-[var(--em-ink)]">忆涟千言—教</strong><span className="block text-[10px] tracking-[0.18em] text-[var(--em-muted-ink)]">AI 学姐陪伴式学习空间</span></span>
+          <img src="/brand/cyrene-icon.jpeg" alt="昔涟教官" className="h-10 w-10 rounded-2xl border border-white object-cover object-top shadow-md" />
+          <span><strong className="block text-sm text-[var(--em-ink)]">忆涟千言—教</strong><span className="block text-[10px] tracking-[0.18em] text-[var(--em-muted-ink)]">昔涟教官 · AI 学习空间</span></span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link to="/xiaolian" className="hidden items-center gap-2 rounded-full border border-violet-100 bg-white/70 py-1 pl-1 pr-3 sm:flex">
-            <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-primary-500 to-sky-400 text-sm font-bold text-white shadow-sm">涟</span>
-            <span className="text-xs font-medium text-[var(--em-muted-ink)]">和小涟一起学习</span>
+            <img src="/brand/cyrene-icon.jpeg" alt="" className="h-8 w-8 rounded-full border border-white object-cover object-top shadow-sm" />
+            <span className="text-xs font-medium text-[var(--em-muted-ink)]">进入昔涟教官工作台</span>
           </Link>
           <Link to="/about" className="grid h-10 w-10 place-items-center rounded-2xl border border-violet-100 bg-white/70 text-[var(--em-muted-ink)] transition hover:text-primary-600" aria-label="打开更多与关于"><Menu className="h-4 w-4" /></Link>
         </div>
