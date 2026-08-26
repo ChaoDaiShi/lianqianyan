@@ -134,9 +134,9 @@ $env:EDUCATION_LLM_MODEL = 'your-model'
 
 Live2D 加载失败时页面不会显示旧形象回退。构建通过并不代表模型可用，最终交付必须在真实浏览器检查模型请求、Cubism Core、可见尺寸、口型和抖动。
 
-## 昔涟 GPT-SoVITS 语音
+## 昔涟 Genie-TTS / GPT-SoVITS 语音
 
-数字人讲解优先调用部署方运行的 GPT-SoVITS V2 非流式 `POST /tts`；未配置或调用失败时，界面会明确显示“浏览器语音（非昔涟音色）”，不会把系统语音冒充为昔涟。当前回答文本最多发送 600 个清洗后的字符，浏览器无法指定上游地址、参考音频、提示词或推理参数。接口格式以 GPT-SoVITS 官方 [`api_v2.py`](https://github.com/RVC-Boss/GPT-SoVITS/blob/main/api_v2.py) 为准。
+当前推荐链路使用本机 [High-Logic/Genie-TTS](https://github.com/High-Logic/Genie-TTS) 2.0.2 和已经转换的昔涟 V2ProPlus ONNX 模型；旧的 GPT-SoVITS V2 HTTP 链路继续作为部署兼容选项。两条链路都只能由 Education API 访问，网页最多提交 600 个清洗后的字符，不能指定模型、上游地址、参考音频、保存路径或推理参数。未配置或调用失败时，界面会明确显示“浏览器语音（非昔涟音色）”，不会把系统语音冒充为昔涟。
 
 ### 1. 安装经审计的参考音频
 
@@ -155,32 +155,71 @@ apps\api\.venv\Scripts\python.exe apps\api\scripts\install_cyrene_voice.py `
 
 固定 WAV 的 SHA-256 为 `C4D72E084DBDA5A8AECEAAFF1094656B9A6B207E46BA7024B47AFC8B61A755C6`；提示文本为“能在梦里听见朦胧的神谕，还在它的指引下前行…人家也觉得很神奇呢。”。
 
-### 2. 启动部署方的推理服务
+### 2. 校验并启动 Genie-TTS 侧车
 
-EducationMind 不内置或自动执行第三方推理包。当前用户资源目录中已发现以下模型权重，但仍需另行准备并启动与这些权重兼容的 GPT-SoVITS 推理程序：
+当前机器已审计以下运行资产：
 
-- `F:\昔涟AI-GPT-SOVITS--V2proplus\GPT-weights\CyreneV3.7-e25.ckpt`
-- `F:\昔涟AI-GPT-SOVITS--V2proplus\SoVITS-Weights\CyreneV3.7_e16_s1392.pth`
+- Genie-TTS：`F:\gpt sovites 轻量级\Genie-TTS`，本地版本 2.0.2；
+- 昔涟 ONNX：`Output\昔涟AI-GPT-SOVITS--V2proplus`，9 个文件、335,992,804 字节；
+- GenieData：中文 G2P、Chinese HuBERT 与 speaker encoder 已就绪；
+- 参考音频：`.local/voice/cyrene-reference.wav`。
 
-权重应在 GPT-SoVITS 推理服务侧加载，不能由网页加载。若 API 与推理服务位于不同主机或容器，必须把参考 WAV 只读挂载到推理服务可见的路径；`EDUCATION_TTS_REFERENCE_AUDIO_PATH` 填写的是该服务看到的路径，不一定是 EducationMind 宿主机路径。
-
-### 3. 配置 EducationMind API
+先执行只读校验。它会逐个核对模型文件大小和 SHA-256，不加载模型、不生成音频、不修改 Genie-TTS 仓库：
 
 ```powershell
+& apps\api\scripts\start_genie_voice.ps1 -ValidateOnly -PrintEducationEnvironment
+```
+
+随后在独立终端以前台方式启动侧车：
+
+```powershell
+& apps\api\scripts\start_genie_voice.ps1
+```
+
+侧车固定监听 `127.0.0.1:9881`、固定单 worker，只公开 `GET /health` 与 `POST /tts`。它不需要管理员权限，不使用 Genie-TTS 原始的模型管理/任意保存接口；每次请求串行推理到私有临时 WAV，验证 32 kHz、单声道、16 位、RIFF/WAVE 和体积后立即删除临时文件。
+
+迁移到其他 Windows 主机时覆盖路径即可，不必修改代码：
+
+```powershell
+& apps\api\scripts\start_genie_voice.ps1 `
+  -GenieRoot 'D:\voice\Genie-TTS' `
+  -ModelDirectory 'D:\voice\models\cyrene-v2pp' `
+  -ReferenceAudio 'D:\educationmind\voice\cyrene-reference.wav'
+```
+
+不要把 Genie-TTS `.venv`、`GenieData`、ONNX 模型、原始 `.ckpt`/`.pth` 或生成 WAV 提交到本仓库。当前 ONNX 已可使用，本流程不会重新反序列化原始 PyTorch 权重或重新转换模型。
+
+### 3. 配置并启动 Education API（Genie 推荐）
+
+```powershell
+$env:EDUCATION_TTS_PROVIDER = 'genie'
+$env:EDUCATION_TTS_BASE_URL = 'http://127.0.0.1:9881'
+$env:EDUCATION_TTS_TIMEOUT = '60'
+$env:EDUCATION_TTS_MAX_AUDIO_BYTES = '20000000'
+Set-Location apps\api
+uv run uvicorn app.main:app --port 8000
+```
+
+Genie 模式只需要 Provider 与侧车 URL。`GET /api/voice/status` 如实返回 `genie_tts`、`gpt_sovits` 或 `unavailable`，但不泄露内部地址或路径；`POST /api/voice/synthesize` 只接受 `{"text":"..."}` 并返回二次校验、禁止缓存的 WAV。侧车故障时请求返回安全错误，前端自动改用明确标注的浏览器语音。
+
+### 4. 旧 GPT-SoVITS V2 兼容配置
+
+未设置 `EDUCATION_TTS_PROVIDER` 时默认保持 `gpt_sovits`。兼容官方 [`api_v2.py`](https://github.com/RVC-Boss/GPT-SoVITS/blob/main/api_v2.py) 的部署仍可使用：
+
+```powershell
+$env:EDUCATION_TTS_PROVIDER = 'gpt_sovits'
 $env:EDUCATION_TTS_BASE_URL = 'http://127.0.0.1:9880'
 $env:EDUCATION_TTS_REFERENCE_AUDIO_PATH = 'F:/比赛/智能体 ican 教育skill/.local/voice/cyrene-reference.wav'
 $env:EDUCATION_TTS_REFERENCE_TEXT = '能在梦里听见朦胧的神谕，还在它的指引下前行…人家也觉得很神奇呢。'
-$env:EDUCATION_TTS_TIMEOUT = '60'
-$env:EDUCATION_TTS_MAX_AUDIO_BYTES = '20000000'
 ```
 
-三项核心配置 `BASE_URL`、`REFERENCE_AUDIO_PATH`、`REFERENCE_TEXT` 必须同时存在。`GET /api/voice/status` 只返回可用状态和署名，不泄露内部地址或路径；`POST /api/voice/synthesize` 只接受 `{"text":"..."}` 并返回不缓存的 WAV。
+这一路径仍要求 URL、参考 WAV 路径和匹配文本三项完整；远程/容器部署时，参考路径必须是 GPT-SoVITS 进程可见的只读挂载路径。
 
 语音功能的完整署名为：
 
 > GPT-SOVITS项目作者为花儿不哭，推理包作者为红血球AE3803和白菜工厂1145号员工，自练作者为KearDawn
 
-详情见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。部署方仍须自行确认参考音频、角色音色、模型权重和推理包在目标平台上的授权范围。
+Genie-TTS 运行时声明为：`Genie-TTS 2.0.2，Copyright (c) 2025 High_Logic，MIT License`。详情见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。部署方仍须自行确认参考音频、角色音色、模型权重和推理包在目标平台上的授权范围。
 
 ## 数据初始化与旧数据退出
 
