@@ -16,9 +16,9 @@ import { VOICE_ATTRIBUTION } from '@/components/digital-human/voiceAttribution';
 
 export function SettingsPage() {
   const identityLabel =
-    ACTIVE_LEARNER_CONTEXT.source === 'host'
-      ? '由宿主平台提供的匿名档案'
-      : '保存在当前浏览器中的匿名档案';
+    ACTIVE_LEARNER_CONTEXT.source === 'account'
+      ? '已认证账号档案'
+      : '未登录';
 
   return (
     <AppShell>
@@ -27,9 +27,9 @@ export function SettingsPage() {
           <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700">
             <Settings className="h-4 w-4" />RUNTIME & PRIVACY
           </p>
-          <h1 className="mt-3 text-3xl font-bold">匿名学习设置</h1>
+          <h1 className="mt-3 text-3xl font-bold">账号与学习设置</h1>
           <p className="mt-3 text-sm leading-7 text-[var(--em-muted-ink)]">
-            当前版本不要求登录。学习画像、计划、练习和考试会写入当前匿名档案；匿名标识用于数据分区，不代表账号认证。
+            当前版本使用正式账号与服务端会话。学习画像、计划、练习和考试只写入当前账号，并按已选课程隔离。
           </p>
         </GlassPanel>
         <div className="grid gap-4 sm:grid-cols-2">

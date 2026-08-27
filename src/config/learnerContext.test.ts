@@ -1,113 +1,68 @@
 import { describe, expect, it } from 'vitest';
 import type { RuntimeConfig } from './runtime';
 import {
-  ANONYMOUS_LEARNER_STORAGE_KEY,
+  AUTH_COURSE_STORAGE_KEY,
+  AUTH_LEARNER_STORAGE_KEY,
+  clearAuthenticatedContext,
   resolveLearnerContext,
+  storeAuthenticatedContext,
 } from './learnerContext';
-
-const UUID = '018f4d31-f9ef-7b3a-bf89-5a84f4d8a972';
 
 function createMemoryStorage(initial?: Record<string, string>): Storage {
   const values = new Map(Object.entries(initial ?? {}));
   return {
-    get length() {
-      return values.size;
-    },
-    clear() {
-      values.clear();
-    },
-    getItem(key) {
-      return values.get(key) ?? null;
-    },
-    key(index) {
-      return [...values.keys()][index] ?? null;
-    },
-    removeItem(key) {
-      values.delete(key);
-    },
-    setItem(key, value) {
-      values.set(key, value);
-    },
+    get length() { return values.size; },
+    clear() { values.clear(); },
+    getItem(key) { return values.get(key) ?? null; },
+    key(index) { return [...values.keys()][index] ?? null; },
+    removeItem(key) { values.delete(key); },
+    setItem(key, value) { values.set(key, value); },
   };
 }
 
-const DEFAULT_RUNTIME: RuntimeConfig = {
-  hostLearnerId: null,
+const RUNTIME: RuntimeConfig = {
+  hostLearnerId: 'platform:user-42',
   courseId: 'course-os',
   apiBaseUrl: '',
 };
 
-describe('resolveLearnerContext', () => {
-  it('uses the host learner without writing browser storage', () => {
+describe('formal learner context', () => {
+  it('does not create or trust an anonymous or host learner before authentication', () => {
     const storage = createMemoryStorage();
-    expect(
-      resolveLearnerContext({
-        runtime: { ...DEFAULT_RUNTIME, hostLearnerId: 'platform:user-42' },
-        storage,
-        randomUUID: () => UUID,
-      }),
-    ).toEqual({
-      learnerId: 'platform:user-42',
-      courseId: 'course-os',
-      source: 'host',
+    expect(resolveLearnerContext({ runtime: RUNTIME, storage })).toEqual({
+      learnerId: 'signed-out',
+      courseId: 'course-unselected',
+      source: 'signed-out',
     });
     expect(storage.length).toBe(0);
   });
 
-  it('creates and reuses a browser anonymous learner', () => {
-    const storage = createMemoryStorage();
-    const first = resolveLearnerContext({
-      runtime: DEFAULT_RUNTIME,
-      storage,
-      randomUUID: () => UUID,
-    });
-    const second = resolveLearnerContext({
-      runtime: DEFAULT_RUNTIME,
-      storage,
-      randomUUID: () => 'unused',
-    });
-
-    expect(first).toEqual({
-      learnerId: `anon:${UUID}`,
-      courseId: 'course-os',
-      source: 'browser',
-    });
-    expect(second).toEqual(first);
-    expect(storage.getItem(ANONYMOUS_LEARNER_STORAGE_KEY)).toBe(
-      `anon:${UUID}`,
-    );
-  });
-
-  it('replaces an invalid stored value with a fresh anonymous learner', () => {
+  it('uses only the authenticated account and explicitly selected course', () => {
     const storage = createMemoryStorage({
-      [ANONYMOUS_LEARNER_STORAGE_KEY]: 'not an id',
+      [AUTH_LEARNER_STORAGE_KEY]: 'account-123',
+      [AUTH_COURSE_STORAGE_KEY]: 'course-os',
     });
-
-    expect(
-      resolveLearnerContext({
-        runtime: DEFAULT_RUNTIME,
-        storage,
-        randomUUID: () => UUID,
-      }).learnerId,
-    ).toBe(`anon:${UUID}`);
+    expect(resolveLearnerContext({ runtime: RUNTIME, storage })).toEqual({
+      learnerId: 'account-123',
+      courseId: 'course-os',
+      source: 'account',
+    });
   });
 
-  it('keeps a process-local id when storage is unavailable', () => {
-    const unavailableStorage = {
-      getItem() {
-        throw new DOMException('blocked');
-      },
-      setItem() {
-        throw new DOMException('blocked');
-      },
-    } as unknown as Storage;
+  it('keeps learning unavailable until both account and course are present', () => {
+    const storage = createMemoryStorage({ [AUTH_LEARNER_STORAGE_KEY]: 'account-123' });
+    expect(resolveLearnerContext({ runtime: RUNTIME, storage }).source).toBe('signed-out');
+  });
 
-    expect(
-      resolveLearnerContext({
-        runtime: DEFAULT_RUNTIME,
-        storage: unavailableStorage,
-        randomUUID: () => UUID,
-      }),
-    ).toMatchObject({ learnerId: `anon:${UUID}`, source: 'browser' });
+  it('stores and clears the formal context without retaining legacy anonymous data', () => {
+    const storage = createMemoryStorage({
+      'educationmind.anonymous-learner-id.v1': 'anon:legacy',
+    });
+    storeAuthenticatedContext(storage, 'account-123', 'course-os');
+    expect(storage.getItem(AUTH_LEARNER_STORAGE_KEY)).toBe('account-123');
+    expect(storage.getItem(AUTH_COURSE_STORAGE_KEY)).toBe('course-os');
+    expect(storage.getItem('educationmind.anonymous-learner-id.v1')).toBeNull();
+    clearAuthenticatedContext(storage);
+    expect(storage.length).toBe(0);
   });
 });

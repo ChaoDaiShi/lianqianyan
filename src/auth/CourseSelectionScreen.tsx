@@ -1,0 +1,11 @@
+import { useEffect, useState } from 'react';
+import { BookOpen, LoaderCircle } from 'lucide-react';
+import { listCourses, type CourseOption } from './authApi';
+
+export function CourseSelectionScreen({ displayName, busy, error, onSelect, onLogout }: { displayName: string; busy: boolean; error: string | null; onSelect(courseId: string): Promise<void>; onLogout(): Promise<void> }) {
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  useEffect(() => { void listCourses().then(setCourses).catch(() => setLoadError('课程目录加载失败，请刷新重试。')).finally(() => setLoading(false)); }, []);
+  return <main className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-pink-50 px-5 py-12 text-slate-800"><section className="mx-auto max-w-5xl"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-medium text-violet-600">欢迎，{displayName}</p><h1 className="mt-2 text-3xl font-semibold">选择一门课程，建立空白学习空间</h1><p className="mt-3 text-slate-500">选择只确定课程范围，不会自动生成计划、练习或成绩。</p></div><button className="text-sm text-slate-500 hover:text-violet-700" onClick={() => void onLogout()}>退出登录</button></div>{loading ? <div className="mt-24 flex justify-center"><LoaderCircle className="h-8 w-8 animate-spin text-violet-500" /></div> : loadError ? <p className="mt-12 rounded-2xl bg-rose-50 p-5 text-rose-700">{loadError}</p> : <div className="mt-10 grid gap-5 md:grid-cols-2">{courses.map((course) => <button key={course.id} disabled={busy} onClick={() => void onSelect(course.id)} className="group rounded-3xl border border-violet-100 bg-white p-7 text-left shadow-sm transition hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl disabled:opacity-60"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-violet-100 text-violet-700"><BookOpen /></span><strong className="mt-5 block text-xl">{course.name}</strong><span className="mt-2 block text-sm leading-6 text-slate-500">{course.description || '进入课程后再由你决定学习目标。'}</span></button>)}</div>}{error && <p className="mt-6 rounded-2xl bg-rose-50 p-4 text-rose-700">{error}</p>}</section></main>;
+}

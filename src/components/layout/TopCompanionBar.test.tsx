@@ -8,6 +8,13 @@ vi.mock('react-router-dom', () => ({
     <a href={to}>{children}</a>
   ),
 }));
+vi.mock('@/auth/AuthProvider', () => ({
+  useAuth: () => ({
+    account: { displayName: '测试学生' },
+    logout: vi.fn(),
+    busy: false,
+  }),
+}));
 
 describe('TopCompanionBar brand identity', () => {
   it('uses the supplied Cyrene artwork and presents Xiaolian as a senior companion', () => {
@@ -16,5 +23,7 @@ describe('TopCompanionBar brand identity', () => {
     expect(html).toContain('/brand/cyrene-icon.jpeg');
     expect(html).toContain('小涟学姐');
     expect(html).not.toContain('昔涟教官');
+    expect(html).toContain('测试学生');
+    expect(html).toContain('退出登录');
   });
 });

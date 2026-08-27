@@ -5,9 +5,9 @@ import { XiaolianWorkspace } from '@/pages/XiaolianPage';
 
 export function AgentPage() {
   const identityLabel =
-    ACTIVE_LEARNER_CONTEXT.source === 'host'
-      ? '平台匿名档案'
-      : '浏览器匿名档案';
+    ACTIVE_LEARNER_CONTEXT.source === 'account'
+      ? '正式账号学习档案'
+      : '未登录';
 
   return (
     <div
@@ -30,7 +30,7 @@ export function AgentPage() {
           </div>
           <p className="flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50/70 px-3 py-1.5 text-[10px] font-medium text-emerald-800">
             <ShieldCheck className="h-3.5 w-3.5" />
-            {identityLabel} · 不含登录凭据
+            {identityLabel} · 会话凭据由服务端保护
           </p>
         </div>
       </header>

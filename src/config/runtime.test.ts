@@ -40,7 +40,7 @@ describe('resolveRuntimeConfig', () => {
       }),
     ).toEqual({
       hostLearnerId: null,
-      courseId: 'course-os',
+      courseId: 'course-unselected',
       apiBaseUrl: '',
     });
   });

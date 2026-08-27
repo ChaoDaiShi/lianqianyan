@@ -1,91 +1,75 @@
-import {
-  getRuntimeConfig,
-  isValidContextId,
-  type RuntimeConfig,
-} from './runtime';
+import { getRuntimeConfig, isValidContextId, type RuntimeConfig } from './runtime';
 
-export const ANONYMOUS_LEARNER_STORAGE_KEY =
-  'educationmind.anonymous-learner-id.v1';
+export const AUTH_LEARNER_STORAGE_KEY = 'educationmind.auth-learner-id.v1';
+export const AUTH_COURSE_STORAGE_KEY = 'educationmind.auth-course-id.v1';
+const LEGACY_ANONYMOUS_STORAGE_KEY = 'educationmind.anonymous-learner-id.v1';
 
 export interface LearnerContext {
   learnerId: string;
   courseId: string;
-  source: 'host' | 'browser';
+  source: 'account' | 'signed-out';
 }
 
 interface LearnerContextInput {
   runtime: RuntimeConfig;
   storage: Storage | null;
-  randomUUID: () => string;
 }
 
-function createAnonymousLearnerId(randomUUID: () => string): string {
-  return `anon:${randomUUID()}`;
-}
-
-export function resolveLearnerContext({
-  runtime,
-  storage,
-  randomUUID,
-}: LearnerContextInput): LearnerContext {
-  if (runtime.hostLearnerId) {
-    return {
-      learnerId: runtime.hostLearnerId,
-      courseId: runtime.courseId,
-      source: 'host',
-    };
-  }
-
+export function resolveLearnerContext({ storage }: LearnerContextInput): LearnerContext {
   if (storage) {
     try {
-      const stored = storage.getItem(ANONYMOUS_LEARNER_STORAGE_KEY);
-      if (isValidContextId(stored) && stored.startsWith('anon:')) {
-        return {
-          learnerId: stored,
-          courseId: runtime.courseId,
-          source: 'browser',
-        };
+      const learnerId = storage.getItem(AUTH_LEARNER_STORAGE_KEY);
+      const courseId = storage.getItem(AUTH_COURSE_STORAGE_KEY);
+      if (
+        isValidContextId(learnerId) &&
+        learnerId !== 'signed-out' &&
+        !learnerId.startsWith('anon:') &&
+        isValidContextId(courseId) &&
+        courseId !== 'course-unselected'
+      ) {
+        return { learnerId, courseId, source: 'account' };
       }
     } catch {
-      // Privacy modes can block storage. The process-local fallback below remains stable.
+      // Blocked storage means no authenticated learning context is available.
     }
   }
+  return {
+    learnerId: 'signed-out',
+    courseId: 'course-unselected',
+    source: 'signed-out',
+  };
+}
 
-  const learnerId = createAnonymousLearnerId(randomUUID);
-
-  if (storage) {
-    try {
-      storage.setItem(ANONYMOUS_LEARNER_STORAGE_KEY, learnerId);
-    } catch {
-      // The in-memory identifier remains valid for this page lifetime.
-    }
+export function storeAuthenticatedContext(
+  storage: Storage,
+  learnerId: string,
+  courseId: string,
+): void {
+  if (!isValidContextId(learnerId) || learnerId.startsWith('anon:')) {
+    throw new Error('invalid authenticated learner id');
   }
+  if (!isValidContextId(courseId) || courseId === 'course-unselected') {
+    throw new Error('invalid selected course id');
+  }
+  storage.removeItem(LEGACY_ANONYMOUS_STORAGE_KEY);
+  storage.setItem(AUTH_LEARNER_STORAGE_KEY, learnerId);
+  storage.setItem(AUTH_COURSE_STORAGE_KEY, courseId);
+}
 
-  return { learnerId, courseId: runtime.courseId, source: 'browser' };
+export function clearAuthenticatedContext(storage: Storage): void {
+  storage.removeItem(AUTH_LEARNER_STORAGE_KEY);
+  storage.removeItem(AUTH_COURSE_STORAGE_KEY);
+  storage.removeItem(LEGACY_ANONYMOUS_STORAGE_KEY);
 }
 
 function browserStorage(): Storage | null {
   if (typeof window === 'undefined') return null;
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
-}
-
-function randomUUID(): string {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID();
-  }
-  const values = new Uint32Array(4);
-  globalThis.crypto.getRandomValues(values);
-  return [...values].map((value) => value.toString(16).padStart(8, '0')).join('-');
+  try { return window.localStorage; } catch { return null; }
 }
 
 export const ACTIVE_LEARNER_CONTEXT = resolveLearnerContext({
   runtime: getRuntimeConfig(),
   storage: browserStorage(),
-  randomUUID,
 });
 
 export const ACTIVE_LEARNER_ID = ACTIVE_LEARNER_CONTEXT.learnerId;

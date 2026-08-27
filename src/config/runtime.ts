@@ -1,4 +1,4 @@
-export const DEFAULT_COURSE_ID = 'course-os';
+export const DEFAULT_COURSE_ID = 'course-unselected';
 
 export interface HostRuntimeConfig {
   learnerId?: string;
