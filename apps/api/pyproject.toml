@@ -1,7 +1,7 @@
 [project]
 name = "education-api"
-version = "0.1.0"
-description = "忆涟千言—教 EducationMind —— 无登录匿名学习与教育智能体 API"
+version = "1.4.0"
+description = "忆涟千言—教 EducationMind —— 正式账号、学习与教育智能体 API"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",

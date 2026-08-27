@@ -40,10 +40,11 @@ Set-Location apps/api
 uv sync --frozen
 $env:EDUCATION_DATABASE_URL = 'sqlite:///D:/educationmind-data/education.db'
 $env:EDUCATION_CORS_ORIGINS = 'https://education.example.com'
+$env:EDUCATION_AUTH_COOKIE_SECURE = 'true'
 uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-Linux 平台可把 `EDUCATION_DATABASE_URL` 改成平台持久卷中的绝对 SQLite 路径。生产环境由 Nginx、Caddy 或平台网关提供 TLS，并将前端同域的 `/api/*` 转发到 `127.0.0.1:8000`。无登录版本仍需要持久化存储，否则重启实例会丢失匿名学生的学习档案、试卷和资源记录。
+Linux 平台可把 `EDUCATION_DATABASE_URL` 改成平台持久卷中的绝对 SQLite 路径。生产环境由 Nginx、Caddy 或平台网关提供 TLS，并将前端同域的 `/api/*` 转发到 `127.0.0.1:8000`。账号、会话与学习记录都需要持久化存储；重启实例不得更换数据库。
 
 首次启动会创建数据库表和共享课程目录，但不会创建伪造的学生进度或成绩。升级前先备份 SQLite 文件；不要让多个后端实例直接并发写同一个 SQLite 文件。需要横向扩容时，应先把数据层迁移到支持多实例的正式数据库。
 
@@ -76,4 +77,3 @@ GET /api/voice/status
 ```
 
 健康检查成功只表示服务可访问；考试生成、PPT、知识图谱、联网检索和语音仍应按各自状态接口及一次真实交互逐项验证。
-

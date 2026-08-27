@@ -1,20 +1,16 @@
 # 忆涟千言—教 EducationMind
 
-EducationMind 是一个无登录、以真实学习证据为核心的教育智能体应用。完整站点提供学习诊断、动态计划、知识空间、数字人讲解、练习与考试、网络检索、编译模拟、资源生成和学习档案；`/#/agent` 提供可嵌入 iframe 或 WebView 的独立小涟页面。
+EducationMind 是一个使用正式账号、以真实学习证据为核心的教育智能体应用。完整站点提供学习诊断、动态计划、知识空间、数字人讲解、练习与考试、网络检索、编译模拟、资源生成和学习档案；`/#/agent` 提供可嵌入 iframe 或 WebView 的独立小涟页面。
 
-当前版本不再使用比赛展示页、固定公共学习者、预置掌握度或 Mock LLM。课程与知识点属于共享目录；画像、证据、计划、练习和考试结果只会由当前匿名档案的真实操作产生。
+当前版本不再使用比赛展示页、固定公共学习者、匿名浏览器身份、预置掌握度或 Mock LLM。课程与知识点属于共享目录；画像、证据、计划、练习和考试结果只会由已登录账号的真实操作产生。
 
-## 无登录匿名模式
+## 正式账号与空白学习空间
 
-页面启动时按以下顺序解析学习上下文：
+页面启动先恢复服务端 HttpOnly Cookie 会话；未登录时只展示登录/注册页，不挂载业务路由，也不会请求任何画像、计划或成绩。注册只建立账号，不生成学习计划、任务、证据、掌握度、画像或考试记录。用户必须主动选择课程后才能进入学习空间。
 
-1. 部署方在页面脚本加载前提供的 `window.__EDUCATIONMIND_CONFIG__`；
-2. 当前浏览器 localStorage 中的随机匿名标识；
-3. 首次访问时生成的 `anon:<uuid>`。
+密码以带独立随机盐的 scrypt 哈希保存，明文密码和会话令牌都不落库；会话令牌只通过 HttpOnly、SameSite=Lax Cookie 传输。连续五次失败会锁定账号 15 分钟。业务 API 默认要求认证，并校验当前账号、学习者和所选课程范围。
 
-匿名标识是数据分区键，不是认证或授权凭据。它不提供账号找回、跨设备同步、教师/学生权限隔离、监考或防作弊保证。公开互联网部署必须由宿主网关限制访问范围、写接口和请求速率，不应让不受信任的访客直接访问命题与批阅能力。
-
-localStorage 只保存随机匿名标识，不保存姓名、手机号或邮箱。语音识别由浏览器完成，用户确认后的文字才会发送；原始音频不会上传到 EducationMind API。语音输出使用昔涟 GPT-SoVITS 时，待朗读文字会发送到部署方配置的语音服务；参考音频路径、模型权重和推理参数只保存在服务端。
+localStorage 只缓存非敏感的账号 ID 与已选课程，用于让现有学习模块建立请求上下文；它不是认证凭据。语音识别由浏览器完成，用户确认后的文字才会发送；原始音频不会上传到 EducationMind API。语音输出使用昔涟 GPT-SoVITS 时，待朗读文字会发送到部署方配置的语音服务；参考音频路径、模型权重和推理参数只保存在服务端。
 
 ## 主要入口
 
@@ -47,10 +43,10 @@ pnpm release
 
 产物写入被 Git 忽略的 `release/`：
 
-- `EducationMind-Platform-FullSource-1.3.1.zip`：平台上传主包。ZIP 根目录包含 React/Vite 前端、FastAPI 后端、MCP、测试、锁文件、部署说明和构建所需的昔涟 Live2D 资产；不包含数据库、密钥、参考音频、TTS 模型、缓存或虚拟环境。目标平台必须能够分别构建 Node/pnpm 前端与 Python/uv 后端，详见包内 `PLATFORM_SOURCE_README.md`。
-- `EducationMind-Platform-Web-1.3.1.zip`：`index.html` 位于压缩包根目录，供只有静态 ZIP 导入能力的平台使用；不包含 API、数据库、参考音频或密钥。平台必须把同域 `/api/*` 转发到另行部署的 Education API。
-- `EducationMind-Windows-Full-1.3.1.zip`：包含静态网站、Education API、Genie-TTS 必需源码、GenieData、昔涟 ONNX 模型与固定参考音频；不包含任何开发数据库、历史学习记录、日志、密钥或现有 `.venv`。
-- `EducationMind-1.3.1-SHA256.txt`：上述三个正式 ZIP 的 SHA-256 清单。
+- `EducationMind-Platform-FullSource-1.4.0.zip`：平台上传主包。ZIP 根目录包含 React/Vite 前端、FastAPI 后端、MCP、测试、锁文件、部署说明和构建所需的昔涟 Live2D 资产；不包含数据库、密钥、参考音频、TTS 模型、缓存或虚拟环境。目标平台必须能够分别构建 Node/pnpm 前端与 Python/uv 后端，详见包内 `PLATFORM_SOURCE_README.md`。
+- `EducationMind-Platform-Web-1.4.0.zip`：`index.html` 位于压缩包根目录，供只有静态 ZIP 导入能力的平台使用；不包含 API、数据库、参考音频或密钥。平台必须把同域 `/api/*` 转发到另行部署的 Education API。
+- `EducationMind-Windows-Full-1.4.0.zip`：包含静态网站、Education API、Genie-TTS 必需源码、GenieData、昔涟 ONNX 模型与固定参考音频；不包含任何开发数据库、历史学习记录、日志、密钥或现有 `.venv`。
+- `EducationMind-1.4.0-SHA256.txt`：上述三个正式 ZIP 的 SHA-256 清单。
 
 发布脚本同时保留 `release/staging/` 下的正式部署目录，使用白名单复制和 .NET `ZipArchive`，ZIP 成员使用 `/` 分隔且没有 `./` 前缀。`-Edition Platform` 会同时生成 FullSource 与 Web，`-Edition Full` 只生成 Windows 包。Windows 完整包解压后按包内 `README.md` 执行 `install.ps1` 与 `start.ps1`；首次启动只会新建空白业务库。
 
@@ -86,7 +82,7 @@ pnpm dev:cyrene
 pnpm dev:cyrene -ValidateOnly
 ```
 
-一键入口把匿名学习记录持久化到被 Git 忽略的 `.local/runtime/education.db`，不会覆盖仓库根目录或 `apps/api` 下的现有 SQLite。API 与侧车日志写入 `.logs/`。按 Ctrl+C 时，Windows Job Object 会终止本轮创建的完整子进程树；端口已被其他程序占用时则直接拒绝启动，不会停止未知进程。
+一键入口把账号与学习记录持久化到被 Git 忽略的 `.local/runtime/education.db`，不会覆盖仓库根目录或 `apps/api` 下的现有 SQLite。API 与侧车日志写入 `.logs/`。按 Ctrl+C 时，Windows Job Object 会终止本轮创建的完整子进程树；端口已被其他程序占用时则直接拒绝启动，不会停止未知进程。
 
 ### 后端
 
@@ -110,7 +106,7 @@ $env:EDUCATION_DATABASE_URL = 'sqlite:///D:/educationmind-data/education.db'
 
 ### 直接 iframe
 
-不需要宿主身份映射时，可以直接使用浏览器匿名档案：
+登录注册界面可以直接嵌入 iframe；账号身份始终由 EducationMind 服务端会话确定：
 
 ```html
 <iframe
@@ -121,19 +117,17 @@ $env:EDUCATION_DATABASE_URL = 'sqlite:///D:/educationmind-data/education.db'
 ></iframe>
 ```
 
-跨站 iframe 可能受到浏览器第三方存储策略影响。需要稳定的平台身份映射时，宿主应部署或代理同一前端，并在应用模块脚本之前注入一个不含个人信息的 opaque ID：
+跨站 iframe 可能阻止会话 Cookie，正式部署推荐由宿主同域反向代理前端与 `/api/*`。宿主配置只用于指定 API 地址，不再接受注入的学习者或课程来绕过登录：
 
 ```html
 <script>
   window.__EDUCATIONMIND_CONFIG__ = {
-    learnerId: 'platform:user-42',
-    courseId: 'course-os',
     apiBaseUrl: 'https://education-api.example.com'
   };
 </script>
 ```
 
-ID 允许字母、数字、点、下划线、冒号和连字符，长度为 3–128；不要放入姓名、邮箱或手机号。`apiBaseUrl` 只接受同源绝对路径或 HTTP(S) 地址。
+`apiBaseUrl` 只接受同源绝对路径或 HTTP(S) 地址。生产 HTTPS 部署设置 `EDUCATION_AUTH_COOKIE_SECURE=true`。
 
 ### 跨域 API
 
@@ -297,5 +291,5 @@ apps\api\.venv\Scripts\python.exe -m pytest apps/api/tests -q
 - 网络搜索返回实际 Provider 状态和来源；失败不补造结果。
 - 编译实验是受约束的语义模拟器，不执行任意用户代码。
 - 资源生成基于真实课程材料与显式输入，失败不返回伪造资源。
-- 无登录版本没有账号权限；匿名 ID 不应被用作敏感信息访问控制。
+- 正式账号会话隔离学习数据；当前版本尚未提供教师/管理员角色、邮箱找回、监考或防作弊保证。
 - 历史开发规格可以保留为工程记录，但不代表当前运行时能力；以现有代码、测试和浏览器验证为准。

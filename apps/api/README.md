@@ -1,6 +1,6 @@
 # EducationMind API
 
-FastAPI 后端为无登录匿名学习站和 `/#/agent` 独立智能体页提供课程目录、学习证据、画像、诊断、计划、辅导、考试、网络检索、编译模拟与资源生成接口。
+FastAPI 后端为正式账号学习站和 `/#/agent` 独立智能体页提供登录注册、会话、课程目录、学习证据、画像、诊断、计划、辅导、考试、网络检索、编译模拟与资源生成接口。
 
 ## 启动
 
@@ -26,6 +26,9 @@ pnpm dev:cyrene
 | --- | --- |
 | `EDUCATION_DATABASE_URL` | SQLAlchemy 数据库 URL |
 | `EDUCATION_CORS_ORIGINS` | 逗号分隔的 HTTP(S) 宿主 Origin allowlist |
+| `EDUCATION_AUTH_REQUIRED` | 是否要求正式认证，生产默认 `true` |
+| `EDUCATION_AUTH_SESSION_DAYS` | 会话有效天数，默认 7 |
+| `EDUCATION_AUTH_COOKIE_SECURE` | HTTPS 生产环境应设置为 `true` |
 | `EDUCATION_LLM_BASE_URL` | OpenAI-compatible 服务地址 |
 | `EDUCATION_LLM_API_KEY` | 外部模型密钥 |
 | `EDUCATION_LLM_MODEL` | 外部模型名 |

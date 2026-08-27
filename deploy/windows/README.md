@@ -14,7 +14,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 安装完成后打开 `http://127.0.0.1:8000/#/agent`。第一次启动会在 `data/education.db` 新建空白业务库；只创建共享课程、知识点和题型元数据，不创建默认学生、学习进度或考试成绩。日志写入 `logs/`。
 
-要允许同一局域网访问，可使用 `.\start.ps1 -HostAddress 0.0.0.0`，并由部署方配置防火墙、HTTPS 反向代理、请求限速与访问边界。当前为无登录匿名版本，匿名 ID 不是认证凭据；请勿直接把命题、判卷和写接口无保护地暴露到公开互联网。
+要允许同一局域网访问，可使用 `.\start.ps1 -HostAddress 0.0.0.0`，并由部署方配置防火墙、HTTPS 反向代理与请求限速。当前版本已启用正式登录注册；公开 HTTPS 部署还应设置 `EDUCATION_AUTH_COOKIE_SECURE=true`。
 
 平台仅支持静态 ZIP 导入时，请改用 `EducationMind-Platform-Web-*.zip`。静态包只包含浏览器端，必须由平台把同域 `/api/*` 反向代理到本完整服务或另一套 Education API，否则服务型功能会明确不可用。
 
