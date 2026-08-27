@@ -44,7 +44,7 @@ export function SettingsPage() {
             <ShieldCheck className="h-5 w-5 text-emerald-700" />
             <h2 className="mt-3 text-base font-bold">隐私边界</h2>
             <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
-                不保存姓名、手机号或邮箱。语音输入只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到 EducationMind 后端。语音输出文字会发送到部署方配置的语音服务（Genie-TTS 或 GPT-SoVITS），浏览器不会获得模型权重或参考音频路径。
+              账号保存用户名与显示名称，不要求手机号或邮箱。密码只保存 scrypt 哈希。语音输入只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到 EducationMind 后端。语音输出文字会发送到部署方配置的语音服务（Genie-TTS 或 GPT-SoVITS），浏览器不会获得模型权重或参考音频路径。
             </p>
             <p className="mt-2 text-[10px] leading-5 text-[var(--em-muted-ink)]">
               语音技术来源：{VOICE_ATTRIBUTION}
@@ -52,7 +52,7 @@ export function SettingsPage() {
           </GlassPanel>
         </div>
         <p className="px-2 text-xs leading-6 text-amber-700">
-          清除浏览器站点数据会创建新的匿名档案；没有登录系统时无法跨设备自动找回。宿主平台注入的匿名档案由宿主自行维护映射。
+          清除浏览器站点数据不会删除服务端账号；再次登录即可恢复。当前版本尚未提供邮箱找回、教师/管理员角色、监考或防作弊能力。
         </p>
       </div>
     </AppShell>
@@ -76,8 +76,8 @@ const EXTRA_LINKS = [
   },
   {
     to: '/settings',
-    title: '匿名与隐私设置',
-    description: '了解当前档案来源、课程上下文、语音数据和跨设备限制。',
+    title: '账号与隐私设置',
+    description: '了解当前账号档案、课程上下文、会话与语音数据边界。',
     icon: Settings,
     tone: 'text-primary-700 bg-violet-50',
   },
