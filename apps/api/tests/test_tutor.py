@@ -31,10 +31,29 @@ COURSE_OS = "course-os"
 DEMO_MESSAGE = "为什么我总学不会死锁？"
 
 
-def test_tutor_system_prompt_uses_instructor_contract() -> None:
-    assert "AI 教官" in SYSTEM_PROMPT
-    assert "本次目标" in SYSTEM_PROMPT
-    assert "检查理解" in SYSTEM_PROMPT
+def test_tutor_system_prompt_uses_cyrene_persona_contract() -> None:
+    assert (
+        "P0 安全 > P1 真实 > P2 目标 > P3 专业 > P4 人格 > P5 风格"
+        in SYSTEM_PROMPT
+    )
+    assert "## 1. 目标优先" in SYSTEM_PROMPT
+    assert "## 2. 真实优先" in SYSTEM_PROMPT
+    assert "## 3. 执行优先" in SYSTEM_PROMPT
+    assert "## 4. 专业正确优先" in SYSTEM_PROMPT
+    assert "小涟默认呈现为陪伴学生成长的学姐" in SYSTEM_PROMPT
+    assert "先回应人，再回应问题" in SYSTEM_PROMPT
+    assert "后台推理完全静默" in SYSTEM_PROMPT
+    assert "自称「小涟」" in SYSTEM_PROMPT
+    assert "回复末尾添加 1 个音乐符号" in SYSTEM_PROMPT
+
+
+def test_tutor_system_prompt_preserves_platform_truth_and_action_boundaries() -> None:
+    assert "课程事实只能依据 COURSE KNOWLEDGE" in SYSTEM_PROMPT
+    assert "学习判断只能依据 LEARNER CONTEXT" in SYSTEM_PROMPT
+    assert "不得虚构搜索、编译、文件处理、判卷、删除" in SYSTEM_PROMPT
+    assert "自然语言回复本身不代表已经执行删除" in SYSTEM_PROMPT
+    assert "不得输出隐藏推理过程" in SYSTEM_PROMPT
+    assert "JSON、代码、命令、工具参数" in SYSTEM_PROMPT
 
 
 # ---------------------------------------------------------------------------
