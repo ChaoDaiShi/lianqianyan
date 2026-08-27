@@ -54,6 +54,9 @@ def test_platform_source_readme_has_full_stack_deployment_contract() -> None:
 
 
 def test_windows_package_has_install_and_start_contracts() -> None:
+    builder = (ROOT / "scripts" / "build-platform-release.ps1").read_text(
+        encoding="utf-8"
+    )
     installer = (ROOT / "deploy" / "windows" / "install.ps1").read_text(
         encoding="utf-8"
     )
@@ -64,6 +67,14 @@ def test_windows_package_has_install_and_start_contracts() -> None:
         encoding="utf-8"
     )
 
+    assert (
+        "Copy-SourceTreeContents -Source (Join-Path $projectRoot 'apps\\api\\app')"
+        in builder
+    )
+    assert (
+        "Copy-SourceTreeContents -Source (Join-Path $resolvedGenieRoot 'src')"
+        in builder
+    )
     assert "runtime\\Genie-TTS" in installer
     assert "pip" in installer
     assert "EDUCATION_WEB_DIST_DIR" in launcher

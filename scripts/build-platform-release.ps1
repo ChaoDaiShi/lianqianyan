@@ -228,14 +228,14 @@ if ($Edition -in @('All', 'Full')) {
     New-Item -ItemType Directory -Path $fullStage -Force | Out-Null
 
     Copy-TreeContents -Source $distRoot -Destination (Join-Path $fullStage 'web')
-    Copy-TreeContents -Source (Join-Path $projectRoot 'apps\api\app') -Destination (Join-Path $fullStage 'apps\api\app')
-    Copy-TreeContents -Source (Join-Path $projectRoot 'apps\api\scripts') -Destination (Join-Path $fullStage 'apps\api\scripts')
+    Copy-SourceTreeContents -Source (Join-Path $projectRoot 'apps\api\app') -Destination (Join-Path $fullStage 'apps\api\app')
+    Copy-SourceTreeContents -Source (Join-Path $projectRoot 'apps\api\scripts') -Destination (Join-Path $fullStage 'apps\api\scripts')
     foreach ($name in @('pyproject.toml', 'uv.lock', 'README.md')) {
         Copy-RequiredFile -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $fullStage "apps\api\$name")
     }
 
     $resolvedGenieRoot = (Resolve-Path -LiteralPath $GenieRoot).Path
-    Copy-TreeContents -Source (Join-Path $resolvedGenieRoot 'src') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\src')
+    Copy-SourceTreeContents -Source (Join-Path $resolvedGenieRoot 'src') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\src')
     Copy-TreeContents -Source (Join-Path $resolvedGenieRoot 'GenieData') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\GenieData')
     Copy-TreeContents -Source (Join-Path $resolvedGenieRoot 'Output\昔涟AI-GPT-SOVITS--V2proplus') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\Output\昔涟AI-GPT-SOVITS--V2proplus')
     foreach ($name in @('pyproject.toml', 'requirements.txt', 'README.md', 'README_zh.md', 'LICENSE')) {
