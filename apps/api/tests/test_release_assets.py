@@ -31,6 +31,11 @@ def test_platform_source_package_allowlists_frontend_backend_and_runtime_assets(
     assert "pnpm-lock.yaml" in content
     assert ".local\\live2d" in content
     assert "PLATFORM_SOURCE_README.md" in content
+    assert "Copy-SourceTreeContents" in content
+    assert "__pycache__" in content
+    assert ".pytest_cache" in content
+    assert "'.pyc'" in content
+    assert "*.db" not in content
 
 
 def test_platform_source_readme_has_full_stack_deployment_contract() -> None:

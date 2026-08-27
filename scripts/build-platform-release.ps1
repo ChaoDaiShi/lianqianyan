@@ -54,6 +54,39 @@ function Copy-TreeContents {
     }
 }
 
+function Copy-SourceTreeContents {
+    param([string]$Source, [string]$Destination)
+    if (-not (Test-Path -LiteralPath $Source -PathType Container)) {
+        throw "源码目录不存在：$Source"
+    }
+
+    $excludedDirectories = @(
+        '.git',
+        '.pytest_cache',
+        '.venv',
+        '__pycache__',
+        'dist',
+        'node_modules',
+        'release'
+    )
+    $excludedExtensions = @('.db', '.log', '.pyc', '.pyo', '.sqlite3')
+    New-Item -ItemType Directory -Path $Destination -Force | Out-Null
+
+    Get-ChildItem -LiteralPath $Source -Recurse -Force -File | ForEach-Object {
+        $relative = [System.IO.Path]::GetRelativePath($Source, $_.FullName)
+        $segments = $relative -split '[\\/]'
+        $isExcludedDirectory = @($segments | Where-Object { $_ -in $excludedDirectories }).Count -gt 0
+        $isEnvironmentFile = $_.Name -eq '.env' -or $_.Name.StartsWith('.env.', [System.StringComparison]::OrdinalIgnoreCase)
+        $isExcludedExtension = $_.Extension.ToLowerInvariant() -in $excludedExtensions
+        if (-not $isExcludedDirectory -and -not $isEnvironmentFile -and -not $isExcludedExtension) {
+            $target = Join-Path $Destination $relative
+            $targetParent = Split-Path -Parent $target
+            New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination $target -Force
+        }
+    }
+}
+
 function Copy-RequiredFile {
     param([string]$Source, [string]$Destination)
     if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) {
@@ -151,17 +184,17 @@ if ($Edition -in @('All', 'Platform')) {
     }
 
     foreach ($name in @('src', 'public', 'mcp', 'packages', 'scripts', 'deploy')) {
-        Copy-TreeContents -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
+        Copy-SourceTreeContents -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
     }
 
     foreach ($name in @('app', 'scripts', 'tests')) {
-        Copy-TreeContents -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $sourceStage "apps\api\$name")
+        Copy-SourceTreeContents -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $sourceStage "apps\api\$name")
     }
     foreach ($name in @('pyproject.toml', 'uv.lock', 'README.md')) {
         Copy-RequiredFile -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $sourceStage "apps\api\$name")
     }
 
-    Copy-TreeContents -Source (Join-Path $projectRoot '.local\live2d') -Destination (Join-Path $sourceStage '.local\live2d')
+    Copy-SourceTreeContents -Source (Join-Path $projectRoot '.local\live2d') -Destination (Join-Path $sourceStage '.local\live2d')
     Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\platform-source\README.md') -Destination (Join-Path $sourceStage 'PLATFORM_SOURCE_README.md')
 
     New-ZipFromDirectory -SourceDirectory $sourceStage -ZipPath $sourceZip
