@@ -1,9 +1,9 @@
 {
   "name": "忆涟千言—教 EducationMind",
-  "description": "无登录的昔涟 AI 教官与证据驱动学习空间",
-  "version": "1.3.0",
+  "description": "无登录的小涟学姐 AI 教学助手与证据驱动学习空间",
+  "version": "1.3.1",
   "author": "EducationMind",
-  "features": ["AI 教官", "智能组卷", "AI 自动判卷", "PPT 生成", "知识图谱", "昔涟语音"],
+  "features": ["小涟 AI 学姐", "智能组卷", "AI 自动判卷", "PPT 生成", "知识图谱", "昔涟语音"],
   "keywords": ["education", "agent", "exam", "knowledge-graph", "pptx", "cyrene"],
   "category": "education-agent",
   "framework": "react",

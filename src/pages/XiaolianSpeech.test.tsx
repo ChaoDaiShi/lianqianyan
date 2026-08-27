@@ -67,8 +67,8 @@ describe('XiaolianPage digital-human speech', () => {
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
-    expect(html).toContain('你好，我是昔涟教官');
-    expect(html).toContain('AI 教官工作台');
+    expect(html).toContain('你好，我是小涟');
+    expect(html).toContain('小涟学习工作台');
     expect(html).toContain('外部模型未配置');
     expect(html).toContain('课程材料与学习记录生成');
   });

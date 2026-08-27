@@ -61,7 +61,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
   const llmStatus = useLlmStatus();
   const speech = useSpeechSynthesis();
   const [messages, setMessages] = useState<ChatMessage[]>([
-    assistantMessage('你好，我是昔涟教官。\n我会结合真实学习证据，为你明确目标、讲清知识、组织训练并完成复盘。'),
+    assistantMessage('你好，我是小涟。\n咱们先看你的目标或卡点，我会结合真实学习证据陪你讲清知识、完成训练与复盘。\n♪'),
   ]);
   const [input, setInput] = useState('');
   const voice = useSpeechRecognition({
@@ -143,8 +143,8 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
             <div className="flex items-center gap-4">
               <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="md" speaking={speech.speaking} />
               <div>
-                <h1 className="text-xl font-bold">AI 教官工作台</h1>
-                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">让昔涟教官讲解、训练、考核或复盘；执行详情默认折叠，需要时再展开。</p>
+                <h1 className="text-xl font-bold">小涟学习工作台</h1>
+                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">让小涟陪你讲解、训练、考核或复盘；执行详情默认折叠，需要时再展开。</p>
               </div>
             </div>
             <XiaolianMessage tone={pending ? 'observe' : companionState === 'encouraging' ? 'encourage' : 'suggest'} compact className="mt-4">

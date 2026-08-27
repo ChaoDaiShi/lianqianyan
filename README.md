@@ -34,7 +34,7 @@ localStorage 只保存随机匿名标识，不保存姓名、手机号或邮箱�
 
 ## 正式发布包
 
-先运行完整质量门禁，再生成平台静态导入包和 Windows 完整服务包：
+先运行完整质量门禁，再生成平台全栈源码主包、静态兼容包和 Windows 完整服务包：
 
 ```powershell
 pnpm check
@@ -47,11 +47,12 @@ pnpm release
 
 产物写入被 Git 忽略的 `release/`：
 
-- `EducationMind-Platform-Web-1.3.0.zip`：`index.html` 位于压缩包根目录，可用于仅接受 ZIP 的静态平台；不包含模型、参考音频、API、数据库或密钥。平台必须把同域 `/api/*` 转发到 Education API。
-- `EducationMind-Windows-Full-1.3.0.zip`：包含静态网站、Education API、Genie-TTS 必需源码、GenieData、昔涟 ONNX 模型与固定参考音频；不包含任何开发数据库、历史学习记录、日志、密钥或现有 `.venv`。
-- `EducationMind-1.3.0-SHA256.txt`：上述正式包的 SHA-256 清单。
+- `EducationMind-Platform-FullSource-1.3.1.zip`：平台上传主包。ZIP 根目录包含 React/Vite 前端、FastAPI 后端、MCP、测试、锁文件、部署说明和构建所需的昔涟 Live2D 资产；不包含数据库、密钥、参考音频、TTS 模型、缓存或虚拟环境。目标平台必须能够分别构建 Node/pnpm 前端与 Python/uv 后端，详见包内 `PLATFORM_SOURCE_README.md`。
+- `EducationMind-Platform-Web-1.3.1.zip`：`index.html` 位于压缩包根目录，供只有静态 ZIP 导入能力的平台使用；不包含 API、数据库、参考音频或密钥。平台必须把同域 `/api/*` 转发到另行部署的 Education API。
+- `EducationMind-Windows-Full-1.3.1.zip`：包含静态网站、Education API、Genie-TTS 必需源码、GenieData、昔涟 ONNX 模型与固定参考音频；不包含任何开发数据库、历史学习记录、日志、密钥或现有 `.venv`。
+- `EducationMind-1.3.1-SHA256.txt`：上述三个正式 ZIP 的 SHA-256 清单。
 
-发布脚本同时保留 `release/staging/` 下的正式部署目录，使用白名单复制和 .NET `ZipArchive`，ZIP 成员使用 `/` 分隔且没有 `./` 前缀。Windows 完整包解压后按包内 `README.md` 执行 `install.ps1` 与 `start.ps1`；首次启动只会新建空白业务库。
+发布脚本同时保留 `release/staging/` 下的正式部署目录，使用白名单复制和 .NET `ZipArchive`，ZIP 成员使用 `/` 分隔且没有 `./` 前缀。`-Edition Platform` 会同时生成 FullSource 与 Web，`-Edition Full` 只生成 Windows 包。Windows 完整包解压后按包内 `README.md` 执行 `install.ps1` 与 `start.ps1`；首次启动只会新建空白业务库。
 
 ## 本地运行
 

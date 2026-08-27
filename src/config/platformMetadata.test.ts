@@ -11,6 +11,6 @@ describe('platform import metadata', () => {
 
     expect(config.needLogin).toBe(false);
     expect(config.icon).toBe('/brand/cyrene-icon.jpeg');
-    expect(config.description).toContain('AI 教官');
+    expect(config.description).toContain('小涟学姐');
   });
 });
