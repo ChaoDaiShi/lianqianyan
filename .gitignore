@@ -133,7 +133,6 @@ release/
 .codex/
 .tmp/
 .logs/
-pnpm-lock.yaml
 yarn.lock
 package-lock.json
 
