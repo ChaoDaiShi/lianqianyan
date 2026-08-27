@@ -49,7 +49,7 @@ export function ExamGenerator() {
     <div className="grid gap-5 xl:grid-cols-[minmax(20rem,.8fr)_minmax(0,1.2fr)]">
       <GlassPanel className="p-5 sm:p-6">
         <p className="flex items-center gap-2 text-xs font-bold tracking-[.14em] text-primary-700"><Bot className="h-4 w-4" />AI 组卷中心</p>
-        <h2 className="mt-2 text-2xl font-bold">昔涟教官生成正式题目</h2>
+        <h2 className="mt-2 text-2xl font-bold">小涟生成正式题目</h2>
         <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">题目进入正式题库，整卷复用发布、作答、自动判卷、成绩与画像证据链。</p>
         <form className="mt-5 space-y-4" onSubmit={submit}>
           <div className="grid grid-cols-2 gap-2">
@@ -70,7 +70,7 @@ export function ExamGenerator() {
             <label className="text-xs font-semibold">时长<Input className="mt-1" type="number" min={1} max={480} value={duration} onChange={(event) => setDuration(Number(event.target.value))} /></label>
           </div>
           <label className="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={includeAi} onChange={(event) => setIncludeAi(event.target.checked)} />加入 AI 语义自动判卷题</label>
-          <Button type="submit" disabled={loading || !title.trim() || selectedPoints.length === 0} className="w-full gap-2 rounded-xl bg-primary-500">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{loading ? '昔涟教官正在组卷…' : purpose === 'exam' ? '生成试卷草稿' : '生成并发布练习'}</Button>
+          <Button type="submit" disabled={loading || !title.trim() || selectedPoints.length === 0} className="w-full gap-2 rounded-xl bg-primary-500">{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}{loading ? '小涟正在组卷…' : purpose === 'exam' ? '生成试卷草稿' : '生成并发布练习'}</Button>
         </form>
         {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-xs text-rose-700">{error}</p>}
       </GlassPanel>

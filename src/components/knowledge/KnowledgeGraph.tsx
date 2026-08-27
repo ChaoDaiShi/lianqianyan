@@ -71,7 +71,7 @@ export function KnowledgeGraph({ graph, loading, error, onRetry }: KnowledgeGrap
     [canvasWidth, visibleNodes],
   );
 
-  if (loading) return <div className="rounded-[28px] border border-violet-100 bg-white/55 p-8 text-center text-sm text-[var(--em-muted-ink)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /><p className="mt-2">昔涟教官正在生成课程知识图谱…</p></div>;
+  if (loading) return <div className="rounded-[28px] border border-violet-100 bg-white/55 p-8 text-center text-sm text-[var(--em-muted-ink)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /><p className="mt-2">小涟正在生成课程知识图谱…</p></div>;
   if (error) return <div className="rounded-[28px] border border-amber-100 bg-amber-50/60 p-8 text-center"><p className="text-sm text-amber-800">知识图谱暂时无法读取。</p><Button type="button" variant="outline" size="sm" onClick={onRetry} className="mt-3 gap-2"><RefreshCw className="h-3.5 w-3.5" />重试</Button></div>;
   if (!graph || graph.nodes.length === 0) return <div className="rounded-[28px] border border-dashed border-violet-200 bg-white/45 p-8 text-center text-sm text-[var(--em-muted-ink)]">当前课程没有可生成图谱的材料。</div>;
 

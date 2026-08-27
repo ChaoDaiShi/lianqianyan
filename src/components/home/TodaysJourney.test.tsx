@@ -65,7 +65,7 @@ describe('TodaysJourney', () => {
     );
 
     expect(html).toContain('选择学习目标');
-    expect(html).toContain('请昔涟教官生成诊断计划');
+    expect(html).toContain('请小涟生成诊断计划');
     expect(html).not.toContain('继续默认学习');
   });
 

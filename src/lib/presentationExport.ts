@@ -7,7 +7,7 @@ export async function downloadPresentation(resource: GeneratedResource): Promise
   }
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
-  pptx.author = '忆涟千言—教 · 昔涟教官';
+  pptx.author = '忆涟千言—教 · 小涟';
   pptx.company = 'EducationMind';
   pptx.subject = '课程材料驱动学习资源';
   pptx.title = resource.title;
@@ -46,7 +46,7 @@ export async function downloadPresentation(resource: GeneratedResource): Promise
         },
       );
     }
-    slide.addText(`昔涟教官 · ${index + 1}/${resource.slides.length}`, {
+    slide.addText(`小涟 · ${index + 1}/${resource.slides.length}`, {
       x: 9.5, y: 7.08, w: 3.1, h: 0.2, fontFace: 'Microsoft YaHei',
       fontSize: 8, color: '998DAE', align: 'right', margin: 0,
     });

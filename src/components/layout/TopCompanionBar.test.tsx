@@ -10,11 +10,11 @@ vi.mock('react-router-dom', () => ({
 }));
 
 describe('TopCompanionBar brand identity', () => {
-  it('uses the supplied Cyrene artwork and presents her as the AI instructor', () => {
+  it('uses the supplied Cyrene artwork and presents Xiaolian as a senior companion', () => {
     const html = renderToStaticMarkup(<TopCompanionBar />);
 
     expect(html).toContain('/brand/cyrene-icon.jpeg');
-    expect(html).toContain('昔涟教官');
-    expect(html).not.toContain('AI 学姐');
+    expect(html).toContain('小涟学姐');
+    expect(html).not.toContain('昔涟教官');
   });
 });
