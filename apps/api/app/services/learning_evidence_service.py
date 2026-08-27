@@ -45,9 +45,11 @@ class LearningEvidenceService:
             payload={"action": "start_learning", "correlation_id": session_id, "topic": topic or ""},
         )
 
-    def list_evidence(self) -> list[LearningEvidenceOut]:
-        """列出全部学习证据。"""
-        return self._repo.list_all()
+    def list_evidence(self, learner_id: str | None = None) -> list[LearningEvidenceOut]:
+        """列出学习证据；正式认证模式始终按当前学习者过滤。"""
+        if learner_id is None:
+            return self._repo.list_all()
+        return self._repo.list_recent_by_learner(learner_id, limit=500)
 
     @property
     def repository(self) -> LearningEvidenceRepository:

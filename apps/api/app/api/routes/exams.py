@@ -8,6 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.auth.dependencies import authorize_learning_scope, optional_current_account
+from app.auth.models import AuthAccount
 from app.exams.ai_grading import AIAnswerGrader
 from app.exams import (
     AnswerSaveOut,
@@ -164,7 +166,9 @@ def list_catalog(
     course_id: str = Query(min_length=1),
     learner_id: str = Query(min_length=1),
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> list[CatalogExamOut]:
+    authorize_learning_scope(account, learner_id, course_id)
     try:
         return service.list_catalog(course_id=course_id, learner_id=learner_id)
     except ExamNotFoundError as exc:
@@ -176,7 +180,9 @@ def list_results(
     course_id: str = Query(min_length=1),
     learner_id: str = Query(min_length=1),
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> list[AttemptSummaryOut]:
+    authorize_learning_scope(account, learner_id, course_id)
     return service.list_results(course_id=course_id, learner_id=learner_id)
 
 
@@ -185,7 +191,9 @@ def get_analytics(
     course_id: str = Query(min_length=1),
     learner_id: str = Query(min_length=1),
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> ExamAnalyticsOut:
+    authorize_learning_scope(account, learner_id, course_id)
     try:
         return service.build_analytics(course_id=course_id, learner_id=learner_id)
     except ExamNotFoundError as exc:
@@ -217,7 +225,9 @@ def get_attempt(
     attempt_id: str,
     learner_id: str = Query(min_length=1),
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> AttemptOut:
+    authorize_learning_scope(account, learner_id)
     try:
         return service.get_attempt(attempt_id, learner_id)
     except (ExamNotFoundError, ExamStateError) as exc:
@@ -232,7 +242,9 @@ def save_answer(
     question_id: str,
     payload: AnswerSaveRequest,
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> AnswerSaveOut:
+    authorize_learning_scope(account, payload.learner_id)
     try:
         return service.save_answer(
             attempt_id, payload.learner_id, question_id, payload.answer
@@ -246,7 +258,9 @@ async def submit_attempt(
     attempt_id: str,
     payload: AttemptActionRequest,
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> AttemptSummaryOut:
+    authorize_learning_scope(account, payload.learner_id)
     try:
         summary = service.submit_attempt(attempt_id, payload.learner_id)
         grader = AIAnswerGrader()
@@ -268,7 +282,9 @@ def get_result(
     attempt_id: str,
     learner_id: str = Query(min_length=1),
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> AttemptResultOut:
+    authorize_learning_scope(account, learner_id)
     try:
         return service.get_result(attempt_id, learner_id)
     except (ExamNotFoundError, ExamStateError) as exc:
@@ -336,7 +352,9 @@ def start_attempt(
     exam_id: str,
     payload: AttemptStartRequest,
     service: ExamService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> AttemptOut:
+    authorize_learning_scope(account, payload.learner_id)
     try:
         return service.start_attempt(exam_id, payload.learner_id)
     except (ExamNotFoundError, ExamStateError, ValueError) as exc:

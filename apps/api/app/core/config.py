@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     tts_max_audio_bytes: int = 20_000_000
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     web_dist_dir: str | None = None
+    auth_required: bool = True
+    auth_session_days: int = 7
+    auth_cookie_name: str = "educationmind_session"
+    auth_cookie_secure: bool = False
 
     model_config = SettingsConfigDict(env_prefix="EDUCATION_", env_file=".env", extra="ignore")
 

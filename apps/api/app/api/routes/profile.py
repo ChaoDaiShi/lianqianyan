@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.auth.dependencies import authorize_learning_scope, optional_current_account
+from app.auth.models import AuthAccount
 from app.db.session import get_db
 from app.domain import LearnerProfileOut, MasteryStateOut, MessageResponse
 from app.domain.models import Course
@@ -36,8 +38,10 @@ def get_mastery(
     knowledge_point_id: str,
     learner_id: str,
     service: LearnerProfileService = Depends(_profile),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> MasteryStateOut:
     """读取某位学习者某知识点的真实当前掌握度。"""
+    authorize_learning_scope(account, learner_id)
     state = service.get_kp_mastery_state(learner_id, knowledge_point_id)
     if state is None:
         raise HTTPException(status_code=404, detail="no mastery record found")
@@ -50,6 +54,8 @@ def get_learner_profile(
     course_id: str = "course-os",
     db: Session = Depends(get_db),
     service: LearnerProfileService = Depends(_profile),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> LearnerProfileOut:
     """读取某学生某课程的学习画像（Derived Read Model，请求时动态计算）。"""
+    authorize_learning_scope(account, learner_id, course_id)
     return service.build_profile(learner_id, course_id, _course_name(db, course_id))

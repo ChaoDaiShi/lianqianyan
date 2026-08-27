@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.auth.dependencies import authorize_learning_scope, optional_current_account
+from app.auth.models import AuthAccount
 from app.db.session import get_db
 from app.domain import (
     EvidenceSource,
@@ -41,6 +43,7 @@ def start_learning(
     topic: str | None = None,
     service: LearningEvidenceService = Depends(_service),
     db: Session = Depends(get_db),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> LearningStartResponse:
     """开启一段学习 —— 记录 `learning_started` 行为证据（不得改变掌握度）。
 
@@ -49,6 +52,7 @@ def start_learning(
     本路由作为该写操作的业务事务边界：创建 learning_started 证据后统一提交，
     与 practice/evaluate 的「证据 + 掌握度更新单事务」保持一致。
     """
+    authorize_learning_scope(account, learner_id, course_id)
     evidence = service.start_learning(
         learner_id=learner_id,
         source=source,
@@ -67,6 +71,7 @@ def start_learning(
 @router.get("/evidence", response_model=list[LearningEvidenceOut])
 def list_evidence(
     service: LearningEvidenceService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> list[LearningEvidenceOut]:
     """列出已持久化的学习证据。"""
-    return service.list_evidence()
+    return service.list_evidence(account.id if account is not None else None)

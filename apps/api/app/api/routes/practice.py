@@ -6,6 +6,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.auth.dependencies import authorize_learning_scope, optional_current_account
+from app.auth.models import AuthAccount
 from app.db.session import get_db
 from app.domain import MessageResponse, PracticeEvaluateRequest, PracticeEvaluateResponse
 from app.services import PracticeEvaluationService
@@ -27,10 +29,12 @@ def practice_root() -> MessageResponse:
 def evaluate_practice(
     payload: PracticeEvaluateRequest,
     service: PracticeEvaluationService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> PracticeEvaluateResponse:
     """评价一道练习。
 
     客户端只提供真实评价结果（is_correct / score / difficulty），
     mastery_before / mastery_after / confidence / evidence_count 全部由服务端计算。
     """
+    authorize_learning_scope(account, payload.learner_id, payload.course_id)
     return service.evaluate(payload)

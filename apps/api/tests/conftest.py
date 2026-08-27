@@ -22,6 +22,9 @@ _TEST_DATABASE_PATH = (
 os.environ["EDUCATION_DATABASE_URL"] = (
     f"sqlite:///{_TEST_DATABASE_PATH.as_posix()}"
 )
+# Domain suites exercise their own contracts without fabricating a logged-in user.
+# Authentication tests opt back in explicitly.
+os.environ["EDUCATION_AUTH_REQUIRED"] = "false"
 
 
 @pytest.fixture(autouse=True)

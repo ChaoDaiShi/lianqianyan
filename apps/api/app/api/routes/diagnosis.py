@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.auth.dependencies import authorize_learning_scope, optional_current_account
+from app.auth.models import AuthAccount
 from app.db.session import get_db
 from app.domain import DiagnosisResultOut, MessageResponse
 from app.domain.models import Course
@@ -36,6 +38,8 @@ def get_diagnosis(
     course_id: str = "course-os",
     db: Session = Depends(get_db),
     service: DiagnosisService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> DiagnosisResultOut:
     """返回某学生某课程的结构化学习诊断。"""
+    authorize_learning_scope(account, learner_id, course_id)
     return service.diagnose_learner_course(learner_id, course_id, _course_name(db, course_id))

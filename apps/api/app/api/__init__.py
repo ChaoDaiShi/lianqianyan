@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+
+from app.auth.dependencies import current_account_if_required
 
 from app.api.routes import (
     agents,
+    auth,
     assessment,
     diagnosis,
     exams,
@@ -27,20 +30,22 @@ from app.api.routes import (
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
-api_router.include_router(system.router)
-api_router.include_router(tools.router)
-api_router.include_router(knowledge.router)
-api_router.include_router(network.router)
-api_router.include_router(lab.router)
-api_router.include_router(resources.router)
-api_router.include_router(exams.router)
-api_router.include_router(profile.router)
-api_router.include_router(diagnosis.router)
-api_router.include_router(plans.router)
-api_router.include_router(learning.router)
-api_router.include_router(practice.router)
-api_router.include_router(agents.router)
-api_router.include_router(assessment.router)
-api_router.include_router(reports.router)
-api_router.include_router(tutor.router)
-api_router.include_router(voice.router)
+api_router.include_router(auth.router)
+_protected = [Depends(current_account_if_required)]
+api_router.include_router(system.router, dependencies=_protected)
+api_router.include_router(tools.router, dependencies=_protected)
+api_router.include_router(knowledge.router, dependencies=_protected)
+api_router.include_router(network.router, dependencies=_protected)
+api_router.include_router(lab.router, dependencies=_protected)
+api_router.include_router(resources.router, dependencies=_protected)
+api_router.include_router(exams.router, dependencies=_protected)
+api_router.include_router(profile.router, dependencies=_protected)
+api_router.include_router(diagnosis.router, dependencies=_protected)
+api_router.include_router(plans.router, dependencies=_protected)
+api_router.include_router(learning.router, dependencies=_protected)
+api_router.include_router(practice.router, dependencies=_protected)
+api_router.include_router(agents.router, dependencies=_protected)
+api_router.include_router(assessment.router, dependencies=_protected)
+api_router.include_router(reports.router, dependencies=_protected)
+api_router.include_router(tutor.router, dependencies=_protected)
+api_router.include_router(voice.router, dependencies=_protected)

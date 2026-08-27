@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
+from app.auth import models as auth_models  # noqa: F401 - register auth tables
 from app.core.config import get_settings
 from app.core.seed import seed_catalog_data
 from app.db.session import SessionLocal, engine
@@ -36,14 +37,14 @@ def create_app() -> FastAPI:
     settings = get_settings()
     application = FastAPI(
         title="忆涟千言—教 EducationMind",
-        description="基于真实学习证据、课程知识与动态学习规划的无登录教育智能体",
+        description="基于正式账号、真实学习证据、课程知识与动态学习规划的教育智能体",
         version=settings.app_version,
         lifespan=lifespan,
     )
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_cors_origins(),
-        allow_credentials=False,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
