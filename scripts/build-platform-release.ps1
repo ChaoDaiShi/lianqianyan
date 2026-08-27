@@ -117,6 +117,56 @@ New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
 $builtArtifacts = [System.Collections.Generic.List[string]]::new()
 
 if ($Edition -in @('All', 'Platform')) {
+    $sourceName = "EducationMind-Platform-FullSource-$Version"
+    $sourceStage = Join-Path $stagingRoot $sourceName
+    $sourceZip = Join-Path $outputRoot "$sourceName.zip"
+    Reset-Target -Target $sourceStage
+    New-Item -ItemType Directory -Path $sourceStage -Force | Out-Null
+
+    # 完整平台源码使用显式白名单。不得把仓库根目录、数据库、秘密或本机缓存整体复制进发布包。
+    foreach ($name in @(
+        '.editorconfig',
+        '.eslintignore',
+        '.eslintrc.json',
+        '.prettierrc',
+        'AGENTS.md',
+        'biome.json',
+        'components.json',
+        'cpage_config.json',
+        'index.html',
+        'meta.json',
+        'package.json',
+        'pnpm-lock.yaml',
+        'pnpm-workspace.yaml',
+        'postcss.config.js',
+        'README.md',
+        'tailwind.config.js',
+        'THIRD_PARTY_NOTICES.md',
+        'tsconfig.json',
+        'tsconfig.node.json',
+        'vite.config.ts',
+        'vitest.config.ts'
+    )) {
+        Copy-RequiredFile -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
+    }
+
+    foreach ($name in @('src', 'public', 'mcp', 'packages', 'scripts', 'deploy')) {
+        Copy-TreeContents -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
+    }
+
+    foreach ($name in @('app', 'scripts', 'tests')) {
+        Copy-TreeContents -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $sourceStage "apps\api\$name")
+    }
+    foreach ($name in @('pyproject.toml', 'uv.lock', 'README.md')) {
+        Copy-RequiredFile -Source (Join-Path $projectRoot "apps\api\$name") -Destination (Join-Path $sourceStage "apps\api\$name")
+    }
+
+    Copy-TreeContents -Source (Join-Path $projectRoot '.local\live2d') -Destination (Join-Path $sourceStage '.local\live2d')
+    Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\platform-source\README.md') -Destination (Join-Path $sourceStage 'PLATFORM_SOURCE_README.md')
+
+    New-ZipFromDirectory -SourceDirectory $sourceStage -ZipPath $sourceZip
+    $builtArtifacts.Add($sourceZip)
+
     $platformName = "EducationMind-Platform-Web-$Version"
     $platformStage = Join-Path $stagingRoot $platformName
     $platformZip = Join-Path $outputRoot "$platformName.zip"
@@ -130,6 +180,7 @@ EducationMind 平台静态导入版 $Version
 
 index.html 位于 ZIP 根目录，可直接导入支持 Vite 静态包的平台。
 本包不含服务端、模型、参考音频、数据库或密钥。平台必须把同域 /api/* 转发到 Education API，服务型功能才可用。
+需要由平台同时构建和运行前后端时，请上传 EducationMind-Platform-FullSource-$Version.zip。
 完整本机服务请使用 EducationMind-Windows-Full-$Version.zip。
 "@ | Set-Content -LiteralPath (Join-Path $platformStage 'DEPLOYMENT_README.txt') -Encoding utf8
     New-ZipFromDirectory -SourceDirectory $platformStage -ZipPath $platformZip
