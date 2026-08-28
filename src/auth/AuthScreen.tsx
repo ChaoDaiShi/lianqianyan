@@ -1,47 +1,231 @@
-import { useState, type FormEvent } from 'react';
-import { ArrowRight, BookOpenCheck, LockKeyhole, Sparkles } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AuthCompanionScene } from './AuthCompanionScene';
+import { fetchPublicRuntimeConfig } from './authApi';
+import { TurnstileWidget, type TurnstileWidgetHandle } from './TurnstileWidget';
 
 interface AuthScreenProps {
-  onLogin(username: string, password: string): Promise<void> | void;
-  onRegister(payload: { username: string; displayName: string; password: string }): Promise<void> | void;
+  onLogin(username: string, password: string, captchaToken?: string | null): Promise<void> | void;
+  onRegister(payload: {
+    username: string;
+    displayName: string;
+    password: string;
+    captchaToken?: string | null;
+  }): Promise<void> | void;
   busy: boolean;
   error: string | null;
 }
 
-export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+type AuthMode = 'login' | 'register';
+
+const inputClassName =
+  'mt-2 h-12 rounded-xl border-[#E4E1EB] bg-white px-4 text-[#2B2935] shadow-none placeholder:text-[#AAA6B5] focus-visible:border-[#8A7BEA] focus-visible:ring-[#7766E8]/10 focus-visible:ring-offset-0';
+
+export function AuthScreen({
+  onLogin,
+  onRegister,
+  busy,
+  error,
+}: AuthScreenProps) {
+  const [mode, setMode] = useState<AuthMode>('login');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileWidgetHandle>(null);
+  const resolved =
+    typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
+      ? 'dark'
+      : 'light';
+
+  useEffect(() => {
+    void fetchPublicRuntimeConfig()
+      .then((config) => setTurnstileSiteKey(config.turnstile_enabled ? config.turnstile_site_key : null))
+      .catch(() => setTurnstileSiteKey(null));
+  }, []);
+
+  const receiveCaptchaToken = useCallback((token: string | null) => setCaptchaToken(token), []);
+  const resetCaptcha = useCallback(() => {
+    setCaptchaToken(null);
+    captchaRef.current?.reset();
+  }, []);
+
+  useEffect(() => {
+    if (error) resetCaptcha();
+  }, [error, resetCaptcha]);
+
+  const isLogin = mode === 'login';
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (mode === 'login') void onLogin(username, password);
-    else void onRegister({ username, displayName, password });
+    if (turnstileSiteKey && !captchaToken) return;
+    if (isLogin) void onLogin(username, password, captchaToken);
+    else void onRegister({ username, displayName, password, captchaToken });
+  };
+
+  const switchMode = () => {
+    setMode(isLogin ? 'register' : 'login');
+    resetCaptcha();
   };
 
   return (
-    <main className="relative grid min-h-screen place-items-center overflow-hidden bg-[radial-gradient(circle_at_15%_10%,#fce7f3_0,transparent_35%),radial-gradient(circle_at_85%_15%,#e0e7ff_0,transparent_32%),linear-gradient(145deg,#fff_0%,#faf7ff_100%)] px-5 py-10 text-slate-800">
-      <div className="absolute left-[-8rem] top-1/3 h-80 w-80 rounded-full bg-pink-200/30 blur-3xl" />
-      <section className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/80 bg-white/75 shadow-[0_28px_90px_rgba(91,74,140,.18)] backdrop-blur-xl lg:grid-cols-[1.05fr_.95fr]">
-        <div className="hidden min-h-[620px] flex-col justify-between bg-gradient-to-br from-violet-700 via-fuchsia-600 to-pink-500 p-12 text-white lg:flex">
-          <div><img src="/brand/cyrene-icon.jpeg" alt="小涟" className="h-20 w-20 rounded-3xl border-2 border-white/70 object-cover object-top shadow-xl" /><p className="mt-8 text-sm tracking-[.24em] text-white/75">忆涟千言—教</p><h1 className="mt-3 text-4xl font-semibold leading-tight">让每一次学习，<br />都从真实的你开始。</h1></div>
-          <div className="space-y-4 text-sm text-white/85"><p className="flex gap-3"><BookOpenCheck className="h-5 w-5" />新账号没有预设计划，由你选择课程。</p><p className="flex gap-3"><LockKeyhole className="h-5 w-5" />学习记录与账号隔离，安全保存在服务端。</p><p className="flex gap-3"><Sparkles className="h-5 w-5" />小涟会根据真实证据持续调整辅导。</p></div>
-        </div>
-        <div className="flex min-h-[620px] flex-col justify-center p-7 sm:p-12">
-          <div className="mb-8 flex rounded-2xl bg-violet-50 p-1">
-            <button type="button" onClick={() => setMode('login')} className={`flex-1 rounded-xl px-4 py-3 text-sm font-medium ${mode === 'login' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}>登录学习空间</button>
-            <button type="button" onClick={() => setMode('register')} className={`flex-1 rounded-xl px-4 py-3 text-sm font-medium ${mode === 'register' ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500'}`}>创建账号</button>
+    <main
+      data-auth-entry='companion'
+      className='relative min-h-screen overflow-x-hidden bg-[#F7F6FA] px-4 py-4 text-[#292733] sm:px-6 sm:py-8 lg:grid lg:place-items-center lg:px-8 lg:py-10'
+    >
+      <span
+        aria-hidden='true'
+        className='pointer-events-none absolute left-[7%] top-[12%] text-lg text-[#7766E8]/10'
+      >
+        ✦
+      </span>
+      <span
+        aria-hidden='true'
+        className='pointer-events-none absolute bottom-[9%] right-[8%] text-2xl text-[#EFB8D3]/10'
+      >
+        ✧
+      </span>
+
+      <section className='relative mx-auto grid w-full max-w-[1180px] overflow-hidden rounded-[24px] border border-[#ECE9F2] bg-white shadow-[0_20px_65px_rgba(49,44,74,0.10)] motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 lg:min-h-[680px] lg:grid-cols-[52%_48%]'>
+        <AuthCompanionScene />
+
+        <div className='flex min-w-0 flex-col bg-white'>
+          <header className='flex min-h-[68px] items-center justify-end border-b border-[#F0EDF4] px-6 sm:px-10 lg:px-12'>
+            <p className='text-right text-sm text-[#777386]'>
+              <span>{isLogin ? '没有账号？' : '已经有账号？'}</span>{' '}
+              <button
+                type='button'
+                onClick={switchMode}
+                className='rounded-lg px-1.5 py-1 font-medium text-[#7766E8] transition-colors duration-200 hover:text-[#6958D5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7766E8]'
+              >
+                {isLogin ? '创建账号' : '返回登录'}
+              </button>
+            </p>
+          </header>
+
+          <div className='flex flex-1 flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-9 xl:px-16'>
+            <div>
+              <p className='text-sm font-medium text-[#7766E8]'>
+                {isLogin ? '学习空间入口' : '建立学习账号'}
+              </p>
+              <h2 className='mt-2 text-[28px] font-semibold leading-tight tracking-[-0.02em] text-[#292733]'>
+                {isLogin ? '欢迎回来' : '创建账号'}
+              </h2>
+              <p className='mt-2 text-sm leading-6 text-[#777386]'>
+                {isLogin
+                  ? '登录后继续你的学习计划。'
+                  : '创建后继续选择你的学习课程。'}
+              </p>
+            </div>
+
+            <form
+              className='mt-7 space-y-4'
+              onSubmit={submit}
+              aria-describedby={error ? 'auth-error' : undefined}
+            >
+              {!isLogin && (
+                <label
+                  htmlFor='auth-display-name'
+                  className='block text-[13px] font-medium text-[#393545]'
+                >
+                  显示名称
+                  <Input
+                    id='auth-display-name'
+                    name='displayName'
+                    required
+                    maxLength={60}
+                    autoComplete='name'
+                    value={displayName}
+                    onChange={event => setDisplayName(event.target.value)}
+                    className={inputClassName}
+                    placeholder='小涟怎么称呼你'
+                  />
+                </label>
+              )}
+
+              <label
+                htmlFor='auth-username'
+                className='block text-[13px] font-medium text-[#393545]'
+              >
+                用户名
+                <Input
+                  id='auth-username'
+                  name='username'
+                  required
+                  minLength={3}
+                  maxLength={32}
+                  autoComplete='username'
+                  value={username}
+                  onChange={event => setUsername(event.target.value)}
+                  className={inputClassName}
+                  placeholder='字母、数字、_ - .'
+                />
+              </label>
+
+              <label
+                htmlFor='auth-password'
+                className='block text-[13px] font-medium text-[#393545]'
+              >
+                密码
+                <Input
+                  id='auth-password'
+                  name='password'
+                  required
+                  minLength={8}
+                  maxLength={128}
+                  type='password'
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  className={inputClassName}
+                  placeholder='至少 8 位，包含字母和数字'
+                />
+              </label>
+
+              {error && (
+                <p
+                  id='auth-error'
+                  role='alert'
+                  className='rounded-xl border border-[#F2D7DC] bg-[#FFF5F6] px-4 py-3 text-sm leading-5 text-[#A34E5B]'
+                >
+                  {error}
+                </p>
+              )}
+
+              {turnstileSiteKey && (
+                <TurnstileWidget
+                  ref={captchaRef}
+                  siteKey={turnstileSiteKey}
+                  theme={resolved}
+                  onToken={receiveCaptchaToken}
+                />
+              )}
+
+              <Button
+                data-auth-primary-action='true'
+                type='submit'
+                disabled={busy || Boolean(turnstileSiteKey && !captchaToken)}
+                aria-busy={busy}
+                className='h-12 w-full rounded-xl bg-[#7766E8] px-5 text-sm font-medium text-white shadow-[0_6px_16px_rgba(119,102,232,0.18)] transition-colors duration-200 hover:bg-[#6958D5] active:bg-[#5F50C8] focus-visible:ring-[#7766E8]/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#AAA6D5]'
+              >
+                {busy
+                  ? isLogin
+                    ? '正在登录…'
+                    : '正在创建…'
+                  : isLogin
+                    ? '进入学习空间'
+                    : '创建账号'}
+                {!busy && <ArrowRight aria-hidden='true' className='h-4 w-4' />}
+              </Button>
+            </form>
+
+            <p className='mt-5 text-center text-xs leading-5 text-[#777386]'>
+              登录后将加载与你账号关联的学习记录。
+            </p>
           </div>
-          <h2 className="text-2xl font-semibold">{mode === 'login' ? '欢迎回来' : '建立你的学习档案'}</h2>
-          <p className="mt-2 text-sm text-slate-500">登录后才会加载你的学习数据，不再创建匿名学习记录。</p>
-          <form className="mt-8 space-y-5" onSubmit={submit}>
-            {mode === 'register' && <label className="block text-sm font-medium">显示名称<input required maxLength={60} value={displayName} onChange={(event) => setDisplayName(event.target.value)} className="mt-2 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 outline-none ring-violet-300 focus:ring-2" placeholder="小涟怎么称呼你" /></label>}
-            <label className="block text-sm font-medium">用户名<input required minLength={3} maxLength={32} autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} className="mt-2 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 outline-none ring-violet-300 focus:ring-2" placeholder="字母、数字、_ - ." /></label>
-            <label className="block text-sm font-medium">密码<input required minLength={8} maxLength={128} type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-2xl border border-violet-100 bg-white px-4 py-3 outline-none ring-violet-300 focus:ring-2" placeholder="至少 8 位，包含字母和数字" /></label>
-            {error && <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
-            <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3.5 font-medium text-white shadow-lg shadow-violet-200 disabled:opacity-60">{busy ? '正在连接…' : mode === 'login' ? '登录' : '注册并继续'}<ArrowRight className="h-4 w-4" /></button>
-          </form>
         </div>
       </section>
     </main>
