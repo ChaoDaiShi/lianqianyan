@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, RotateCw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, FileText, RotateCw } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { QuestCard } from '@/components/design/QuestCard';
@@ -8,7 +8,7 @@ import { LearningState } from '@/components/feedback/LearningState';
 import { EvidenceInsightCard } from '@/components/learning/EvidenceInsightCard';
 import { LearningArtifactPanel } from '@/components/learning/LearningArtifactPanel';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
-import { LearningModulePanel } from '@/components/learning/LearningModulePanel';
+import { WorkbenchSidePanel } from '@/components/learning/WorkbenchSidePanel';
 import { WorkbenchTaskHeader } from '@/components/learning/WorkbenchTaskHeader';
 import {
   deriveLearningStages,
@@ -21,6 +21,7 @@ import { TutorExplanationCard } from '@/components/learning/TutorExplanationCard
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { Button } from '@/components/ui/button';
 import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
+import { buildReflectionHref } from '@/components/learning/reflectionPresentation';
 import type { DiagnosisResult, KnowledgePointDiagnosis, PersistedStudyTask } from '@/domain';
 import type { AgentChatResponse, PracticeEvaluationResponse } from '@/lib/educationApi';
 import { useCurrentPlan, useDiagnosis, useKnowledgePoint, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
@@ -60,6 +61,7 @@ export function LearningSpacePage() {
   const [evaluationPending, setEvaluationPending] = useState(false);
   const [preparingTask, setPreparingTask] =
     useState<PersistedStudyTask | null>(null);
+  const [sidePanel, setSidePanel] = useState<'guide' | 'artifacts' | null>(null);
   const setRuntimeState = useXiaolianRuntimeStore(
     (state) => state.setRuntimeState,
   );
@@ -229,16 +231,37 @@ export function LearningSpacePage() {
         {!loading && !error && !currentTask && <div className="space-y-5"><LearningState kind="empty" title="请选择一个学习任务开始" description="学习工作台由真实 Current Plan 任务进入。" action={<Button asChild variant="outline"><Link to="/" className="gap-2"><ArrowLeft className="h-4 w-4" />返回首页</Link></Button>} />{tasks.length > 0 && <GlassPanel className="p-5 sm:p-6"><h2 className="text-lg font-bold">当前计划任务</h2><div className="mt-4 space-y-3">{tasks.slice(0, 3).map((task, index) => <QuestCard key={task.id} task={task} index={index} pending={startingTaskId === task.id} onStart={() => handleStartTask(task)} />)}</div>{startError && <p className="mt-3 text-sm text-amber-700">{startError}</p>}</GlassPanel>}</div>}
 
         {!loading && currentTask && <>
-          {plan && <WorkbenchTaskHeader plan={plan} task={currentTask} state={companionJourneyState} />}
+          {plan && (
+            <WorkbenchTaskHeader
+              plan={plan}
+              task={currentTask}
+              state={companionJourneyState}
+              actions={
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setSidePanel('guide')}
+                    className="inline-flex items-center gap-1 rounded-full border border-violet-200/70 px-3 py-1 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    课前引导
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSidePanel('artifacts')}
+                    className="inline-flex items-center gap-1 rounded-full border border-violet-200/70 px-3 py-1 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    学习产物
+                  </button>
+                </>
+              }
+            />
+          )}
           {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
-          <div className="grid gap-6 xl:grid-cols-[15rem_minmax(24rem,1fr)_20rem] xl:items-start">
-            <div className="order-1 xl:order-2 xl:col-start-2 xl:row-start-1"><SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} /></div>
-
-            <div className="order-2 space-y-5 xl:order-1 xl:col-start-1 xl:row-start-1"><TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} /><LearningModulePanel task={currentTask} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
-
-            <div className="order-3 xl:col-start-3 xl:row-start-1 xl:sticky xl:top-24"><LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} /></div>
-
-            {module && <div className="order-4 xl:col-start-2 xl:row-start-2"><ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} /></div>}
+          <div className="mx-auto w-full max-w-3xl space-y-6">
+            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} />
+            {module && <ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} />}
           </div>
           <EvidenceInsightCard
             evidence={evidence.data ?? []}
@@ -249,6 +272,20 @@ export function LearningSpacePage() {
             error={evidence.error}
             onRetry={() => void evidence.refetch()}
           />
+          {sidePanel === 'guide' && (
+            <WorkbenchSidePanel title="课前引导" onClose={() => setSidePanel(null)}>
+              <TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} />
+              <Link to={buildReflectionHref(currentTask)} className="mt-5 flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50/70 px-4 py-3 text-sm font-semibold text-primary-700 transition hover:bg-violet-100">
+                用自己的话复述
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </WorkbenchSidePanel>
+          )}
+          {sidePanel === 'artifacts' && (
+            <WorkbenchSidePanel title="学习产物" onClose={() => setSidePanel(null)}>
+              <LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} />
+            </WorkbenchSidePanel>
+          )}
         </>}
         <LearningEntryDialog
           open={preparingTask !== null}
