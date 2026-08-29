@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     turnstile_site_key: str | None = None
     turnstile_secret_key: str | None = None
     turnstile_timeout: float = 5.0
+    vaptcha_vid: str | None = None
+    vaptcha_key: str | None = None
+    captcha_mode: str = "auto"
     mcp_public_base_url: str | None = None
     mcp_allowed_hosts: str = "localhost:*,127.0.0.1:*,testserver"
 
@@ -114,6 +117,12 @@ class Settings(BaseSettings):
         return bool(
             (self.turnstile_site_key or "").strip()
             and (self.turnstile_secret_key or "").strip()
+        )
+
+    def vaptcha_configured(self) -> bool:
+        return bool(
+            (self.vaptcha_vid or "").strip()
+            and (self.vaptcha_key or "").strip()
         )
 
     def allowed_mcp_hosts(self) -> list[str]:

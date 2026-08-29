@@ -49,12 +49,15 @@ interface TurnstileWidgetProps {
   siteKey: string;
   theme: 'light' | 'dark';
   onToken(token: string | null): void;
+  /** 脚本加载失败（Cloudflare 不可达）时回调，供上层切换兜底验证。 */
+  onUnavailable?(): void;
 }
 
 export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(function TurnstileWidget({
   siteKey,
   theme,
   onToken,
+  onUnavailable,
 }, ref) {
   const reactId = useId();
   const containerId = `turnstile-${reactId.replace(/:/g, '')}`;
@@ -74,15 +77,18 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
         size: 'flexible',
         callback: (token: string) => onToken(token),
         'expired-callback': () => onToken(null),
-        'error-callback': () => onToken(null),
+        'error-callback': () => onUnavailable?.(),
       });
-    }).catch(() => onToken(null));
+    }).catch(() => {
+      onToken(null);
+      onUnavailable?.();
+    });
     return () => {
       disposed = true;
       if (widgetRef.current && window.turnstile) window.turnstile.remove(widgetRef.current);
       widgetRef.current = null;
     };
-  }, [containerId, onToken, siteKey, theme]);
+  }, [containerId, onToken, onUnavailable, siteKey, theme]);
 
   return <div id={containerId} className="min-h-[65px]" aria-label="人机验证" />;
 });

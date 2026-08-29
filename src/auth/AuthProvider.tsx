@@ -7,6 +7,7 @@ import {
   restoreSession,
   selectAccountCourse,
   type AuthAccount,
+  type CaptchaCredential,
 } from './authApi';
 import {
   AUTH_COURSE_STORAGE_KEY,
@@ -20,8 +21,8 @@ interface AuthContextValue {
   loading: boolean;
   busy: boolean;
   error: string | null;
-  login(username: string, password: string, captchaToken?: string | null): Promise<void>;
-  register(payload: { username: string; displayName: string; password: string; captchaToken?: string | null }): Promise<void>;
+  login(username: string, password: string, captcha?: CaptchaCredential | null): Promise<void>;
+  register(payload: { username: string; displayName: string; password: string; captcha?: CaptchaCredential | null }): Promise<void>;
   selectCourse(courseId: string): Promise<void>;
   logout(): Promise<void>;
 }
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => ({
     account, loading, busy, error,
-    login: (username, password, captchaToken) => run(() => loginAccount(username, password, captchaToken)),
+    login: (username, password, captcha) => run(() => loginAccount(username, password, captcha)),
     register: (payload) => run(() => registerAccount(payload)),
     selectCourse: async (courseId) => {
       await run(() => selectAccountCourse(courseId));

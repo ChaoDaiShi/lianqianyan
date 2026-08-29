@@ -20,7 +20,8 @@ from app.auth.service import (
     InvalidCredentialsError,
     UsernameExistsError,
 )
-from app.auth.turnstile import TurnstileError, TurnstileVerifier, get_turnstile_verifier
+from app.auth.captcha import CaptchaError, verify_captcha
+from app.auth.dependencies import get_auth_service, require_current_account
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.domain.models import Course
@@ -59,11 +60,15 @@ async def register(
     request: Request,
     response: Response,
     service: AuthService = Depends(get_auth_service),
-    verifier: TurnstileVerifier = Depends(get_turnstile_verifier),
 ) -> SessionOut:
     try:
-        await verifier.verify(payload.captcha_token, request.client.host if request.client else None)
-    except TurnstileError as error:
+        await verify_captcha(
+            payload.captcha_provider,
+            payload.captcha_token,
+            request.client.host if request.client else None,
+            get_settings(),
+        )
+    except CaptchaError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     try:
         account, token = service.register(payload)
@@ -79,11 +84,15 @@ async def login(
     request: Request,
     response: Response,
     service: AuthService = Depends(get_auth_service),
-    verifier: TurnstileVerifier = Depends(get_turnstile_verifier),
 ) -> SessionOut:
     try:
-        await verifier.verify(payload.captcha_token, request.client.host if request.client else None)
-    except TurnstileError as error:
+        await verify_captcha(
+            payload.captcha_provider,
+            payload.captcha_token,
+            request.client.host if request.client else None,
+            get_settings(),
+        )
+    except CaptchaError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
     try:
         account, token = service.login(payload.username, payload.password)

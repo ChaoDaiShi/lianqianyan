@@ -35,29 +35,44 @@ function mapAccount(account: AccountWire): AuthAccount {
   };
 }
 
+export type CaptchaProvider = 'turnstile' | 'vaptcha';
+
+export interface CaptchaCredential {
+  captchaToken: string;
+  captchaProvider: CaptchaProvider;
+}
+
 export async function registerAccount(payload: {
   username: string;
   displayName: string;
   password: string;
-  captchaToken?: string | null;
+  captcha?: CaptchaCredential | null;
 }): Promise<AuthAccount> {
   const response = await api.post<SessionWire>('/api/auth/register', {
     username: payload.username,
     display_name: payload.displayName,
     password: payload.password,
-    captcha_token: payload.captchaToken || null,
+    captcha_token: payload.captcha?.captchaToken ?? null,
+    captcha_provider: payload.captcha?.captchaProvider ?? null,
   });
   return mapAccount(response.data.account);
 }
 
-export async function loginAccount(username: string, password: string, captchaToken?: string | null): Promise<AuthAccount> {
-  const response = await api.post<SessionWire>('/api/auth/login', { username, password, captcha_token: captchaToken || null });
+export async function loginAccount(username: string, password: string, captcha?: CaptchaCredential | null): Promise<AuthAccount> {
+  const response = await api.post<SessionWire>('/api/auth/login', {
+    username,
+    password,
+    captcha_token: captcha?.captchaToken ?? null,
+    captcha_provider: captcha?.captchaProvider ?? null,
+  });
   return mapAccount(response.data.account);
 }
 
 export interface PublicRuntimeConfig {
   turnstile_enabled: boolean;
   turnstile_site_key: string | null;
+  captcha_chain?: CaptchaProvider[];
+  vaptcha_vid?: string | null;
 }
 
 export async function fetchPublicRuntimeConfig(): Promise<PublicRuntimeConfig> {
