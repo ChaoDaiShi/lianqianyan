@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('application icon', () => {
@@ -8,5 +9,12 @@ describe('application icon', () => {
     expect(html).toContain('href="/brand/cyrene-icon.jpeg"');
     expect(html).toContain('type="image/jpeg"');
     expect(html).not.toContain('/src/assets/educationmind-favicon.svg');
+  });
+
+  it('ships the supplied learning-space background asset', () => {
+    const asset = resolve(process.cwd(), 'public/brand/learning-space-background.png');
+
+    expect(existsSync(asset)).toBe(true);
+    expect(statSync(asset).size).toBeGreaterThan(1000);
   });
 });
