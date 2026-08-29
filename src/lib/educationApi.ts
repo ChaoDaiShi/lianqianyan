@@ -160,6 +160,30 @@ export interface KnowledgePointContent {
   sections: Array<{ title: string; content: string }>;
 }
 
+export interface KnowledgePointOption {
+  id: string;
+  name: string;
+  difficulty: number;
+}
+
+export async function listKnowledgePoints(
+  courseId: string,
+): Promise<KnowledgePointOption[]> {
+  const response = await api.get<Record<string, unknown>>(
+    '/api/knowledge/points',
+    { params: { course_id: courseId } },
+  );
+  const raw = extractApiData(response);
+  return ((raw['points'] as unknown[]) ?? []).map((item) => {
+    const value = item as Record<string, unknown>;
+    return {
+      id: value['id'] as string,
+      name: value['name'] as string,
+      difficulty: (value['difficulty'] as number) ?? 1,
+    };
+  });
+}
+
 export interface LlmStatus {
   provider: string;
   model: string | null;

@@ -3,7 +3,7 @@ import { Bot, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import type { ExamGenerationPurpose, ExamGenerationResult } from '@/domain';
 import { generateExam } from '@/lib/educationApi';
 import { ACTIVE_COURSE_ID } from '@/store';
-import { WORKSHOP_KNOWLEDGE_POINTS } from '@/components/workshop/workshopPresentation';
+import { useKnowledgePointOptions } from '@/components/workshop/useKnowledgePointOptions';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 export function ExamGenerator() {
   const [purpose, setPurpose] = useState<ExamGenerationPurpose>('exam');
   const [title, setTitle] = useState('');
-  const [selectedPoints, setSelectedPoints] = useState<string[]>(['kp-deadlock']);
+  const [selectedPoints, setSelectedPoints] = useState<string[]>([]);
   const [questionCount, setQuestionCount] = useState(8);
   const [difficulty, setDifficulty] = useState(0.6);
   const [duration, setDuration] = useState(30);
@@ -19,6 +19,13 @@ export function ExamGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<ExamGenerationResult | null>(null);
+  const { options: knowledgePoints, loading: pointsLoading } = useKnowledgePointOptions();
+
+  const togglePoint = (id: string, checked: boolean) => {
+    setSelectedPoints((current) =>
+      checked ? [...current, id] : current.filter((item) => item !== id),
+    );
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,8 +67,9 @@ export function ExamGenerator() {
           <label className="block text-xs font-semibold">标题<Input className="mt-1 rounded-xl bg-white/70" maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)} placeholder={purpose === 'exam' ? '例如：进程管理阶段考试' : '例如：死锁专项练习'} /></label>
           <fieldset>
             <legend className="text-xs font-semibold">知识点（可多选）</legend>
+            {pointsLoading && <p className="mt-2 text-xs text-[var(--em-muted-ink)]">正在读取课程知识点…</p>}
             <div className="mt-2 grid grid-cols-2 gap-2">
-              {WORKSHOP_KNOWLEDGE_POINTS.map((point) => <label key={point.id} className="flex items-center gap-2 rounded-xl border border-violet-100 bg-white/55 px-3 py-2 text-xs"><input type="checkbox" checked={selectedPoints.includes(point.id)} onChange={(event) => setSelectedPoints((current) => event.target.checked ? [...current, point.id] : current.filter((id) => id !== point.id))} />{point.label}</label>)}
+              {knowledgePoints.map((point) => <label key={point.id} className="flex items-center gap-2 rounded-xl border border-violet-100 bg-white/55 px-3 py-2 text-xs"><input type="checkbox" checked={selectedPoints.includes(point.id)} onChange={(event) => togglePoint(point.id, event.target.checked)} />{point.name}</label>)}
             </div>
           </fieldset>
           <div className="grid grid-cols-3 gap-3">

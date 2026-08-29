@@ -18,6 +18,16 @@ CATALOG_COURSES = [
         "name": "操作系统",
         "description": "软件设计师备考 · 操作系统",
     },
+    {
+        "id": "course-net",
+        "name": "计算机网络",
+        "description": "软件设计师备考 · 计算机网络",
+    },
+    {
+        "id": "course-ds",
+        "name": "数据结构与算法",
+        "description": "软件设计师备考 · 数据结构与算法",
+    },
 ]
 
 CATALOG_KNOWLEDGE_POINTS = [
@@ -49,6 +59,66 @@ CATALOG_KNOWLEDGE_POINTS = [
         "id": "kp-scheduling",
         "name": "进程调度",
         "course_id": DEFAULT_COURSE_ID,
+        "difficulty": 3,
+    },
+    {
+        "id": "kp-osi-model",
+        "name": "OSI 与 TCP/IP 分层",
+        "course_id": "course-net",
+        "difficulty": 2,
+    },
+    {
+        "id": "kp-ip-addressing",
+        "name": "IP 地址与子网划分",
+        "course_id": "course-net",
+        "difficulty": 3,
+    },
+    {
+        "id": "kp-tcp-udp",
+        "name": "TCP 与 UDP",
+        "course_id": "course-net",
+        "difficulty": 3,
+    },
+    {
+        "id": "kp-routing",
+        "name": "交换与路由基础",
+        "course_id": "course-net",
+        "difficulty": 3,
+    },
+    {
+        "id": "kp-network-security",
+        "name": "网络安全基础",
+        "course_id": "course-net",
+        "difficulty": 4,
+    },
+    {
+        "id": "kp-linear-list",
+        "name": "线性表",
+        "course_id": "course-ds",
+        "difficulty": 2,
+    },
+    {
+        "id": "kp-stack-queue",
+        "name": "栈与队列",
+        "course_id": "course-ds",
+        "difficulty": 2,
+    },
+    {
+        "id": "kp-trees",
+        "name": "树与二叉树",
+        "course_id": "course-ds",
+        "difficulty": 3,
+    },
+    {
+        "id": "kp-graphs",
+        "name": "图与遍历",
+        "course_id": "course-ds",
+        "difficulty": 4,
+    },
+    {
+        "id": "kp-sorting-search",
+        "name": "排序与查找",
+        "course_id": "course-ds",
         "difficulty": 3,
     },
 ]

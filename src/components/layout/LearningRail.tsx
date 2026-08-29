@@ -27,14 +27,15 @@ function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string 
       end={item.to === '/'}
       aria-label={item.label}
       className={({ isActive }) => cn(
-        'group flex min-w-[60px] flex-none flex-col items-center gap-1 rounded-[18px] px-1 py-2 text-[9px] font-semibold transition duration-200 sm:text-[10px] md:min-w-0 md:px-1.5 md:py-2.5 md:text-[10px]',
+        'group relative flex min-w-[60px] flex-none flex-col items-center gap-1 rounded-[18px] px-1 py-2 text-[9px] font-semibold transition duration-200 sm:text-[10px] md:min-w-0 md:px-1.5 md:py-2.5 md:text-[10px]',
         isActive || currentPath === item.to
-          ? 'bg-white/95 text-primary-700 shadow-[0_8px_24px_rgba(91,76,154,0.14)]'
+          ? 'bg-primary-500/10 text-primary-700 ring-1 ring-primary-300/50'
           : 'text-[var(--em-muted-ink)] hover:bg-white/55 hover:text-primary-700'
       )}
     >
       {({ isActive }) => (
         <>
+          {(isActive || currentPath === item.to) && <span aria-hidden="true" className="absolute -left-0.5 top-1/2 hidden h-6 w-1 -translate-y-1/2 rounded-full bg-gradient-to-b from-primary-400 to-star md:block" />}
           <Icon className={cn('h-5 w-5', (isActive || currentPath === item.to) && 'text-primary-500')} />
           <span className="whitespace-nowrap">{item.label}</span>
         </>

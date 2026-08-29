@@ -6,18 +6,10 @@ import {
   RESOURCE_TYPES,
   resultCountLabel,
   stageTone,
-  WORKSHOP_KNOWLEDGE_POINTS,
 } from './workshopPresentation';
 
 describe('learning workshop presentation model', () => {
-  it('uses the five backend knowledge points and six unique resource types', () => {
-    expect(WORKSHOP_KNOWLEDGE_POINTS.map((item) => item.id)).toEqual([
-      'kp-process-concept',
-      'kp-process-sync',
-      'kp-pv',
-      'kp-deadlock',
-      'kp-scheduling',
-    ]);
+  it('uses six unique resource types with a real presentation type', () => {
     expect(new Set(RESOURCE_TYPES.map((item) => item.value)).size).toBe(6);
     expect(RESOURCE_TYPES.some((item) => item.value === 'presentation')).toBe(true);
   });

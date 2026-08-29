@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import {
   generateLearningResource,
+  listKnowledgePoints,
   type GeneratedResource,
+  type KnowledgePointOption,
   type ResourceType,
 } from '@/lib/educationApi';
 import { ACTIVE_COURSE_ID } from '@/store';
@@ -18,13 +20,15 @@ import { downloadPresentation } from '@/lib/presentationExport';
 import {
   downloadMarkdown,
   RESOURCE_TYPES,
-  WORKSHOP_KNOWLEDGE_POINTS,
 } from './workshopPresentation';
 
 type CopyStatus = 'idle' | 'copied' | 'failed';
 
 export function ResourceGenerator() {
-  const [knowledgePointId, setKnowledgePointId] = useState('kp-deadlock');
+  const [points, setPoints] = useState<KnowledgePointOption[]>([]);
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [pointsError, setPointsError] = useState(false);
+  const [knowledgePointId, setKnowledgePointId] = useState('');
   const [resourceType, setResourceType] =
     useState<ResourceType>('study_sheet');
   const [resource, setResource] = useState<GeneratedResource | null>(null);
@@ -32,6 +36,28 @@ export function ResourceGenerator() {
   const [error, setError] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
   const [previewText, setPreviewText] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setPointsLoading(true);
+    setPointsError(false);
+    listKnowledgePoints(ACTIVE_COURSE_ID)
+      .then((options) => {
+        if (cancelled) return;
+        setPoints(options);
+        setKnowledgePointId(options[0]?.id ?? '');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setPointsError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setPointsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     setPreviewText(resource?.content ?? '');
@@ -105,13 +131,15 @@ export function ResourceGenerator() {
             选择知识点
             <select
               value={knowledgePointId}
-              disabled={loading}
+              disabled={loading || pointsLoading || points.length === 0}
               onChange={(event) => setKnowledgePointId(event.target.value)}
               className="mt-2 h-11 w-full rounded-2xl border border-violet-200 bg-white/80 px-3 text-sm text-[var(--em-ink)]"
             >
-              {WORKSHOP_KNOWLEDGE_POINTS.map((item) => (
+              {pointsLoading && <option value="">正在读取课程知识点…</option>}
+              {!pointsLoading && points.length === 0 && <option value="">当前课程暂无知识点</option>}
+              {points.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {item.name} · 难度 {item.difficulty}
                 </option>
               ))}
             </select>
@@ -137,7 +165,7 @@ export function ResourceGenerator() {
 
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || !knowledgePointId}
             className="h-11 w-full gap-2 rounded-2xl bg-primary-500"
           >
             {loading ? (
@@ -149,6 +177,14 @@ export function ResourceGenerator() {
           </Button>
         </form>
 
+        {pointsError && (
+          <div
+            role="alert"
+            className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800"
+          >
+            课程知识点暂时没有加载成功，不使用其他课程的列表代替。请稍后重试。
+          </div>
+        )}
         {error && (
           <div
             role="alert"

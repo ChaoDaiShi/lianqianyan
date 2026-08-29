@@ -1,6 +1,5 @@
 import {
   ArrowRight,
-  Bot,
   Code2,
   Database,
   Info,
@@ -60,13 +59,6 @@ export function SettingsPage() {
 }
 
 const EXTRA_LINKS = [
-  {
-    to: '/agent',
-    title: '跨平台智能体',
-    description: '打开无完整导航的独立小涟页面，用于 iframe 或 WebView 集成。',
-    icon: Bot,
-    tone: 'text-fuchsia-700 bg-pink-50',
-  },
   {
     to: '/about/capabilities',
     title: '开发者能力说明',
