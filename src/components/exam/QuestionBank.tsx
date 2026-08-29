@@ -3,7 +3,7 @@ import { BookOpenCheck, Plus, RotateCw } from 'lucide-react';
 import type { ExamAnswerValue, ExamQuestion, ExamQuestionType } from '@/domain';
 import { createExamQuestion, fetchExamQuestions, fetchExamQuestionTypes } from '@/lib/educationApi';
 import { ACTIVE_COURSE_ID } from '@/store';
-import { WORKSHOP_KNOWLEDGE_POINTS } from '@/components/workshop/workshopPresentation';
+import { useKnowledgePointOptions } from '@/components/workshop/useKnowledgePointOptions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,7 +24,11 @@ export function QuestionBank() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(false);
   const [questionTypeId, setQuestionTypeId] = useState('');
-  const [knowledgePointId, setKnowledgePointId] = useState('kp-deadlock');
+  const [knowledgePointId, setKnowledgePointId] = useState('');
+  const { options: knowledgePoints, loading: pointsLoading } = useKnowledgePointOptions();
+  useEffect(() => {
+    if (!knowledgePointId && knowledgePoints.length > 0) setKnowledgePointId(knowledgePoints[0].id);
+  }, [knowledgePointId, knowledgePoints]);
   const [prompt, setPrompt] = useState('');
   const [optionsText, setOptionsText] = useState('');
   const [answerText, setAnswerText] = useState('');
@@ -102,7 +106,8 @@ export function QuestionBank() {
         <div className="flex items-center gap-2"><Plus className="h-4 w-4 text-primary-600" /><h3 className="text-lg font-bold">创建自定义题目</h3></div>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <label className="text-xs font-semibold">题型<select value={questionTypeId} onChange={(event) => setQuestionTypeId(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-violet-100 bg-white/70 px-3 text-sm">{types.map((type) => <option key={type.id} value={type.id}>{type.name} · {responseKindLabel(type.responseKind)}</option>)}</select></label>
-          <label className="text-xs font-semibold">关联知识点<select value={knowledgePointId} onChange={(event) => setKnowledgePointId(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-violet-100 bg-white/70 px-3 text-sm">{WORKSHOP_KNOWLEDGE_POINTS.map((point) => <option key={point.id} value={point.id}>{point.label}</option>)}</select></label>
+          <label className="text-xs font-semibold">关联知识点<select value={knowledgePointId} onChange={(event) => setKnowledgePointId(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-violet-100 bg-white/70 px-3 text-sm">{pointsLoading && <option value="">正在读取课程知识点…</option>}
+{knowledgePoints.map((point) => <option key={point.id} value={point.id}>{point.name}</option>)}</select></label>
           <label className="text-xs font-semibold lg:col-span-2">题干<Textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={4_000} rows={3} placeholder="输入清晰、可独立理解的题干" className="mt-1 rounded-xl bg-white/70" /></label>
           {choice && <label className="text-xs font-semibold">选项（每行一个）<Textarea value={optionsText} onChange={(event) => setOptionsText(event.target.value)} rows={5} placeholder={'互斥\n请求并保持\n不可抢占\n循环等待'} className="mt-1 rounded-xl bg-white/70" /></label>}
           {selectedType?.responseKind === 'boolean' ? (

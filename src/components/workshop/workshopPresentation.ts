@@ -4,14 +4,6 @@ import type {
   ResourceType,
 } from '@/lib/educationApi';
 
-export const WORKSHOP_KNOWLEDGE_POINTS = [
-  { id: 'kp-process-concept', label: '进程基础' },
-  { id: 'kp-process-sync', label: '进程同步' },
-  { id: 'kp-pv', label: 'PV 操作' },
-  { id: 'kp-deadlock', label: '死锁' },
-  { id: 'kp-scheduling', label: '进程调度' },
-] as const;
-
 export const RESOURCE_TYPES: ReadonlyArray<{
   value: ResourceType;
   label: string;
