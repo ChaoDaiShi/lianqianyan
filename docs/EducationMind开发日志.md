@@ -174,6 +174,47 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
   - `git diff --check`：通过，仅输出 Windows 行尾转换提示。
 - **负责人：** EducationMind 项目组
 
+### 3.7 Learning Space Layout Refresh
+
+- **时间：** 2026-08-29
+- **状态：** 已完成
+- **阶段目标：** 参考 [R星研学社](http://122.51.33.232) 的品牌优先、留白和聚焦入口组织方式，
+  使用项目提供的樱花云海图片统一学习空间视觉，同时简化登录注册入口、应用壳层和首页的主要学习行动。
+- **实际完成：**
+  - 将用户提供的背景图原样纳入 `public/brand/learning-space-background.png`，作为认证入口和登录后学习空间的统一背景资源。
+  - 重做 `AuthScreen` 与 `AuthCompanionScene` 的结构：桌面端采用左侧品牌说明、右侧聚焦认证卡片，
+    移动端收敛为紧凑品牌头部和视口约束卡片。
+  - 保留既有真实登录、注册、验证码、密码校验和错误反馈流程；新增认证入口、品牌区、认证卡片和视口约束的稳定测试标记。
+  - 收敛 `AppShell`、`LearningRail`、`TopCompanionBar` 和背景层的间距与视觉层级；桌面端保留垂直主导航，
+    移动端改为横向导航，主内容区域更聚焦。
+  - 将首页主行动调整为“继续今天的学习”，并补充真实学习计划步骤数和学习证据数量；无计划、无证据时分别显示
+    “尚未安排”和 `--`，不使用虚构进度或统计数据。
+  - 为窄视口认证卡片增加宽度约束，完成桌面端和移动端浏览器布局检查；实际 DOM 测量未发现页面横向溢出。
+  - 当前分支已有的相关前后端、设置、MCP、语音运行时和 UI-R2 改动均保留并纳入提交，未使用 reset 或清理方式覆盖用户工作区。
+- **关键决策：**
+  - 参考站点只用于提取布局和信息层级方向，不复制其代码、资源或业务实现。
+  - 背景图片只改变展示层，不改变认证 API、学习数据接口、Agent、MCP、数据库结构或既有业务语义。
+  - 登录注册只验证真实前端表单、状态转换、校验和错误反馈；当前没有授权测试账号，因此不把远端账号登录或注册结果写成已完成。
+  - 首页摘要只读取既有计划和学习证据；缺失数据继续呈现诚实空状态。
+- **对应提交：** `ea728bd merge: refresh learning space layout`
+- **修改文件与资源：**
+  - `src/auth/AuthScreen.tsx`、`src/auth/AuthCompanionScene.tsx` 及认证测试
+  - `src/components/layout/`、`src/components/design/NebulaBackground.tsx` 及相关测试
+  - `src/components/home/HeroBanner.tsx`、`src/components/home/TodaysJourney.tsx` 及首页派生测试
+  - `src/design/theme.css`
+  - `public/brand/learning-space-background.png`
+  - `docs/superpowers/specs/2026-08-29-learning-space-layout-design.md`
+  - `docs/superpowers/plans/2026-08-29-learning-space-layout-refresh.md`
+- **验证结果：**
+  - `pnpm check`：TypeScript 类型检查与 ESLint 全部通过。
+  - `pnpm exec vitest run`：72 个测试文件、237 项测试全部通过。
+  - `pnpm build`：生产构建成功，2483 个模块转换完成；保留 `vendor-pixi` 约 526 kB 的既有大包体积提示。
+  - `uv run pytest`：后端 362 项测试全部通过；仅保留 1 条第三方 Starlette/httpx 弃用提示。
+  - `git diff --check`：通过，仅输出 Windows 行尾转换提示。
+  - Git：已从功能分支合并到 `main` 并推送远端；本地 `main` 与 `origin/main` 均指向合并提交
+    `ea728bd4121020467d3b2e78b64b58245e2a91c4`。
+- **负责人：** EducationMind 项目组
+
 ## 4. 问题追踪表
 
 | 编号 | 日期 | 问题 | 状态 | 处理记录 |
@@ -189,6 +230,10 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | HD-04 | 2026-08-25 | 390 px 首页主操作与固定底部导航相交 | 已解决 | 收紧移动端 Hero 尺寸、间距与按钮水平内边距，并完成真实视口测量 |
 | HD-05 | 2026-08-25 | 项目自有 UTC 时间调用产生大批 Python 弃用警告 | 已解决 | 统一使用保持 naive UTC 数据库契约的共享时钟函数 |
 | HD-06 | 2026-08-25 | Reflection 空状态缺少稳定的页面一级标题 | 已解决 | 在状态内容之外增加固定页面标题与真实数据边界说明 |
+| UI9-01 | 2026-08-29 | 登录入口信息层级分散，缺少统一品牌焦点 | 已解决 | 采用品牌说明区与聚焦认证卡片的双栏入口，移动端收敛为紧凑布局 |
+| UI9-02 | 2026-08-29 | 学习空间背景、导航和内容容器的视觉层级不统一 | 已解决 | 统一使用项目背景资源，收敛 AppShell、主导航、顶部陪伴入口和内容间距 |
+| UI9-03 | 2026-08-29 | 窄视口认证卡片存在宽度约束风险 | 已解决 | 增加 viewport-clamped 宽度规则，并通过组件测试和浏览器 DOM 测量确认无实际横向溢出 |
+| UI9-04 | 2026-08-29 | 首页缺少清晰的下一步学习行动和真实摘要 | 已解决 | 将主行动改为“继续今天的学习”，摘要只读取真实计划与学习证据，缺失时呈现空状态 |
 
 ## 5. 节点记录
 
@@ -200,6 +245,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-23 | UI-8 Xiaolian Companion Flow 启动 | 本阶段设计与实施计划 |
 | 2026-08-23 | UI-8 陪伴流程、学习准备与下一任务引导完成 | 源码、测试与提交前验证记录 |
 | 2026-08-25 | Product Hardening 完成 | 前后端测试、生产构建与 30 场景浏览器巡检记录 |
+| 2026-08-29 | Learning Space Layout Refresh 完成 | 前后端测试、生产构建、桌面/移动端布局检查与 `main` 远端推送记录 |
 
 ## 6. 团队分工与贡献
 
@@ -217,6 +263,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 - `docs/superpowers/plans/`：阶段实施计划
 - `docs/创新赛道——开发日志参考模板.docx`：开发日志参考模板
 - `docs/EducationMind开发日志.md`：持续维护的开发日志
+- `public/brand/learning-space-background.png`：学习空间统一背景资源
 
 ## 8. 经费使用记录
 
@@ -231,6 +278,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-23 | 1.2 | 完成 UI-8 提交前评审修复，更新为 20 文件 82 测试并补录错误隔离、诊断重点和重规划续接边界 |
 | 2026-08-23 | 1.3 | 补齐 Reflection 页面级重规划续接，更新为 21 个测试文件、83 项测试 |
 | 2026-08-25 | 1.4 | 完成 Product Hardening，补录运行稳定性、性能、移动端、UTC 时间与语义修复 |
+| 2026-08-29 | 1.5 | 完成 Learning Space Layout Refresh，补录参考布局、背景资源、认证入口、响应式壳层、真实空状态、验证结果与 main 推送 |
 
 ## 10. 附件与参考链接
 
@@ -238,4 +286,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 - UI-8 实施计划：`docs/superpowers/plans/2026-08-23-educationmind-ui-8.md`
 - Product Hardening 设计：`docs/superpowers/specs/2026-08-24-educationmind-product-hardening-design.md`
 - Product Hardening 实施计划：`docs/superpowers/plans/2026-08-24-educationmind-product-hardening.md`
+- Learning Space Layout Refresh 设计：`docs/superpowers/specs/2026-08-29-learning-space-layout-design.md`
+- Learning Space Layout Refresh 实施计划：`docs/superpowers/plans/2026-08-29-learning-space-layout-refresh.md`
+- 参考布局：<http://122.51.33.232>
 - 开发日志参考模板：`docs/创新赛道——开发日志参考模板.docx`
