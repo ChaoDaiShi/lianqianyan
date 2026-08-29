@@ -17,6 +17,8 @@ export interface CaptchaPanelProps {
   onCredential(credential: { token: string | null; provider: CaptchaProvider } | null): void;
   /** 从 Turnstile 切到其他 provider 时回调一次，便于展示降级提示。 */
   onFallback?(provider: CaptchaProvider): void;
+  /** 链上所有 provider 的组件都无法加载时回调一次，便于展示重试入口。 */
+  onAllUnavailable?(): void;
 }
 
 function useActiveProvider(
@@ -45,6 +47,7 @@ export const CaptchaPanel = forwardRef<CaptchaPanelHandle, CaptchaPanelProps>(fu
   theme,
   onCredential,
   onFallback,
+  onAllUnavailable,
 }, ref) {
   const { provider: activeProvider, setForced } = useActiveProvider(chain, turnstileSiteKey, vaptchaVid);
   const [turnstileGeneration, setTurnstileGeneration] = useState(0);
@@ -87,7 +90,14 @@ export const CaptchaPanel = forwardRef<CaptchaPanelHandle, CaptchaPanelProps>(fu
 
   const handleTurnstileUnavailable = useCallback(() => {
     if (chain.includes('vaptcha')) switchTo('vaptcha');
-  }, [chain, switchTo]);
+    else onAllUnavailable?.();
+  }, [chain, onAllUnavailable, switchTo]);
+
+  const handleVaptchaUnavailable = useCallback(() => {
+    // vaptcha 作为链上兜底，它不可用即全部不可用
+    handleCredential(null);
+    onAllUnavailable?.();
+  }, [handleCredential, onAllUnavailable]);
 
   if (!activeProvider) {
     return null;
@@ -112,7 +122,7 @@ export const CaptchaPanel = forwardRef<CaptchaPanelHandle, CaptchaPanelProps>(fu
           theme={theme}
           generation={vaptchaGeneration}
           onToken={(token) => handleCredential(token ? { token, provider: 'vaptcha' } : null)}
-          onUnavailable={() => handleCredential(null)}
+          onUnavailable={handleVaptchaUnavailable}
         />
       )}
     </div>

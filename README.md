@@ -176,6 +176,8 @@ $env:EDUCATION_CUSTOM_MODEL_HOSTS = 'api.openai.com,models.example.com,voice.exa
 
 Claude 不是验证码服务。本项目使用适合 SPA 的 Cloudflare Turnstile 显式渲染，并在后端调用 Siteverify；只配置前端 Site Key 不会启用验证。
 
+> **配置文件位置**：后端进程读取的是 `apps/api/.env`（`API_ENV_FILE` 指向后端目录），不是仓库根目录的 `.env`。改完任何 `.env` 后必须重启后端进程才会生效。
+
 ```powershell
 $env:EDUCATION_TURNSTILE_SITE_KEY = '<Cloudflare widget site key>'
 $env:EDUCATION_TURNSTILE_SECRET_KEY = '<Cloudflare widget secret key>'
