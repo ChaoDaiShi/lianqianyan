@@ -1,5 +1,6 @@
 import { ArrowLeft, CheckCircle2, CircleDot } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import type { PersistedStudyPlan, PersistedStudyTask } from '@/domain';
 import { ACTION_TYPE_LABEL } from '@/domain';
 import { GlassPanel } from '@/components/design/GlassPanel';
@@ -10,6 +11,7 @@ interface WorkbenchTaskHeaderProps {
   plan: PersistedStudyPlan;
   task: PersistedStudyTask;
   state: CompanionJourneyState;
+  actions?: ReactNode;
 }
 
 const STEPS = [
@@ -21,7 +23,7 @@ const STEPS = [
   { id: 'complete', label: '完成' },
 ] as const satisfies ReadonlyArray<{ id: CompanionJourneyState; label: string }>;
 
-export function WorkbenchTaskHeader({ plan, task, state }: WorkbenchTaskHeaderProps) {
+export function WorkbenchTaskHeader({ plan, task, state, actions }: WorkbenchTaskHeaderProps) {
   const currentIndex = STEPS.findIndex((step) => step.id === state);
 
   return (
@@ -41,8 +43,11 @@ export function WorkbenchTaskHeader({ plan, task, state }: WorkbenchTaskHeaderPr
         <span className="rounded-full border border-violet-100 bg-violet-50/70 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
           预计 {task.estimatedMinutes} 分钟
         </span>
-        <span className="ml-auto rounded-full border border-primary-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-primary-700">
-          任务 {task.order} / {plan.tasks.length}
+        <span className="ml-auto flex items-center gap-2">
+          {actions}
+          <span className="rounded-full border border-primary-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-primary-700">
+            任务 {task.order} / {plan.tasks.length}
+          </span>
         </span>
       </div>
       <ol className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-0.5">
