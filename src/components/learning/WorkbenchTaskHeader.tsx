@@ -1,11 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, CheckCircle2, CircleDot, FileText, History, Info, MoreHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { PersistedStudyPlan, PersistedStudyTask } from '@/domain';
 import { ACTION_TYPE_LABEL } from '@/domain';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import type { CompanionJourneyState } from './companionFlow';
-import type { CaptchaProvider } from '@/auth/authApi';
 import { cn } from '@/lib/utils';
 
 interface WorkbenchTaskHeaderProps {
@@ -14,10 +13,6 @@ interface WorkbenchTaskHeaderProps {
   state: CompanionJourneyState;
   /** 打开某个抽屉（历史/产物/上下文）。 */
   onOpenPanel?(panel: 'history' | 'artifacts' | 'context'): void;
-  /** 保留给旧调用方的扩展位。 */
-  actions?: ReactNode;
-  /** 仅用于类型完整性；CaptchaProvider 不在 Header 中使用。 */
-  _providerHint?: CaptchaProvider;
 }
 
 const STEPS = [
@@ -36,9 +31,13 @@ const PANEL_ENTRIES = [
 ] as const;
 
 const PANEL_ICON_BUTTON =
-  'inline-flex h-9 w-9 items-center justify-center rounded-full border border-violet-200/70 text-primary-700 transition hover:bg-violet-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7766E8]';
+  'inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200/70 text-primary-700 transition hover:bg-violet-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7766E8]';
 
-export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel, actions }: WorkbenchTaskHeaderProps) {
+/**
+ * 工作台单行任务头：返回 + 任务信息 + 阶段轨 + 抽屉入口。
+ * 阶段仅反映已观察到的学习互动，不代表掌握度。
+ */
+export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: WorkbenchTaskHeaderProps) {
   const currentIndex = STEPS.findIndex((step) => step.id === state);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -48,25 +47,65 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel, actions }:
   };
 
   return (
-    <GlassPanel className="p-4 sm:p-5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+    <GlassPanel className="p-3 sm:p-4">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
         <Link
           to="/"
-          className="inline-flex items-center gap-1 rounded-full border border-violet-200/70 px-3 py-1 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
+          aria-label="返回首页"
+          className="inline-flex h-8 items-center gap-1 rounded-full border border-violet-200/70 px-2.5 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          返回首页
+          <span className="hidden sm:inline">返回首页</span>
+          <span className="sm:hidden">返回</span>
         </Link>
-        <h1 className="text-lg font-bold">{task.knowledgePointName}</h1>
-        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2.5 py-0.5 text-xs font-semibold text-primary-700 sm:inline">
+        <h1 className="text-base font-bold sm:text-lg">{task.knowledgePointName}</h1>
+        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2 py-0.5 text-xs font-semibold text-primary-700 sm:inline">
           {ACTION_TYPE_LABEL[task.actionType]}
         </span>
-        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2.5 py-0.5 text-xs font-semibold text-primary-700 sm:inline">
+        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2 py-0.5 text-xs font-semibold text-primary-700 lg:inline">
           预计 {task.estimatedMinutes} 分钟
         </span>
-        <span className="ml-auto flex items-center gap-2">
-          {actions}
-          {/* 桌面端：icon + tooltip */}
+
+        <ol className="order-last flex w-full items-center gap-1 overflow-x-auto pb-0.5 md:order-none md:mx-1 md:w-auto md:min-w-0 md:flex-1 md:overflow-visible">
+          {STEPS.map((step, index) => {
+            const completed = state === 'complete' || index < currentIndex;
+            const current = state !== 'complete' && index === currentIndex;
+            return (
+              <li key={step.id} className="flex items-center gap-1">
+                <span
+                  aria-current={current ? 'step' : undefined}
+                  title="阶段仅反映已观察到的学习互动，不代表掌握度"
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold',
+                    completed && 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
+                    current && 'border-primary-300 bg-violet-50 text-primary-800',
+                    !completed && !current && 'border-slate-200 bg-slate-50/70 text-slate-500',
+                  )}
+                >
+                  {completed || current ? (
+                    completed ? (
+                      <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <CircleDot className="h-3 w-3" aria-hidden="true" />
+                    )
+                  ) : null}
+                  {step.label}
+                </span>
+                {index < STEPS.length - 1 && (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      'h-px w-2 shrink-0',
+                      completed ? 'bg-emerald-300/80' : 'bg-violet-200/60',
+                    )}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        <span className="ml-auto flex items-center gap-1.5">
           {onOpenPanel && (
             <span className="hidden items-center gap-1.5 md:flex">
               {PANEL_ENTRIES.map((entry) => {
@@ -86,7 +125,6 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel, actions }:
               })}
             </span>
           )}
-          {/* 移动端：··· 菜单 */}
           {onOpenPanel && (
             <span className="relative md:hidden">
               <button
@@ -118,51 +156,11 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel, actions }:
               )}
             </span>
           )}
-          <span className="hidden rounded-full border border-primary-200 bg-violet-50 px-3 py-1 text-xs font-semibold text-primary-700 sm:inline">
+          <span className="hidden rounded-full border border-primary-200 bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 lg:inline">
             任务 {task.order} / {plan.tasks.length}
           </span>
         </span>
       </div>
-      <ol className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-0.5">
-        {STEPS.map((step, index) => {
-          const completed = state === 'complete' || index < currentIndex;
-          const current = state !== 'complete' && index === currentIndex;
-          return (
-            <li key={step.id} className="flex items-center gap-1.5">
-              <span
-                aria-current={current ? 'step' : undefined}
-                className={cn(
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold',
-                  completed && 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
-                  current && 'border-primary-300 bg-violet-50 text-primary-800',
-                  !completed && !current && 'border-slate-200 bg-slate-50/70 text-slate-500',
-                )}
-              >
-                {completed || current ? (
-                  completed ? (
-                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  ) : (
-                    <CircleDot className="h-3.5 w-3.5" aria-hidden="true" />
-                  )
-                ) : null}
-                {step.label}
-              </span>
-              {index < STEPS.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'h-px w-3 shrink-0',
-                    completed ? 'bg-emerald-300/80' : 'bg-violet-200/60',
-                  )}
-                />
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      <p className="mt-2.5 text-[11px] leading-4 text-[var(--em-muted-ink)]">
-        阶段仅反映已观察到的学习互动，不表示掌握度或回答正确性；任务序号只表示计划中的位置。
-      </p>
     </GlassPanel>
   );
 }

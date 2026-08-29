@@ -10,6 +10,8 @@ def get_voice_status(
     genie_ready: bool = False,
 ) -> VoiceStatus:
     active_settings = settings or get_settings()
+    if active_settings.minimax_configured():
+        return VoiceStatus(provider="minimax", configured=True)
     configured = active_settings.tts_configured()
     if active_settings.tts_provider == "genie":
         configured = configured and genie_ready

@@ -22,6 +22,8 @@ interface SpaceTutorProps {
   onResponse?: (response: AgentChatResponse) => void;
   /** 点击消息内"课程来源 · N"时打开来源面板。 */
   onOpenSources?: (sources: KnowledgeSource[]) => void;
+  /** 语音播放状态上抛，供页面级 Live2D 陪伴角色联动口型。 */
+  onSpeakingChange?: (speaking: boolean) => void;
 }
 
 interface Msg {
@@ -39,6 +41,7 @@ export function SpaceTutor({
   onPendingChange,
   onResponse,
   onOpenSources,
+  onSpeakingChange,
 }: SpaceTutorProps) {
   const { send, pending } = useAgentChat(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID, knowledgePointId);
   const [messages, setMessages] = useState<Msg[]>(() =>
@@ -64,6 +67,7 @@ export function SpaceTutor({
   const topic = knowledgePointName ?? '这个知识点';
 
   useEffect(() => { onPendingChange?.(pending); }, [pending, onPendingChange]);
+  useEffect(() => { onSpeakingChange?.(speech.speaking); }, [speech.speaking, onSpeakingChange]);
   useEffect(() => {
     requestGenerationRef.current += 1;
     voice.stop();

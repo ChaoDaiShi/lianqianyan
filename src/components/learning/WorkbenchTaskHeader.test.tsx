@@ -45,7 +45,7 @@ describe('WorkbenchTaskHeader', () => {
       expect(html).toContain(label);
     }
     expect(html).toContain('aria-current="step"');
-    expect(html).toContain('不表示掌握度');
+    expect(html).toContain('title="阶段仅反映已观察到的学习互动，不代表掌握度"');
     expect(html).not.toContain('%');
   });
 

@@ -9,7 +9,8 @@ const MODE_LABELS: Record<Exclude<VoiceMode, 'cyrene'>, string> = {
   unavailable: '当前输出：语音讲解不可用',
 };
 
-const CYRENE_PROVIDER_LABELS: Record<'genie_tts' | 'gpt_sovits', string> = {
+const CYRENE_PROVIDER_LABELS: Record<'minimax' | 'genie_tts' | 'gpt_sovits', string> = {
+  minimax: '当前输出：MiniMax 语音合成',
   genie_tts: '当前输出：昔涟 Genie-TTS',
   gpt_sovits: '当前输出：昔涟 GPT-SoVITS',
 };
@@ -32,7 +33,7 @@ export function VoiceAttributionNotice({
 }: VoiceAttributionNoticeProps) {
   const label =
     mode === 'cyrene' &&
-    (provider === 'genie_tts' || provider === 'gpt_sovits')
+    (provider === 'minimax' || provider === 'genie_tts' || provider === 'gpt_sovits')
       ? CYRENE_PROVIDER_LABELS[provider]
       : mode === 'cyrene'
         ? '当前输出：昔涟语音服务'

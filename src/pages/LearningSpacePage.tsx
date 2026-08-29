@@ -9,6 +9,7 @@ import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { WorkbenchSidePanel } from '@/components/learning/WorkbenchSidePanel';
 import { WorkbenchTaskHeader } from '@/components/learning/WorkbenchTaskHeader';
 import { SourceReferences } from '@/components/learning/SourceReferences';
+import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import { WorkspaceArtifactsPanel, type ArtifactScope } from '@/components/workspace/WorkspaceArtifactsPanel';
 import { WorkspaceHistoryPanel } from '@/components/workspace/WorkspaceHistoryPanel';
 import { WorkspaceContextPanel } from '@/components/workspace/WorkspaceContextPanel';
@@ -79,6 +80,9 @@ export function LearningSpacePage() {
   const setCompanionState = useXiaolianRuntimeStore(
     (state) => state.setCompanionState,
   );
+  const runtimeState = useXiaolianRuntimeStore((state) => state.runtimeState);
+  const companionState = useXiaolianRuntimeStore((state) => state.companionState);
+  const [tutorSpeaking, setTutorSpeaking] = useState(false);
   const resetRuntime = useXiaolianRuntimeStore((state) => state.reset);
   const taskIdParam = searchParams.get('task_id');
   const knowledgePointParam = searchParams.get('knowledge_point_id');
@@ -253,8 +257,20 @@ export function LearningSpacePage() {
             />
           )}
           {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
+          <div
+            aria-label="小涟陪伴角色"
+            className="pointer-events-none fixed bottom-6 right-6 z-30 hidden xl:block"
+          >
+            <XiaolianCharacter
+              runtimeState={runtimeState}
+              companionState={companionState}
+              size="lg"
+              speaking={tutorSpeaking}
+              priority
+            />
+          </div>
           <div className="mx-auto w-full max-w-3xl space-y-6">
-            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} onOpenSources={openSourcesPanel} />
+            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} onOpenSources={openSourcesPanel} onSpeakingChange={setTutorSpeaking} />
             {module && <ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} />}
           </div>
           {sidePanel === 'guide' && (

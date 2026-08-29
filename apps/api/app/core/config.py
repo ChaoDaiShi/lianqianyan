@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     custom_model_hosts: str = ""
     custom_model_allow_http: bool = False
     tts_provider: str = "genie"
+    minimax_api_key: str | None = None
+    minimax_group_id: str | None = None
+    minimax_model: str | None = None
+    minimax_voice_id: str | None = None
+    minimax_timeout: float = 60.0
     tts_base_url: str | None = None
     tts_genie_root: str | None = None
     tts_model_dir: str | None = None
@@ -117,6 +122,12 @@ class Settings(BaseSettings):
         return bool(
             (self.turnstile_site_key or "").strip()
             and (self.turnstile_secret_key or "").strip()
+        )
+
+    def minimax_configured(self) -> bool:
+        return bool(
+            (self.minimax_api_key or "").strip()
+            and (self.minimax_group_id or "").strip()
         )
 
     def vaptcha_configured(self) -> bool:

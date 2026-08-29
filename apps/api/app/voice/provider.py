@@ -5,6 +5,7 @@ from typing import Protocol
 from app.core.config import Settings
 from app.voice.genie_embedded import EmbeddedGenieTTSProvider
 from app.voice.gpt_sovits import GPTSoVITSProvider
+from app.voice.minimax import MiniMaxTTSProvider
 from app.voice.gpt_sovits import VoiceNotConfiguredError
 from app.voice.models import SynthesizedVoiceAudio
 
@@ -27,6 +28,9 @@ def create_voice_provider(
     *,
     embedded_provider: EmbeddedGenieTTSProvider | None = None,
 ) -> VoiceSynthesisProvider:
+    # MiniMax 为首选语音输出；未配置时回退既有链路
+    if settings.minimax_configured():
+        return MiniMaxTTSProvider(settings)
     if settings.tts_provider == "genie":
         return embedded_provider or UnavailableGenieTTSProvider()
     return GPTSoVITSProvider(settings)
