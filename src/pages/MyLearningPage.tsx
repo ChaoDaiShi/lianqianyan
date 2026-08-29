@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, ArrowRight, CalendarClock, GraduationCap, Layers, ListChecks, Loader2, RefreshCw, RotateCw, Route, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarClock, GraduationCap, Layers, ListChecks, Loader2, Radar, RefreshCw, RotateCw, Route, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { QuestCard } from '@/components/design/QuestCard';
@@ -8,11 +8,38 @@ import { LearningState } from '@/components/feedback/LearningState';
 import { Button } from '@/components/ui/button';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
+import { MasteryRadar, type MasteryRadarPoint } from '@/components/diagnosis/MasteryRadar';
 import { useCurrentPlan, useDiagnosis, useRecentEvidence } from '@/lib/hooks';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 
 function formatTime(iso: string) { try { return new Date(iso).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
 const STRATEGY_LABEL: Record<string, string> = { diagnosis_driven: '诊断驱动' };
+const ASSESSED_STATUSES = new Set(['mastered', 'proficient', 'developing', 'weak']);
+
+function masteryRadarPoints(diagnosis: ReturnType<typeof useDiagnosis>['data']): MasteryRadarPoint[] {
+  if (!diagnosis) return [];
+  const points = [
+    diagnosis.primaryFocus,
+    ...diagnosis.priorityInterventions,
+    ...diagnosis.strengths,
+    ...diagnosis.weakPoints,
+    ...diagnosis.developingPoints,
+    ...diagnosis.unassessedPoints,
+  ];
+  const seen = new Set<string>();
+  const radar: MasteryRadarPoint[] = [];
+  for (const point of points) {
+    if (!point || seen.has(point.knowledgePointId)) continue;
+    seen.add(point.knowledgePointId);
+    radar.push({
+      label: point.knowledgePointName,
+      value: ASSESSED_STATUSES.has(point.status)
+        ? Math.round(Math.min(1, Math.max(0, point.masteryScore)) * 100)
+        : null,
+    });
+  }
+  return radar;
+}
 
 export function MyLearningPage() {
   const [preparingTaskId, setPreparingTaskId] = useState<string | null>(null);
@@ -32,6 +59,26 @@ export function MyLearningPage() {
       <GlassPanel className="p-4 sm:p-5"><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-2xl bg-violet-50/65 p-3"><p className="text-[10px] text-[var(--em-muted-ink)]">建立时间</p><p className="mt-1 flex items-center gap-2 text-xs font-bold"><CalendarClock className="h-3.5 w-3.5 text-primary-500" />{formatTime(plan?.generatedAt ?? summary.generatedAt)}</p></div><div className="rounded-2xl bg-amber-50/55 p-3"><p className="text-[10px] text-[var(--em-muted-ink)]">路线依据</p><p className="mt-1 flex items-center gap-2 text-xs font-bold"><Layers className="h-3.5 w-3.5 text-star" />{STRATEGY_LABEL[summary.strategy] ?? summary.strategy}</p></div><div className="rounded-2xl bg-sky-50/55 p-3"><p className="text-[10px] text-[var(--em-muted-ink)]">接下来</p><p className="mt-1 flex items-center gap-2 text-xs font-bold"><ListChecks className="h-3.5 w-3.5 text-companion" />按顺序完成 {tasks.length} 项</p></div></div><div className="mt-4 flex items-center justify-between gap-3"><p className="text-xs text-[var(--em-muted-ink)]">重新规划会替换当前路线</p><Button variant="ghost" size="sm" className="gap-2 rounded-xl" onClick={() => void generate()} disabled={generating}>{generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}重新规划</Button></div></GlassPanel>
       <section aria-labelledby="route-heading"><div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-xs font-semibold text-primary-700">CURRENT JOURNEY</p><h2 id="route-heading" className="mt-1 text-xl font-bold">从这里继续</h2></div>{tasks.length > 0 && <span className="flex items-center gap-1 text-xs text-[var(--em-muted-ink)]">按服务端顺序 <ArrowRight className="h-3.5 w-3.5" /></span>}</div><div className="relative mx-auto max-w-4xl space-y-3 before:absolute before:bottom-8 before:left-5 before:top-8 before:w-px before:bg-gradient-to-b before:from-primary-300 before:via-star before:to-transparent sm:before:left-7">{tasks.length > 0 ? tasks.map((task, index) => <div key={task.id} className="relative pl-12 sm:pl-16"><span className="absolute left-[14px] top-6 h-3 w-3 rounded-full bg-primary-500 shadow-[0_0_18px_rgba(139,124,246,0.65)] sm:left-[22px]" /><QuestCard task={task} index={index} active={index === 0} pending={startingTaskId === task.id} onStart={() => setPreparingTaskId(task.id)} /></div>) : <div className="rounded-2xl border border-dashed border-violet-200 bg-white/40 px-5 py-4 text-sm text-[var(--em-muted-ink)]">当前路线没有待完成任务。这里不补造新的学习任务，可以在有新证据后重新规划。</div>}</div></section>
       {startError && <p className="flex items-center gap-2 text-sm text-amber-700"><AlertTriangle className="h-4 w-4" />{startError}</p>}
+      {!diagnosis.loading && !diagnosis.error && masteryRadarPoints(diagnosis.data).length > 0 && (
+        <GlassPanel className="p-4 sm:p-5">
+          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+            <MasteryRadar points={masteryRadarPoints(diagnosis.data)} />
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold text-primary-700"><Radar className="h-4 w-4" />PORTRAIT RADAR</p>
+              <h2 className="mt-1 text-xl font-bold">当前课程掌握画像</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--em-muted-ink)]">轮廓只由已有评价证据的知识点构成；尚未评估的知识点不会按 0 分计入，避免把"未学习"误画成"掌握为零"。</p>
+              <ul className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                {masteryRadarPoints(diagnosis.data).map((point) => (
+                  <li key={point.label} className="flex items-center justify-between gap-2 rounded-xl border border-violet-100 bg-white/55 px-3 py-2">
+                    <span className="truncate font-semibold">{point.label}</span>
+                    <span className="shrink-0 text-[var(--em-muted-ink)]">{point.value === null ? '未评估' : `${point.value}%`}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </GlassPanel>
+      )}
     </>}
     <LearningEntryDialog open={preparingTask !== null} onOpenChange={(open) => { if (!open) setPreparingTaskId(null); }} plan={plan} task={preparingTask} diagnosis={diagnosis.data} evidence={courseEvidence} dataLoading={diagnosis.loading || evidence.loading} diagnosisError={diagnosis.error} evidenceError={evidence.error} starting={startingTaskId === preparingTask?.id} startError={startError} onConfirm={() => { if (plan && preparingTask) void startTask(plan, preparingTask); }} />
   </div></AppShell>;
