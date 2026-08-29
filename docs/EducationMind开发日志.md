@@ -215,6 +215,50 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
     `ea728bd4121020467d3b2e78b64b58245e2a91c4`。
 - **负责人：** EducationMind 项目组
 
+### 3.8 Workspace Cleanup & Dark Theme Readability
+
+- **时间：** 2026-08-29
+- **状态：** 已完成
+- **阶段目标：** 清理仓库中的多余文件与未使用依赖；修复暗色主题下多个页面面板沿用亮色玻璃样式导致的
+  低对比、文字不可读问题，使设置、知识星图、学习工坊、我的学习、学习诊断与考试中心在黑夜主题下全部可读。
+- **实际完成：**
+  - 删除与 `AGENTS.md` 逐字节相同的 `CLAUDE.md`，以及未被任何路由或组件引用的 `src/examples/`、
+    `src/pages/ExamplesPage.tsx`、`src/components/PlaceholderPage.tsx` 与空目录 `src/mock/`、`src/components/showcase/`。
+  - 删除未被使用的 shadcn 基元 `form.tsx`、`accordion.tsx`、`toggle.tsx`、`slider.tsx`，并移除仅被这些文件
+    或示例代码引用的依赖：`react-hook-form`、`@hookform/resolvers`、`zod`、`@radix-ui/react-icons`、
+    `@radix-ui/react-aspect-ratio`、`@radix-ui/react-menubar`、`@radix-ui/react-navigation-menu`、
+    `@radix-ui/react-toggle-group`、`@radix-ui/react-accordion`、`@radix-ui/react-toggle`、`@radix-ui/react-slider`、
+    `@radix-ui/react-toast`，以及模板遗留的 `@types/react-router-dom`（react-router-dom 7 自带类型）。
+  - 清理本地未跟踪残留：`.logs/`、`.tmp/`、`.pytest_cache/`、`__pycache__/` 与过期数据库备份
+    `education.db.pre-anonymous-*.bak`；`release/`、`dist/` 等构建产物与运行数据库保留。
+  - 定位暗色低对比根因：主题体系以 `data-theme="dark"` 生效，`theme.css` 中对 `bg-white/*` 的重映射只覆盖
+    4 个档位，实际代码使用了 17 个档位，另有大量浅色 `-50/-100` 底色、配套 `-700..-900` 深色状态文字、
+    白色渐变 stops 与浅紫边框未被映射。按实际用法穷举补全 `theme.css` 的暗色重映射，并在组件测试中验证。
+  - 将知识星图画布背景、节点标签与关系标签改为主题变量驱动（`var(--em-ink)` / `var(--em-muted-ink)` /
+    `var(--em-glass-bg)`），黑夜主题下星图节点名称与关系说明全部可读。
+  - 在真实浏览器（1440×900，黑夜与明亮主题）逐页巡检首页、我的学习、学习诊断、知识空间、考试中心、
+    学习工坊、学习档案、设置、小涟对话、智能体对话与复盘页；确认暗色灰块全部消除、明亮主题无回归。
+- **关键决策：**
+  - 继续沿用项目既有的"暗色主题穷举重映射"策略而非重构全部组件配色：改动集中在一个 CSS 文件，
+    亮色主题零影响，风险最小。
+  - `CLAUDE.md` 与 `AGENTS.md` 内容完全相同且 `AGENTS.md` 明确自己是唯一代理规则来源，判定为冗余副本删除。
+  - Genie-TTS 运行时启动失败经核实已在 `lifespan` 中捕获并降级（`voice_provider` 置空、仅记录日志），
+    属预期行为，不做代码修改。
+  - 探查使用的注册账号、学习计划与证据均来自真实前后端流程，不写入虚构演示数据。
+- **对应提交：** `chore: remove unused files and dependencies`、`fix: remap light-panel utilities for dark theme readability`
+- **修改文件与资源：**
+  - 删除：`CLAUDE.md`、`src/examples/`、`src/pages/ExamplesPage.tsx`、`src/components/PlaceholderPage.tsx`、
+    `src/components/ui/{form,accordion,toggle,slider}.tsx`
+  - 修改：`src/design/theme.css`、`src/components/knowledge/KnowledgeGalaxy.tsx`、`src/components/index.ts`、
+    `package.json`、`pnpm-lock.yaml`
+- **验证结果：**
+  - `pnpm check`：TypeScript 类型检查与 ESLint 全部通过。
+  - `npx vitest run`：72 个测试文件、237 项前端测试全部通过。
+  - `uv run pytest`：后端 362 项测试全部通过。
+  - `pnpm build`：生产构建成功。
+  - 浏览器实测：黑夜主题下设置/星图/工坊/我的学习/诊断/考试中心对比度恢复正常，明亮主题无回归。
+- **负责人：** EducationMind 项目组
+
 ## 4. 问题追踪表
 
 | 编号 | 日期 | 问题 | 状态 | 处理记录 |
@@ -234,6 +278,8 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | UI9-02 | 2026-08-29 | 学习空间背景、导航和内容容器的视觉层级不统一 | 已解决 | 统一使用项目背景资源，收敛 AppShell、主导航、顶部陪伴入口和内容间距 |
 | UI9-03 | 2026-08-29 | 窄视口认证卡片存在宽度约束风险 | 已解决 | 增加 viewport-clamped 宽度规则，并通过组件测试和浏览器 DOM 测量确认无实际横向溢出 |
 | UI9-04 | 2026-08-29 | 首页缺少清晰的下一步学习行动和真实摘要 | 已解决 | 将主行动改为“继续今天的学习”，摘要只读取真实计划与学习证据，缺失时呈现空状态 |
+| UI9-05 | 2026-08-29 | 黑夜主题下设置、星图、工坊、我的学习、诊断、考试中心多处面板呈低对比灰块，文字不可读 | 已解决 | `theme.css` 暗色重映射按实际用法穷举补全（全部 `bg-white/*` 档位、浅色 `-50/-100` 底色、配套深色文字、白色渐变 stops、浅紫边框），星图颜色改为主题变量驱动 |
+| HD-07 | 2026-08-29 | 仓库残留未被引用的示例页、占位组件、shadcn 基元与十余项未使用依赖，另有本地日志、缓存与过期备份 | 已解决 | 删除死代码与未用依赖，清理 `.logs/`、`.tmp/`、`.pytest_cache/`、`__pycache__/` 与过期 `.bak` 备份；保留构建产物与运行数据库 |
 
 ## 5. 节点记录
 
@@ -246,6 +292,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-23 | UI-8 陪伴流程、学习准备与下一任务引导完成 | 源码、测试与提交前验证记录 |
 | 2026-08-25 | Product Hardening 完成 | 前后端测试、生产构建与 30 场景浏览器巡检记录 |
 | 2026-08-29 | Learning Space Layout Refresh 完成 | 前后端测试、生产构建、桌面/移动端布局检查与 `main` 远端推送记录 |
+| 2026-08-29 | 工作区清理与黑夜主题可读性修复完成 | 前后端测试、生产构建与逐页浏览器巡检记录 |
 
 ## 6. 团队分工与贡献
 
@@ -279,6 +326,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-23 | 1.3 | 补齐 Reflection 页面级重规划续接，更新为 21 个测试文件、83 项测试 |
 | 2026-08-25 | 1.4 | 完成 Product Hardening，补录运行稳定性、性能、移动端、UTC 时间与语义修复 |
 | 2026-08-29 | 1.5 | 完成 Learning Space Layout Refresh，补录参考布局、背景资源、认证入口、响应式壳层、真实空状态、验证结果与 main 推送 |
+| 2026-08-29 | 1.6 | 完成工作区清理与黑夜主题可读性修复，补录死代码/依赖清理、暗色重映射补全、星图主题化与逐页巡检结果 |
 
 ## 10. 附件与参考链接
 
