@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthCompanionScene } from './AuthCompanionScene';
+import { useAuth } from './AuthProvider';
 import { fetchPublicRuntimeConfig, type CaptchaCredential, type CaptchaProvider } from './authApi';
 import { CaptchaPanel, type CaptchaPanelHandle } from './CaptchaPanel';
 
@@ -24,6 +25,7 @@ const inputClassName =
   'mt-2 h-12 rounded-xl border-[#E4E1EB] bg-white px-4 text-[#2B2935] shadow-none placeholder:text-[#AAA6B5] focus-visible:border-[#8A7BEA] focus-visible:ring-[#7766E8]/10 focus-visible:ring-offset-0';
 
 export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps) {
+  const { captchaServiceFailed } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -35,6 +37,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   const [fallbackProvider, setFallbackProvider] = useState<CaptchaProvider | null>(null);
   const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
   const [captchaGeneration, setCaptchaGeneration] = useState(0);
+  const [forcedProvider, setForcedProvider] = useState<CaptchaProvider | null>(null);
   const captchaRef = useRef<CaptchaPanelHandle>(null);
   const resolved =
     typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
@@ -68,8 +71,20 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   const resetCaptcha = useCallback(() => {
     setCredential(null);
     setCaptchaUnavailable(false);
+    setForcedProvider(null);
     captchaRef.current?.reset();
   }, []);
+
+  // 后端校验 Cloudflare 失败（网络不可达）时，自动切换到 Vaptcha 让用户重新验证一次
+  useEffect(() => {
+    if (error && captchaServiceFailed && captchaChain.includes('vaptcha')) {
+      const currentProvider = credential?.captchaProvider ?? null;
+      if (currentProvider === 'turnstile' || currentProvider === null) {
+        setCredential(null);
+        setForcedProvider('vaptcha');
+      }
+    }
+  }, [error, captchaServiceFailed, captchaChain, credential]);
 
   useEffect(() => {
     if (error) resetCaptcha();
@@ -207,9 +222,9 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
                 {captchaRequired && (
                   <div>
-                    {fallbackProvider && !captchaUnavailable && (
+                    {(fallbackProvider || forcedProvider) && !captchaUnavailable && (
                       <p className="mb-2 rounded-xl border border-[#E4DEF7] bg-[#F6F3FF] px-3 py-2 text-xs leading-5 text-[#6A5DC8]">
-                        Cloudflare 验证暂不可用，已切换到 Vaptcha 人机验证。
+                        Cloudflare 验证暂不可用，已切换到 Vaptcha 人机验证，完成后重新提交即可。
                       </p>
                     )}
                     {captchaUnavailable ? (
@@ -217,7 +232,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                         <p className="text-sm leading-5 text-[#A34E5B]">人机验证组件暂时无法加载，请检查网络后重试。</p>
                         <button
                           type="button"
-                          onClick={() => { setCaptchaUnavailable(false); setCaptchaGeneration((current) => current + 1); }}
+                          onClick={() => { setCaptchaUnavailable(false); setFallbackProvider(null); setForcedProvider(null); setCaptchaGeneration((current) => current + 1); }}
                           className="mt-2 rounded-lg px-2 py-1 text-xs font-medium text-[#7766E8] underline underline-offset-2 hover:text-[#6958D5]"
                         >
                           重新加载验证
@@ -234,6 +249,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                         onCredential={receiveCredential}
                         onFallback={setFallbackProvider}
                         onAllUnavailable={() => setCaptchaUnavailable(true)}
+                        forceProvider={forcedProvider}
                       />
                     )}
                   </div>
