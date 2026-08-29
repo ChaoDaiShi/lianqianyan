@@ -50,7 +50,8 @@ describe('TutorExplanationCard knowledge mode', () => {
     );
 
     expect(html).toContain('基础辅导模式');
-    expect(html).toContain('Provider：unavailable · 基础辅导');
+    // Provider 等技术信息移入上下文抽屉的技术详情，消息内不再常驻
+    expect(html).not.toContain('Provider：');
     expect(html).not.toContain('本地演示');
   });
 

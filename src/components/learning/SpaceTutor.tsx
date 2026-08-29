@@ -2,14 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, Send, Sparkles } from 'lucide-react';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { useAgentChat } from '@/lib/hooks';
-import type { AgentChatResponse, KnowledgePointContent } from '@/lib/educationApi';
+import type { AgentChatResponse, KnowledgePointContent, KnowledgeSource } from '@/lib/educationApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
 import { TutorExplanationCard } from './TutorExplanationCard';
 import { SpeechControls } from '@/components/digital-human/SpeechControls';
-import { VoiceAttributionNotice } from '@/components/digital-human/VoiceAttributionNotice';
 import { VoiceInputButton } from '@/components/digital-human/VoiceInputButton';
 import { useSpeechRecognition } from '@/components/digital-human/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/components/digital-human/useSpeechSynthesis';
@@ -21,6 +20,8 @@ interface SpaceTutorProps {
   quickQuestions?: string[];
   onPendingChange?: (pending: boolean) => void;
   onResponse?: (response: AgentChatResponse) => void;
+  /** 点击消息内"课程来源 · N"时打开来源面板。 */
+  onOpenSources?: (sources: KnowledgeSource[]) => void;
 }
 
 interface Msg {
@@ -37,6 +38,7 @@ export function SpaceTutor({
   quickQuestions,
   onPendingChange,
   onResponse,
+  onOpenSources,
 }: SpaceTutorProps) {
   const { send, pending } = useAgentChat(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID, knowledgePointId);
   const [messages, setMessages] = useState<Msg[]>(() =>
@@ -111,14 +113,13 @@ export function SpaceTutor({
 
       <div ref={scrollRef} className="space-y-4 px-1 pb-4">
         {messages.map((message) => <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}><div className={cn('max-w-[92%] text-[13px] leading-relaxed', message.role === 'user' ? 'rounded-[18px] bg-primary-500 px-3.5 py-2.5 text-white' : 'text-[var(--em-ink)]')}>
-          {message.response ? <TutorExplanationCard response={message.response} knowledge={knowledge ?? null} knowledgePointName={topic} /> : <>{message.role === 'assistant' && <div className="mb-1 flex items-center gap-1 text-[10px] text-primary-600"><Sparkles className="h-2.5 w-2.5" />小涟</div>}<p className="whitespace-pre-line">{message.content}</p></>}
+          {message.response ? <TutorExplanationCard response={message.response} knowledge={knowledge ?? null} knowledgePointName={topic} onOpenSources={onOpenSources} /> : <>{message.role === 'assistant' && <div className="mb-1 flex items-center gap-1 text-[10px] text-primary-600"><Sparkles className="h-2.5 w-2.5" />小涟</div>}<p className="whitespace-pre-line">{message.content}</p></>}
           {message.role === 'assistant' && <SpeechControls text={message.content} supported={speech.supported} speaking={speech.speaking} mode={speech.mode} onSpeak={speech.speak} onStop={speech.stop} className="mt-2" />}
         </div></div>)}
       </div>
 
       <div className="sticky bottom-20 space-y-2 lg:bottom-4">
         {quickQuestions && quickQuestions.length > 0 && <div className="flex flex-wrap gap-1.5 px-1">{quickQuestions.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question)} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-primary-700 backdrop-blur hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
-        <VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} className="px-1" />
         <form className="flex items-start gap-2 rounded-[22px] border border-violet-100 bg-[var(--em-glass-bg)] p-2.5 shadow-[var(--em-glass-shadow)] backdrop-blur-xl" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder={`问问小涟「${topic}」…`} className="h-9 rounded-xl border-0 bg-transparent text-[13px] focus-visible:ring-0" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" size="icon" className="h-9 w-9 shrink-0 rounded-xl bg-primary-500" disabled={pending || !input.trim()} aria-label="发送"><Send className="h-3.5 w-3.5" /></Button></form>
       </div>
     </section>

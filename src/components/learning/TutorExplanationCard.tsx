@@ -1,15 +1,15 @@
 import { BookOpen, Brain, Lightbulb, Sparkles } from 'lucide-react';
-import type { AgentChatResponse, KnowledgePointContent } from '@/lib/educationApi';
+import type { AgentChatResponse, KnowledgePointContent, KnowledgeSource } from '@/lib/educationApi';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { buildProactiveTeachingContent } from './companionFlow';
-import { AgentToolTrace } from './AgentToolTrace';
-import { SourceReferences } from './SourceReferences';
 
 interface AgentTutorExplanationCardProps {
   mode?: 'agent';
   response: AgentChatResponse;
   knowledge: KnowledgePointContent | null;
   knowledgePointName: string;
+  /** 点击"课程来源 · N"时回调，由页面打开来源面板；未提供时按钮不渲染。 */
+  onOpenSources?(sources: KnowledgeSource[]): void;
 }
 
 interface KnowledgeTutorExplanationCardProps {
@@ -26,8 +26,7 @@ type TutorExplanationCardProps =
   | KnowledgeTutorExplanationCardProps;
 
 export function TutorExplanationCard(props: TutorExplanationCardProps) {
-  if (props.mode === 'knowledge') {
-    const content = buildProactiveTeachingContent(props.knowledge);
+  if (props.mode === 'knowledge') {    const content = buildProactiveTeachingContent(props.knowledge);
 
     return (
       <GlassPanel className="p-5">
@@ -133,9 +132,16 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
       </section>
 
       {response.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[10px] text-[var(--em-muted-ink)]">回答使用上下文：</span>{response.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] text-primary-700">{key}</span>)}</div>}
-      <SourceReferences sources={response.sources} />
-      <AgentToolTrace items={response.agentTrace} compact />
-      <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{response.provider}{response.model ? ` · ${response.model}` : ' · 基础辅导'}</p>
+      {response.sources.length > 0 && (
+        <button
+          type="button"
+          onClick={() => props.onOpenSources?.(response.sources)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50/60 px-3 py-1 text-[11px] font-semibold text-sky-700 transition hover:bg-sky-100"
+        >
+          <BookOpen className="h-3 w-3" />
+          课程来源 · {response.sources.length}
+        </button>
+      )}
     </article>
   );
 }
