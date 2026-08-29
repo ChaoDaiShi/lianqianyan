@@ -113,6 +113,18 @@ body {
     radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.55), transparent 42%);
 }
 
+[data-auth-card-width="viewport-clamped"] {
+  width: 100%;
+  max-width: 450px;
+}
+
+@media (max-width: 640px) {
+  [data-auth-card-width="viewport-clamped"] {
+    width: calc(100vw - 2rem) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
+
 :root[data-theme="dark"] .em-learning-background {
   opacity: 0.14;
   filter: saturate(0.7) brightness(0.72);

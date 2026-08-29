@@ -73,8 +73,8 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
     >
       <AuthCompanionScene />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-[1240px] items-center sm:min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-4rem)]">
-        <div className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(390px,450px)] lg:gap-16 xl:gap-24">
+      <div className="relative z-10 mx-auto flex min-w-0 min-h-[calc(100vh-2rem)] w-full max-w-[1240px] items-center sm:min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-4rem)]">
+        <div className="grid min-w-0 w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(390px,450px)] lg:gap-16 xl:gap-24">
           <section data-auth-brand="true" className="hidden max-w-xl px-4 text-white drop-shadow-[0_3px_24px_rgba(46,35,91,0.2)] lg:block lg:px-8">
             <p className="flex items-center gap-3 text-sm font-semibold tracking-[0.2em] text-white/85">
               <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#ffd1e8] shadow-[0_0_0_5px_rgba(255,255,255,0.2)]" />
@@ -92,14 +92,15 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
           <section
             data-auth-card="true"
-            className="mx-auto w-full max-w-[450px] overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_28px_80px_rgba(48,39,99,0.2)] backdrop-blur-xl"
+            data-auth-card-width="viewport-clamped"
+            className="mx-auto min-w-0 w-full max-w-full overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_28px_80px_rgba(48,39,99,0.2)] backdrop-blur-xl"
           >
-            <header className="flex items-center justify-between border-b border-[#F0EDF4] px-6 py-5 sm:px-8">
+            <header className="flex min-w-0 flex-wrap items-center justify-between gap-y-1 border-b border-[#F0EDF4] px-6 py-5 sm:px-8">
               <div className="flex items-center gap-2.5 lg:hidden">
                 <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#EFB8D3]" />
                 <span className="text-sm font-semibold tracking-[0.08em] text-[#393545]">忆涟千言—教</span>
               </div>
-              <span className="text-xs text-[#AAA6B5]">AI 学习空间</span>
+              <span className="hidden text-xs text-[#AAA6B5] sm:inline">AI 学习空间</span>
               <p className="text-right text-sm text-[#777386]">
                 <span>{isLogin ? '没有账号？' : '已经有账号？'}</span>{' '}
                 <button

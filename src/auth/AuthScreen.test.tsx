@@ -45,6 +45,17 @@ describe('AuthScreen', () => {
     expect(renderScreen()).toContain('创建账号');
   });
 
+  it('keeps the form card shrinkable on narrow viewports', () => {
+    const html = renderScreen();
+
+    expect(html).toContain('min-w-0');
+    expect(html).toContain('w-full');
+    expect(html).toContain('max-w-full');
+    expect(html).toContain('data-auth-card-width="viewport-clamped"');
+    expect(html).toContain('hidden text-xs');
+    expect(html).toContain('sm:inline');
+  });
+
   it('keeps the real credential constraints and account switch available', () => {
     const html = renderScreen();
     expect(html).toContain('name="username"');
