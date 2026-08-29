@@ -17,7 +17,7 @@ export interface TurnstileWidgetHandle {
 }
 
 export function resetTurnstileWidget(
-  turnstile: Window['turnstile'] | undefined,
+  turnstile: Pick<NonNullable<Window['turnstile']>, 'reset'> | undefined,
   widgetId: string | null,
   onToken: (token: string | null) => void,
 ): void {
