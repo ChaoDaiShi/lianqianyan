@@ -448,6 +448,55 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
     Vaptcha 容器并在未出票时保持提交禁用；超时/加载失败/出票不切换三类降级路径由组件测试覆盖。
 - **负责人：** EducationMind 项目组
 
+### 3.14 Workspace Component Architecture
+
+- **时间：** 2026-08-29
+- **状态：** 已完成
+- **阶段目标：** 按"主界面极简 + 能力完整 + 功能组件化 + 按需展开"重构学习工作台：
+  历史记录、学习产物、学习上下文三类语义独立的抽屉替代常驻区块；
+  禁止删除任何有效功能，低频/辅助/证据/产物类能力全部按需调用。
+- **实际完成：**
+  - **Header 重设计**（`WorkbenchTaskHeader`）：左侧返回 + 任务名 + 类型/时长 chips，
+    右侧桌面端"历史/学习产物/学习上下文"三个 icon+tooltip 入口，移动端收敛为 ··· 菜单
+    （390px 下不出现四个文字按钮）；阶段进度轨与诚实说明保留。
+  - **历史记录抽屉**（`WorkspaceHistoryPanel`）：五类分区——对话（后端无持久化会话 API，
+    如实显示"当前版本尚未提供可恢复的云端对话历史"，不伪造本地假历史）、学习行为
+    （真实 LearningEvidence 事件化："开始学习/完成练习评价 · 知识点"，展开可看时间/来源/会话/掌握变化，
+    不显示原始 payload）、练习（本次会话服务端评价含 masteryBefore→After/置信度/重规划状态，
+    云端证据单独列出）、复述（明确标记"本地复述记录 · 刷新后清空，不代表云端长期记忆"）、
+    任务历史（当前 Current Plan 任务列表）。
+  - **学习产物抽屉**（`WorkspaceArtifactsPanel`）：统一 `ArtifactCard` 外壳（类型/标题/产生时间/
+    关联知识点/内容/操作），覆盖知识总结、诊断重点、练习结果、复述结果、来源引用与生成资源入口；
+    支持当前任务/当前知识点/本次会话三种范围切换（展示层过滤）。
+  - **学习上下文抽屉**（`WorkspaceContextPanel`）：五个关键字段（课程/知识点/任务/计划位置/诊断），
+    评价证据面板（计数 + 最近 5 条 + 折叠的全部证据），技术详情默认折叠
+    （Agent/Tool 执行记录、Provider/Model、语音归属 Genie-TTS/GPT-SoVITS），普通学习者默认不可见。
+  - **回答内收纳**：`TutorExplanationCard` 只保留"课程来源 · N"按钮打开来源抽屉；
+    AgentToolTrace、Provider 行与长语音归属声明从消息流移入上下文抽屉技术详情。
+  - **主区减法**：移除常驻的"小涟如何了解你的学习情况"大区块（能力由上下文抽屉承载）；
+    删除被取代的 `LearningArtifactPanel`、`EvidenceInsightCard`。
+  - **移动端**：`WorkbenchSidePanel` 在窄视口变为底部 Bottom Sheet（86dvh 上限），历史/产物/上下文
+    分别为独立 Sheet，主聊天区保持最高优先级；抽屉层级提升至固定顶栏之上。
+- **关键决策：**
+  - 三类抽屉语义严格分离：History=过去发生了什么、Artifacts=当前学习产生了什么、Context=小涟现在依据什么。
+  - 复用优先：抽屉壳复用 `WorkbenchSidePanel`，Trace/来源/证据过滤复用 `AgentToolTrace`、
+    `SourceReferences`、`filterLearningEvidence`，不新造第二套组件；组件均为 props 驱动的
+    presentation component，数据编排在页面与既有 hook/store。
+  - 数据诚实边界：无后端持久化 API 的能力（对话恢复、复述云存储）如实标注，不声称云端长期记忆。
+- **对应提交：** `feat: componentize the learning workspace with history, artifacts and context drawers`
+- **修改文件与资源：**
+  - 新增：`src/components/workspace/{WorkspaceHistoryPanel,WorkspaceArtifactsPanel,WorkspaceContextPanel}` 及测试
+  - 修改：`WorkbenchTaskHeader`、`WorkbenchSidePanel`（Bottom Sheet + z 序）、`SpaceTutor`、
+    `TutorExplanationCard`、`LearningSpacePage`（编排重排）、`src/components/index.ts`
+  - 删除：`LearningArtifactPanel`、`EvidenceInsightCard`（能力已由抽屉承载）
+- **验证结果：**
+  - `pnpm check`：通过；`npx vitest run`：77 文件 262 项测试全部通过（新增 13 项工作台组件测试）；
+    `pnpm build`：成功；`uv run pytest`：后端 369 项全部通过。
+  - 浏览器实测（真实注册→选课→生成路线→进入工作台）：首屏仅 Header + 对话流 + 练习卡；
+    历史抽屉显示真实学习证据事件；上下文抽屉五字段与证据面板正确；产物抽屉范围切换正常；
+    390px 下 ··· 菜单与 Bottom Sheet 正常，Esc 关闭抽屉正常。
+- **负责人：** EducationMind 项目组
+
 ## 4. 问题追踪表
 
 | 编号 | 日期 | 问题 | 状态 | 处理记录 |
@@ -477,6 +526,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | KB-01 | 2026-08-29 | 知识库仅有一门操作系统课程，学科选择单一 | 已解决 | 新增计算机网络与数据结构与算法两门课程、10 个知识点与 10 篇分章节材料，注册选课自动展示 |
 | HD-09 | 2026-08-29 | 国内网络到 Cloudflare Siteverify 间歇中断，注册登录报"验证服务暂不可用"；前端组件加载失败时登录被锁死 | 已解决 | 引入 Vaptcha 兜底链：后端按 captcha_provider 分发校验，前端 CaptchaPanel 在脚本加载失败或 8 秒未出票时自动切换 Vaptcha 并提示；EDUCATION_CAPTCHA_MODE 可强制单源或关闭 |
 | HD-10 | 2026-08-29 | 部署方把 Vaptcha 密钥填入仓库根 `.env`，但后端实际读取 `apps/api/.env`，兜底未生效；旧后端进程未重启也导致前后端验证状态不一致 | 已解决 | 密钥写入生效的 `apps/api/.env` 并重启后端，config 下发 `["turnstile","vaptcha"]` 双源链；README 明确配置文件位置与重启要求；人机验证错误详情映射为中文提示；全部 provider 加载失败时展示内联重试入口 |
+| UI9-10 | 2026-08-29 | 工作台缺少统一历史记录入口，证据/产物/技术详情常驻挤占主学习区 | 已解决 | 建立历史/产物/上下文三个语义独立的按需抽屉（移动端 Bottom Sheet），Header icon 化入口 + 移动端 ··· 菜单；主区仅保留对话流与练习卡，功能零删除 |
 
 ## 5. 节点记录
 
@@ -496,6 +546,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | V2 视觉升级与知识库扩充完成 | 前后端测试、生产构建、网状图/多学科/画像雷达浏览器实测记录 |
 | 2026-08-29 | Vaptcha 兜底人机验证完成 | 前后端测试、生产构建与降级链浏览器实测记录 |
 | 2026-08-29 | 验证配置踩坑修复（配置文件位置/降级 UX）完成 | 双源链 config 实测、前端 249 项测试与生产构建记录 |
+| 2026-08-29 | 工作台组件化架构与历史记录体系完成 | 前后端测试、生产构建与桌面/移动端抽屉实测记录 |
 
 ## 6. 团队分工与贡献
 
@@ -535,6 +586,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | 1.9 | 完成参考站对齐的页面级对话，补录去容器化、悬浮输入区、气泡轻量化与真实对话实测 |
 | 2026-08-29 | 2.0 | 完成 V2 视觉升级与知识库扩充：聊天页合一、知识图谱网状化、两门新学科、知识点数据源统一与掌握度雷达 |
 | 2026-08-29 | 2.1 | 完成 Vaptcha 兜底人机验证：定位 Cloudflare 可达性根因，新增 provider 分发校验、前端自动降级与双源组件测试 |
+| 2026-08-29 | 2.2 | 完成工作台组件化架构：历史/产物/上下文三抽屉、Header icon 化与移动端 ··· 菜单、回答内来源收纳与运行详情折叠，功能零删除 |
 
 ## 10. 附件与参考链接
 
