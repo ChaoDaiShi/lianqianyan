@@ -2,6 +2,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthScreen } from './AuthScreen';
 
+vi.mock('./AuthProvider', () => ({
+  useAuth: () => ({ captchaServiceFailed: false }),
+}));
+
 describe('AuthScreen', () => {
   const renderScreen = ({
     busy = false,

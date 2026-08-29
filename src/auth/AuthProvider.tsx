@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { AxiosError } from 'axios';
 import {
   authErrorMessage,
+  CAPTCHA_SERVICE_UNAVAILABLE_DETAIL,
   loginAccount,
   logoutAccount,
   registerAccount,
@@ -21,6 +23,8 @@ interface AuthContextValue {
   loading: boolean;
   busy: boolean;
   error: string | null;
+  /** 后端校验人机验证服务本身不可达时为 true，前端据此切换备用验证方式。 */
+  captchaServiceFailed: boolean;
   login(username: string, password: string, captcha?: CaptchaCredential | null): Promise<void>;
   register(payload: { username: string; displayName: string; password: string; captcha?: CaptchaCredential | null }): Promise<void>;
   selectCourse(courseId: string): Promise<void>;
@@ -40,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaServiceFailed, setCaptchaServiceFailed] = useState(false);
 
   useEffect(() => {
     void restoreSession()
@@ -64,12 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         storeAuthenticatedContext(localStorage, next.id, next.selectedCourseId);
         window.location.reload();
       }
-    } catch (cause) { setError(authErrorMessage(cause)); }
+    } catch (cause) {
+      const message = authErrorMessage(cause);
+      setCaptchaServiceFailed(
+        cause instanceof AxiosError &&
+          (cause.response?.data as { detail?: string } | undefined)?.detail === CAPTCHA_SERVICE_UNAVAILABLE_DETAIL,
+      );
+      setError(message);
+    }
     finally { setBusy(false); }
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
-    account, loading, busy, error,
+    account, loading, busy, error, captchaServiceFailed,
     login: (username, password, captcha) => run(() => loginAccount(username, password, captcha)),
     register: (payload) => run(() => registerAccount(payload)),
     selectCourse: async (courseId) => {
@@ -84,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.location.reload();
       }
     },
-  }), [account, busy, error, loading, run]);
+  }), [account, busy, captchaServiceFailed, error, loading, run]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

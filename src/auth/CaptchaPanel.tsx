@@ -19,6 +19,8 @@ export interface CaptchaPanelProps {
   onFallback?(provider: CaptchaProvider): void;
   /** 链上所有 provider 的组件都无法加载时回调一次，便于展示重试入口。 */
   onAllUnavailable?(): void;
+  /** 外部强制切换 provider（如后端校验服务不可达时切到 Vaptcha）。 */
+  forceProvider?: CaptchaProvider | null;
 }
 
 function useActiveProvider(
@@ -48,6 +50,7 @@ export const CaptchaPanel = forwardRef<CaptchaPanelHandle, CaptchaPanelProps>(fu
   onCredential,
   onFallback,
   onAllUnavailable,
+  forceProvider,
 }, ref) {
   const { provider: activeProvider, setForced } = useActiveProvider(chain, turnstileSiteKey, vaptchaVid);
   const [turnstileGeneration, setTurnstileGeneration] = useState(0);
@@ -87,6 +90,12 @@ export const CaptchaPanel = forwardRef<CaptchaPanelHandle, CaptchaPanelProps>(fu
       vaptchaRef.current?.refresh();
     },
   }), [handleCredential]);
+
+  useEffect(() => {
+    if (forceProvider && forceProvider !== activeProvider) {
+      switchTo(forceProvider);
+    }
+  }, [forceProvider, activeProvider, switchTo]);
 
   const handleTurnstileUnavailable = useCallback(() => {
     if (chain.includes('vaptcha')) switchTo('vaptcha');

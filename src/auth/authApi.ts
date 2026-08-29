@@ -103,9 +103,11 @@ export async function selectAccountCourse(courseId: string): Promise<AuthAccount
   return mapAccount(response.data);
 }
 
+export const CAPTCHA_SERVICE_UNAVAILABLE_DETAIL = 'verification service is temporarily unavailable';
+
 const CAPTCHA_DETAIL_I18N: Record<string, string> = {
   'complete the verification challenge': '请先完成人机验证再提交。',
-  'verification service is temporarily unavailable': '验证服务暂时不可用，请稍后重试。',
+  [CAPTCHA_SERVICE_UNAVAILABLE_DETAIL]: '验证服务暂时不可用，请换一种验证方式重试。',
   'verification challenge was not accepted': '人机验证未通过，请重新完成验证。',
   'captcha provider is not enabled': '当前部署未启用该验证方式，请刷新页面重试。',
   'unsupported captcha provider': '当前部署未启用该验证方式，请刷新页面重试。',
