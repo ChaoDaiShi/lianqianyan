@@ -10,6 +10,7 @@ import {
   getKnowledgeNodeStatusText,
   type KnowledgeSceneNode,
 } from './knowledgePresentation';
+import { computeForceMesh } from './forceMesh';
 
 interface KnowledgeGalaxyProps {
   graph: KnowledgeGraphData | null;
@@ -36,19 +37,14 @@ const NODE_COLOR = {
   unassessed: { fill: '#d4d4d8', stroke: '#e4e4e7' },
 } as const;
 
-function canvasWidth(knowledgePointCount: number) {
-  return Math.max(980, knowledgePointCount * 165);
-}
-
-function layoutNodes(nodes: KnowledgeSceneNode[], width: number) {
-  const result = new Map<string, { x: number; y: number }>();
-  const course = nodes.filter((node) => node.kind === 'course');
-  const points = nodes.filter((node) => node.kind === 'knowledge_point');
-  const sections = nodes.filter((node) => node.kind === 'section');
-  course.forEach((node, index) => result.set(node.id, { x: ((index + 1) * width) / (course.length + 1), y: 76 }));
-  points.forEach((node, index) => result.set(node.id, { x: ((index + 1) * width) / (points.length + 1), y: 245 + (index % 2) * 42 }));
-  sections.forEach((node, index) => result.set(node.id, { x: ((index + 1) * width) / (sections.length + 1), y: 450 }));
-  return result;
+function layoutNodes(nodes: KnowledgeSceneNode[], links: Array<{ source: string; target: string }>) {
+  const width = 960;
+  const height = 600;
+  return computeForceMesh(
+    nodes.map((node) => ({ id: node.id, radius: nodeRadius(node, false) })),
+    links,
+    { width, height, linkLength: 148 },
+  );
 }
 
 function nodeRadius(node: KnowledgeSceneNode, selected: boolean) {
@@ -81,8 +77,10 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
     () => (scene?.edges ?? []).filter((edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target)),
     [scene, visibleIds],
   );
-  const width = canvasWidth(visibleNodes.filter((node) => node.kind === 'knowledge_point').length);
-  const positions = useMemo(() => layoutNodes(visibleNodes, width), [visibleNodes, width]);
+  const positions = useMemo(
+    () => layoutNodes(visibleNodes, visibleEdges.map((edge) => ({ source: edge.source, target: edge.target }))),
+    [visibleNodes, visibleEdges],
+  );
   const attentionPoints = points.filter((point) => point.status === 'weak' || point.status === 'unassessed' || point.status === 'insufficient_evidence');
 
   if (loading) return <div className="rounded-[2rem] border border-violet-100 bg-white/55 p-10 text-sm text-[var(--em-muted-ink)]"><p className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />正在读取课程关系与学习状态…</p></div>;
@@ -103,7 +101,7 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
             </div>
           </div>
           <div className="mt-4 overflow-x-auto rounded-[1.75rem] border border-white/80 bg-[radial-gradient(circle_at_50%_18%,rgba(139,124,246,.18),transparent_35%),var(--em-glass-bg)]">
-            <svg viewBox={`0 0 ${width} 540`} role="img" aria-label="融合课程关系与学习状态的知识星图" className="min-w-[820px]">
+            <svg viewBox="0 0 960 600" role="img" aria-label="融合课程关系与学习状态的知识网状图" className="w-full min-w-[760px]">
               {visibleEdges.map((edge) => {
                 const source = positions.get(edge.source);
                 const target = positions.get(edge.target);
