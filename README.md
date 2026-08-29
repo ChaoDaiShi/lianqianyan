@@ -185,6 +185,19 @@ $env:EDUCATION_TURNSTILE_SECRET_KEY = '<Cloudflare widget secret key>'
 
 两项都配置后，注册与登录必须提交一次性验证码 token；Secret 永远不会出现在 `/api/public/config` 或前端构建中。本地未配置时验证码诚实地处于关闭状态，不使用假验证码。
 
+### MiniMax 语音输出
+
+部署推荐使用 MiniMax 开放平台完成语音输出（替代 Genie-TTS / GPT-SoVITS 本地链路）。在 MiniMax 控制台获取 API Key 与 **UID（即接口所需的 GroupId）** 后，在后端实际读取的 `apps/api/.env` 中配置：
+
+```powershell
+$env:EDUCATION_MINIMAX_API_KEY = '<MiniMax API Key>'
+$env:EDUCATION_MINIMAX_GROUP_ID = '<控制台 UID，即 GroupId>'
+# 可选：EDUCATION_MINIMAX_MODEL = 'speech-02-hd'
+# 可选：EDUCATION_MINIMAX_VOICE_ID = 'female-shaonv' 等音色 ID
+```
+
+MiniMax 配置后为最高优先级：`/api/voice/status` 返回 `provider=minimax`，语音输出经后端代理调用 `api.minimax.chat/v1/t2a_v2`，API Key 不会下发到前端。**修改 `.env` 后必须重启后端进程才会生效。** 未配置 MiniMax 时回退既有语音链路；两者都不可用时诚实降级为浏览器语音。
+
 ### Vaptcha 兜底验证
 
 国内网络访问 Cloudflare 不稳定时，可配置 Vaptcha 作为兜底人机验证：在 [vaptcha.com](https://www.vaptcha.com/) 注册验证单元后填入

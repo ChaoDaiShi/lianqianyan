@@ -567,6 +567,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | HD-10 | 2026-08-29 | 部署方把 Vaptcha 密钥填入仓库根 `.env`，但后端实际读取 `apps/api/.env`，兜底未生效；旧后端进程未重启也导致前后端验证状态不一致 | 已解决 | 密钥写入生效的 `apps/api/.env` 并重启后端，config 下发 `["turnstile","vaptcha"]` 双源链；README 明确配置文件位置与重启要求；人机验证错误详情映射为中文提示；全部 provider 加载失败时展示内联重试入口 |
 | UI9-10 | 2026-08-29 | 工作台缺少统一历史记录入口，证据/产物/技术详情常驻挤占主学习区 | 已解决 | 建立历史/产物/上下文三个语义独立的按需抽屉（移动端 Bottom Sheet），Header icon 化入口 + 移动端 ··· 菜单；主区仅保留对话流与练习卡，功能零删除 |
 | HD-11 | 2026-08-29 | Genie-TTS 嵌入式运行时启动慢且在模型缺失时报错；语音输出需切换到 MiniMax 开放平台 | 已解决 | 新增 MiniMax TTS provider 并置于输出链最高优先级，移除 Genie lifespan 启动；配置 EDUCATION_MINIMAX_API_KEY/_GROUP_ID 后自动接管语音输出，未配置时诚实降级 |
+| HD-12 | 2026-08-29 | MiniMax 密钥配置后语音仍不可用：运行中的后端进程未重启（配置在启动时读取，`get_settings` 带缓存），且 MiniMax 控制台的 UID 即接口所需的 GroupId | 已解决 | 确认 `apps/api/.env` 的四项 MiniMax 配置解析正常后重启后端，`/api/voice/status` 返回 `provider=minimax`；README 记录"UID 即 GroupId、配置后必须重启"要点 |
 | UI9-11 | 2026-08-29 | 工作台 Header 双行布局过高，对话区显得偏小；昔涟 Live2D 仅以小图标出现在对话头部 | 已解决 | Header 收敛为单行（标题+chips+阶段轨+icons），全尺寸昔涟 Live2D 悬浮于对话区右下角并联动运行/口型状态 |
 
 ## 5. 节点记录
