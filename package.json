@@ -59,6 +59,8 @@
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@testing-library/dom": "^9.3.4",
+    "@testing-library/react": "^14.0.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "6.21.0",
@@ -70,6 +72,7 @@
     "eslint-plugin-react": "7",
     "eslint-plugin-react-hooks": "4.6.2",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jsdom": "^30.0.1",
     "postcss": "^8.5.2",
     "prettier": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.6.14",

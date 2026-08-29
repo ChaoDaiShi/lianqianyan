@@ -405,6 +405,49 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
     「线性表 · 学习单」；主导航激活态在暗色主题下协调。
 - **负责人：** EducationMind 项目组
 
+### 3.13 Vaptcha Fallback Captcha
+
+- **时间：** 2026-08-29
+- **状态：** 已完成
+- **阶段目标：** 定位注册/登录"verification service is temporarily unavailable"的根因，并按部署决策引入
+  国内 Vaptcha 人机验证作为 Cloudflare Turnstile 不可用时的自动兜底。
+- **根因定位：**
+  - 后端 `TurnstileVerifier` 调用 `challenges.cloudflare.com/turnstile/v0/siteverify`；在本机实测 DNS 正常、
+    但 httpx 连接被直接拒绝（`WinError 10061 目标计算机积极拒绝`），curl 报 `CRYPT_E_REVOCATION_OFFLINE`，
+    即国内网络到 Cloudflare 边缘的可达性间歇中断；httpx 异常被统一转成"验证服务暂不可用"。
+  - 脆弱点有两处：后端二次校验与前端 widget 脚本同源，浏览器加载不到组件时登录按钮永久禁用。
+- **实际完成：**
+  - 后端新增 `app/auth/captcha.py`：`VaptchaVerifier`（`api.vaptcha.com/verify`，成功码 `0103`，
+    携带 vid/secretkey/token/ip）、`verify_captcha` 按 `captcha_provider` 分发校验、`captcha_chain`
+    依据 `EDUCATION_CAPTCHA_MODE`（auto/turnstile/vaptcha/off，默认 auto）生成优先级链。
+  - `/api/public/config` 下发 `captcha_chain` 与 `vaptcha_vid`；注册/登录载荷新增 `captcha_provider`，
+    后端分别调用 Siteverify 或 Vaptcha 校验；未配置任何 provider 时保持"诚实关闭"不校验。
+  - 前端新增 `CaptchaPanel`：按链渲染 Turnstile，脚本加载失败立即切换 Vaptcha，8 秒未出票也自动切换
+    （已出票则不切换），切换时展示"Cloudflare 验证暂不可用，已切换到 Vaptcha"提示；
+    凭据未就绪时提交按钮保持禁用。`VaptchaWidget` 封装 v3.js（vid/type/scene/container、
+    pass 事件、getToken、refresh/destroy）。
+  - 环境变量：`EDUCATION_VAPTCHA_VID` / `EDUCATION_VAPTCHA_KEY`（均配置才入链）、
+    `EDUCATION_CAPTCHA_MODE`；README 补充接入说明，`.env` 留有占位待部署方填入密钥。
+- **关键决策：**
+  - 兜底切换放在前端：Turnstile 与 Vaptcha 的 token 互不相通，只有前端能感知"组件加载失败/未出票"
+    并改用另一 provider 重新取票；后端只按请求声明的 provider 校验对应凭证，不猜测。
+  - Vaptcha 选用其免费策略（注册即用、无验证量限制），与项目"免费、国内可达"的部署诉求一致。
+  - 超时兜底设 8 秒：覆盖脚本慢加载，同时避免用户明显感知等待。
+- **对应提交：** `feat: fall back to vaptcha when cloudflare turnstile is unreachable`
+- **修改文件与资源：**
+  - 后端：`app/auth/captcha.py`（新增）、`app/api/routes/{auth,public}.py`、`app/auth/schemas.py`、
+    `app/core/config.py`、`tests/test_captcha_chain.py`（新增 7 项）
+  - 前端：`src/auth/{CaptchaPanel,VaptchaWidget,CaptchaPanel.test}.tsx`（新增/含 6 项组件测试）、
+    `src/auth/{AuthScreen,AuthProvider,TurnstileWidget,authApi}`、`package.json`（新增
+    @testing-library/react、@testing-library/dom、jsdom 开发依赖）、`README.md`
+- **验证结果：**
+  - `pnpm check`：通过；`npx vitest run`：74 文件 247 项测试全部通过；`pnpm build`：成功；
+    `uv run pytest`：后端 369 项测试全部通过。
+  - 浏览器实测：双 provider 链下 Turnstile 组件正常渲染（可达性间歇，正常路径不受影响）；
+    将后端切换为 vaptcha-only 链后，`/api/public/config` 下发 `["vaptcha"]`，登录页正确渲染
+    Vaptcha 容器并在未出票时保持提交禁用；超时/加载失败/出票不切换三类降级路径由组件测试覆盖。
+- **负责人：** EducationMind 项目组
+
 ## 4. 问题追踪表
 
 | 编号 | 日期 | 问题 | 状态 | 处理记录 |
@@ -432,6 +475,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | UI9-09 | 2026-08-29 | 存在 /agent 与 /xiaolian 两个聊天页面 | 已解决 | 删除 /agent 路由与包装页，/xiaolian 成为唯一聊天入口，关于页同步移除入口 |
 | HD-08 | 2026-08-29 | 资源生成/组卷/题库的知识点列表硬编码为操作系统五项，切换学科后错配 | 已解决 | 后端新增课程知识点列表接口，前端统一走 useKnowledgePointOptions 按当前课程读取，含加载与错误态 |
 | KB-01 | 2026-08-29 | 知识库仅有一门操作系统课程，学科选择单一 | 已解决 | 新增计算机网络与数据结构与算法两门课程、10 个知识点与 10 篇分章节材料，注册选课自动展示 |
+| HD-09 | 2026-08-29 | 国内网络到 Cloudflare Siteverify 间歇中断，注册登录报"验证服务暂不可用"；前端组件加载失败时登录被锁死 | 已解决 | 引入 Vaptcha 兜底链：后端按 captcha_provider 分发校验，前端 CaptchaPanel 在脚本加载失败或 8 秒未出票时自动切换 Vaptcha 并提示；EDUCATION_CAPTCHA_MODE 可强制单源或关闭 |
 
 ## 5. 节点记录
 
@@ -449,6 +493,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | Codex 式单栏工作台布局完成 | 前端测试、生产构建与桌面/窄视口滑出面板实测记录 |
 | 2026-08-29 | 参考站对齐的页面级对话完成 | 前端测试、生产构建与真实对话/窄视口实测记录 |
 | 2026-08-29 | V2 视觉升级与知识库扩充完成 | 前后端测试、生产构建、网状图/多学科/画像雷达浏览器实测记录 |
+| 2026-08-29 | Vaptcha 兜底人机验证完成 | 前后端测试、生产构建与降级链浏览器实测记录 |
 
 ## 6. 团队分工与贡献
 
@@ -487,6 +532,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | 1.8 | 完成 Codex 式单栏工作台布局，补录滑出面板、任务头开关、常驻左栏删除与实测结果 |
 | 2026-08-29 | 1.9 | 完成参考站对齐的页面级对话，补录去容器化、悬浮输入区、气泡轻量化与真实对话实测 |
 | 2026-08-29 | 2.0 | 完成 V2 视觉升级与知识库扩充：聊天页合一、知识图谱网状化、两门新学科、知识点数据源统一与掌握度雷达 |
+| 2026-08-29 | 2.1 | 完成 Vaptcha 兜底人机验证：定位 Cloudflare 可达性根因，新增 provider 分发校验、前端自动降级与双源组件测试 |
 
 ## 10. 附件与参考链接
 

@@ -183,6 +183,17 @@ $env:EDUCATION_TURNSTILE_SECRET_KEY = '<Cloudflare widget secret key>'
 
 两项都配置后，注册与登录必须提交一次性验证码 token；Secret 永远不会出现在 `/api/public/config` 或前端构建中。本地未配置时验证码诚实地处于关闭状态，不使用假验证码。
 
+### Vaptcha 兜底验证
+
+国内网络访问 Cloudflare 不稳定时，可配置 Vaptcha 作为兜底人机验证：在 [vaptcha.com](https://www.vaptcha.com/) 注册验证单元后填入
+
+```powershell
+$env:EDUCATION_VAPTCHA_VID = '<验证单元 VID>'
+$env:EDUCATION_VAPTCHA_KEY = '<验证单元 Key>'
+```
+
+Turnstile 与 Vaptcha 同时配置时，`/api/public/config` 按 `["turnstile", "vaptcha"]` 下发验证链；前端 Turnstile 加载失败或超时未出票会自动切换 Vaptcha，请求携带 `captcha_provider` 标记实际来源，后端分别调用 Siteverify 或 `api.vaptcha.com/verify`（成功码 `0103`）。`EDUCATION_CAPTCHA_MODE` 可强制 `turnstile`、`vaptcha` 或 `off`，默认 `auto`。
+
 ## Live2D 资源
 
 昔涟模型和 Cubism Core 位于被 Git 忽略的 `.local/live2d/`，源文件不会进入仓库。开发服务器将其只读挂载到 `/local-live2d/`；执行 `pnpm build` 时，如果本地目录存在，构建插件会拒绝符号链接并把普通文件复制到 `dist/local-live2d/`。交付 `dist` 前仍须确认模型与 Cubism 授权允许目标平台使用。

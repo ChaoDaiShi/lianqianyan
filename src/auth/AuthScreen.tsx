@@ -3,16 +3,16 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthCompanionScene } from './AuthCompanionScene';
-import { fetchPublicRuntimeConfig } from './authApi';
-import { TurnstileWidget, type TurnstileWidgetHandle } from './TurnstileWidget';
+import { fetchPublicRuntimeConfig, type CaptchaCredential, type CaptchaProvider } from './authApi';
+import { CaptchaPanel, type CaptchaPanelHandle } from './CaptchaPanel';
 
 interface AuthScreenProps {
-  onLogin(username: string, password: string, captchaToken?: string | null): Promise<void> | void;
+  onLogin(username: string, password: string, captcha?: CaptchaCredential | null): Promise<void> | void;
   onRegister(payload: {
     username: string;
     displayName: string;
     password: string;
-    captchaToken?: string | null;
+    captcha?: CaptchaCredential | null;
   }): Promise<void> | void;
   busy: boolean;
   error: string | null;
@@ -28,9 +28,12 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [credential, setCredential] = useState<CaptchaCredential | null>(null);
+  const [captchaChain, setCaptchaChain] = useState<CaptchaProvider[]>([]);
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
-  const captchaRef = useRef<TurnstileWidgetHandle>(null);
+  const [vaptchaVid, setVaptchaVid] = useState<string | null>(null);
+  const [fallbackProvider, setFallbackProvider] = useState<CaptchaProvider | null>(null);
+  const captchaRef = useRef<CaptchaPanelHandle>(null);
   const resolved =
     typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
       ? 'dark'
@@ -38,13 +41,30 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
   useEffect(() => {
     void fetchPublicRuntimeConfig()
-      .then((config) => setTurnstileSiteKey(config.turnstile_enabled ? config.turnstile_site_key : null))
-      .catch(() => setTurnstileSiteKey(null));
+      .then((config) => {
+        const chain = (config.captcha_chain ?? []).filter((provider) =>
+          provider === 'turnstile'
+            ? config.turnstile_enabled && Boolean(config.turnstile_site_key)
+            : provider === 'vaptcha'
+              ? Boolean(config.vaptcha_vid)
+              : false,
+        );
+        setCaptchaChain(chain);
+        setTurnstileSiteKey(chain.includes('turnstile') ? config.turnstile_site_key : null);
+        setVaptchaVid(chain.includes('vaptcha') ? config.vaptcha_vid ?? null : null);
+      })
+      .catch(() => {
+        setCaptchaChain([]);
+        setTurnstileSiteKey(null);
+        setVaptchaVid(null);
+      });
   }, []);
 
-  const receiveCaptchaToken = useCallback((token: string | null) => setCaptchaToken(token), []);
+  const receiveCredential = useCallback((value: { token: string | null; provider: CaptchaProvider } | null) => {
+    setCredential(value && value.token ? { captchaToken: value.token, captchaProvider: value.provider } : null);
+  }, []);
   const resetCaptcha = useCallback(() => {
-    setCaptchaToken(null);
+    setCredential(null);
     captchaRef.current?.reset();
   }, []);
 
@@ -53,12 +73,13 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   }, [error, resetCaptcha]);
 
   const isLogin = mode === 'login';
+  const captchaRequired = captchaChain.length > 0;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    if (turnstileSiteKey && !captchaToken) return;
-    if (isLogin) void onLogin(username, password, captchaToken);
-    else void onRegister({ username, displayName, password, captchaToken });
+    if (captchaRequired && !credential) return;
+    if (isLogin) void onLogin(username, password, credential);
+    else void onRegister({ username, displayName, password, captcha: credential });
   };
 
   const switchMode = () => {
@@ -181,14 +202,29 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                   </p>
                 )}
 
-                {turnstileSiteKey && (
-                  <TurnstileWidget ref={captchaRef} siteKey={turnstileSiteKey} theme={resolved} onToken={receiveCaptchaToken} />
+                {captchaRequired && (
+                  <div>
+                    {fallbackProvider && (
+                      <p className="mb-2 rounded-xl border border-[#E4DEF7] bg-[#F6F3FF] px-3 py-2 text-xs leading-5 text-[#6A5DC8]">
+                        Cloudflare 验证暂不可用，已切换到 Vaptcha 人机验证。
+                      </p>
+                    )}
+                    <CaptchaPanel
+                      ref={captchaRef}
+                      chain={captchaChain}
+                      turnstileSiteKey={turnstileSiteKey}
+                      vaptchaVid={vaptchaVid}
+                      theme={resolved}
+                      onCredential={receiveCredential}
+                      onFallback={setFallbackProvider}
+                    />
+                  </div>
                 )}
 
                 <Button
                   data-auth-primary-action="true"
                   type="submit"
-                  disabled={busy || Boolean(turnstileSiteKey && !captchaToken)}
+                  disabled={busy || Boolean(captchaRequired && !credential)}
                   aria-busy={busy}
                   className="h-12 w-full rounded-xl bg-[#7766E8] px-5 text-sm font-medium text-white shadow-[0_6px_16px_rgba(119,102,232,0.18)] transition-colors duration-200 hover:bg-[#6958D5] active:bg-[#5F50C8] focus-visible:ring-[#7766E8]/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#AAA6D5]"
                 >
