@@ -37,7 +37,10 @@ describe('LearningRail assessment and workshop entries', () => {
         (item) => item.label === '考试中心' && item.to === '/exams',
       ),
     ).toHaveLength(1);
-    expect(learningRailItems).toHaveLength(7);
+    expect(
+      learningRailItems.filter((item) => item.to === '/settings'),
+    ).toHaveLength(1);
+    expect(learningRailItems).toHaveLength(8);
   });
 
   it('uses a horizontally scrollable mobile rail and keeps labels visible', () => {
@@ -49,5 +52,14 @@ describe('LearningRail assessment and workshop entries', () => {
     expect(html).toContain('考试中心');
     expect(html).toContain('学习工坊');
     expect(html).toContain('href="/resources"');
+  });
+
+  it('marks the learning rail as the responsive primary navigation', () => {
+    const html = renderToStaticMarkup(<LearningRail currentPath="/" />);
+
+    expect(html).toContain('data-learning-rail="primary"');
+    expect(html).toContain('学习星轨');
+    expect(html).toContain('首页');
+    expect(html).toContain('设置');
   });
 });

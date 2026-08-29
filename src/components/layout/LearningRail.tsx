@@ -1,4 +1,4 @@
-import { BookOpen, ClipboardCheck, FolderOpen, GraduationCap, Home, Stethoscope, WandSparkles, type LucideIcon } from 'lucide-react';
+import { BookOpen, ClipboardCheck, FolderOpen, GraduationCap, Home, Settings, Stethoscope, WandSparkles, type LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,7 @@ export const learningRailItems: RailItem[] = [
   { label: '考试中心', to: '/exams', icon: ClipboardCheck },
   { label: '学习工坊', to: '/resources', icon: WandSparkles },
   { label: '学习档案', to: '/archive', icon: FolderOpen },
+  { label: '设置', to: '/settings', icon: Settings },
 ];
 
 function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string }) {
@@ -26,10 +27,10 @@ function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string 
       end={item.to === '/'}
       aria-label={item.label}
       className={({ isActive }) => cn(
-        'group flex min-w-[60px] flex-none flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[9px] font-semibold transition duration-200 sm:text-[10px] md:min-w-0 md:px-2 md:py-3 md:text-[10px]',
+        'group flex min-w-[60px] flex-none flex-col items-center gap-1 rounded-[18px] px-1 py-2 text-[9px] font-semibold transition duration-200 sm:text-[10px] md:min-w-0 md:px-1.5 md:py-2.5 md:text-[10px]',
         isActive || currentPath === item.to
-          ? 'bg-white text-primary-700 shadow-[0_10px_30px_rgba(139,124,246,0.18)]'
-          : 'text-[var(--em-muted-ink)] hover:bg-white/60 hover:text-primary-700'
+          ? 'bg-white/95 text-primary-700 shadow-[0_8px_24px_rgba(91,76,154,0.14)]'
+          : 'text-[var(--em-muted-ink)] hover:bg-white/55 hover:text-primary-700'
       )}
     >
       {({ isActive }) => (
@@ -45,7 +46,7 @@ function RailLink({ item, currentPath }: { item: RailItem; currentPath?: string 
 export function LearningRail({ currentPath }: { currentPath?: string }) {
   return (
     <>
-      <nav aria-label="学习星轨" className="em-glass fixed bottom-0 left-0 right-0 z-40 flex w-full items-center gap-1 overflow-x-auto rounded-t-[28px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:bottom-auto md:left-3 md:right-auto md:top-1/2 md:w-[76px] md:-translate-y-1/2 md:flex-col md:overflow-visible md:rounded-[28px] md:px-2 md:py-3">
+      <nav data-learning-rail="primary" aria-label="学习星轨" className="em-glass fixed bottom-0 left-0 right-0 z-40 flex w-full items-center gap-1 overflow-x-auto rounded-t-[24px] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:bottom-auto md:left-4 md:right-auto md:top-1/2 md:w-[72px] md:-translate-y-1/2 md:flex-col md:overflow-visible md:rounded-[24px] md:px-1.5 md:py-2.5">
         {learningRailItems.map((item) => <RailLink key={item.to} item={item} currentPath={currentPath} />)}
       </nav>
     </>
