@@ -44,12 +44,12 @@ describe('formal account information pages', () => {
     expect(html).toContain('GPT-SOVITS项目作者为花儿不哭');
   });
 
-  it('links to the embed page without competition routes', async () => {
+  it('links to developer and settings pages without duplicate chat or competition routes', async () => {
     const { AboutPage } = await import('./PlaceholderPages');
     const html = renderToStaticMarkup(<AboutPage />);
 
-    expect(html).toContain('href="/agent"');
-    expect(html).toContain('跨平台智能体');
+    expect(html).toContain('href="/about/capabilities"');
+    expect(html).not.toContain('href="/agent"');
     expect(html).not.toContain('/demo');
     expect(html).not.toContain('/showcase');
     expect(html).not.toContain('比赛展示');
