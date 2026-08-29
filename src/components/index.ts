@@ -11,7 +11,6 @@ export * from './agent/AgentActivityTimeline';
 export * from './capabilities/CapabilityCenter';
 export * from './home/XiaolianDailyInsight';
 export * from './home/TodaysJourney';
-export * from './learning/LearningArtifactPanel';
 export * from './learning/AgentToolTrace';
 export * from './learning/LearningEntryDialog';
 export * from './learning/WorkbenchSidePanel';

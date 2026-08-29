@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookOpen, FileText, RotateCw } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { QuestCard } from '@/components/design/QuestCard';
 import { LearningState } from '@/components/feedback/LearningState';
-import { EvidenceInsightCard } from '@/components/learning/EvidenceInsightCard';
-import { LearningArtifactPanel } from '@/components/learning/LearningArtifactPanel';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { WorkbenchSidePanel } from '@/components/learning/WorkbenchSidePanel';
 import { WorkbenchTaskHeader } from '@/components/learning/WorkbenchTaskHeader';
+import { SourceReferences } from '@/components/learning/SourceReferences';
+import { WorkspaceArtifactsPanel, type ArtifactScope } from '@/components/workspace/WorkspaceArtifactsPanel';
+import { WorkspaceHistoryPanel } from '@/components/workspace/WorkspaceHistoryPanel';
+import { WorkspaceContextPanel } from '@/components/workspace/WorkspaceContextPanel';
 import {
   deriveLearningStages,
   filterLearningEvidence,
@@ -23,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
 import { buildReflectionHref } from '@/components/learning/reflectionPresentation';
 import type { DiagnosisResult, KnowledgePointDiagnosis, PersistedStudyTask } from '@/domain';
-import type { AgentChatResponse, PracticeEvaluationResponse } from '@/lib/educationApi';
+import type { AgentChatResponse, KnowledgeSource, PracticeEvaluationResponse } from '@/lib/educationApi';
 import { useCurrentPlan, useDiagnosis, useKnowledgePoint, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
 import {
   ACTIVE_COURSE_ID,
@@ -34,6 +36,8 @@ import {
 } from '@/store';
 import { getLearningModule } from '@/content/learningContent';
 import { selectLearningSpaceFeedback } from './learningSpacePresentation';
+
+type SidePanelKind = 'guide' | 'artifacts' | 'history' | 'context' | 'sources';
 
 interface TaskScopedValue<T> {
   taskId: string;
@@ -61,7 +65,14 @@ export function LearningSpacePage() {
   const [evaluationPending, setEvaluationPending] = useState(false);
   const [preparingTask, setPreparingTask] =
     useState<PersistedStudyTask | null>(null);
-  const [sidePanel, setSidePanel] = useState<'guide' | 'artifacts' | null>(null);
+  const [sidePanel, setSidePanel] = useState<SidePanelKind | null>(null);
+  const [artifactScope, setArtifactScope] = useState<ArtifactScope>('task');
+  const [sidePanelSources, setSidePanelSources] = useState<KnowledgeSource[]>([]);
+
+  const openSourcesPanel = useCallback((sources: KnowledgeSource[]) => {
+    setSidePanelSources(sources);
+    setSidePanel('sources');
+  }, []);
   const setRuntimeState = useXiaolianRuntimeStore(
     (state) => state.setRuntimeState,
   );
@@ -106,6 +117,8 @@ export function LearningSpacePage() {
       ? state.reflectionResults[currentTaskId] ?? null
       : null,
   );
+  const storedReflectionResults = useLearningLoopStore((state) => state.reflectionResults);
+  const storedPracticeEvaluations = useLearningLoopStore((state) => state.practiceEvaluations);
   const storedPracticeEvaluation = useLearningLoopStore((state) =>
     currentTaskId
       ? state.practiceEvaluations[currentTaskId] ?? null
@@ -236,42 +249,14 @@ export function LearningSpacePage() {
               plan={plan}
               task={currentTask}
               state={companionJourneyState}
-              actions={
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setSidePanel('guide')}
-                    className="inline-flex items-center gap-1 rounded-full border border-violet-200/70 px-3 py-1 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    课前引导
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSidePanel('artifacts')}
-                    className="inline-flex items-center gap-1 rounded-full border border-violet-200/70 px-3 py-1 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    学习产物
-                  </button>
-                </>
-              }
+              onOpenPanel={setSidePanel}
             />
           )}
           {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
           <div className="mx-auto w-full max-w-3xl space-y-6">
-            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} />
+            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} onOpenSources={openSourcesPanel} />
             {module && <ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} />}
           </div>
-          <EvidenceInsightCard
-            evidence={evidence.data ?? []}
-            learnerId={ACTIVE_LEARNER_ID}
-            courseId={ACTIVE_COURSE_ID}
-            knowledgePointId={currentTask.knowledgePointId}
-            loading={evidence.loading}
-            error={evidence.error}
-            onRetry={() => void evidence.refetch()}
-          />
           {sidePanel === 'guide' && (
             <WorkbenchSidePanel title="课前引导" onClose={() => setSidePanel(null)}>
               <TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} />
@@ -283,7 +268,61 @@ export function LearningSpacePage() {
           )}
           {sidePanel === 'artifacts' && (
             <WorkbenchSidePanel title="学习产物" onClose={() => setSidePanel(null)}>
-              <LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} />
+              <WorkspaceArtifactsPanel
+                scope={artifactScope}
+                onScopeChange={setArtifactScope}
+                task={currentTask}
+                knowledge={currentKnowledge}
+                knowledgeLoading={currentKnowledgeLoading}
+                knowledgeError={knowledge.error}
+                currentDiagnosis={currentDiagnosis}
+                isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId}
+                sources={currentTutorResponse?.sources ?? []}
+                practiceEvaluation={currentEvaluation}
+                reflection={storedReflectionResult}
+                evidenceLearningStarted={currentEvidence.learningStarted.length}
+                evidencePracticeEvaluated={currentEvidence.practiceEvaluated.length}
+              />
+            </WorkbenchSidePanel>
+          )}
+          {sidePanel === 'history' && (
+            <WorkbenchSidePanel title="历史记录" onClose={() => setSidePanel(null)}>
+              <WorkspaceHistoryPanel
+                tasks={tasks}
+                evidence={evidence.data ?? []}
+                practiceEvaluations={storedPracticeEvaluations}
+                reflectionResults={storedReflectionResults}
+                loading={evidence.loading}
+                error={evidence.error}
+                onRetry={() => void evidence.refetch()}
+              />
+            </WorkbenchSidePanel>
+          )}
+          {sidePanel === 'context' && (
+            <WorkbenchSidePanel title="学习上下文" onClose={() => setSidePanel(null)}>
+              <WorkspaceContextPanel
+                courseName={profile.data?.courseName ?? ACTIVE_COURSE_ID}
+                task={currentTask}
+                planTaskCount={tasks.length}
+                currentDiagnosis={currentDiagnosis}
+                diagnosisLoading={diagnosis.loading}
+                learnerId={ACTIVE_LEARNER_ID}
+                courseId={ACTIVE_COURSE_ID}
+                evidence={evidence.data ?? []}
+                evidenceLoading={evidence.loading}
+                evidenceError={evidence.error}
+                onRetryEvidence={() => void evidence.refetch()}
+                response={currentTutorResponse}
+              />
+            </WorkbenchSidePanel>
+          )}
+          {sidePanel === 'sources' && (
+            <WorkbenchSidePanel title="课程来源" onClose={() => setSidePanel(null)}>
+              {(sidePanelSources.length > 0 ? sidePanelSources : currentTutorResponse?.sources ?? []).length > 0 ? (
+                <SourceReferences sources={sidePanelSources.length > 0 ? sidePanelSources : currentTutorResponse?.sources ?? []} />
+              ) : (
+                <p className="text-xs leading-5 text-[var(--em-muted-ink)]">小涟最近一次回答没有返回课程来源。</p>
+              )}
             </WorkbenchSidePanel>
           )}
         </>}
