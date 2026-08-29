@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.domain import Course
+from app.domain import Course, KnowledgePoint
 
 from app.knowledge import (
     KnowledgePointContent,
@@ -17,6 +18,17 @@ from app.knowledge import (
 )
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+
+
+class KnowledgePointOption(BaseModel):
+    id: str
+    name: str
+    difficulty: int
+
+
+class KnowledgePointOptionsOut(BaseModel):
+    course_id: str
+    points: list[KnowledgePointOption]
 
 
 @router.post("/search", response_model=KnowledgeSearchResponse)
@@ -39,6 +51,28 @@ def graph(
     return KnowledgeGraphGenerator().generate(
         course_id,
         course_label=course.name if course is not None else course_id,
+    )
+
+
+@router.get("/points", response_model=KnowledgePointOptionsOut)
+def point_options(
+    course_id: str = Query(default="course-os", min_length=1),
+    db: Session = Depends(get_db),
+) -> KnowledgePointOptionsOut:
+    points = (
+        db.query(KnowledgePoint)
+        .filter(KnowledgePoint.course_id == course_id)
+        .order_by(KnowledgePoint.difficulty, KnowledgePoint.id)
+        .all()
+    )
+    return KnowledgePointOptionsOut(
+        course_id=course_id,
+        points=[
+            KnowledgePointOption(
+                id=point.id, name=point.name, difficulty=point.difficulty
+            )
+            for point in points
+        ],
     )
 
 
