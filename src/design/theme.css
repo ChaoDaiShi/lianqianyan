@@ -88,11 +88,198 @@ body {
     linear-gradient(145deg, #171423 0%, #11101c 52%, #121725 100%);
 }
 
+/* 暗色主题下，把为亮色玻璃面板编写的工具类统一映射到暗色体系。
+   这里必须穷举实际用到的档位：Tailwind 转义类名无法用通配符匹配。 */
 :root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .bg-white\/95,
+:root[data-theme="dark"] .bg-white\/80,
+:root[data-theme="dark"] .bg-white\/75,
 :root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .bg-white\/65,
 :root[data-theme="dark"] .bg-white\/60,
-:root[data-theme="dark"] .bg-white\/55 {
+:root[data-theme="dark"] .bg-white\/58,
+:root[data-theme="dark"] .bg-white\/56,
+:root[data-theme="dark"] .bg-white\/55,
+:root[data-theme="dark"] .bg-white\/50,
+:root[data-theme="dark"] .bg-white\/46,
+:root[data-theme="dark"] .bg-white\/45,
+:root[data-theme="dark"] .bg-white\/44,
+:root[data-theme="dark"] .bg-white\/40,
+:root[data-theme="dark"] .bg-white\/35,
+:root[data-theme="dark"] .bg-white\/30,
+:root[data-theme="dark"] .bg-gray-50,
+:root[data-theme="dark"] .bg-gray-100,
+:root[data-theme="dark"] .bg-gray-200,
+:root[data-theme="dark"] .bg-slate-50\/70,
+:root[data-theme="dark"] .bg-slate-100 {
   background-color: rgba(30, 27, 48, 0.88) !important;
+}
+
+:root[data-theme="dark"] .hover\:bg-white:hover,
+:root[data-theme="dark"] .hover\:bg-white\/80:hover,
+:root[data-theme="dark"] .hover\:bg-white\/70:hover {
+  background-color: rgba(41, 37, 66, 0.92) !important;
+}
+
+:root[data-theme="dark"] .bg-violet-50,
+:root[data-theme="dark"] .bg-violet-50\/35,
+:root[data-theme="dark"] .bg-violet-50\/45,
+:root[data-theme="dark"] .bg-violet-50\/55,
+:root[data-theme="dark"] .bg-violet-50\/60,
+:root[data-theme="dark"] .bg-violet-50\/65,
+:root[data-theme="dark"] .bg-violet-50\/70,
+:root[data-theme="dark"] .bg-violet-50\/80,
+:root[data-theme="dark"] .bg-violet-50\/85,
+:root[data-theme="dark"] .bg-violet-100,
+:root[data-theme="dark"] .bg-violet-100\/40,
+:root[data-theme="dark"] .bg-violet-100\/65,
+:root[data-theme="dark"] .bg-violet-100\/70,
+:root[data-theme="dark"] .bg-violet-100\/80,
+:root[data-theme="dark"] .bg-violet-200\/20,
+:root[data-theme="dark"] .bg-violet-200\/35,
+:root[data-theme="dark"] .bg-primary-50 {
+  background-color: rgba(52, 45, 88, 0.6) !important;
+}
+
+:root[data-theme="dark"] .hover\:bg-violet-50:hover,
+:root[data-theme="dark"] .hover\:bg-violet-100:hover {
+  background-color: rgba(64, 56, 104, 0.7) !important;
+}
+
+:root[data-theme="dark"] .bg-sky-50,
+:root[data-theme="dark"] .bg-sky-50\/40,
+:root[data-theme="dark"] .bg-sky-50\/50,
+:root[data-theme="dark"] .bg-sky-50\/55,
+:root[data-theme="dark"] .bg-sky-50\/60,
+:root[data-theme="dark"] .bg-sky-50\/65,
+:root[data-theme="dark"] .bg-sky-100 {
+  background-color: rgba(26, 42, 70, 0.6) !important;
+}
+
+:root[data-theme="dark"] .bg-amber-50,
+:root[data-theme="dark"] .bg-amber-50\/55,
+:root[data-theme="dark"] .bg-amber-50\/60 {
+  background-color: rgba(64, 50, 22, 0.55) !important;
+}
+
+:root[data-theme="dark"] .bg-rose-50,
+:root[data-theme="dark"] .bg-red-50,
+:root[data-theme="dark"] .bg-pink-50 {
+  background-color: rgba(70, 32, 46, 0.55) !important;
+}
+
+:root[data-theme="dark"] .bg-emerald-50,
+:root[data-theme="dark"] .bg-emerald-50\/60,
+:root[data-theme="dark"] .bg-emerald-50\/70 {
+  background-color: rgba(22, 52, 42, 0.55) !important;
+}
+
+:root[data-theme="dark"] .bg-fuchsia-50 {
+  background-color: rgba(58, 30, 66, 0.55) !important;
+}
+
+/* 渐变里的白色/浅色 stops 同样会压暗可读性，按同一体系重映射。 */
+:root[data-theme="dark"] .from-white\/95 {
+  --tw-gradient-from: rgba(24, 21, 38, 0.96) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgba(24, 21, 38, 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+:root[data-theme="dark"] .via-white\/78 {
+  --tw-gradient-to: rgba(24, 21, 38, 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(24, 21, 38, 0.8) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+:root[data-theme="dark"] .to-white\/55,
+:root[data-theme="dark"] .to-white\/35 {
+  --tw-gradient-to: rgba(24, 21, 38, 0.45) var(--tw-gradient-to-position);
+}
+:root[data-theme="dark"] .from-violet-50,
+:root[data-theme="dark"] .from-violet-50\/80,
+:root[data-theme="dark"] .from-violet-50\/85,
+:root[data-theme="dark"] .from-violet-100\/40,
+:root[data-theme="dark"] .from-violet-100\/70 {
+  --tw-gradient-from: rgba(52, 45, 88, 0.75) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgba(52, 45, 88, 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+:root[data-theme="dark"] .to-violet-50\/70,
+:root[data-theme="dark"] .to-violet-100,
+:root[data-theme="dark"] .to-violet-50 {
+  --tw-gradient-to: rgba(38, 33, 64, 0.8) var(--tw-gradient-to-position);
+}
+:root[data-theme="dark"] .from-sky-100,
+:root[data-theme="dark"] .to-sky-100 {
+  --tw-gradient-from: rgba(26, 42, 70, 0.75) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgba(26, 42, 70, 0.2) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+:root[data-theme="dark"] .to-sky-100\/20 {
+  --tw-gradient-to: rgba(26, 42, 70, 0.2) var(--tw-gradient-to-position);
+}
+:root[data-theme="dark"] .via-sky-50\/40 {
+  --tw-gradient-to: rgba(26, 42, 70, 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(26, 42, 70, 0.4) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+:root[data-theme="dark"] .to-sky-50,
+:root[data-theme="dark"] .to-sky-50\/50,
+:root[data-theme="dark"] .to-sky-50\/65 {
+  --tw-gradient-to: rgba(26, 42, 70, 0.7) var(--tw-gradient-to-position);
+}
+
+/* 浅紫边框在暗色底上过亮，统一压成暗色玻璃边。 */
+:root[data-theme="dark"] .border-violet-100,
+:root[data-theme="dark"] .border-violet-100\/70,
+:root[data-theme="dark"] .border-violet-200,
+:root[data-theme="dark"] .border-violet-200\/70 {
+  border-color: rgba(185, 173, 255, 0.22) !important;
+}
+
+/* 配套的深色状态文字（amber-700 等）在暗色底上不可读，换成亮色 tint。 */
+:root[data-theme="dark"] .text-amber-700,
+:root[data-theme="dark"] .text-amber-800,
+:root[data-theme="dark"] .text-amber-900 {
+  color: #fcd34d !important;
+}
+:root[data-theme="dark"] .text-sky-700,
+:root[data-theme="dark"] .text-sky-800,
+:root[data-theme="dark"] .text-sky-900 {
+  color: #93c5fd !important;
+}
+:root[data-theme="dark"] .text-rose-700 {
+  color: #fda4af !important;
+}
+:root[data-theme="dark"] .text-emerald-700,
+:root[data-theme="dark"] .text-emerald-800,
+:root[data-theme="dark"] .text-emerald-900 {
+  color: #6ee7b7 !important;
+}
+:root[data-theme="dark"] .text-fuchsia-700 {
+  color: #f0abfc !important;
+}
+:root[data-theme="dark"] .text-violet-700,
+:root[data-theme="dark"] .text-violet-800 {
+  color: #c4b8ff !important;
+}
+:root[data-theme="dark"] .text-blue-700,
+:root[data-theme="dark"] .text-blue-800 {
+  color: #a5c4ff !important;
+}
+:root[data-theme="dark"] .text-pink-700 {
+  color: #f9a8d4 !important;
+}
+:root[data-theme="dark"] .text-red-700 {
+  color: #fca5a5 !important;
+}
+:root[data-theme="dark"] .text-slate-800 {
+  color: #cbd5e1 !important;
+}
+:root[data-theme="dark"] .text-gray-700,
+:root[data-theme="dark"] .text-gray-800,
+:root[data-theme="dark"] .text-gray-900 {
+  color: #d1d5db !important;
+}
+:root[data-theme="dark"] .text-primary-600,
+:root[data-theme="dark"] .text-primary-700 {
+  color: var(--em-primary) !important;
 }
 
 .em-glass {
