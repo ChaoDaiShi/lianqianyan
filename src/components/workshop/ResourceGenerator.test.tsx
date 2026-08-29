@@ -7,7 +7,7 @@ describe('ResourceGenerator presentation', () => {
     const html = renderToStaticMarkup(<ResourceGenerator />);
 
     expect(html).toContain('选择知识点');
-    expect(html).toContain('选择资源类型');
+    expect(html).toContain('选择生成模式');
     expect(html).toContain('学习单');
     expect(html).toContain('复习闪卡');
     expect(html).toContain('章节自测');

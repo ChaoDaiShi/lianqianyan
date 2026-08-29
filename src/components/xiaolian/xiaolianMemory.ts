@@ -233,7 +233,7 @@ export function buildReflectionGrowthFeedback(
 export interface LearningStoryItem {
   id: string;
   occurredAt: string;
-  kind: LearningJourneyEvent['kind'];
+  kind: LearningJourneyEvent['kind'] | 'reflection';
   headline: string;
   body: string;
   sourceLabel: string;
@@ -255,6 +255,7 @@ export function buildLearningStories(input: {
   evidence: LearningEvidence[];
   plan: PersistedStudyPlan | null;
   practiceEvaluations: PracticeEvaluationResponse[];
+  reflectionResults?: ReflectionResult[];
   knowledgeNames: Record<string, string>;
   learnerId: string;
   courseId: string;
@@ -263,7 +264,7 @@ export function buildLearningStories(input: {
     (input.plan?.tasks ?? []).map((task) => [`plan-task:${task.id}`, task]),
   );
 
-  return buildJourneyEvents(input).map((event) => {
+  const eventStories = buildJourneyEvents(input).map((event) => {
     let body = event.detail ? `${event.title}。${event.detail}` : event.title;
 
     if (event.kind === 'plan' && input.plan) {
@@ -285,4 +286,40 @@ export function buildLearningStories(input: {
       planContextOnly: event.kind === 'plan_task',
     };
   });
+
+  const reflectionStories: LearningStoryItem[] = (input.reflectionResults ?? [])
+    .filter(
+      (result) =>
+        result.learnerId === input.learnerId &&
+        result.courseId === input.courseId &&
+        Object.prototype.hasOwnProperty.call(
+          input.knowledgeNames,
+          result.knowledgePointId,
+        ) &&
+        Number.isFinite(Date.parse(result.submittedAt)),
+    )
+    .map((result) => {
+      const covered = joinNames(result.coveredConcepts);
+      const missing = joinNames(result.missingConcepts);
+      const detail = covered && missing
+        ? `这次复述覆盖了${covered}，仍需补充${missing}。`
+        : covered
+          ? `这次复述覆盖了${covered}。`
+          : missing
+            ? `这次复述仍需补充${missing}。`
+            : '这次复述尚未匹配到课程章节概念。';
+      return {
+        id: `reflection:${result.taskId}:${result.submittedAt}`,
+        occurredAt: result.submittedAt,
+        kind: 'reflection',
+        headline: '一次复述留下了新的理解',
+        body: `围绕「${result.knowledgePointName}」，${detail}`,
+        sourceLabel: '本地复述记录',
+        planContextOnly: false,
+      };
+    });
+
+  return [...eventStories, ...reflectionStories].sort(
+    (left, right) => Date.parse(right.occurredAt) - Date.parse(left.occurredAt),
+  );
 }

@@ -14,10 +14,11 @@ build/
 
 # Environment
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Editors
 .vscode/
@@ -45,6 +46,11 @@ pids/
 *.seed
 *.pid.lock
 .local/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.safetensors
 
 # Coverage directory used by tools like istanbul
 coverage/
@@ -104,7 +110,6 @@ jspm_packages/
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -136,6 +141,11 @@ release/
 yarn.lock
 package-lock.json
 
+# Project-local Genie-TTS runtime payload. Keep the contract README in Git,
+# but never commit the ~750 MB model/data/source copy or generated manifest.
+runtime/genie-tts/*
+!runtime/genie-tts/README.md
+
 # Python / uv
 __pycache__/
 *.py[cod]
@@ -147,5 +157,6 @@ __pycache__/
 
 # SQLite (backend phase-1)
 *.db
+*.sqlite
 *.sqlite3
 *.db.pre-anonymous-*.bak

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { XiaolianDailyInsight } from '@/components/home/XiaolianDailyInsight';
 import { TodaysJourney } from '@/components/home/TodaysJourney';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
@@ -47,10 +46,9 @@ function Home() {
   }, [currentTask, error, focus, setCompanionState]);
   useEffect(() => () => resetRuntime(), [resetRuntime]);
 
-  return <AppShell><div className="space-y-6 lg:space-y-8">
-    <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} loading={loading} error={error} runtimeState={runtimeState} companionState={companionState} onPrepareTask={() => setEntryOpen(true)} />
-    <XiaolianDailyInsight profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} loading={loading} error={error} onPrepareTask={() => setEntryOpen(true)} />
-    <TodaysJourney plan={plan.plan} currentTaskId={currentTask?.id ?? null} loading={plan.loading} error={plan.error} generating={plan.generating} starting={startingTaskId === currentTask?.id} startError={startError} onGenerate={() => void plan.generate()} onPrepare={() => setEntryOpen(true)} onRetry={() => void plan.refetch()} />
+  return <AppShell scene="companion"><div className="space-y-6 lg:space-y-8">
+    <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} currentTask={currentTask} loading={loading} error={error} generating={plan.generating} runtimeState={runtimeState} companionState={companionState} onGeneratePlan={() => void plan.generate()} onPrepareTask={() => setEntryOpen(true)} />
+    <TodaysJourney diagnosis={diagnosis.data} plan={plan.plan} currentTask={currentTask} evidence={courseEvidence} loading={loading} error={error} onRetry={() => { void profile.refetch(); void diagnosis.refetch(); void plan.refetch(); void evidence.refetch(); }} />
     <LearningEntryDialog open={entryOpen} onOpenChange={setEntryOpen} plan={plan.plan} task={currentTask} diagnosis={diagnosis.data} evidence={courseEvidence} dataLoading={diagnosis.loading || evidence.loading} diagnosisError={diagnosis.error} evidenceError={evidence.error} starting={startingTaskId === currentTask?.id} startError={startError} onConfirm={() => { if (plan.plan && currentTask) void startTask(plan.plan, currentTask); }} />
   </div></AppShell>;
 }

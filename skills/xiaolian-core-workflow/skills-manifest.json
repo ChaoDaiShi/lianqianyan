@@ -1,0 +1,102 @@
+{
+  "entrypoint": "SKILL.md",
+  "orchestrator": "xiaolian-core-workflow",
+  "skills": [
+    {
+      "id": "task-executor",
+      "path": "skills/task-executor/SKILL.md",
+      "display_name": "任务执行",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "直接执行任务，输出最终成果"
+    },
+    {
+      "id": "document-workflow",
+      "path": "skills/document-workflow/SKILL.md",
+      "display_name": "长文档工作流",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "扫描、审查、修正复杂长文档"
+    },
+    {
+      "id": "code-review",
+      "path": "skills/code-review/SKILL.md",
+      "display_name": "代码审查",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "专业代码审查与诊断，提出修复方案"
+    },
+    {
+      "id": "academic-review",
+      "path": "skills/academic-review/SKILL.md",
+      "display_name": "论文评审",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "按正式学术标准审查论文"
+    },
+    {
+      "id": "project-workflow",
+      "path": "skills/project-workflow/SKILL.md",
+      "display_name": "项目工作流",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "长期项目阶段管理和进度追踪"
+    },
+    {
+      "id": "socratic-tutor",
+      "path": "skills/socratic-tutor/SKILL.md",
+      "display_name": "苏格拉底式教学",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "通过提问引导学生自主推导知识"
+    },
+    {
+      "id": "deliverable-generator",
+      "path": "skills/deliverable-generator/SKILL.md",
+      "display_name": "智能交付",
+      "trigger_mode": "orchestrated",
+      "scope": "runtime",
+      "description": "判断回答是否应升级为独立成果文件"
+    },
+    {
+      "id": "qa-checker",
+      "path": "skills/qa-checker/SKILL.md",
+      "display_name": "质量检查",
+      "trigger_mode": "always_final",
+      "scope": "runtime",
+      "description": "所有最终输出的静默质量检查与修正"
+    },
+    {
+      "id": "evidence-citation-guard",
+      "path": "skills/evidence-citation-guard/SKILL.md",
+      "display_name": "证据与引用守护",
+      "trigger_mode": "conditional",
+      "scope": "runtime",
+      "description": "保证事实、数据、引用和结论可追溯"
+    },
+    {
+      "id": "artifact-version-manager",
+      "path": "skills/artifact-version-manager/SKILL.md",
+      "display_name": "成果版本管理",
+      "trigger_mode": "conditional",
+      "scope": "runtime",
+      "description": "管理成果文件的版本、差异和回滚"
+    },
+    {
+      "id": "skill-creator",
+      "path": "skills/skill-creator/SKILL.md",
+      "display_name": "Skill 创建与优化",
+      "trigger_mode": "orchestrated",
+      "scope": "development",
+      "description": "设计、创建、评估和优化 Skill——明确目标与触发条件、设计能力契约、调度开发实现、生成测试用例"
+    },
+    {
+      "id": "skill-developer",
+      "path": "skills/skill-developer/SKILL.md",
+      "display_name": "Skill 内容开发",
+      "trigger_mode": "orchestrated",
+      "scope": "development",
+      "description": "在已有 Skill 脚手架中实现正文、脚本、参考资料和配置"
+    }
+  ]
+}

@@ -6,12 +6,27 @@
   --em-ink: #29234a;
   --em-muted-ink: #6f6a8a;
   --em-canvas: #f7f4ff;
+  --em-surface: #ffffff;
   --em-panel-radius: 28px;
   --em-surface-radius: 20px;
   --em-control-radius: 14px;
   --em-glass-border: rgba(139, 124, 246, 0.18);
   --em-glass-bg: rgba(255, 255, 255, 0.72);
   --em-glass-shadow: 0 24px 70px rgba(87, 73, 151, 0.12);
+}
+
+:root[data-theme="dark"] {
+  --em-primary: #b9adff;
+  --em-primary-deep: #9586ff;
+  --em-secondary: #8dbbff;
+  --em-accent: #ffafd4;
+  --em-ink: #f3f0ff;
+  --em-muted-ink: #b8b1cf;
+  --em-canvas: #11101c;
+  --em-surface: #1d1a30;
+  --em-glass-border: rgba(185, 173, 255, 0.2);
+  --em-glass-bg: rgba(29, 26, 48, 0.78);
+  --em-glass-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
 }
 
 html {
@@ -35,11 +50,90 @@ body {
     linear-gradient(145deg, #fbf9ff 0%, #f4f3ff 52%, #f8fbff 100%);
 }
 
+.em-nebula[data-nebula-scene="companion"] {
+  background:
+    radial-gradient(circle at 24% 34%, rgba(255, 183, 215, 0.22), transparent 31%),
+    radial-gradient(circle at 72% 18%, rgba(188, 174, 255, 0.2), transparent 30%),
+    linear-gradient(155deg, #fffafd 0%, #f6f3ff 56%, #f7fbff 100%);
+}
+
+.em-nebula[data-nebula-scene="galaxy"] {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(139, 124, 246, 0.22), transparent 34%),
+    radial-gradient(circle at 86% 58%, rgba(108, 168, 255, 0.18), transparent 32%),
+    linear-gradient(150deg, #f7f5ff 0%, #f2f4ff 54%, #f8fbff 100%);
+}
+
+.em-nebula[data-nebula-scene="storybook"] {
+  background:
+    radial-gradient(circle at 16% 22%, rgba(255, 205, 224, 0.18), transparent 27%),
+    radial-gradient(circle at 76% 64%, rgba(213, 202, 255, 0.18), transparent 30%),
+    linear-gradient(150deg, #fffbfd 0%, #f8f5ff 52%, #fafbff 100%);
+}
+
+:root[data-theme="dark"] .em-nebula {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 110, 179, 0.12), transparent 28%),
+    radial-gradient(circle at 78% 8%, rgba(80, 138, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 58% 68%, rgba(139, 124, 246, 0.14), transparent 34%),
+    linear-gradient(145deg, #151322 0%, #11101c 52%, #121725 100%);
+}
+
+:root[data-theme="dark"] .em-nebula[data-nebula-scene="companion"],
+:root[data-theme="dark"] .em-nebula[data-nebula-scene="galaxy"],
+:root[data-theme="dark"] .em-nebula[data-nebula-scene="storybook"] {
+  background:
+    radial-gradient(circle at 22% 22%, rgba(185, 173, 255, 0.14), transparent 30%),
+    radial-gradient(circle at 78% 58%, rgba(108, 168, 255, 0.1), transparent 32%),
+    linear-gradient(145deg, #171423 0%, #11101c 52%, #121725 100%);
+}
+
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .bg-white\/70,
+:root[data-theme="dark"] .bg-white\/60,
+:root[data-theme="dark"] .bg-white\/55 {
+  background-color: rgba(30, 27, 48, 0.88) !important;
+}
+
 .em-glass {
   border: 1px solid var(--em-glass-border);
   background: var(--em-glass-bg);
   box-shadow: var(--em-glass-shadow);
   backdrop-filter: blur(20px);
+}
+
+.em-learning-background {
+  opacity: 0.2;
+  filter: saturate(0.9) blur(0.5px);
+}
+
+.em-learning-background-wash {
+  background:
+    linear-gradient(120deg, rgba(252, 249, 255, 0.92) 0%, rgba(248, 246, 255, 0.78) 48%, rgba(248, 251, 255, 0.9) 100%),
+    radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.55), transparent 42%);
+}
+
+[data-auth-card-width="viewport-clamped"] {
+  width: 100%;
+  max-width: 450px;
+}
+
+@media (max-width: 640px) {
+  [data-auth-card-width="viewport-clamped"] {
+    width: calc(100vw - 2rem) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+}
+
+:root[data-theme="dark"] .em-learning-background {
+  opacity: 0.14;
+  filter: saturate(0.7) brightness(0.72);
+}
+
+:root[data-theme="dark"] .em-learning-background-wash {
+  background:
+    linear-gradient(120deg, rgba(17, 16, 28, 0.94) 0%, rgba(22, 19, 38, 0.88) 48%, rgba(17, 23, 37, 0.94) 100%),
+    radial-gradient(circle at 50% 54%, rgba(113, 98, 178, 0.18), transparent 42%);
 }
 
 .em-focus-ring:focus-visible,

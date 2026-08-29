@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { ChevronDown, Send, Sparkles } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
@@ -27,12 +27,6 @@ import {
   useXiaolianRuntimeStore,
 } from '@/store';
 
-const CAPABILITIES: Array<{ capability: AgentCapability; label: string; question: string }> = [
-  { capability: 'diagnosis', label: '学习诊断', question: '我现在学得怎么样？' },
-  { capability: 'planning', label: '学习规划', question: '我今天应该学什么？' },
-  { capability: 'tutoring', label: '学习辅导', question: '给我解释死锁四个必要条件。' },
-  { capability: 'assessment', label: '学习评估', question: '分析一下我刚才的练习。' },
-];
 const QUICK_QUESTIONS = ['我现在最应该学什么，为什么？', '给我解释死锁四个必要条件。', 'PV 操作掌握了吗？'];
 const CONTEXT_LABELS: Record<string, string> = {
   profile: '学习画像',
@@ -69,7 +63,6 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
       setInput((current) => [current.trim(), transcript].filter(Boolean).join(' '));
     },
   });
-  const [selectedCapability, setSelectedCapability] = useState<AgentCapability | null>(null);
   const [pending, setPending] = useState(false);
   const runtimeState = useXiaolianRuntimeStore(
     (state) => state.runtimeState,
@@ -96,7 +89,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
     if (!text || pending) return;
     voice.stop();
     speech.stop();
-    const requestedCapability = capability === undefined ? selectedCapability : capability;
+    const requestedCapability = capability ?? null;
     setInput('');
     setMessages((previous) => [...previous, { id: crypto.randomUUID(), role: 'user', content: text }]);
     setPending(true);
@@ -109,7 +102,6 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
         message: text,
         capability: requestedCapability,
       });
-      setSelectedCapability(null);
       setMessages((previous) => [...previous, assistantMessage(result.answer, {
         contextUsed: result.contextUsed,
         isFallback: result.responseMode === 'fallback',
@@ -139,41 +131,33 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
         )}
       >
         <GlassPanel className={cn('flex flex-col overflow-hidden', embedded ? 'min-h-[calc(100vh-5.5rem)] rounded-[22px]' : 'min-h-[720px]')}>
-          <div className="border-b border-violet-100 p-5">
+          <header className="border-b border-violet-100 px-4 py-4 sm:px-6">
             <div className="flex items-center gap-4">
-              <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="md" speaking={speech.speaking} />
+              <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="sm" speaking={speech.speaking} />
               <div>
-                <h1 className="text-xl font-bold">小涟学习工作台</h1>
-                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">让小涟陪你讲解、训练、考核或复盘；执行详情默认折叠，需要时再展开。</p>
+                <p className="text-[10px] font-semibold tracking-[0.16em] text-primary-700">XIAOLIAN CONVERSATION</p>
+                <h1 className="mt-1 text-xl font-bold">和小涟一起想明白</h1>
+                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">说出目标或卡点，我们从真实学习记录继续。</p>
               </div>
             </div>
-            <XiaolianMessage tone={pending ? 'observe' : companionState === 'encouraging' ? 'encourage' : 'suggest'} compact className="mt-4">
-              {pending ? '我正在结合真实学习状态制定教学响应。' : '先告诉我目标或卡点，我会给出讲解、检查理解与下一步任务。'}
-            </XiaolianMessage>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {CAPABILITIES.map((item) => <button key={item.capability} type="button" disabled={pending} onClick={() => { setSelectedCapability(item.capability); setInput(item.question); }} className={cn('rounded-[16px] border px-3 py-2 text-left text-xs transition disabled:opacity-50', selectedCapability === item.capability ? 'border-primary-300 bg-violet-50 text-primary-700' : 'border-violet-100 bg-white/55 text-[var(--em-muted-ink)] hover:border-primary-200')}><strong>{item.label}</strong><span className="mt-0.5 block text-[9px]">点击预填问题</span></button>)}
-            </div>
-          </div>
+            {pending && <XiaolianMessage tone="observe" compact className="mt-3">我正在结合真实学习状态整理回答。</XiaolianMessage>}
+          </header>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
             {messages.map((message) => <div key={message.id} className={cn('flex', message.role === 'user' ? 'justify-end' : 'justify-start')}><div className={cn('max-w-[90%] rounded-[20px] px-4 py-3 text-sm leading-relaxed sm:max-w-[82%]', message.role === 'user' ? 'bg-primary-500 text-white' : 'border border-violet-100 bg-white/65 text-[var(--em-ink)]')}>
               {message.role === 'assistant' && <div className="mb-2 flex items-center gap-1.5 text-[11px] text-primary-600"><Sparkles className="h-3 w-3" />小涟{message.isFallback && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">基础辅导模式</span>}</div>}
               <p className="whitespace-pre-line">{message.content}</p>
               {message.role === 'assistant' && <SpeechControls text={message.content} supported={speech.supported} speaking={speech.speaking} mode={speech.mode} onSpeak={speech.speak} onStop={speech.stop} className="mt-3" />}
-              {message.role === 'assistant' && message.contextUsed && message.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[11px] text-[var(--em-muted-ink)]">已参考：</span>{message.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] text-primary-700">{CONTEXT_LABELS[key] ?? key}</span>)}</div>}
-              {message.role === 'assistant' && message.suggestedActions?.length ? <div className="mt-3 border-t border-violet-100 pt-2"><p className="text-[11px] font-semibold text-[var(--em-muted-ink)]">下一步建议</p>{message.suggestedActions.map((action) => <p key={action} className="mt-1 text-xs text-[var(--em-muted-ink)]">· {action}</p>)}</div> : null}
-              {message.role === 'assistant' && (message.agentTrace || message.sources) && <AgentToolTrace items={message.agentTrace ?? []} sources={message.sources ?? []} />}
-              {message.role === 'assistant' && message.provider && <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">Provider：{message.provider}{message.model ? ` · ${message.model}` : ' · 基础辅导'}</p>}
+              {message.role === 'assistant' && (message.contextUsed?.length || message.suggestedActions?.length || message.agentTrace?.length || message.sources?.length || message.provider) ? <details className="group mt-3 border-t border-violet-100 pt-2"><summary className="flex cursor-pointer list-none items-center justify-between text-[11px] text-[var(--em-muted-ink)]"><span>回答详情</span><ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" /></summary><div className="mt-3 space-y-3">{message.contextUsed && message.contextUsed.length > 0 && <div className="flex flex-wrap gap-1.5"><span className="text-[11px] text-[var(--em-muted-ink)]">已参考：</span>{message.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] text-primary-700">{CONTEXT_LABELS[key] ?? key}</span>)}</div>}{message.suggestedActions?.length ? <div><p className="text-[11px] font-semibold text-[var(--em-muted-ink)]">下一步建议</p>{message.suggestedActions.map((action) => <p key={action} className="mt-1 text-xs text-[var(--em-muted-ink)]">· {action}</p>)}</div> : null}{(message.agentTrace || message.sources) && <AgentToolTrace items={message.agentTrace ?? []} sources={message.sources ?? []} compact />}{message.provider && <p className="text-[10px] text-[var(--em-muted-ink)]">对话服务：{message.provider}{message.model ? ` · ${message.model}` : ' · 基础辅导'}</p>}</div></details> : null}
             </div></div>)}
             {pending && <div className="rounded-[20px] border border-violet-100 bg-white/65 px-4 py-3 text-sm text-[var(--em-muted-ink)]">小涟正在协调学习能力…</div>}
           </div>
 
           <div className="border-t border-violet-100 p-4">
-            <p className="mb-3 text-[10px] text-[var(--em-muted-ink)]">{llmStatus.loading ? '正在读取服务状态…' : llmStatus.data?.configured ? `Provider：${llmStatus.data.provider}${llmStatus.data.model ? ` · ${llmStatus.data.model}` : ''}` : '外部模型未配置，当前回答由课程材料与学习记录生成'}</p>
-            <div className="mb-3 flex flex-wrap gap-2">{QUICK_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-full border border-violet-200 bg-violet-50/65 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>
-            <VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} className="mb-3" />
+            {messages.length === 1 && <div className="mb-3 flex flex-wrap gap-2">{QUICK_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-full border border-violet-200 bg-violet-50/65 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
             <form className="flex items-start gap-2" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="向小涟提问，例如：为什么我总学不会死锁？" className="h-11 flex-1 rounded-2xl bg-white/70" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" disabled={pending || !input.trim()} size="icon" className="h-11 w-11 shrink-0 rounded-2xl bg-primary-500" aria-label="发送"><Send className="h-4 w-4" /></Button></form>
             <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">语音仅填入输入框，确认文字后再发送；音频不会上传到 EducationMind 后端。</p>
+            <details className="group mt-3"><summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-[var(--em-muted-ink)]">更多 · 技术详情<ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" /></summary><div className="mt-3 space-y-2"><p className="text-[10px] text-[var(--em-muted-ink)]">{llmStatus.loading ? '正在读取服务状态…' : llmStatus.data?.configured ? `对话服务：${llmStatus.data.provider}${llmStatus.data.model ? ` · ${llmStatus.data.model}` : ''}` : '外部模型未配置，当前回答由课程材料与学习记录生成'}</p><VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} /></div></details>
           </div>
         </GlassPanel>
       </div>

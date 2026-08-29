@@ -34,11 +34,13 @@ class VoiceReferenceSpec:
     min_duration_seconds: float
     max_duration_seconds: float
     max_file_bytes: int
+    clip_end_seconds: float | None = None
+    output_duration_seconds: float | None = None
 
 
 CYRENE_REFERENCE_SPEC = VoiceReferenceSpec(
     filename="6dfbeee4e5c7441f.wav",
-    transcript="能在梦里听见朦胧的神谕，还在它的指引下前行…人家也觉得很神奇呢。",
+    transcript="能在梦里听见朦胧的神谕。",
     sha256="C4D72E084DBDA5A8AECEAAFF1094656B9A6B207E46BA7024B47AFC8B61A755C6",
     channels=1,
     sample_rate=48_000,
@@ -46,6 +48,8 @@ CYRENE_REFERENCE_SPEC = VoiceReferenceSpec(
     min_duration_seconds=3.0,
     max_duration_seconds=10.0,
     max_file_bytes=2_000_000,
+    clip_end_seconds=2.12,
+    output_duration_seconds=3.05,
 )
 
 
@@ -131,6 +135,31 @@ def _write_temporary(directory: Path, suffix: str, content: bytes) -> Path:
         return Path(temporary.name)
 
 
+def _clip_reference(content: bytes, spec: VoiceReferenceSpec) -> bytes:
+    if spec.clip_end_seconds is None:
+        return content
+    with wave.open(io.BytesIO(content), "rb") as source:
+        params = source.getparams()
+        frame_limit = min(
+            source.getnframes(), round(source.getframerate() * spec.clip_end_seconds)
+        )
+        frames = source.readframes(frame_limit)
+        if spec.output_duration_seconds is not None:
+            output_frames = round(source.getframerate() * spec.output_duration_seconds)
+            if output_frames < frame_limit:
+                raise ValueError("output reference duration cannot be shorter than the clip")
+            frames += b"\0" * (
+                (output_frames - frame_limit)
+                * source.getsampwidth()
+                * source.getnchannels()
+            )
+    output = io.BytesIO()
+    with wave.open(output, "wb") as target:
+        target.setparams(params)
+        target.writeframes(frames)
+    return output.getvalue()
+
+
 def install_cyrene_voice(
     zip_path: Path,
     output_directory: Path,
@@ -155,17 +184,22 @@ def install_cyrene_voice(
 
     if len(content) > spec.max_file_bytes or len(content) != info.file_size:
         raise ValueError("selected reference WAV exceeds the size limit")
-    frame_count, duration_seconds = _validate_wav(content, spec)
+    _validate_wav(content, spec)
+    content = _clip_reference(content, spec)
+    with wave.open(io.BytesIO(content), "rb") as installed_audio:
+        frame_count = installed_audio.getnframes()
+        duration_seconds = frame_count / installed_audio.getframerate()
     digest = hashlib.sha256(content).hexdigest().upper()
 
     metadata = {
-        "format_version": 1,
+        "format_version": 3,
         "voice": "cyrene",
         "provider": "gpt_sovits",
-        "filename": "cyrene-reference.wav",
+        "filename": "cyrene-reference-clean.wav",
         "source_archive": zip_path.name,
         "source_entry": info.filename.replace("\\", "/"),
         "source_filename": spec.filename,
+        "source_sha256": spec.sha256,
         "sha256": digest,
         "transcript": spec.transcript,
         "attribution": VOICE_ATTRIBUTION,
@@ -182,7 +216,7 @@ def install_cyrene_voice(
     ).encode("utf-8")
 
     output_directory.mkdir(parents=True, exist_ok=True)
-    wav_path = output_directory / "cyrene-reference.wav"
+    wav_path = output_directory / "cyrene-reference-clean.wav"
     metadata_path = output_directory / "cyrene-reference.json"
     temporary_paths: list[Path] = []
     try:

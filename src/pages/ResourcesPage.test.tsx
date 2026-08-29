@@ -25,10 +25,12 @@ vi.mock('@/components/workshop/CompilerLab', () => ({
 import { ResourcesPage } from './ResourcesPage';
 
 describe('ResourcesPage learning workshop', () => {
-  it('composes all three real tools with explicit capability boundaries', () => {
+  it('leads with a creation workspace and keeps supporting tools secondary', () => {
     const html = renderToStaticMarkup(<ResourcesPage />);
 
-    expect(html).toContain('学习工坊');
+    expect(html).toContain('创作工作台');
+    expect(html).toContain('选择目标');
+    expect(html).toContain('生成与预览');
     expect(html).toContain('资源生成');
     expect(html).toContain('联网检索');
     expect(html).toContain('编译实验');
@@ -36,8 +38,7 @@ describe('ResourcesPage learning workshop', () => {
     expect(html).toContain('network-search-panel');
     expect(html).toContain('compiler-lab-panel');
     expect(html).toContain('课程来源可追溯');
-    expect(html).toContain('Wikipedia 补充资料');
-    expect(html).toContain('不执行本机代码');
+    expect(html).toContain('扩展工具');
     expect(html).toContain('live2d-xiaolian');
   });
 });

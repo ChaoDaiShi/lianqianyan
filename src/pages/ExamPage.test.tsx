@@ -14,18 +14,20 @@ vi.mock('@/components/exam/ExamGenerator', () => ({ ExamGenerator: () => <div>ge
 import { ExamPage } from './ExamPage';
 
 describe('ExamPage', () => {
-  it('exposes the complete student and authoring workflow with honest boundaries', () => {
+  it('leads with the assessment workspace and folds authoring behind secondary entries', () => {
     const html = renderToStaticMarkup(<ExamPage />);
 
-    expect(html).toContain('考试中心');
+    expect(html).toContain('测评工作台');
+    expect(html).toContain('当前测评');
     expect(html).toContain('我的结果');
     expect(html).toContain('题库与题型');
-    expect(html).toContain('命题与批阅');
+    expect(html).toContain('试卷与批阅');
     expect(html).toContain('AI 智能组卷');
-    expect(html).toContain('服务端计时');
-    expect(html).toContain('发布后锁定');
-    expect(html).toContain('匿名学习档案');
-    expect(html).toContain('不构成账号权限或监考保证');
+    expect(html).toContain('考试与成绩');
+    expect(html).toContain('出题与组卷');
+    expect(html).toContain('当前账号');
+    expect(html).not.toContain('匿名学习档案');
+    expect(html).not.toContain('不构成账号权限或监考保证');
     expect(html).not.toContain('单学习者演示');
     expect(html).toContain('catalog-panel');
     expect(html).toContain('history-panel');

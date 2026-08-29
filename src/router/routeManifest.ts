@@ -74,7 +74,7 @@ export const lazyRoutes: RouteObject[] = [
   {
     path: '/settings',
     lazy: () =>
-      import('@/pages/PlaceholderPages').then((module) => ({
+      import('@/pages/SettingsPage').then((module) => ({
         Component: module.SettingsPage,
       })),
   },

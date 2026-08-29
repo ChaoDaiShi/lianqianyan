@@ -34,3 +34,14 @@ uv run --project apps/api pytest apps/api/tests/test_mcp_server.py -q
 - 不暴露 `evaluate_practice`、Agent Chat、环境变量、API Key、Authorization 或 Base URL。
 
 完整目录和输入见 [docs/tools.md](./docs/tools.md)。
+
+## 部署后的账号 MCP
+
+FastAPI 同时挂载官方 Streamable HTTP MCP：
+
+```text
+https://<部署域名>/mcp
+Authorization: Bearer <设置页创建的 emcp_ 令牌>
+```
+
+账号令牌只保存 SHA-256 摘要，明文只在创建响应中出现一次。远程工具不接收可扩大权限的 `learner_id` 或 `course_id`：服务端始终使用令牌所属账号及其当前选择课程。令牌可在设置页查看前缀、最近使用时间并撤销。生产部署需用 `EDUCATION_MCP_ALLOWED_HOSTS` 列出真实 Host，保留 DNS 重绑定防护。

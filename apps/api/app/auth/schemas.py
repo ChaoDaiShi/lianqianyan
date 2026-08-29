@@ -13,6 +13,7 @@ class RegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=32)
     display_name: str = Field(min_length=1, max_length=60)
     password: str = Field(min_length=8, max_length=128)
+    captcha_token: str | None = Field(default=None, max_length=2048)
 
     @field_validator("username")
     @classmethod
@@ -45,6 +46,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=1, max_length=128)
+    captcha_token: str | None = Field(default=None, max_length=2048)
 
 
 class CourseSelectionRequest(BaseModel):

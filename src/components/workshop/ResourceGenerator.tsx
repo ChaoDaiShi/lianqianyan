@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   BookOpenCheck,
   Copy,
@@ -31,6 +31,11 @@ export function ResourceGenerator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
+  const [previewText, setPreviewText] = useState('');
+
+  useEffect(() => {
+    setPreviewText(resource?.content ?? '');
+  }, [resource]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,7 +64,7 @@ export function ResourceGenerator() {
       return;
     }
     try {
-      await navigator.clipboard.writeText(resource.content);
+      await navigator.clipboard.writeText(previewText);
       setCopyStatus('copied');
     } catch {
       setCopyStatus('failed');
@@ -76,7 +81,7 @@ export function ResourceGenerator() {
       }
       return;
     }
-    downloadMarkdown(resource);
+    downloadMarkdown({ ...resource, content: previewText });
   };
 
   return (
@@ -87,7 +92,8 @@ export function ResourceGenerator() {
             <BookOpenCheck className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-lg font-bold">课程资源生成</h2>
+            <p className="text-[10px] font-semibold text-primary-700">01 · 选择目标</p>
+            <h2 className="mt-1 text-lg font-bold">课程资源生成</h2>
             <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
               基于课程材料模板生成，不把模板输出冒充大模型创作。
             </p>
@@ -112,7 +118,7 @@ export function ResourceGenerator() {
           </label>
 
           <label className="block text-xs font-semibold text-[var(--em-muted-ink)]">
-            选择资源类型
+            02 · 选择生成模式
             <select
               value={resourceType}
               disabled={loading}
@@ -139,7 +145,7 @@ export function ResourceGenerator() {
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {loading ? '正在整理课程材料…' : '生成学习资源'}
+            {loading ? '正在整理课程材料…' : '03 · 生成学习资源'}
           </Button>
         </form>
 
@@ -153,7 +159,8 @@ export function ResourceGenerator() {
         )}
       </GlassPanel>
 
-      <GlassPanel className="min-h-[34rem] overflow-hidden p-5 sm:p-6">
+      <GlassPanel className="min-h-[30rem] overflow-hidden p-5 sm:p-6">
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-violet-100 pb-4"><div><p className="text-[10px] font-semibold text-primary-700">04 · 生成与预览</p><h2 className="mt-1 text-lg font-bold">资源画布</h2></div><span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] text-primary-700">本地预览修改</span></div>
         {resource ? (
           <div>
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -204,9 +211,8 @@ export function ResourceGenerator() {
               ))}
             </div>
 
-            <pre className="mt-5 max-h-[30rem] overflow-auto whitespace-pre-wrap rounded-[22px] border border-violet-100 bg-white/65 p-4 font-sans text-sm leading-7 text-[var(--em-ink)]">
-              {resource.content}
-            </pre>
+            <label className="mt-5 block text-xs font-semibold text-[var(--em-muted-ink)]">05 · {resource.format === 'markdown' ? '预览与调整' : '结构化预览'}<textarea value={previewText} readOnly={resource.format === 'presentation'} onChange={(event) => setPreviewText(event.target.value)} className="mt-2 min-h-[22rem] w-full resize-y rounded-[22px] border border-violet-100 bg-white/65 p-4 text-sm font-normal leading-7 text-[var(--em-ink)] outline-none focus:border-primary-300 read-only:cursor-default read-only:bg-violet-50/35" /></label>
+            <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">{resource.format === 'markdown' ? '调整仅作用于当前浏览器预览与本次导出，不宣称已保存到服务端。' : 'PPT 预览为只读结构，下载文件严格使用服务端本次生成的真实 .pptx。'}</p>
             <p aria-live="polite" className="mt-2 text-xs text-[var(--em-muted-ink)]">
               {copyStatus === 'copied'
                 ? 'Markdown 已复制。'
@@ -216,16 +222,8 @@ export function ResourceGenerator() {
             </p>
           </div>
         ) : (
-          <div className="grid min-h-[30rem] place-items-center text-center">
-            <div className="max-w-sm">
-              <span className="mx-auto grid h-16 w-16 place-items-center rounded-[24px] bg-gradient-to-br from-violet-100 to-sky-100 text-primary-600">
-                <BookOpenCheck className="h-7 w-7" />
-              </span>
-              <h3 className="mt-4 text-lg font-bold">生成结果会出现在这里</h3>
-              <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
-                内容只整理真实课程章节，并附带来源；接口失败时不会补造资源。
-              </p>
-            </div>
+          <div className="min-h-[24rem] rounded-[22px] border border-dashed border-violet-200 bg-white/35 p-5">
+            <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 text-primary-600"><BookOpenCheck className="h-5 w-5" /></span><div><h3 className="font-bold">预览尚未生成</h3><p className="mt-1 text-xs text-[var(--em-muted-ink)]">左侧选择目标与模式后显式生成。</p></div></div><div className="mt-6 space-y-3" aria-label="预览结构说明"><div className="h-5 w-2/5 rounded-full bg-violet-100/80" /><div className="h-3 w-full rounded-full bg-slate-100" /><div className="h-3 w-5/6 rounded-full bg-slate-100" /><div className="mt-6 h-24 rounded-2xl border border-violet-100 bg-white/55" /></div><p className="mt-6 text-xs leading-6 text-[var(--em-muted-ink)]">这里只展示画布结构，不是生成结果。资源仍只整理真实课程章节并附带来源，接口失败时不会补造内容。</p>
           </div>
         )}
       </GlassPanel>

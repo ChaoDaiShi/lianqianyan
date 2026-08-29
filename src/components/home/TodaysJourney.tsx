@@ -1,155 +1,81 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-  Circle,
-  Loader2,
-  Route,
-  Sparkles,
-} from 'lucide-react';
-import { ACTION_TYPE_LABEL, type PersistedStudyPlan } from '@/domain';
-import { buildTodaysJourney } from '@/components/learning/companionFlow';
-import { GlassPanel } from '@/components/design/GlassPanel';
+import { AlertTriangle, Check, Circle, Loader2, Route } from 'lucide-react';
+import type {
+  DiagnosisResult,
+  PersistedStudyPlan,
+  PersistedStudyTask,
+} from '@/domain';
+import type { LearningEvidence } from '@/lib/educationApi';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { buildHomeJourney } from './homePresentation';
 
 export interface TodaysJourneyProps {
+  diagnosis: DiagnosisResult | null;
   plan: PersistedStudyPlan | null;
-  currentTaskId: string | null;
+  currentTask: PersistedStudyTask | null;
+  evidence: LearningEvidence[];
   loading: boolean;
   error: boolean;
-  generating: boolean;
-  starting: boolean;
-  startError?: string | null;
-  onGenerate: () => void;
-  onPrepare: () => void;
   onRetry: () => void;
 }
 
-export function TodaysJourney({
-  plan,
-  currentTaskId,
-  loading,
-  error,
-  generating,
-  starting,
-  startError,
-  onGenerate,
-  onPrepare,
-  onRetry,
-}: TodaysJourneyProps) {
-  const journey = buildTodaysJourney(plan, currentTaskId);
-  const currentTask =
-    journey?.tasks.find((item) => item.state === 'current')?.task ?? null;
+export function TodaysJourney({ diagnosis, plan, currentTask, evidence, loading, error, onRetry }: TodaysJourneyProps) {
+  const journey = buildHomeJourney({ diagnosis, plan, task: currentTask, evidence });
+  const current = journey.find((node) => node.state === 'current');
+  const introduction = !diagnosis
+    ? '今天从第一次诊断开始。'
+    : currentTask
+      ? `今天围绕「${currentTask.knowledgePointName}」完成一次学习闭环。`
+      : '诊断已经完成，下一步是生成学习计划。';
 
   return (
-    <GlassPanel className="overflow-hidden p-5 sm:p-7">
-      <div className="flex items-center gap-2">
-        <Route className="h-4 w-4 text-primary-600" />
-        <p className="text-xs font-bold text-primary-700">TODAY&apos;S JOURNEY</p>
+    <section className="rounded-[2rem] border border-violet-100/80 bg-white/55 px-5 py-6 sm:px-8 sm:py-8">
+      <div className="flex items-center gap-2 text-primary-700">
+        <Route className="h-4 w-4" />
+        <p className="text-xs font-bold tracking-[0.14em]">TODAY&apos;S JOURNEY</p>
       </div>
-      <h2 className="mt-2 text-2xl font-bold">今天，和小涟一起完成真实学习任务</h2>
-      <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">
-        这里直接展示 CurrentPlan 中已有的任务，不创建新的任务系统。
-      </p>
+      <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+        <div>
+          <h2 className="text-2xl font-bold tracking-[-0.025em]">今天的学习路径</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">{introduction}</p>
+        </div>
+        {current ? <p className="text-xs text-[var(--em-muted-ink)]">当前停留：{current.label}</p> : null}
+      </div>
+
+      <div className="mt-5 flex flex-col gap-2 border-y border-violet-100/70 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-[var(--em-muted-ink)]">学习计划</span>
+          <strong className="font-semibold text-[var(--em-ink)]">{plan ? `${plan.tasks.length} 个步骤` : '尚未安排'}</strong>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-[var(--em-muted-ink)]">学习证据</span>
+          <strong className="font-semibold text-[var(--em-ink)]">{evidence.length ? `${evidence.length} 条` : '--'}</strong>
+        </div>
+      </div>
 
       {loading ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-[var(--em-muted-ink)]">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          正在同步当前学习计划…
-        </p>
+        <p className="mt-8 flex items-center gap-2 text-sm text-[var(--em-muted-ink)]"><Loader2 className="h-4 w-4 animate-spin" />正在同步真实学习进度…</p>
       ) : error ? (
-        <div className="mt-5">
-          <p className="flex items-center gap-2 text-sm text-amber-700">
-            <AlertTriangle className="h-4 w-4" />
-            当前计划暂时没有加载成功
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={onRetry}
-          >
-            重新加载
-          </Button>
+        <div className="mt-7">
+          <p className="flex items-center gap-2 text-sm text-amber-700"><AlertTriangle className="h-4 w-4" />学习路径暂时没有加载成功</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>重新加载</Button>
         </div>
-      ) : journey && journey.tasks.length > 0 ? (
-        <>
-          <ol className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {journey.tasks.map(({ task, state }) => (
-              <li
-                key={task.id}
-                className={cn(
-                  'rounded-lg border p-4',
-                  state === 'current'
-                    ? 'border-primary-300 bg-violet-50/70'
-                    : 'border-violet-100 bg-white/55',
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-semibold text-primary-700">
-                    任务 {task.order}
-                  </span>
-                  {state === 'current' ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary-700">
-                      <Sparkles className="h-3 w-3" />
-                      今日入口
-                    </span>
-                  ) : (
-                    <Circle className="h-3.5 w-3.5 text-slate-300" />
-                  )}
-                </div>
-                <strong className="mt-2 block text-sm">
-                  {task.knowledgePointName}
-                </strong>
-                <p className="mt-1 text-xs text-[var(--em-muted-ink)]">
-                  {ACTION_TYPE_LABEL[task.actionType]} · {task.estimatedMinutes}{' '}
-                  分钟
-                </p>
-              </li>
-            ))}
-          </ol>
-          {currentTask ? (
-            <Button
-              className="mt-5 gap-2 bg-primary-500 hover:bg-primary-600"
-              disabled={starting}
-              onClick={onPrepare}
-            >
-              {starting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArrowRight className="h-4 w-4" />
-              )}
-              {starting ? '正在进入学习…' : '和小涟一起准备'}
-            </Button>
-          ) : null}
-        </>
       ) : (
-        <div className="mt-5 rounded-lg border border-dashed border-violet-200 bg-white/45 p-7 text-center">
-          <Sparkles className="mx-auto h-7 w-7 text-primary-400" />
-          <p className="mt-3 text-sm font-semibold">选择学习目标</p>
-          <p className="mt-1 text-xs text-[var(--em-muted-ink)]">
-            当前没有默认学习进度。只有你主动选择后，才会基于诊断生成真实计划。
-          </p>
-          <Button
-            className="mt-4 bg-primary-500"
-            onClick={onGenerate}
-            disabled={generating}
-          >
-            {generating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                正在生成…
-              </>
-            ) : (
-              '请小涟生成诊断计划'
-            )}
-          </Button>
-        </div>
+        <ol className="relative mt-8 grid gap-5 sm:grid-cols-4 sm:gap-0">
+          <span aria-hidden="true" className="absolute left-6 top-6 hidden h-px w-[calc(100%-3rem)] bg-violet-200 sm:block" />
+          {journey.map((node, index) => (
+            <li key={node.id} data-journey-node={node.id} data-journey-state={node.state} className="relative flex gap-4 sm:block sm:px-3 sm:text-center">
+              <span className={cn('relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-full border bg-[var(--em-surface)] text-sm font-bold transition-colors sm:mx-auto', node.state === 'completed' && 'border-primary-500 bg-primary-600 text-white', node.state === 'current' && 'border-primary-400 text-primary-700 shadow-[0_0_0_7px_rgba(139,114,219,0.12)]', node.state === 'waiting' && 'border-violet-100 text-slate-400')}>
+                {node.state === 'completed' ? <Check className="h-4 w-4" /> : node.state === 'current' ? <Circle className="h-3.5 w-3.5 fill-current" /> : index + 1}
+              </span>
+              <div className="pt-1 sm:pt-4">
+                <strong className={cn('text-sm', node.state === 'waiting' && 'text-slate-400')}>{node.label}</strong>
+                <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">{node.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       )}
-
-      {startError ? (
-        <p className="mt-3 text-sm text-amber-700">{startError}</p>
-      ) : null}
-    </GlassPanel>
+    </section>
   );
 }

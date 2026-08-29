@@ -1,0 +1,189 @@
+{
+  "skill": {
+    "id": "lian-navigator",
+    "display_name": "涟引导",
+    "version": "1.0.0",
+    "role": "entry_navigator"
+  },
+  "behavior": {
+    "goal": "将模糊需求快速转化为一个明确、可执行的下一步",
+    "default_action": "infer_then_guide",
+    "prefer_execution_over_navigation": true,
+    "avoid_capability_menu": true,
+    "avoid_questionnaire": true,
+    "avoid_over_planning": true,
+    "max_questions_per_turn": 2,
+    "preferred_questions_per_turn": 1,
+    "question_budget": {
+      "direct_execution": 0,
+      "clear_goal_missing_key_info": 1,
+      "exploration": 1,
+      "maximum": 2,
+      "urgent": 1
+    },
+    "urgent_execution_first": true,
+    "ask_sequentially_not_in_batch": true
+  },
+  "routing": {
+    "learning": {
+      "description": "学习、知识理解、复习、考试、学习路线",
+      "signals": [
+        "学不会",
+        "看不懂",
+        "怎么学",
+        "复习",
+        "考试",
+        "知识点",
+        "学习路线",
+        "讲一下"
+      ],
+      "exit_when_clear": true,
+      "preferred_target": "socratic-tutor"
+    },
+    "execution": {
+      "description": "用户希望直接完成、修改、整理或生成成果",
+      "signals": [
+        "帮我做",
+        "帮我改",
+        "帮我写",
+        "帮我整理",
+        "你直接弄",
+        "全交给你",
+        "赶时间"
+      ],
+      "exit_when_clear": true,
+      "preferred_target": "task-executor"
+    },
+    "project": {
+      "description": "竞赛、课程设计、毕业设计、软件项目等长期任务",
+      "signals": [
+        "比赛",
+        "竞赛",
+        "项目",
+        "毕设",
+        "课程设计",
+        "软件开发",
+        "创业",
+        "智能体"
+      ],
+      "clarify_fields": [
+        "goal",
+        "current_stage",
+        "next_blocker"
+      ],
+      "preferred_target": "project-workflow",
+      "question_policy": "one_key_question_then_start"
+    },
+    "document": {
+      "description": "论文、报告、PPT、Word、PDF、正式文档",
+      "signals": [
+        "论文",
+        "报告",
+        "PPT",
+        "Word",
+        "PDF",
+        "文档",
+        "演讲稿",
+        "申请材料"
+      ],
+      "exit_when_clear": true,
+      "preferred_target": "document-workflow"
+    },
+    "code": {
+      "description": "代码、Bug、报错、项目结构、接口、部署等技术问题",
+      "signals": [
+        "代码",
+        "Bug",
+        "报错",
+        "API",
+        "前端",
+        "后端",
+        "数据库",
+        "部署",
+        "项目结构"
+      ],
+      "exit_when_clear": true,
+      "preferred_target": "code-review"
+    },
+    "planning": {
+      "description": "学习计划、时间安排、职业选择、任务排序",
+      "signals": [
+        "怎么安排",
+        "怎么选",
+        "哪个更适合",
+        "计划",
+        "规划",
+        "时间不够",
+        "先做什么"
+      ],
+      "clarify_fields": [
+        "goal",
+        "deadline",
+        "current_constraints"
+      ],
+      "preferred_target": "task-executor",
+      "question_policy": "execute_with_defaults_when_possible"
+    },
+    "emotional_support": {
+      "description": "明确的压力、焦虑、崩溃、害怕、想放弃等情绪表达",
+      "signals": [
+        "焦虑",
+        "崩溃",
+        "压力很大",
+        "害怕",
+        "想放弃",
+        "撑不住",
+        "失眠",
+        "很难受",
+        "哭"
+      ],
+      "priority": "high",
+      "do_not_force_task_routing": true,
+      "urgent_task_overrides_extended_clarification": true
+    }
+  },
+  "priority": {
+    "multi_goal_order": [
+      "nearest_deadline",
+      "highest_failure_cost",
+      "critical_path",
+      "unblock_other_tasks",
+      "long_term_non_urgent"
+    ]
+  },
+  "clarification": {
+    "ask_only_if": [
+      "missing_information_changes_core_direction",
+      "multiple_interpretations_cause_major_rework",
+      "execution_requires_user_specific_input"
+    ],
+    "do_not_ask_if": [
+      "reasonable_default_is_available",
+      "missing_information_only_affects_minor_style",
+      "context_already_implies_intent",
+      "task_can_start_safely"
+    ]
+  },
+  "exit_conditions": [
+    "goal_is_clear",
+    "next_action_is_clear",
+    "enough_information_to_execute",
+    "professional_task_identified",
+    "user_gives_direct_execution_instruction"
+  ],
+  "output_policy": {
+    "default_structure": [
+      "brief_judgment",
+      "next_action",
+      "optional_one_question"
+    ],
+    "tone": "natural_low_pressure",
+    "show_internal_category": false,
+    "show_skill_name": false,
+    "show_routing_process": false
+  },
+  "success_definition": {
+    "from": "用户不知道怎么办",
+    "to": "用户知道下一步先做什么"
+  }
+}

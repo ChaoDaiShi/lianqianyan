@@ -134,3 +134,17 @@ def test_business_api_requires_login_and_enforces_learner_course_scope(monkeypat
             "/api/profile/someone-else", params={"course_id": "course-os"}
         )
         assert other.status_code == 403
+
+
+def test_voice_readiness_is_public_but_synthesis_requires_login(monkeypatch) -> None:
+    with _client(monkeypatch) as client:
+        readiness = client.get("/api/voice/status")
+        synthesis = client.post(
+            "/api/voice/synthesize",
+            json={"text": "你好，昔涟。"},
+        )
+
+    assert readiness.status_code == 200
+    assert readiness.json()["voice"] == "cyrene"
+    assert synthesis.status_code == 401
+    assert synthesis.json() == {"detail": "authentication required"}

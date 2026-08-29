@@ -6,10 +6,16 @@ from pathlib import Path
 import pytest
 
 from app.voice.cyrene_genie_manifest import (
+    CYRENE_REFERENCE_TRANSCRIPT,
     AssetFingerprint,
     GenieAssetConfigurationError,
     validate_genie_assets,
 )
+
+
+def test_reference_prompt_is_a_single_short_utterance() -> None:
+    assert CYRENE_REFERENCE_TRANSCRIPT == "能在梦里听见朦胧的神谕。"
+    assert "还在" not in CYRENE_REFERENCE_TRANSCRIPT
 
 
 def _sha256(content: bytes) -> str:

@@ -334,10 +334,11 @@ describe('buildLearningStories', () => {
       knowledgeNames: { 'kp-deadlock': '死锁' },
       learnerId: 'learner-1',
       courseId: 'course-1',
+      reflectionResults: [latestReflection],
     });
 
     expect(stories.filter((story) => story.id === 'practice-1')).toHaveLength(1);
-    expect(stories[0]).toMatchObject({
+    expect(stories.find((story) => story.id === 'practice-1')).toMatchObject({
       id: 'practice-1',
       occurredAt: '2026-08-22T08:00:00.000Z',
       sourceLabel: 'LearningEvidence',
@@ -353,5 +354,26 @@ describe('buildLearningStories', () => {
     expect(stories.map((story) => story.body).join('\n')).not.toContain(
       'remediate',
     );
+    expect(stories.find((story) => story.kind === 'reflection')).toMatchObject({
+      sourceLabel: '本地复述记录',
+      planContextOnly: false,
+    });
+  });
+
+  it('ignores a local reflection from another learner or unknown knowledge point', () => {
+    const stories = buildLearningStories({
+      evidence: [],
+      plan: null,
+      practiceEvaluations: [],
+      reflectionResults: [
+        { ...latestReflection, learnerId: 'learner-2' },
+        { ...latestReflection, knowledgePointId: 'kp-unknown' },
+      ],
+      knowledgeNames: { 'kp-deadlock': '死锁' },
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+    });
+
+    expect(stories).toEqual([]);
   });
 });

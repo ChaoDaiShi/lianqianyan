@@ -1,5 +1,7 @@
 # 昔涟 Genie-TTS 本地推理侧车设计
 
+> 历史设计：自 2026-08-27 起，当前实现改为 Education API 单进程内嵌 Genie-TTS；本文不再是活动架构规范。
+
 ## 目标
 
 把已在 `F:\gpt sovites 轻量级\Genie-TTS` 验证过的 Genie-TTS 2.0.2 与昔涟 V2ProPlus ONNX 模型接入 EducationMind，使小涟页、学习空间和考试讲解能够生成与当前文本一致的昔涟语音。系统继续保持无登录、浏览器不接触模型路径、参考音频路径或推理参数；Genie-TTS 不可用时明确降级为浏览器系统语音。

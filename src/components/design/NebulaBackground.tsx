@@ -7,9 +7,17 @@ const PARTICLES = [
   ['right-[18%] bottom-[12%]', 'h-1 w-1'],
 ] as const;
 
-export function NebulaBackground() {
+export type NebulaScene = 'default' | 'companion' | 'galaxy' | 'storybook';
+
+export function NebulaBackground({ scene = 'default' }: { scene?: NebulaScene }) {
   return (
-    <div className="em-nebula pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+    <div className="em-nebula pointer-events-none fixed inset-0 overflow-hidden" data-background="learning-space" data-nebula-scene={scene} aria-hidden="true">
+      <img
+        src="/brand/learning-space-background.png"
+        alt=""
+        className="em-learning-background absolute inset-0 h-full w-full object-cover"
+      />
+      <span className="em-learning-background-wash absolute inset-0" />
       <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-pink-200/20 blur-3xl" />
       <div className="absolute -right-24 top-0 h-96 w-96 rounded-full bg-sky-200/25 blur-3xl" />
       <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-violet-200/20 blur-3xl" />
