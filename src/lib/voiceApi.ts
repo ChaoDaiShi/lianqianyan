@@ -1,7 +1,7 @@
 import { api } from './api';
 
 export interface VoiceServiceStatus {
-  provider: 'genie_tts' | 'gpt_sovits' | 'account_tts' | 'unavailable';
+  provider: 'minimax' | 'genie_tts' | 'gpt_sovits' | 'account_tts' | 'unavailable';
   voice: 'cyrene';
   configured: boolean;
   fallback: 'browser_speech';

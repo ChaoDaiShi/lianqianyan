@@ -6,6 +6,7 @@ from app.auth.dependencies import current_account_if_required, optional_current_
 from app.auth.models import AuthAccount
 from app.core.config import Settings, get_settings
 from app.voice.gpt_sovits import VoiceNotConfiguredError, VoiceProviderError
+from app.voice.minimax import MiniMaxTTSProvider
 from app.voice.models import VoiceStatus, VoiceSynthesisRequest
 from app.voice.provider import VoiceSynthesisProvider, create_voice_provider
 from app.voice.status import get_voice_status
@@ -23,6 +24,9 @@ def get_voice_provider(
     db: Session = Depends(get_db),
     account: AuthAccount | None = Depends(optional_current_account),
 ) -> VoiceSynthesisProvider:
+    # MiniMax 为部署级首选语音输出，配置后覆盖账号级 TTS profile 与本地运行时
+    if settings.minimax_configured():
+        return MiniMaxTTSProvider(settings)
     return account_voice_provider(
         db,
         settings,
