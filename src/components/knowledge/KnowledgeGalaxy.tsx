@@ -102,13 +102,13 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
               {Object.entries(RELATION_LABEL).map(([key, label]) => <span key={key}><strong className="text-primary-700">{key}</strong> · {label}</span>)}
             </div>
           </div>
-          <div className="mt-4 overflow-x-auto rounded-[1.75rem] border border-white/80 bg-[radial-gradient(circle_at_50%_18%,rgba(196,181,253,.24),transparent_35%),rgba(250,249,255,.72)]">
+          <div className="mt-4 overflow-x-auto rounded-[1.75rem] border border-white/80 bg-[radial-gradient(circle_at_50%_18%,rgba(139,124,246,.18),transparent_35%),var(--em-glass-bg)]">
             <svg viewBox={`0 0 ${width} 540`} role="img" aria-label="融合课程关系与学习状态的知识星图" className="min-w-[820px]">
               {visibleEdges.map((edge) => {
                 const source = positions.get(edge.source);
                 const target = positions.get(edge.target);
                 if (!source || !target) return null;
-                return <g key={edge.id}><line x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={edge.relation === 'precedes' ? '#f59e0b' : '#c4b5fd'} strokeWidth="2" strokeDasharray={edge.relation === 'precedes' ? '7 6' : undefined} opacity="0.74" /><text x={(source.x + target.x) / 2} y={(source.y + target.y) / 2 - 7} textAnchor="middle" fontSize="10" fill="#786a91">{RELATION_LABEL[edge.relation]}</text></g>;
+                return <g key={edge.id}><line x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke={edge.relation === 'precedes' ? '#f59e0b' : '#c4b5fd'} strokeWidth="2" strokeDasharray={edge.relation === 'precedes' ? '7 6' : undefined} opacity="0.74" /><text x={(source.x + target.x) / 2} y={(source.y + target.y) / 2 - 7} textAnchor="middle" fontSize="10" style={{ fill: 'var(--em-muted-ink)' }}>{RELATION_LABEL[edge.relation]}</text></g>;
               })}
               {visibleNodes.map((node) => {
                 const position = positions.get(node.id);
@@ -121,7 +121,7 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
                   {isSelected ? <circle cx={position.x} cy={position.y} r={radius + 11} fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.34" /> : null}
                   {node.inCurrentPlan && !isSelected ? <circle cx={position.x} cy={position.y} r={radius + 7} fill="none" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="3 4" /> : null}
                   <circle cx={position.x} cy={position.y} r={radius} fill={tone.fill} stroke={tone.stroke} strokeWidth={isSelected ? 4 : 2} />
-                  <text x={position.x} y={position.y + radius + 24} textAnchor="middle" fontSize={node.kind === 'section' ? '11' : '13'} fontWeight="700" fill="#44385c">{node.label.length > labelLimit ? `${node.label.slice(0, labelLimit)}…` : node.label}</text>
+                  <text x={position.x} y={position.y + radius + 24} textAnchor="middle" fontSize={node.kind === 'section' ? '11' : '13'} fontWeight="700" style={{ fill: 'var(--em-ink)' }}>{node.label.length > labelLimit ? `${node.label.slice(0, labelLimit)}…` : node.label}</text>
                 </g>;
               })}
             </svg>

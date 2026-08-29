@@ -21,6 +21,5 @@ export * from './learning/TutorExplanationCard';
 export * from './knowledge/KnowledgeGalaxy';
 export * from './archive/LearningIdentityCard';
 export * from './archive/LearningStoryTimeline';
-export * from './PlaceholderPage';
 export * from './learning/useStartLearning';
 export * from './learning/PracticeCard';
