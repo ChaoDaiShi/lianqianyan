@@ -49,42 +49,60 @@ const plan: PersistedStudyPlan = {
 };
 
 describe('TodaysJourney', () => {
-  it('presents an explicit goal choice before a learner has a plan', () => {
+  it('presents diagnosis as the next path node without a second CTA', () => {
     const html = renderToStaticMarkup(
       <TodaysJourney
+        diagnosis={null}
         plan={null}
-        currentTaskId={null}
+        currentTask={null}
+        evidence={[]}
         loading={false}
         error={false}
-        generating={false}
-        starting={false}
-        onGenerate={vi.fn()}
-        onPrepare={vi.fn()}
         onRetry={vi.fn()}
       />,
     );
 
-    expect(html).toContain('选择学习目标');
-    expect(html).toContain('请小涟生成诊断计划');
+    expect(html).toContain('data-journey-node="diagnosis"');
+    expect(html).toContain('data-journey-state="current"');
+    expect(html).toContain('今天从第一次诊断开始');
+    expect(html).toContain('尚未安排');
+    expect(html).toContain('--');
+    expect(html).not.toContain('<button');
     expect(html).not.toContain('继续默认学习');
   });
 
-  it('does not mark available CurrentPlan tasks as completed', () => {
+  it('renders one connected semantic path instead of plan task cards', () => {
     const html = renderToStaticMarkup(
       <TodaysJourney
+        diagnosis={{
+          learnerId: 'learner-1',
+          courseId: 'course-1',
+          courseName: '操作系统',
+          primaryFocus: null,
+          priorityInterventions: [],
+          strengths: [],
+          weakPoints: [],
+          developingPoints: [],
+          unassessedPoints: [],
+          summaryCodes: [],
+          diagnosisGeneratedAt: '2026-08-23T07:30:00.000Z',
+        }}
         plan={plan}
-        currentTaskId="task-1"
+        currentTask={plan.tasks[0]}
+        evidence={[]}
         loading={false}
         error={false}
-        generating={false}
-        starting={false}
-        onGenerate={vi.fn()}
-        onPrepare={vi.fn()}
         onRetry={vi.fn()}
       />,
     );
 
-    expect(html).toContain('PV 操作');
-    expect(html).not.toContain('lucide-circle-check');
+    expect(html.match(/data-journey-node=/g)).toHaveLength(4);
+    expect(html).toContain('诊断');
+    expect(html).toContain('计划');
+    expect(html).toContain('学习');
+    expect(html).toContain('验证');
+    expect(html).not.toContain('PV 操作');
+    expect(html).not.toContain('sm:grid-cols-2');
+    expect(html).not.toContain('lg:grid-cols-3');
   });
 });
