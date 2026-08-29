@@ -38,7 +38,13 @@ vi.mock('./TurnstileWidget', () => ({
 }));
 
 vi.mock('./VaptchaWidget', () => ({
-  VaptchaWidget: ({ onToken }: { onToken(token: string | null): void }) => {
+  VaptchaWidget: ({
+    onToken,
+    onUnavailable,
+  }: {
+    onToken(token: string | null): void;
+    onUnavailable(): void;
+  }) => {
     vaptchaTokenReceiver.mockImplementation(onToken);
     return (
       <div data-testid="vaptcha-widget">
@@ -48,6 +54,13 @@ vi.mock('./VaptchaWidget', () => ({
           onClick={() => onToken('va-token')}
         >
           pass
+        </button>
+        <button
+          type="button"
+          data-testid="vaptcha-unavailable"
+          onClick={() => onUnavailable()}
+        >
+          unavailable
         </button>
       </div>
     );
@@ -155,6 +168,39 @@ describe('CaptchaPanel', () => {
       vi.advanceTimersByTime(9_000);
     });
     expect(screen.getByTestId('turnstile-widget')).toBeTruthy();
+  });
+
+  it('reports all providers unavailable when the vaptcha fallback also fails', () => {
+    const onAllUnavailable = vi.fn();
+    render(
+      <CaptchaPanel
+        chain={['turnstile', 'vaptcha']}
+        turnstileSiteKey="site"
+        vaptchaVid="vid"
+        theme="dark"
+        onCredential={vi.fn()}
+        onAllUnavailable={onAllUnavailable}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('turnstile-unavailable'));
+    fireEvent.click(screen.getByTestId('vaptcha-unavailable'));
+    expect(onAllUnavailable).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports all providers unavailable for a turnstile-only chain', () => {
+    const onAllUnavailable = vi.fn();
+    render(
+      <CaptchaPanel
+        chain={['turnstile']}
+        turnstileSiteKey="site"
+        vaptchaVid={null}
+        theme="dark"
+        onCredential={vi.fn()}
+        onAllUnavailable={onAllUnavailable}
+      />,
+    );
+    fireEvent.click(screen.getByTestId('turnstile-unavailable'));
+    expect(onAllUnavailable).toHaveBeenCalledTimes(1);
   });
 
   it('exposes reset through the imperative handle', () => {

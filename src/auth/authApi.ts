@@ -103,13 +103,23 @@ export async function selectAccountCourse(courseId: string): Promise<AuthAccount
   return mapAccount(response.data);
 }
 
+const CAPTCHA_DETAIL_I18N: Record<string, string> = {
+  'complete the verification challenge': '请先完成人机验证再提交。',
+  'verification service is temporarily unavailable': '验证服务暂时不可用，请稍后重试。',
+  'verification challenge was not accepted': '人机验证未通过，请重新完成验证。',
+  'captcha provider is not enabled': '当前部署未启用该验证方式，请刷新页面重试。',
+  'unsupported captcha provider': '当前部署未启用该验证方式，请刷新页面重试。',
+};
+
 export function authErrorMessage(error: unknown): string {
   if (error instanceof AxiosError) {
     const detail = (error.response?.data as { detail?: string } | undefined)?.detail;
     if (error.response?.status === 409) return '这个用户名已经被使用，请换一个。';
     if (error.response?.status === 423) return '登录尝试过多，账号已暂时锁定 15 分钟。';
     if (error.response?.status === 401) return '用户名或密码不正确。';
-    if (error.response?.status === 400 && typeof detail === 'string') return `人机验证失败：${detail}`;
+    if (error.response?.status === 400 && typeof detail === 'string') {
+      return `人机验证失败：${CAPTCHA_DETAIL_I18N[detail] ?? detail}`;
+    }
     if (typeof detail === 'string') return detail;
   }
   return '服务暂时不可用，请稍后重试。';

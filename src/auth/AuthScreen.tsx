@@ -33,6 +33,8 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string | null>(null);
   const [vaptchaVid, setVaptchaVid] = useState<string | null>(null);
   const [fallbackProvider, setFallbackProvider] = useState<CaptchaProvider | null>(null);
+  const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
+  const [captchaGeneration, setCaptchaGeneration] = useState(0);
   const captchaRef = useRef<CaptchaPanelHandle>(null);
   const resolved =
     typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
@@ -65,6 +67,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
   }, []);
   const resetCaptcha = useCallback(() => {
     setCredential(null);
+    setCaptchaUnavailable(false);
     captchaRef.current?.reset();
   }, []);
 
@@ -204,20 +207,35 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
                 {captchaRequired && (
                   <div>
-                    {fallbackProvider && (
+                    {fallbackProvider && !captchaUnavailable && (
                       <p className="mb-2 rounded-xl border border-[#E4DEF7] bg-[#F6F3FF] px-3 py-2 text-xs leading-5 text-[#6A5DC8]">
                         Cloudflare 验证暂不可用，已切换到 Vaptcha 人机验证。
                       </p>
                     )}
-                    <CaptchaPanel
-                      ref={captchaRef}
-                      chain={captchaChain}
-                      turnstileSiteKey={turnstileSiteKey}
-                      vaptchaVid={vaptchaVid}
-                      theme={resolved}
-                      onCredential={receiveCredential}
-                      onFallback={setFallbackProvider}
-                    />
+                    {captchaUnavailable ? (
+                      <div className="rounded-xl border border-[#F2D7DC] bg-[#FFF5F6] px-4 py-3">
+                        <p className="text-sm leading-5 text-[#A34E5B]">人机验证组件暂时无法加载，请检查网络后重试。</p>
+                        <button
+                          type="button"
+                          onClick={() => { setCaptchaUnavailable(false); setCaptchaGeneration((current) => current + 1); }}
+                          className="mt-2 rounded-lg px-2 py-1 text-xs font-medium text-[#7766E8] underline underline-offset-2 hover:text-[#6958D5]"
+                        >
+                          重新加载验证
+                        </button>
+                      </div>
+                    ) : (
+                      <CaptchaPanel
+                        key={`captcha-${captchaGeneration}`}
+                        ref={captchaRef}
+                        chain={captchaChain}
+                        turnstileSiteKey={turnstileSiteKey}
+                        vaptchaVid={vaptchaVid}
+                        theme={resolved}
+                        onCredential={receiveCredential}
+                        onFallback={setFallbackProvider}
+                        onAllUnavailable={() => setCaptchaUnavailable(true)}
+                      />
+                    )}
                   </div>
                 )}
 
