@@ -8,6 +8,8 @@ from app.agents.orchestrator import EducationAgentOrchestrator
 from app.db.session import get_db
 from app.auth.dependencies import authorize_learning_scope, optional_current_account
 from app.auth.models import AuthAccount
+from app.core.config import get_settings
+from app.preferences.providers import account_llm_provider
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -19,4 +21,6 @@ async def chat(
     account: AuthAccount | None = Depends(optional_current_account),
 ) -> AgentsChatResponse:
     authorize_learning_scope(account, payload.learner_id, payload.course_id)
-    return await EducationAgentOrchestrator(db).handle(payload)
+    return await EducationAgentOrchestrator(
+        db, llm_provider=account_llm_provider(db, get_settings(), account)
+    ).handle(payload)

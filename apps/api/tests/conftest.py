@@ -28,17 +28,18 @@ os.environ["EDUCATION_AUTH_REQUIRED"] = "false"
 
 
 @pytest.fixture(autouse=True)
-def reset_settings_cache():
-    """Prevent one test's temporary environment from leaking through the cache."""
-    from app.core.config import get_settings
+def reset_settings_cache(monkeypatch: pytest.MonkeyPatch):
+    """Isolate tests from deployment dotenv files and cached settings."""
+    from app.core.config import Settings, get_settings
 
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
 
 
 def pytest_sessionfinish() -> None:
-    """Release SQLAlchemy handles, then remove the exact test DB and sidecars."""
+    """Release SQLAlchemy handles, then remove the exact temporary test DB files."""
     expected_parent = Path(tempfile.gettempdir()).resolve()
     if _TEST_DATABASE_PATH.parent != expected_parent:
         raise RuntimeError("refusing to clean a pytest database outside the temp directory")

@@ -58,7 +58,7 @@ $env:EDUCATION_LLM_API_KEY = '<secret>'
 $env:EDUCATION_LLM_MODEL = 'your-model'
 ```
 
-昔涟专用语音需要独立的 Genie-TTS 或 GPT-SoVITS 服务。源码包不包含参考音频、ONNX 模型、GenieData 或推理运行环境；未配置时网页会明确降级为浏览器语音，不会把系统音色冒充为昔涟。完整本机语音环境请使用单独的 Windows Full 包。
+Education API 已内嵌 Genie-TTS 2.0.2 依赖，不需要独立语音服务或额外端口；平台源码包携带干净参考音频，但不包含约 750 MB 的 ONNX 模型或 GenieData。平台若支持长期运行的 Python 3.11/3.12、原生 ONNX Runtime 和受控持久卷，可通过 `EDUCATION_TTS_GENIE_ROOT`、`EDUCATION_TTS_MODEL_DIR`、`EDUCATION_TTS_GENIE_DATA_DIR`、`EDUCATION_TTS_REFERENCE_AUDIO_PATH` 与 `EDUCATION_TTS_REFERENCE_TEXT` 挂载项目运行区，并以 `--workers 1` 启动。静态或 Serverless 平台不能承载该本地推理运行时；未配置时网页会明确降级为浏览器语音。完整本机语音环境请使用 Windows Full 包。
 
 语音归属文字：
 
@@ -66,7 +66,7 @@ $env:EDUCATION_LLM_MODEL = 'your-model'
 
 ## 安全与数据边界
 
-本源码包不包含 `.env`、API Key、SQLite 数据库、运行日志、缓存、`node_modules`、Python `.venv`、参考音频或 TTS 模型。部署时从平台的秘密管理功能注入环境变量，不要把密钥写入源码或 Vite 的公开变量。
+本源码包不包含 `.env`、API Key、SQLite 数据库、运行日志、缓存、`node_modules`、Python `.venv`、GenieData 或 TTS 模型。部署时从平台的秘密管理功能注入环境变量，不要把密钥写入源码或 Vite 的公开变量。
 
 部署后至少检查：
 

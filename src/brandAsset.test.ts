@@ -12,7 +12,7 @@ describe('application icon', () => {
   });
 
   it('ships the supplied learning-space background asset', () => {
-    const asset = resolve(process.cwd(), 'public/brand/learning-space-background.png');
+    const asset = resolve('public/brand/learning-space-background.png');
 
     expect(existsSync(asset)).toBe(true);
     expect(statSync(asset).size).toBeGreaterThan(1000);

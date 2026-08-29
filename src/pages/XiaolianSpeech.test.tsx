@@ -57,19 +57,22 @@ vi.mock('@/store', () => ({
 import { XiaolianPage } from './XiaolianPage';
 
 describe('XiaolianPage digital-human speech', () => {
-  it('offers speech for assistant answers and drives Live2D speaking state', () => {
+  it('keeps conversation and voice primary while technical attribution is collapsed', () => {
     const html = renderToStaticMarkup(<XiaolianPage />);
 
     expect(html).toContain('昔涟讲解');
-    expect(html).toContain('当前输出：昔涟 Genie-TTS');
-    expect(html).toContain('Genie-TTS 2.0.2');
-    expect(html).toContain('GPT-SOVITS项目作者为花儿不哭');
+    expect(html).toContain('和小涟一起想明白');
+    expect(html).toContain('更多');
+    expect(html).toContain('技术详情');
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('你好，我是小涟');
-    expect(html).toContain('小涟学习工作台');
-    expect(html).toContain('外部模型未配置');
-    expect(html).toContain('课程材料与学习记录生成');
+    expect(html).not.toContain('小涟学习工作台');
+    expect(html).not.toContain('Provider：');
+    expect(html).toContain('当前输出：昔涟 Genie-TTS');
+    expect(html).toContain('<details');
+    expect(html).not.toContain('<details open=""');
+    expect(html).not.toContain('学习诊断</strong>');
   });
 });

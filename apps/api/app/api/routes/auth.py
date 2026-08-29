@@ -20,6 +20,7 @@ from app.auth.service import (
     InvalidCredentialsError,
     UsernameExistsError,
 )
+from app.auth.turnstile import TurnstileError, TurnstileVerifier, get_turnstile_verifier
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.domain.models import Course
@@ -53,11 +54,17 @@ def _set_cookie(response: Response, token: str) -> None:
 
 
 @router.post("/register", response_model=SessionOut, status_code=201)
-def register(
+async def register(
     payload: RegisterRequest,
+    request: Request,
     response: Response,
     service: AuthService = Depends(get_auth_service),
+    verifier: TurnstileVerifier = Depends(get_turnstile_verifier),
 ) -> SessionOut:
+    try:
+        await verifier.verify(payload.captcha_token, request.client.host if request.client else None)
+    except TurnstileError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     try:
         account, token = service.register(payload)
     except UsernameExistsError as error:
@@ -67,11 +74,17 @@ def register(
 
 
 @router.post("/login", response_model=SessionOut)
-def login(
+async def login(
     payload: LoginRequest,
+    request: Request,
     response: Response,
     service: AuthService = Depends(get_auth_service),
+    verifier: TurnstileVerifier = Depends(get_turnstile_verifier),
 ) -> SessionOut:
+    try:
+        await verifier.verify(payload.captcha_token, request.client.host if request.client else None)
+    except TurnstileError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
     try:
         account, token = service.login(payload.username, payload.password)
     except AccountLockedError as error:

@@ -44,9 +44,10 @@ class OpenAICompatibleProvider(BaseLLMProvider):
             transport=self._transport,
         )
         try:
+            headers = {"Authorization": f"Bearer {self._api_key}"} if self._api_key else {}
             response = await client.post(
                 self.endpoint_for(self._base_url),
-                headers={"Authorization": f"Bearer {self._api_key}"},
+                headers=headers,
                 json={
                     "model": self._model,
                     "messages": [{"role": item.role, "content": item.content} for item in messages],

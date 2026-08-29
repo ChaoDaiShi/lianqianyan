@@ -1,5 +1,7 @@
 # Cyrene Genie-TTS Sidecar Implementation Plan
 
+> Historical plan: superseded on 2026-08-27 by the single-process embedded Genie-TTS runtime.
+
 > **Execution:** Use the executing-plans workflow inline. Do not spawn subagents. Every feature or fix follows RED -> GREEN -> focused regression before commit.
 
 **Goal:** Run the user-provided Genie-TTS 2.0.2 environment and converted Cyrene V2ProPlus ONNX model behind a loopback-only safe sidecar, route EducationMind voice synthesis through it, and show the active engine honestly in every speech surface.

@@ -40,6 +40,8 @@ from app.exams import (
     QuestionUpdate,
     ReviewQueueItemOut,
 )
+from app.core.config import get_settings
+from app.preferences.providers import account_llm_provider
 
 router = APIRouter(prefix="/exams", tags=["exams"])
 
@@ -68,9 +70,12 @@ def _raise_http(exc: Exception) -> NoReturn:
 async def generate_exam(
     payload: ExamGenerationRequest,
     db: Session = Depends(get_db),
+    account: AuthAccount | None = Depends(optional_current_account),
 ) -> ExamGenerationResult:
     try:
-        return await ExamGenerationService(db).generate(payload)
+        return await ExamGenerationService(
+            db, llm_provider=account_llm_provider(db, get_settings(), account)
+        ).generate(payload)
     except GenerationSourceNotFound as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except (ExamNotFoundError, ExamStateError, ValueError) as exc:
@@ -258,12 +263,13 @@ async def submit_attempt(
     attempt_id: str,
     payload: AttemptActionRequest,
     service: ExamService = Depends(_service),
+    db: Session = Depends(get_db),
     account: AuthAccount | None = Depends(optional_current_account),
 ) -> AttemptSummaryOut:
     authorize_learning_scope(account, payload.learner_id)
     try:
         summary = service.submit_attempt(attempt_id, payload.learner_id)
-        grader = AIAnswerGrader()
+        grader = AIAnswerGrader(provider=account_llm_provider(db, get_settings(), account))
         for item in service.list_ai_review_items(attempt_id):
             grade = await grader.grade(
                 prompt=item.prompt,

@@ -348,15 +348,14 @@ describe('ArchivePage Xiaolian memory integration', () => {
     const html = renderToStaticMarkup(<ArchivePage />);
     const storyProps = fixtures.storyProps;
 
-    expect(html).toContain('learning-identity-card');
+    expect(html).not.toContain('learning-identity-card');
     expect(html).toContain('xiaolian-memory-card');
     expect(html).toContain('learner-portrait-dashboard');
-    expect(html).toContain('memory-capsule');
+    expect(html).not.toContain('memory-capsule');
     expect(html).toContain('learning-story-timeline');
     expect(html).not.toContain('growth-timeline');
     expect(html).toContain('Operating Systems');
-    expect(html).toContain('当前星轨');
-    expect(html).toContain('Deadlock');
+    expect(html).not.toContain('当前星轨');
     expect(fixtures.memoryProps?.profile).toBe(fixtures.profile);
     expect(fixtures.memoryProps?.diagnosis).toBe(fixtures.diagnosis);
     expect(fixtures.memoryProps?.evidence).toBe(fixtures.evidence);
@@ -368,13 +367,15 @@ describe('ArchivePage Xiaolian memory integration', () => {
     expect(fixtures.portraitProps?.analytics).toBe(fixtures.analytics);
     expect(fixtures.portraitProps?.analyticsLoading).toBe(false);
     expect(fixtures.portraitProps?.analyticsError).toBe(false);
-    expect(fixtures.capsuleProps?.confirmedPreferences).toEqual([]);
     expect(storyProps).not.toBeNull();
     expect(storyProps?.plan).toBe(fixtures.plan);
     expect(storyProps?.evidence).toBe(fixtures.evidence);
     expect(storyProps?.practiceEvaluations).toEqual(
       Object.values(fixtures.practiceEvaluations),
     );
+    expect(storyProps?.reflectionResults).toEqual([
+      fixtures.reflectionResults['task-1'],
+    ]);
     expect(storyProps?.learnerId).toBe('learner-1');
     expect(storyProps?.courseId).toBe('course-1');
     expect(storyProps?.loading).toBe(false);
@@ -426,8 +427,9 @@ describe('ArchivePage Xiaolian memory integration', () => {
       knowledgePoints: [],
     };
 
-    renderToStaticMarkup(<ArchivePage />);
+    const html = renderToStaticMarkup(<ArchivePage />);
 
-    expect(fixtures.portraitProps?.profile.knowledgePoints).toEqual([]);
+    expect(fixtures.portraitProps).toBeNull();
+    expect(html).not.toContain('展开证据驱动学习画像');
   });
 });

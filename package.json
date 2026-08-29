@@ -4,6 +4,7 @@
   "description": "忆涟千言—教 EducationMind 正式账号教育智能体与学习空间",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev": "vite",
     "dev:cyrene": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/start-cyrene-web.ps1",
@@ -94,11 +95,14 @@
     "node": ">=18.0.0"
   },
   "keywords": [
-    "react",
-    "vite",
-    "typescript",
-    "template",
-    "starter"
+    "education-ai",
+    "ai-agent",
+    "adaptive-learning",
+    "learning-evidence",
+    "rag",
+    "mcp",
+    "educationmind",
+    "yilian-qianyan"
   ],
-  "author": "XAGI Team"
+  "author": "YiLianQianYan / EducationMind Project"
 }

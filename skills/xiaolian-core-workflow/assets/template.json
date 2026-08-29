@@ -1,0 +1,5 @@
+{
+  "_note": "技能配置已迁移至 skills-manifest.json。此文件保留为向后兼容。",
+  "version": "1.0.0",
+  "last_validated": null
+}

@@ -1,5 +1,7 @@
 # 昔涟 Genie-TTS 本地推理接入验证
 
+> 历史记录：本架构已于 2026-08-27 被 Education API 内嵌 Genie-TTS 运行时取代。本文仅保留当时证据，不再作为当前启动或部署说明。
+
 验证日期：2026-08-26（Asia/Shanghai）
 
 验证分支：`phase-3-1-competition-sprint`

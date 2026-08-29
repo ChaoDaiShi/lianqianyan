@@ -66,7 +66,7 @@ def test_installs_only_the_hash_pinned_nested_unicode_wav(tmp_path: Path) -> Non
         spec=make_spec(wav_bytes),
     )
 
-    installed_wav = output_directory / "cyrene-reference.wav"
+    installed_wav = output_directory / "cyrene-reference-clean.wav"
     metadata_path = output_directory / "cyrene-reference.json"
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     assert report.wav_path == installed_wav
@@ -126,7 +126,7 @@ def test_rejects_wrong_hash_and_preserves_existing_outputs(tmp_path: Path) -> No
     archive_path = tmp_path / "audio.zip"
     output_directory = tmp_path / "output"
     output_directory.mkdir()
-    installed_wav = output_directory / "cyrene-reference.wav"
+    installed_wav = output_directory / "cyrene-reference-clean.wav"
     metadata_path = output_directory / "cyrene-reference.json"
     installed_wav.write_bytes(b"existing-wav")
     metadata_path.write_text("existing-metadata", encoding="utf-8")

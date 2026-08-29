@@ -19,9 +19,11 @@ from app.api.routes import (
     network,
     plans,
     practice,
+    public,
     profile,
     reports,
     resources,
+    settings,
     system,
     tools,
     tutor,
@@ -30,9 +32,12 @@ from app.api.routes import (
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
+api_router.include_router(public.router)
 api_router.include_router(auth.router)
+api_router.include_router(voice.router)
 _protected = [Depends(current_account_if_required)]
 api_router.include_router(system.router, dependencies=_protected)
+api_router.include_router(settings.router, dependencies=_protected)
 api_router.include_router(tools.router, dependencies=_protected)
 api_router.include_router(knowledge.router, dependencies=_protected)
 api_router.include_router(network.router, dependencies=_protected)
@@ -48,4 +53,3 @@ api_router.include_router(agents.router, dependencies=_protected)
 api_router.include_router(assessment.router, dependencies=_protected)
 api_router.include_router(reports.router, dependencies=_protected)
 api_router.include_router(tutor.router, dependencies=_protected)
-api_router.include_router(voice.router, dependencies=_protected)

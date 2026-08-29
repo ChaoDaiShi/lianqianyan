@@ -2,7 +2,6 @@ import { Eye, Sparkles } from 'lucide-react';
 import type { DiagnosisResult, LearnerProfile } from '@/domain';
 import type { LearningEvidence } from '@/lib/educationApi';
 import type { ReflectionResult } from '@/components/learning/learningLoop';
-import { GlassPanel } from '@/components/design/GlassPanel';
 import { buildXiaolianMemoryObservations } from './xiaolianMemory';
 
 export interface XiaolianMemoryCardProps {
@@ -32,7 +31,7 @@ export function XiaolianMemoryCard({
   });
 
   return (
-    <GlassPanel className="p-5 sm:p-6">
+    <section className="p-1">
       <div className="flex items-center gap-2">
         <Eye className="h-4 w-4 text-primary-600" />
         <p className="text-[10px] font-bold text-primary-600">
@@ -65,6 +64,6 @@ export function XiaolianMemoryCard({
           </p>
         </div>
       )}
-    </GlassPanel>
+    </section>
   );
 }

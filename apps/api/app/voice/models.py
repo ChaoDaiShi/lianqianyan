@@ -12,7 +12,7 @@ VOICE_ATTRIBUTION = (
 
 
 class VoiceStatus(BaseModel):
-    provider: Literal["genie_tts", "gpt_sovits", "unavailable"]
+    provider: Literal["genie_tts", "gpt_sovits", "account_tts", "unavailable"]
     voice: Literal["cyrene"] = "cyrene"
     configured: bool
     fallback: Literal["browser_speech"] = "browser_speech"

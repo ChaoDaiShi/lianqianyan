@@ -27,7 +27,6 @@ def test_runtime_validates_starts_waits_and_cleans_its_owned_processes() -> None
         "$GenieRoot",
         "$ModelDirectory",
         "$ReferenceAudio",
-        "$SidecarPort",
         "$ApiPort",
         "$WebPort",
         "$DatabasePath",
@@ -37,14 +36,18 @@ def test_runtime_validates_starts_waits_and_cleans_its_owned_processes() -> None
         assert parameter in content
 
     for required_value in (
+        "runtime\\genie-tts",
         "127.0.0.1",
         "EDUCATION_TTS_PROVIDER",
-        "EDUCATION_TTS_BASE_URL",
+        "EDUCATION_TTS_GENIE_ROOT",
+        "EDUCATION_TTS_MODEL_DIR",
+        "EDUCATION_TTS_GENIE_DATA_DIR",
+        "EDUCATION_TTS_REFERENCE_AUDIO_PATH",
+        "EDUCATION_TTS_REFERENCE_TEXT",
         "EDUCATION_DATABASE_URL",
         ".local\\runtime",
         "Get-NetTCPConnection",
         "Invoke-WebRequest",
-        "/health",
         "/api/voice/status",
         "Start-Process",
         "-WindowStyle Hidden",
@@ -52,7 +55,6 @@ def test_runtime_validates_starts_waits_and_cleans_its_owned_processes() -> None
         "AssignProcessToJobObject",
         "CreateKillOnCloseJob",
         "Stop-ProcessTree",
-        "$sidecarProcess.Id",
         "$apiProcess.Id",
         "$webProcess.Id",
     ):
@@ -61,8 +63,19 @@ def test_runtime_validates_starts_waits_and_cleans_its_owned_processes() -> None
     assert "while (" in content
     assert "pnpm.cmd" in content
     assert "0.0.0.0" not in content
+    assert "9881" not in content
+    assert "$SidecarPort" not in content
+    assert "$sidecarProcess" not in content
+    assert "start_genie_voice.ps1" not in content
+    assert "F:\\gpt sovites 轻量级\\Genie-TTS" not in content
+    assert "$GenieRoot = ''" in content
+    assert "$env:GENIE_DATA_DIR = $resolvedGenieData" in content
+    assert content.index("$env:GENIE_DATA_DIR = $resolvedGenieData") < content.index(
+        "import genie_tts"
+    )
     assert "Invoke-Expression" not in content
     assert "taskkill" not in content.lower()
+    assert "if (-not $ValidateOnly) {\n    Assert-PortAvailable" in content
 
 
 def test_runtime_does_not_stop_an_unknown_port_owner() -> None:
@@ -70,7 +83,6 @@ def test_runtime_does_not_stop_an_unknown_port_owner() -> None:
 
     assert "Assert-PortAvailable" in content
     assert "端口已被其他进程占用" in content
-    assert "Stop-ProcessTree -ProcessId $sidecarProcess.Id" in content
     assert "Stop-ProcessTree -ProcessId $apiProcess.Id" in content
     assert "Stop-ProcessTree -ProcessId $webProcess.Id" in content
     assert "Stop-Process -Id $connection.OwningProcess" not in content

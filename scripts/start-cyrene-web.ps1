@@ -1,10 +1,8 @@
 [CmdletBinding()]
 param(
-    [string]$GenieRoot = 'F:\gpt sovites 轻量级\Genie-TTS',
+    [string]$GenieRoot = '',
     [string]$ModelDirectory = '',
     [string]$ReferenceAudio = '',
-    [ValidateRange(1, 65535)]
-    [int]$SidecarPort = 9881,
     [ValidateRange(1, 65535)]
     [int]$ApiPort = 8000,
     [ValidateRange(1, 65535)]
@@ -317,45 +315,52 @@ function Wait-HttpCondition {
 
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $apiDirectory = Resolve-RequiredDirectory -LiteralPath (Join-Path $projectRoot 'apps\api') -Label 'Education API 目录'
-$genieLauncher = Resolve-RequiredFile -LiteralPath (Join-Path $apiDirectory 'scripts\start_genie_voice.ps1') -Label 'Genie-TTS 启动器'
 $apiPython = Resolve-RequiredFile -LiteralPath (Join-Path $apiDirectory '.venv\Scripts\python.exe') -Label 'Education API Python'
+if ([string]::IsNullOrWhiteSpace($GenieRoot)) {
+    $GenieRoot = Join-Path $projectRoot 'runtime\genie-tts'
+}
 $resolvedGenieRoot = Resolve-RequiredDirectory -LiteralPath $GenieRoot -Label 'Genie-TTS 根目录'
 
 if ([string]::IsNullOrWhiteSpace($ModelDirectory)) {
     $ModelDirectory = Join-Path $resolvedGenieRoot 'Output\昔涟AI-GPT-SOVITS--V2proplus'
 }
 if ([string]::IsNullOrWhiteSpace($ReferenceAudio)) {
-    $ReferenceAudio = Join-Path $projectRoot '.local\voice\cyrene-reference.wav'
+    $ReferenceAudio = Join-Path $resolvedGenieRoot 'Reference\cyrene-reference.wav'
 }
 if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
     $DatabasePath = Join-Path $projectRoot '.local\runtime\education.db'
 }
 
 $resolvedModelDirectory = Resolve-RequiredDirectory -LiteralPath $ModelDirectory -Label '昔涟 ONNX 模型目录'
+$resolvedGenieData = Resolve-RequiredDirectory -LiteralPath (Join-Path $resolvedGenieRoot 'GenieData') -Label 'GenieData 目录'
 $resolvedReferenceAudio = Resolve-RequiredFile -LiteralPath $ReferenceAudio -Label '昔涟参考音频'
 if (-not [System.IO.Path]::IsPathRooted($DatabasePath)) {
     throw 'Education API 数据库必须使用绝对路径'
 }
 $resolvedDatabasePath = [System.IO.Path]::GetFullPath($DatabasePath)
 
-if (($SidecarPort -eq $ApiPort) -or ($SidecarPort -eq $WebPort) -or ($ApiPort -eq $WebPort)) {
-    throw '侧车、API 与网站端口必须互不相同'
+if ($ApiPort -eq $WebPort) {
+    throw 'API 与网站端口必须互不相同'
 }
 
-Assert-PortAvailable -Port $SidecarPort -Label 'Genie-TTS 侧车'
-Assert-PortAvailable -Port $ApiPort -Label 'Education API'
-Assert-PortAvailable -Port $WebPort -Label 'Vite 网站'
+if (-not $ValidateOnly) {
+    Assert-PortAvailable -Port $ApiPort -Label 'Education API'
+    Assert-PortAvailable -Port $WebPort -Label 'Vite 网站'
+}
 
-& $genieLauncher `
-    -GenieRoot $resolvedGenieRoot `
-    -ModelDirectory $resolvedModelDirectory `
-    -ReferenceAudio $resolvedReferenceAudio `
-    -Port $SidecarPort `
-    -ValidateOnly
+$env:EDUCATION_TTS_PROVIDER = 'genie'
+$env:EDUCATION_TTS_GENIE_ROOT = $resolvedGenieRoot
+$env:EDUCATION_TTS_MODEL_DIR = $resolvedModelDirectory
+$env:EDUCATION_TTS_GENIE_DATA_DIR = $resolvedGenieData
+$env:GENIE_DATA_DIR = $resolvedGenieData
+$env:EDUCATION_TTS_REFERENCE_AUDIO_PATH = $resolvedReferenceAudio
+$env:EDUCATION_TTS_REFERENCE_TEXT = '能在梦里听见朦胧的神谕。'
+$env:EDUCATION_TTS_TIMEOUT = '60'
+$env:EDUCATION_TTS_MAX_AUDIO_BYTES = '20000000'
 
 Push-Location -LiteralPath $apiDirectory
 try {
-    & $apiPython -c 'import fastapi, uvicorn; from app.main import app; assert app.title; print("validated education_api=ok")'
+    & $apiPython -c 'from pathlib import Path; from app.main import app; from app.voice.cyrene_genie_manifest import validate_genie_assets; from app.voice.genie_runtime import GenieRuntimeSettings, _assert_project_genie_module, _prepare_project_genie_import; from app.core.config import get_settings; settings = get_settings(); runtime = GenieRuntimeSettings.from_application_settings(settings); source = _prepare_project_genie_import(runtime.genie_root); import genie_tts; _assert_project_genie_module(genie_tts, source); report = validate_genie_assets(runtime.model_dir, runtime.reference_audio, runtime.genie_data_dir); assert app.title; print(f"validated education_api=ok engine={Path(genie_tts.__file__).resolve()} model_files={report.model_file_count} model_bytes={report.model_bytes}")'
     if ($LASTEXITCODE -ne 0) {
         throw 'Education API 运行时校验失败'
     }
@@ -366,12 +371,10 @@ finally {
 
 $pnpmCommand = Get-Command 'pnpm.cmd' -ErrorAction Stop
 $webUrl = "http://127.0.0.1:$WebPort"
-$sidecarUrl = "http://127.0.0.1:$SidecarPort"
 $apiUrl = "http://127.0.0.1:$ApiPort"
 
 if ($ValidateOnly) {
     Write-Output '昔涟语音网站运行环境校验通过'
-    Write-Output "sidecar=$sidecarUrl"
     Write-Output "api=$apiUrl"
     Write-Output "web=$webUrl/#/agent"
     Write-Output "database=$resolvedDatabasePath"
@@ -384,63 +387,18 @@ $logDirectory = Join-Path $projectRoot '.logs'
 [System.IO.Directory]::CreateDirectory($logDirectory) | Out-Null
 
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$sidecarOutputLog = Join-Path $logDirectory "cyrene-sidecar-$timestamp.out.log"
-$sidecarErrorLog = Join-Path $logDirectory "cyrene-sidecar-$timestamp.err.log"
 $apiOutputLog = Join-Path $logDirectory "education-api-$timestamp.out.log"
 $apiErrorLog = Join-Path $logDirectory "education-api-$timestamp.err.log"
 $webOutputLog = Join-Path $logDirectory "education-web-$timestamp.out.log"
 $webErrorLog = Join-Path $logDirectory "education-web-$timestamp.err.log"
 
-$sidecarProcess = $null
 $apiProcess = $null
 $webProcess = $null
 $processJobHandle = [EducationMindCyreneProcessJob]::CreateKillOnCloseJob()
 
 try {
-    $powerShellExecutable = (Get-Process -Id $PID).Path
-    $sidecarArguments = @(
-        '-NoProfile',
-        '-ExecutionPolicy',
-        'Bypass',
-        '-File',
-        (ConvertTo-QuotedProcessArgument $genieLauncher),
-        '-GenieRoot',
-        (ConvertTo-QuotedProcessArgument $resolvedGenieRoot),
-        '-ModelDirectory',
-        (ConvertTo-QuotedProcessArgument $resolvedModelDirectory),
-        '-ReferenceAudio',
-        (ConvertTo-QuotedProcessArgument $resolvedReferenceAudio),
-        '-Port',
-        [string]$SidecarPort
-    )
-    $sidecarProcess = Start-HiddenProcess `
-        -FilePath $powerShellExecutable `
-        -ArgumentList $sidecarArguments `
-        -WorkingDirectory $projectRoot `
-        -StandardOutputPath $sidecarOutputLog `
-        -StandardErrorPath $sidecarErrorLog `
-        -JobHandle $processJobHandle
-
-    Wait-HttpCondition `
-        -Uri "$sidecarUrl/health" `
-        -Process $sidecarProcess `
-        -Condition {
-            param($response)
-            $status = $response.Content | ConvertFrom-Json
-            return $status.ready -eq $true -and $status.runtime -eq 'genie_tts'
-        } `
-        -Label 'Genie-TTS 侧车' `
-        -TimeoutSeconds $StartupTimeoutSeconds `
-        -StandardOutputPath $sidecarOutputLog `
-        -StandardErrorPath $sidecarErrorLog
-    Add-ProcessTreeToJob -ProcessId $sidecarProcess.Id -JobHandle $processJobHandle
-
     $databaseUrlPath = $resolvedDatabasePath.Replace('\', '/')
     $env:EDUCATION_DATABASE_URL = "sqlite:///$databaseUrlPath"
-    $env:EDUCATION_TTS_PROVIDER = 'genie'
-    $env:EDUCATION_TTS_BASE_URL = $sidecarUrl
-    $env:EDUCATION_TTS_TIMEOUT = '60'
-    $env:EDUCATION_TTS_MAX_AUDIO_BYTES = '20000000'
     $env:EDUCATION_API_URL = $apiUrl
 
     $apiArguments = @(
@@ -450,7 +408,9 @@ try {
         '--host',
         '127.0.0.1',
         '--port',
-        [string]$ApiPort
+        [string]$ApiPort,
+        '--workers',
+        '1'
     )
     $apiProcess = Start-HiddenProcess `
         -FilePath $apiPython `
@@ -505,10 +465,10 @@ try {
     Write-Output "语音状态：$webUrl/api/voice/status"
     Write-Output "运行数据库：$resolvedDatabasePath"
     Write-Output "日志目录：$logDirectory"
-    Write-Output '按 Ctrl+C 停止本轮网站、API 与语音侧车。'
+    Write-Output '按 Ctrl+C 停止本轮网站与内嵌昔涟语音 API。'
 
     while ($true) {
-        foreach ($ownedProcess in @($sidecarProcess, $apiProcess, $webProcess)) {
+        foreach ($ownedProcess in @($apiProcess, $webProcess)) {
             $ownedProcess.Refresh()
             if ($ownedProcess.HasExited) {
                 throw "运行进程意外退出：PID $($ownedProcess.Id)"
@@ -523,9 +483,6 @@ finally {
     }
     if ($null -ne $apiProcess) {
         Stop-ProcessTree -ProcessId $apiProcess.Id
-    }
-    if ($null -ne $sidecarProcess) {
-        Stop-ProcessTree -ProcessId $sidecarProcess.Id
     }
     if ($processJobHandle -ne [IntPtr]::Zero) {
         [EducationMindCyreneProcessJob]::Close($processJobHandle)

@@ -4,13 +4,16 @@ param(
     [string]$Edition = 'All',
     [string]$Version = '',
     [string]$OutputDirectory = '',
-    [string]$GenieRoot = 'F:\gpt sovites 轻量级\Genie-TTS',
+    [string]$GenieRoot = '',
     [switch]$SkipBuild,
     [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+if ([string]::IsNullOrWhiteSpace($GenieRoot)) {
+    $GenieRoot = Join-Path $projectRoot 'runtime\genie-tts'
+}
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
     $OutputDirectory = Join-Path $projectRoot 'release'
 }
@@ -183,7 +186,7 @@ if ($Edition -in @('All', 'Platform')) {
         Copy-RequiredFile -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
     }
 
-    foreach ($name in @('src', 'public', 'mcp', 'packages', 'scripts', 'deploy')) {
+    foreach ($name in @('src', 'public', 'mcp', 'packages', 'scripts', 'deploy', 'skills')) {
         Copy-SourceTreeContents -Source (Join-Path $projectRoot $name) -Destination (Join-Path $sourceStage $name)
     }
 
@@ -195,6 +198,8 @@ if ($Edition -in @('All', 'Platform')) {
     }
 
     Copy-SourceTreeContents -Source (Join-Path $projectRoot '.local\live2d') -Destination (Join-Path $sourceStage '.local\live2d')
+    # 外部 GPT-SoVITS / OpenAI 兼容语音服务仍需要干净的参考音频；只打包裁剪后的单句版本，避免部署后回退到含多段语音的原始素材。
+    Copy-RequiredFile -Source (Join-Path $projectRoot '.local\voice\cyrene-reference-clean.wav') -Destination (Join-Path $sourceStage '.local\voice\cyrene-reference.wav')
     Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\platform-source\README.md') -Destination (Join-Path $sourceStage 'PLATFORM_SOURCE_README.md')
 
     New-ZipFromDirectory -SourceDirectory $sourceStage -ZipPath $sourceZip
@@ -238,11 +243,11 @@ if ($Edition -in @('All', 'Full')) {
     Copy-SourceTreeContents -Source (Join-Path $resolvedGenieRoot 'src') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\src')
     Copy-TreeContents -Source (Join-Path $resolvedGenieRoot 'GenieData') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\GenieData')
     Copy-TreeContents -Source (Join-Path $resolvedGenieRoot 'Output\昔涟AI-GPT-SOVITS--V2proplus') -Destination (Join-Path $fullStage 'runtime\Genie-TTS\Output\昔涟AI-GPT-SOVITS--V2proplus')
-    foreach ($name in @('pyproject.toml', 'requirements.txt', 'README.md', 'README_zh.md', 'LICENSE')) {
+    foreach ($name in @('pyproject.toml', 'requirements.txt', 'README.md', 'UPSTREAM_README.md', 'UPSTREAM_README_zh.md', 'LICENSE', 'RUNTIME_MANIFEST.json')) {
         Copy-RequiredFile -Source (Join-Path $resolvedGenieRoot $name) -Destination (Join-Path $fullStage "runtime\Genie-TTS\$name")
     }
 
-    Copy-RequiredFile -Source (Join-Path $projectRoot '.local\voice\cyrene-reference.wav') -Destination (Join-Path $fullStage '.local\voice\cyrene-reference.wav')
+    Copy-RequiredFile -Source (Join-Path $resolvedGenieRoot 'Reference\cyrene-reference.wav') -Destination (Join-Path $fullStage '.local\voice\cyrene-reference.wav')
     Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\windows\install.ps1') -Destination (Join-Path $fullStage 'install.ps1')
     Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\windows\start.ps1') -Destination (Join-Path $fullStage 'start.ps1')
     Copy-RequiredFile -Source (Join-Path $projectRoot 'deploy\windows\README.md') -Destination (Join-Path $fullStage 'README.md')
