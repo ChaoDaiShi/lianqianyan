@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, LayoutGrid, RotateCw } from 'lucide-react';
+import { ArrowLeft, RotateCw } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { QuestCard } from '@/components/design/QuestCard';
 import { LearningState } from '@/components/feedback/LearningState';
 import { EvidenceInsightCard } from '@/components/learning/EvidenceInsightCard';
-import { CompanionJourney } from '@/components/learning/CompanionJourney';
 import { LearningArtifactPanel } from '@/components/learning/LearningArtifactPanel';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { LearningModulePanel } from '@/components/learning/LearningModulePanel';
-import { LearningJourneyHeader } from '@/components/learning/LearningJourneyHeader';
-import { LearningStageProgress } from '@/components/learning/LearningStageProgress';
+import { WorkbenchTaskHeader } from '@/components/learning/WorkbenchTaskHeader';
 import {
   deriveLearningStages,
   filterLearningEvidence,
@@ -219,25 +217,24 @@ export function LearningSpacePage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div>
-          <p className="flex items-center gap-2 text-xs font-semibold text-primary-700"><LayoutGrid className="h-4 w-4" />AI LEARNING WORKBENCH</p>
-          <h1 className="mt-2 text-3xl font-bold">{currentTask ? '小涟学习工作台' : '选择一项学习任务'}</h1>
-          <p className="mt-2 text-sm text-[var(--em-muted-ink)]">围绕当前真实任务对话、练习，并留下可核验的学习产物。</p>
-        </div>
+        {!currentTask && (
+          <div>
+            <h1 className="text-2xl font-bold sm:text-3xl">小涟学习工作台</h1>
+            <p className="mt-2 text-sm text-[var(--em-muted-ink)]">围绕当前真实任务对话、练习，并留下可核验的学习产物。</p>
+          </div>
+        )}
 
         {loading && <LearningState kind="loading" title="正在加载当前学习计划" />}
         {error && !currentTask && <LearningState kind="error" title="暂时无法读取学习计划" action={<Button variant="outline" onClick={refetch} className="gap-2"><RotateCw className="h-4 w-4" />重新加载</Button>} />}
         {!loading && !error && !currentTask && <div className="space-y-5"><LearningState kind="empty" title="请选择一个学习任务开始" description="学习工作台由真实 Current Plan 任务进入。" action={<Button asChild variant="outline"><Link to="/" className="gap-2"><ArrowLeft className="h-4 w-4" />返回首页</Link></Button>} />{tasks.length > 0 && <GlassPanel className="p-5 sm:p-6"><h2 className="text-lg font-bold">当前计划任务</h2><div className="mt-4 space-y-3">{tasks.slice(0, 3).map((task, index) => <QuestCard key={task.id} task={task} index={index} pending={startingTaskId === task.id} onStart={() => handleStartTask(task)} />)}</div>{startError && <p className="mt-3 text-sm text-amber-700">{startError}</p>}</GlassPanel>}</div>}
 
         {!loading && currentTask && <>
-          {plan && <LearningJourneyHeader plan={plan} currentTask={currentTask} />}
-          <CompanionJourney state={companionJourneyState} />
-          <LearningStageProgress stages={stages} />
+          {plan && <WorkbenchTaskHeader plan={plan} task={currentTask} state={companionJourneyState} />}
           {feedback ? <XiaolianFeedbackBubble {...feedback} /> : null}
           <div className="grid gap-6 xl:grid-cols-[15rem_minmax(24rem,1fr)_20rem] xl:items-start">
             <div className="order-1 xl:order-2 xl:col-start-2 xl:row-start-1"><SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} /></div>
 
-            <div className="order-2 space-y-5 xl:order-1 xl:col-start-1 xl:row-start-1"><TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} /><LearningModulePanel task={currentTask} taskCount={tasks.length} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
+            <div className="order-2 space-y-5 xl:order-1 xl:col-start-1 xl:row-start-1"><TutorExplanationCard mode="knowledge" knowledge={currentKnowledge} knowledgePointName={currentTask.knowledgePointName} loading={currentKnowledgeLoading} error={knowledge.error} /><LearningModulePanel task={currentTask} knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} diagnosis={currentDiagnosis} diagnosisLoading={diagnosis.loading} diagnosisError={diagnosis.error} /></div>
 
             <div className="order-3 xl:col-start-3 xl:row-start-1 xl:sticky xl:top-24"><LearningArtifactPanel knowledge={currentKnowledge} knowledgeLoading={currentKnowledgeLoading} knowledgeError={knowledge.error} currentDiagnosis={currentDiagnosis} isPrimaryFocus={diagnosis.data?.primaryFocus?.knowledgePointId === currentTask.knowledgePointId} sources={currentTutorResponse?.sources ?? []} evaluation={currentEvaluation} /></div>
 

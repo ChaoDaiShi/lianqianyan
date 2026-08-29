@@ -13,7 +13,6 @@ export * from './home/XiaolianDailyInsight';
 export * from './home/TodaysJourney';
 export * from './learning/LearningArtifactPanel';
 export * from './learning/AgentToolTrace';
-export * from './learning/CompanionJourney';
 export * from './learning/LearningEntryDialog';
 export * from './learning/LearningModulePanel';
 export * from './learning/ReflectionNextStepCard';
