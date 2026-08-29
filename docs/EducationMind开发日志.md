@@ -497,6 +497,45 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
     390px 下 ··· 菜单与 Bottom Sheet 正常，Esc 关闭抽屉正常。
 - **负责人：** EducationMind 项目组
 
+### 3.15 MiniMax Voice & Compact Workspace
+
+- **时间：** 2026-08-29
+- **状态：** 已完成
+- **阶段目标：** 按部署决策以 MiniMax 开放平台 TTS 替换既有语音输出方案；压缩工作台 Header
+  让对话区回到视觉主体；昔涟 Live2D 模型移至对话区右侧悬浮。
+- **实际完成：**
+  - **MiniMax 语音输出**：新增 `app/voice/minimax.py`（T2A v2 接口，hex 解码 MP3，
+    `base_resp.status_code==0` 判成功，网络/业务错误分别可读），`create_voice_provider` 与
+    `/api/voice` 路由中 MiniMax 优先于账号级 TTS profile 与本地运行时；`/api/voice/status`
+    配置后返回 `provider=minimax`。配置项：`EDUCATION_MINIMAX_API_KEY / _GROUP_ID /
+    _MODEL / _VOICE_ID / _TIMEOUT`（key 只存服务端，前端继续消费 `/api/voice/synthesize`）。
+  - **移除 Genie-TTS 嵌入式启动**：`create_app` 不再在 lifespan 启动 Genie 运行时
+    （启动更快、不再出现 CN_HuBERT 加载报错）；相关生命周期测试随能力一并移除，
+    genie 代码文件保留但不再是生产路径。前端语音类型与归属标签适配 `minimax`。
+  - **Header 单行紧凑**：返回 + 任务名 + 类型/时长 chips + 六步阶段轨 + 抽屉 icons + 任务序号
+    合并为一行（阶段轨可横向滚动，说明文字并入阶段 tooltip），工作台首屏高度显著下降。
+  - **Live2D 悬浮陪伴**：全尺寸昔涟模型固定悬浮于对话区右下角（xl 及以上屏幕显示，
+    pointer-events-none 不遮挡交互），runtime/thinking 与语音口型状态由页面上抛联动；
+    对话区因 Header 压缩与模型外移获得更大空间。
+- **关键决策：**
+  - MiniMax 走后端代理而非浏览器直连：密钥不暴露给前端，且与现有
+    `/api/voice/synthesize` blob 播放链路完全兼容，前端仅需类型与文案适配。
+  - Genie 代码文件本轮保留（非生产路径），避免一次性删除 16 处引用带来的回归风险；
+    后续可单独清理。
+- **对应提交：** `feat: minimax voice output, compact workbench header and floating live2d`
+- **修改文件与资源：**
+  - 后端：`app/voice/minimax.py`（新增）、`app/voice/{provider,status,models}.py`、
+    `app/api/routes/voice.py`、`app/core/config.py`、`app/main.py`、
+    `tests/test_minimax_voice.py`（新增 4 项）、删除 `tests/test_genie_embedded_api.py`
+  - 前端：`src/lib/voiceApi.ts`、`VoiceAttributionNotice`、`SpaceTutor`（speaking 上抛）、
+    `WorkbenchTaskHeader`（单行重构）、`LearningSpacePage`（悬浮角色）
+- **验证结果：**
+  - `pnpm check`：通过；`npx vitest run`：77 文件 262 项测试全部通过；`pnpm build`：成功；
+    `uv run pytest`：后端 365 项全部通过（含 MiniMax 4 项）。
+  - 浏览器实测：单行 Header 正确渲染；昔涟 Live2D 全尺寸悬浮于右下角；对话区占屏比例明显提升。
+    MiniMax 真实合成需部署方填入 API Key 后在设置中验证。
+- **负责人：** EducationMind 项目组
+
 ## 4. 问题追踪表
 
 | 编号 | 日期 | 问题 | 状态 | 处理记录 |
@@ -527,6 +566,8 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | HD-09 | 2026-08-29 | 国内网络到 Cloudflare Siteverify 间歇中断，注册登录报"验证服务暂不可用"；前端组件加载失败时登录被锁死 | 已解决 | 引入 Vaptcha 兜底链：后端按 captcha_provider 分发校验，前端 CaptchaPanel 在脚本加载失败或 8 秒未出票时自动切换 Vaptcha 并提示；EDUCATION_CAPTCHA_MODE 可强制单源或关闭 |
 | HD-10 | 2026-08-29 | 部署方把 Vaptcha 密钥填入仓库根 `.env`，但后端实际读取 `apps/api/.env`，兜底未生效；旧后端进程未重启也导致前后端验证状态不一致 | 已解决 | 密钥写入生效的 `apps/api/.env` 并重启后端，config 下发 `["turnstile","vaptcha"]` 双源链；README 明确配置文件位置与重启要求；人机验证错误详情映射为中文提示；全部 provider 加载失败时展示内联重试入口 |
 | UI9-10 | 2026-08-29 | 工作台缺少统一历史记录入口，证据/产物/技术详情常驻挤占主学习区 | 已解决 | 建立历史/产物/上下文三个语义独立的按需抽屉（移动端 Bottom Sheet），Header icon 化入口 + 移动端 ··· 菜单；主区仅保留对话流与练习卡，功能零删除 |
+| HD-11 | 2026-08-29 | Genie-TTS 嵌入式运行时启动慢且在模型缺失时报错；语音输出需切换到 MiniMax 开放平台 | 已解决 | 新增 MiniMax TTS provider 并置于输出链最高优先级，移除 Genie lifespan 启动；配置 EDUCATION_MINIMAX_API_KEY/_GROUP_ID 后自动接管语音输出，未配置时诚实降级 |
+| UI9-11 | 2026-08-29 | 工作台 Header 双行布局过高，对话区显得偏小；昔涟 Live2D 仅以小图标出现在对话头部 | 已解决 | Header 收敛为单行（标题+chips+阶段轨+icons），全尺寸昔涟 Live2D 悬浮于对话区右下角并联动运行/口型状态 |
 
 ## 5. 节点记录
 
@@ -547,6 +588,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | Vaptcha 兜底人机验证完成 | 前后端测试、生产构建与降级链浏览器实测记录 |
 | 2026-08-29 | 验证配置踩坑修复（配置文件位置/降级 UX）完成 | 双源链 config 实测、前端 249 项测试与生产构建记录 |
 | 2026-08-29 | 工作台组件化架构与历史记录体系完成 | 前后端测试、生产构建与桌面/移动端抽屉实测记录 |
+| 2026-08-29 | MiniMax 语音输出与紧凑工作台完成 | 前后端测试、生产构建与浏览器实测记录 |
 
 ## 6. 团队分工与贡献
 
@@ -587,6 +629,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | 2.0 | 完成 V2 视觉升级与知识库扩充：聊天页合一、知识图谱网状化、两门新学科、知识点数据源统一与掌握度雷达 |
 | 2026-08-29 | 2.1 | 完成 Vaptcha 兜底人机验证：定位 Cloudflare 可达性根因，新增 provider 分发校验、前端自动降级与双源组件测试 |
 | 2026-08-29 | 2.2 | 完成工作台组件化架构：历史/产物/上下文三抽屉、Header icon 化与移动端 ··· 菜单、回答内来源收纳与运行详情折叠，功能零删除 |
+| 2026-08-29 | 2.3 | 完成 MiniMax 语音输出替换与紧凑工作台：MiniMax provider 最高优先级、Genie 启动移除、Header 单行化与 Live2D 右下悬浮 |
 
 ## 10. 附件与参考链接
 
