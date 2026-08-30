@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 
 import {
   buildSrt,
+  formatSrtTime,
   sceneDurationsFromEnds,
 } from './demo-video-lib.mjs';
 
@@ -13,6 +14,7 @@ const rawRoot = join(outputRoot, 'raw-scenes');
 const audioPath = join(outputRoot, 'audio', 'narration.mp3');
 const outputPath = join(outputRoot, '涟千言_三分钟功能演示.mp4');
 const srtPath = join(outputRoot, '涟千言_三分钟功能演示.srt');
+const narrationPath = join(outputRoot, '旁白稿.md');
 const planPath = join(outputRoot, 'compose-plan.json');
 const timeline = JSON.parse(
   readFileSync(join(workspace, 'scripts', 'demo-video', 'timeline.json'), 'utf8'),
@@ -78,6 +80,23 @@ const srtEntries = scenes.map((scene) => {
   return { start, end: cursor, text: scene.caption };
 });
 writeFileSync(srtPath, buildSrt(srtEntries), 'utf8');
+const narrationLines = [
+  '# 涟千言三分钟功能演示旁白稿',
+  '',
+  '> 配音由 MiniMax 异步长文本语音合成生成；以下时间轴对应最终 143.8 秒成片。',
+  '',
+];
+for (let index = 0; index < scenes.length; index += 1) {
+  const entry = srtEntries[index];
+  const clock = (seconds) => formatSrtTime(seconds).slice(3, 8);
+  narrationLines.push(
+    `## ${clock(entry.start)}–${clock(entry.end)} ${scenes[index].id}`,
+    '',
+    timeline[index].narration.trim(),
+    '',
+  );
+}
+writeFileSync(narrationPath, narrationLines.join('\n'), 'utf8');
 
 const plan = {
   generatedAt: new Date().toISOString(),
