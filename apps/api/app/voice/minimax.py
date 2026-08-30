@@ -13,9 +13,9 @@ import httpx
 
 from app.core.config import Settings
 from app.voice.models import SynthesizedVoiceAudio
-from app.voice.gpt_sovits import VoiceNotConfiguredError, VoiceProviderError
+from app.voice.errors import VoiceNotConfiguredError, VoiceProviderError
 
-T2A_URL = "https://api.minimax.chat/v1/t2a_v2"
+T2A_PATH = "/v1/t2a_v2"
 DEFAULT_MODEL = "speech-02-hd"
 DEFAULT_VOICE_ID = "female-shaonv"
 SUCCESS_STATUS = 0
@@ -32,6 +32,7 @@ class MiniMaxTTSProvider:
     ) -> None:
         self._api_key = (settings.minimax_api_key or "").strip()
         self._group_id = (settings.minimax_group_id or "").strip()
+        self._base_url = settings.minimax_base_url.rstrip("/")
         self._model = (settings.minimax_model or "").strip() or DEFAULT_MODEL
         self._voice_id = (settings.minimax_voice_id or "").strip() or DEFAULT_VOICE_ID
         self._timeout = settings.minimax_timeout
@@ -39,7 +40,7 @@ class MiniMaxTTSProvider:
 
     async def synthesize(self, text: str) -> SynthesizedVoiceAudio:
         cleaned = (text or "").strip()
-        if not self._api_key or not self._group_id:
+        if not self._api_key:
             raise VoiceNotConfiguredError("MiniMax 语音服务未配置")
         if not cleaned:
             raise VoiceProviderError("语音内容为空")
@@ -72,7 +73,8 @@ class MiniMaxTTSProvider:
                 follow_redirects=False,
             ) as client:
                 response = await client.post(
-                    f"{T2A_URL}?GroupId={self._group_id}",
+                    f"{self._base_url}{T2A_PATH}",
+                    params={"GroupId": self._group_id} if self._group_id else None,
                     json=payload,
                     headers=headers,
                 )

@@ -7,9 +7,9 @@
   --em-muted-ink: #6f6a8a;
   --em-canvas: #f7f4ff;
   --em-surface: #ffffff;
-  --em-panel-radius: 28px;
-  --em-surface-radius: 20px;
-  --em-control-radius: 14px;
+  --em-panel-radius: 32px;
+  --em-surface-radius: 24px;
+  --em-control-radius: 18px;
   --em-glass-border: rgba(139, 124, 246, 0.18);
   --em-glass-bg: rgba(255, 255, 255, 0.72);
   --em-glass-shadow: 0 24px 70px rgba(87, 73, 151, 0.12);

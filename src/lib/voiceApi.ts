@@ -1,11 +1,8 @@
 import { api } from './api';
 
 export interface VoiceServiceStatus {
-  provider: 'minimax' | 'genie_tts' | 'gpt_sovits' | 'account_tts' | 'unavailable';
-  voice: 'cyrene';
+  provider: 'minimax' | 'unavailable';
   configured: boolean;
-  fallback: 'browser_speech';
-  attribution: string;
 }
 
 export type RemoteVoiceProvider = Exclude<
@@ -13,10 +10,7 @@ export type RemoteVoiceProvider = Exclude<
   'unavailable'
 >;
 
-export type VoiceOutputProvider =
-  | RemoteVoiceProvider
-  | 'browser_speech'
-  | 'unavailable';
+export type VoiceOutputProvider = RemoteVoiceProvider | 'unavailable';
 
 export async function fetchVoiceStatus(
   signal?: AbortSignal,

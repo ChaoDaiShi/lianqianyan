@@ -1,12 +1,26 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.auth.dependencies import optional_current_account
+from app.auth.models import AuthAccount
+from app.core.config import Settings, get_settings
+from app.db.session import get_db
+from app.llm.provider import LLMMessage
+from app.preferences.providers import account_llm_provider
 
 from app.resources import (
     GeneratedResource,
     KnowledgeResourceNotFound,
     ResourceGenerationRequest,
     ResourceGenerationService,
+    GeneratedResourceImage,
+    MiniMaxImageService,
+    OptimizedResource,
+    ResourceImageRequest,
+    ResourceImageUnavailable,
+    ResourceOptimizeRequest,
 )
 
 router = APIRouter(prefix="/resources", tags=["learning-resources"])
@@ -21,3 +35,31 @@ def generate_resource(payload: ResourceGenerationRequest) -> GeneratedResource:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="course knowledge point not found",
         ) from exc
+
+
+@router.post("/image", response_model=GeneratedResourceImage)
+async def generate_resource_image(payload: ResourceImageRequest, settings: Settings = Depends(get_settings)) -> GeneratedResourceImage:
+    try:
+        return await MiniMaxImageService(settings).generate(payload)
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="course knowledge point not found") from exc
+    except ResourceImageUnavailable as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+
+
+@router.post("/optimize", response_model=OptimizedResource)
+async def optimize_resource(
+    payload: ResourceOptimizeRequest,
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    account: AuthAccount | None = Depends(optional_current_account),
+) -> OptimizedResource:
+    provider = account_llm_provider(db, settings, account)
+    try:
+        result = await provider.chat([
+            LLMMessage(role="system", content="你是学习资源编辑。只优化结构和表达，不添加未给出的事实。保留 Markdown；标题清晰，重点使用 **加粗**，关键警示用 <span style=\"color:#dc2626\">红色</span>。"),
+            LLMMessage(role="user", content=payload.content),
+        ])
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AI optimization is unavailable") from exc
+    return OptimizedResource(content=result.content, provider=provider.name, model=result.usage.get("model"))

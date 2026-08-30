@@ -46,7 +46,7 @@ export function NetworkSearchPanel() {
             <Globe2 className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-lg font-bold">联网学习检索 · Wikipedia</h2>
+            <h2 className="text-lg font-bold">联网学习检索 · AnySearch</h2>
             <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
               用于查找补充资料；结果不会写入学习诊断、掌握度或课程证据。
             </p>
@@ -75,8 +75,8 @@ export function NetworkSearchPanel() {
               }
               className="mt-2 h-11 w-full rounded-2xl border border-violet-200 bg-white/80 px-3 text-sm"
             >
-              <option value="zh">中文 Wikipedia</option>
-              <option value="en">English Wikipedia</option>
+              <option value="zh">中文资料</option>
+              <option value="en">English sources</option>
             </select>
           </label>
           <Button
@@ -89,12 +89,12 @@ export function NetworkSearchPanel() {
             ) : (
               <Search className="h-4 w-4" />
             )}
-            {loading ? '正在连接 Wikipedia…' : '检索联网资料'}
+            {loading ? '正在连接 AnySearch…' : '检索联网资料'}
           </Button>
         </form>
 
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 text-[11px] leading-5 text-sky-800">
-          课程内检索仍由 EducationMind 的本地知识库负责；这里的外部结果仅作为延伸阅读，并保留原始来源链接。
+          课程内检索仍由涟千言的本地知识库负责；这里的外部结果仅作为延伸阅读，并保留原始来源链接。
         </div>
       </GlassPanel>
 
@@ -113,7 +113,7 @@ export function NetworkSearchPanel() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-[10px] font-bold tracking-[0.16em] text-sky-700">
-                  WIKIPEDIA RESULTS
+                  ANYSEARCH RESULTS
                 </p>
                 <h3 className="mt-1 text-lg font-bold">{resultCountLabel(response.results.length)}</h3>
               </div>
@@ -165,7 +165,7 @@ export function NetworkSearchPanel() {
               </span>
               <h3 className="mt-4 text-lg font-bold">从一个学习问题开始</h3>
               <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
-                服务会实时请求 Wikipedia；尚未检索时不会展示预设的伪结果。
+                服务会实时请求 AnySearch；尚未检索时不会展示预设的伪结果。
               </p>
             </div>
           </div>

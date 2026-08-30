@@ -42,20 +42,16 @@ class Settings(BaseSettings):
     model_secret_key: str | None = None
     custom_model_hosts: str = ""
     custom_model_allow_http: bool = False
-    tts_provider: str = "genie"
     minimax_api_key: str | None = None
     minimax_group_id: str | None = None
+    minimax_base_url: str = "https://api.minimax.io"
     minimax_model: str | None = None
     minimax_voice_id: str | None = None
     minimax_timeout: float = 60.0
-    tts_base_url: str | None = None
-    tts_genie_root: str | None = None
-    tts_model_dir: str | None = None
-    tts_genie_data_dir: str | None = None
-    tts_reference_audio_path: str | None = None
-    tts_reference_text: str | None = None
-    tts_timeout: float = 60.0
-    tts_max_audio_bytes: int = 20_000_000
+    minimax_image_model: str = "image-01"
+    anysearch_api_key: str | None = None
+    anysearch_base_url: str = "https://api.anysearch.com"
+    anysearch_timeout: float = 12.0
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     web_dist_dir: str | None = None
     auth_required: bool = True
@@ -125,10 +121,7 @@ class Settings(BaseSettings):
         )
 
     def minimax_configured(self) -> bool:
-        return bool(
-            (self.minimax_api_key or "").strip()
-            and (self.minimax_group_id or "").strip()
-        )
+        return bool((self.minimax_api_key or "").strip())
 
     def vaptcha_configured(self) -> bool:
         return bool(
@@ -138,42 +131,6 @@ class Settings(BaseSettings):
 
     def allowed_mcp_hosts(self) -> list[str]:
         return [item.strip() for item in self.mcp_allowed_hosts.split(",") if item.strip()]
-
-    def normalized_tts_base_url(self) -> str | None:
-        """Return a safe absolute TTS service URL from server config."""
-        candidate = (self.tts_base_url or "").strip().rstrip("/")
-        if not candidate:
-            return None
-        parsed = urlsplit(candidate)
-        if (
-            parsed.scheme not in {"http", "https"}
-            or not parsed.netloc
-            or parsed.username
-            or parsed.password
-            or parsed.query
-            or parsed.fragment
-        ):
-            return None
-        return candidate
-
-    def tts_configured(self) -> bool:
-        """Require the server-owned values needed by the selected TTS provider."""
-        if self.tts_provider == "genie":
-            return bool(
-                (self.tts_genie_root or "").strip()
-                and (self.tts_model_dir or "").strip()
-                and (self.tts_genie_data_dir or "").strip()
-                and (self.tts_reference_audio_path or "").strip()
-                and (self.tts_reference_text or "").strip()
-            )
-        if self.tts_provider != "gpt_sovits":
-            return False
-        return bool(
-            self.normalized_tts_base_url()
-            and
-            (self.tts_reference_audio_path or "").strip()
-            and (self.tts_reference_text or "").strip()
-        )
 
     def existing_web_dist_dir(self) -> Path | None:
         """Return an explicitly configured static build directory when it exists."""

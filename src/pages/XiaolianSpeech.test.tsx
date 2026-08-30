@@ -20,7 +20,7 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
     supported: true,
     speaking: true,
     mode: 'cyrene',
-    provider: 'genie_tts',
+    provider: 'minimax',
     error: null,
     speak: vi.fn(),
     stop: vi.fn(),
@@ -60,17 +60,16 @@ describe('XiaolianPage digital-human speech', () => {
   it('keeps conversation and voice primary while technical attribution is collapsed', () => {
     const html = renderToStaticMarkup(<XiaolianPage />);
 
-    expect(html).toContain('昔涟讲解');
+    expect(html).toContain('MiniMax 讲解');
     expect(html).toContain('和小涟一起想明白');
     expect(html).toContain('更多');
-    expect(html).toContain('技术详情');
+    expect(html).toContain('服务状态');
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('你好，我是小涟');
     expect(html).not.toContain('小涟学习工作台');
     expect(html).not.toContain('Provider：');
-    expect(html).toContain('当前输出：昔涟 Genie-TTS');
     expect(html).toContain('<details');
     expect(html).not.toContain('<details open=""');
     expect(html).not.toContain('学习诊断</strong>');

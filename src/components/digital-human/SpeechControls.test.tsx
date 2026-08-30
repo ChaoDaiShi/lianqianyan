@@ -25,9 +25,9 @@ describe('SpeechControls', () => {
       />,
     );
 
-    expect(idle).toContain('昔涟讲解');
-    expect(idle).toContain('播放昔涟讲解');
-    expect(speaking).toContain('停止讲解');
+    expect(idle).toContain('MiniMax 讲解');
+    expect(idle).toContain('播放MiniMax 讲解');
+    expect(speaking).toContain('停止 MiniMax 讲解');
   });
 
   it('renders an explicit disabled state when output is unavailable', () => {

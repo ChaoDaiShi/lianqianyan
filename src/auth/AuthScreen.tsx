@@ -117,7 +117,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
           <section data-auth-brand="true" className="hidden max-w-xl px-4 text-white drop-shadow-[0_3px_24px_rgba(46,35,91,0.2)] lg:block lg:px-8">
             <p className="flex items-center gap-3 text-sm font-semibold tracking-[0.2em] text-white/85">
               <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#ffd1e8] shadow-[0_0_0_5px_rgba(255,255,255,0.2)]" />
-              忆涟千言—教
+              涟千言
             </p>
             <h1 className="mt-8 max-w-lg text-5xl font-semibold leading-[1.12] tracking-[-0.04em] xl:text-6xl">
               把今天的学习，
@@ -137,7 +137,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
             <header className="flex min-w-0 flex-wrap items-center justify-between gap-y-1 border-b border-[#F0EDF4] px-6 py-5 sm:px-8">
               <div className="flex items-center gap-2.5 lg:hidden">
                 <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#EFB8D3]" />
-                <span className="text-sm font-semibold tracking-[0.08em] text-[#393545]">忆涟千言—教</span>
+                <span className="text-sm font-semibold tracking-[0.08em] text-[#393545]">涟千言</span>
               </div>
               <span className="hidden text-xs text-[#AAA6B5] sm:inline">AI 学习空间</span>
               <p className="text-right text-sm text-[#777386]">

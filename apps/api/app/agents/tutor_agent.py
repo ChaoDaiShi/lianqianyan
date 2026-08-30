@@ -32,7 +32,7 @@ class TutorAgent:
                 if isinstance(value, dict)
             )
             if notes:
-                message = f"{request.message}\n\n协作诊断与计划摘要：\n{notes}"
+                message = f"{request.message}\n\n服务端授权的补充上下文：\n{notes}"
         response = await self._service.chat(
             TutorConversationRequest(
                 learner_id=request.learner_id,

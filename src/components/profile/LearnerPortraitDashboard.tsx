@@ -1,4 +1,5 @@
-import { Activity, Focus, GraduationCap, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Activity, Focus, GraduationCap, Loader2, Sparkles } from 'lucide-react';
 import type { DiagnosisResult, ExamAnalytics, LearnerProfile } from '@/domain';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { AssessmentSnapshot } from './AssessmentSnapshot';
@@ -6,6 +7,7 @@ import { EvidenceCoverageRing } from './EvidenceCoverageRing';
 import { KnowledgePerformanceBars } from './KnowledgePerformanceBars';
 import { PortraitRadar } from './PortraitRadar';
 import { buildProfileVisualization } from './profileVisualization';
+import { summarizeLearnerProfile } from '@/lib/educationApi';
 
 export interface LearnerPortraitDashboardProps {
   profile: LearnerProfile;
@@ -31,6 +33,16 @@ export function LearnerPortraitDashboard({
 }: LearnerPortraitDashboardProps) {
   const view = buildProfileVisualization(profile, analytics);
   const focus = diagnosis.primaryFocus;
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState(false);
+
+  const summarize = async () => {
+    setSummaryLoading(true); setSummaryError(false);
+    try { setAiSummary((await summarizeLearnerProfile(profile.learnerId, profile.courseId)).summary); }
+    catch { setSummaryError(true); }
+    finally { setSummaryLoading(false); }
+  };
 
   return (
     <GlassPanel className="overflow-hidden p-5 sm:p-6">
@@ -64,6 +76,12 @@ export function LearnerPortraitDashboard({
           onRetry={onRetryAnalytics}
         />
       </div>
+
+      <section className="mt-4 rounded-[1.75rem] border border-violet-100 bg-gradient-to-r from-violet-50/80 to-sky-50/70 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-bold text-primary-700">AI 画像总结</p><p className="mt-1 text-[11px] text-[var(--em-muted-ink)]">仅依据当前课程的真实画像证据生成，不补造行为。</p></div><button type="button" disabled={summaryLoading} onClick={() => void summarize()} className="inline-flex items-center gap-2 rounded-full bg-primary-500 px-4 py-2 text-xs font-bold text-white disabled:opacity-60">{summaryLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}{aiSummary ? '重新总结' : '生成 AI 总结'}</button></div>
+        {aiSummary ? <p className="mt-4 whitespace-pre-line rounded-2xl bg-white/70 p-4 text-sm leading-7">{aiSummary}</p> : null}
+        {summaryError ? <p className="mt-3 text-xs text-amber-800">AI 总结暂时不可用，现有画像数据保持不变。</p> : null}
+      </section>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.45fr_.55fr]">
         <KnowledgePerformanceBars rows={view.knowledge} />

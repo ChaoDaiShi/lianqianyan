@@ -24,7 +24,7 @@
     --border: 249 58% 90%;
     --input: 249 58% 90%;
     --ring: 248 82% 73%;
-    --radius: 0.875rem;
+    --radius: 1.125rem;
   }
 
   * {
@@ -54,7 +54,7 @@
   }
 
   .card {
-    @apply rounded-[20px] border border-violet-100 bg-white/75 shadow-sm backdrop-blur-xl;
+    @apply rounded-[24px] border border-violet-100 bg-white/75 shadow-sm backdrop-blur-xl;
   }
 
   .card-hover {

@@ -8,7 +8,9 @@ export type ProfileRadarKey =
   | 'mastery'
   | 'confidence'
   | 'coverage'
-  | 'assessment';
+  | 'assessment'
+  | 'engagement'
+  | 'consistency';
 
 export interface ProfileRadarAxis {
   key: ProfileRadarKey;
@@ -55,6 +57,16 @@ export function buildProfileVisualization(
     ]),
   );
 
+  const knownMasteries = profile.knowledgePoints
+    .filter((point) => !['unassessed', 'insufficient_evidence'].includes(point.status))
+    .map((point) => point.masteryScore);
+  const engagement = profile.totalKnowledgePoints > 0
+    ? Math.min(100, Math.round(profile.knowledgePoints.reduce((sum, point) => sum + point.evidenceCount, 0) / (profile.totalKnowledgePoints * 3) * 100))
+    : null;
+  const consistency = knownMasteries.length >= 2
+    ? Math.round(Math.max(0, 100 - Math.sqrt(knownMasteries.reduce((sum, value) => sum + (value - knownMasteries.reduce((a, b) => a + b, 0) / knownMasteries.length) ** 2, 0) / knownMasteries.length) * 160))
+    : null;
+
   return {
     radar: [
       {
@@ -77,6 +89,8 @@ export function buildProfileVisualization(
         label: '考试表现',
         value: boundPercentage(analytics?.averagePercentage ?? null),
       },
+      { key: 'engagement', label: '证据活跃', value: engagement },
+      { key: 'consistency', label: '掌握均衡', value: consistency },
     ],
     assessment: analytics,
     knowledge: profile.knowledgePoints.map((point) => {

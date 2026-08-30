@@ -1,8 +1,8 @@
 import { api } from '@/lib/api';
 import type { ThemePreference } from '@/theme/ThemeProvider';
 
-export type ModelKind = 'llm' | 'tts';
-export type ModelProvider = 'openai_chat' | 'openai_speech' | 'gpt_sovits';
+export type ModelKind = 'llm';
+export type ModelProvider = 'openai_chat';
 
 export interface ModelProfile {
   id: string;

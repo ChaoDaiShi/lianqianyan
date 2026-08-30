@@ -4,14 +4,18 @@ import {
   Copy,
   Download,
   Loader2,
+  ImageIcon,
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import {
   generateLearningResource,
+  generateResourceImage,
+  optimizeLearningResource,
   listKnowledgePoints,
   type GeneratedResource,
+  type GeneratedResourceImage,
   type KnowledgePointOption,
   type ResourceType,
 } from '@/lib/educationApi';
@@ -21,6 +25,7 @@ import {
   downloadMarkdown,
   RESOURCE_TYPES,
 } from './workshopPresentation';
+import { RichResourcePreview } from './RichResourcePreview';
 
 type CopyStatus = 'idle' | 'copied' | 'failed';
 
@@ -36,6 +41,10 @@ export function ResourceGenerator() {
   const [error, setError] = useState(false);
   const [copyStatus, setCopyStatus] = useState<CopyStatus>('idle');
   const [previewText, setPreviewText] = useState('');
+  const [image, setImage] = useState<GeneratedResourceImage | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizeError, setOptimizeError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,18 +79,31 @@ export function ResourceGenerator() {
     setError(false);
     setCopyStatus('idle');
     setResource(null);
+    setImage(null);
+    setImageError(false);
     try {
-      const generated = await generateLearningResource({
-        courseId: ACTIVE_COURSE_ID,
-        knowledgePointId,
-        resourceType,
-      });
-      setResource(generated);
+      const request = { courseId: ACTIVE_COURSE_ID, knowledgePointId };
+      const [textResult, imageResult] = await Promise.allSettled([
+        generateLearningResource({ ...request, resourceType }),
+        generateResourceImage(request),
+      ]);
+      if (textResult.status === 'rejected') throw textResult.reason;
+      setResource(textResult.value);
+      if (imageResult.status === 'fulfilled') setImage(imageResult.value);
+      else setImageError(true);
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
+  };
+
+  const optimize = async () => {
+    if (!previewText.trim() || optimizing) return;
+    setOptimizing(true); setOptimizeError(false);
+    try { setPreviewText((await optimizeLearningResource(previewText)).content); }
+    catch { setOptimizeError(true); }
+    finally { setOptimizing(false); }
   };
 
   const copyMarkdown = async () => {
@@ -173,7 +195,7 @@ export function ResourceGenerator() {
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {loading ? '正在整理课程材料…' : '03 · 生成学习资源'}
+            {loading ? '正在并行生成图文…' : '03 · 图文并行生成'}
           </Button>
         </form>
 
@@ -212,6 +234,7 @@ export function ResourceGenerator() {
                 <h3 className="mt-3 text-xl font-bold">{resource.title}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
+                {resource.format === 'markdown' && <Button type="button" size="sm" variant="outline" disabled={optimizing} onClick={() => void optimize()} className="gap-1.5 rounded-xl bg-white/70"><Sparkles className="h-3.5 w-3.5" />{optimizing ? 'AI 优化中…' : 'AI 优化'}</Button>}
                 {resource.format === 'markdown' && <Button
                   type="button"
                   size="sm"
@@ -247,7 +270,10 @@ export function ResourceGenerator() {
               ))}
             </div>
 
-            <label className="mt-5 block text-xs font-semibold text-[var(--em-muted-ink)]">05 · {resource.format === 'markdown' ? '预览与调整' : '结构化预览'}<textarea value={previewText} readOnly={resource.format === 'presentation'} onChange={(event) => setPreviewText(event.target.value)} className="mt-2 min-h-[22rem] w-full resize-y rounded-[22px] border border-violet-100 bg-white/65 p-4 text-sm font-normal leading-7 text-[var(--em-ink)] outline-none focus:border-primary-300 read-only:cursor-default read-only:bg-violet-50/35" /></label>
+            {image?.imageUrls[0] ? <figure className="mt-5 overflow-hidden rounded-[1.75rem] border border-violet-100 bg-violet-50"><img src={image.imageUrls[0]} alt={`${resource.title} 的 MiniMax 教育信息图`} className="aspect-video w-full object-cover" /><figcaption className="flex items-center gap-2 px-4 py-2 text-[10px] text-[var(--em-muted-ink)]"><ImageIcon className="h-3.5 w-3.5" />MiniMax {image.model} · 临时图片链接</figcaption></figure> : null}
+            {imageError ? <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-800">文字已生成；MiniMax 图片暂时不可用，没有用占位图冒充结果。</p> : null}
+            {optimizeError ? <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-800">AI 优化暂时不可用，原内容保持不变。</p> : null}
+            <div className="mt-5 grid gap-4 lg:grid-cols-2"><label className="block text-xs font-semibold text-[var(--em-muted-ink)]">05 · 编辑 Markdown<textarea value={previewText} readOnly={resource.format === 'presentation'} onChange={(event) => setPreviewText(event.target.value)} className="mt-2 min-h-[22rem] w-full resize-y rounded-[22px] border border-violet-100 bg-white/65 p-4 text-sm font-normal leading-7 text-[var(--em-ink)] outline-none focus:border-primary-300 read-only:cursor-default read-only:bg-violet-50/35" /></label><div><p className="mb-2 text-xs font-semibold text-[var(--em-muted-ink)]">增强预览</p><RichResourcePreview content={previewText} /></div></div>
             <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">{resource.format === 'markdown' ? '调整仅作用于当前浏览器预览与本次导出，不宣称已保存到服务端。' : 'PPT 预览为只读结构，下载文件严格使用服务端本次生成的真实 .pptx。'}</p>
             <p aria-live="polite" className="mt-2 text-xs text-[var(--em-muted-ink)]">
               {copyStatus === 'copied'

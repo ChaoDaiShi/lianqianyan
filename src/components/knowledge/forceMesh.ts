@@ -22,6 +22,18 @@ export interface MeshLayoutOptions {
 
 export type MeshPositions = Map<string, { x: number; y: number }>;
 
+function boundedVector(
+  x: number,
+  y: number,
+  maxMagnitude: number,
+): { x: number; y: number } {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return { x: 0, y: 0 };
+  const magnitude = Math.hypot(x, y);
+  if (magnitude <= maxMagnitude || magnitude === 0) return { x, y };
+  const scale = maxMagnitude / magnitude;
+  return { x: x * scale, y: y * scale };
+}
+
 function seedFromId(id: string): number {
   let hash = 2166136261;
   for (let index = 0; index < id.length; index += 1) {
@@ -56,6 +68,7 @@ export function computeForceMesh(
   );
 
   const positions = new Map<string, { x: number; y: number }>();
+  const safePositions = new Map<string, { x: number; y: number }>();
   const velocities = new Map<string, { x: number; y: number }>();
   const centerX = width / 2;
   const centerY = height / 2;
@@ -64,10 +77,12 @@ export function computeForceMesh(
   nodes.forEach((node, index) => {
     const angle = (2 * Math.PI * index) / Math.max(nodes.length, 1)
       + random() * 0.8;
-    positions.set(node.id, {
+    const initialPosition = {
       x: centerX + Math.cos(angle) * initialRadius * (0.7 + random() * 0.6),
       y: centerY + Math.sin(angle) * initialRadius * (0.7 + random() * 0.6),
-    });
+    };
+    positions.set(node.id, initialPosition);
+    safePositions.set(node.id, { ...initialPosition });
     velocities.set(node.id, { x: 0, y: 0 });
   });
 
@@ -134,19 +149,37 @@ export function computeForceMesh(
     for (const node of nodes) {
       const velocity = velocities.get(node.id)!;
       const force = forces.get(node.id)!;
-      velocity.x = (velocity.x + force.x) * 0.32 * cooling;
-      velocity.y = (velocity.y + force.y) * 0.32 * cooling;
+      const boundedForce = boundedVector(force.x, force.y, 72);
+      const nextVelocity = boundedVector(
+        (velocity.x + boundedForce.x) * 0.32 * cooling,
+        (velocity.y + boundedForce.y) * 0.32 * cooling,
+        24,
+      );
+      velocity.x = nextVelocity.x;
+      velocity.y = nextVelocity.y;
       const position = positions.get(node.id)!;
       position.x += velocity.x;
       position.y += velocity.y;
+      if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+        const fallback = safePositions.get(node.id)!;
+        position.x = fallback.x;
+        position.y = fallback.y;
+        velocity.x = 0;
+        velocity.y = 0;
+      } else {
+        safePositions.set(node.id, { ...position });
+      }
     }
   }
 
   // 收敛后夹回画布边界，保留节点半径与呼吸空间
   for (const node of nodes) {
     const position = positions.get(node.id)!;
-    position.x = Math.min(Math.max(position.x, padding + node.radius), width - padding - node.radius);
-    position.y = Math.min(Math.max(position.y, padding + node.radius), height - padding - node.radius);
+    const fallback = safePositions.get(node.id) ?? { x: centerX, y: centerY };
+    const finiteX = Number.isFinite(position.x) ? position.x : fallback.x;
+    const finiteY = Number.isFinite(position.y) ? position.y : fallback.y;
+    position.x = Math.min(Math.max(finiteX, padding + node.radius), width - padding - node.radius);
+    position.y = Math.min(Math.max(finiteY, padding + node.radius), height - padding - node.radius);
   }
 
   return positions;

@@ -7,8 +7,8 @@ export async function downloadPresentation(resource: GeneratedResource): Promise
   }
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
-  pptx.author = '忆涟千言—教 · 小涟';
-  pptx.company = 'EducationMind';
+  pptx.author = '涟千言 · 小涟';
+  pptx.company = '涟千言';
   pptx.subject = '课程材料驱动学习资源';
   pptx.title = resource.title;
   pptx.theme = {

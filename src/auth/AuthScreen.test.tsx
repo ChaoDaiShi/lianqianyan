@@ -34,7 +34,7 @@ describe('AuthScreen', () => {
     expect(html).toContain('data-auth-brand="true"');
     expect(html).toContain('进入我的学习空间');
     expect(html).toContain('没有账号？');
-    expect(html).toContain('忆涟千言—教');
+    expect(html).toContain('涟千言');
     expect(html).toContain('bg-[#7766E8]');
     expect(html).not.toContain('bg-gradient-to-r');
     expect(html).not.toContain('新账号没有预设计划');

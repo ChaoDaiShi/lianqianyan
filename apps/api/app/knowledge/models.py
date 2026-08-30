@@ -53,6 +53,7 @@ class KnowledgeSearchRequest(BaseModel):
 
 
 class KnowledgeSearchResponse(BaseModel):
+    retrieval_mode: Literal["graph_rag_course_grounded"] = "graph_rag_course_grounded"
     results: list[RetrievedKnowledge] = Field(default_factory=list)
 
 
@@ -85,7 +86,7 @@ class KnowledgeGraphEdge(BaseModel):
 
 class KnowledgeGraphOut(BaseModel):
     course_id: str
-    generation_mode: Literal["course_grounded"] = "course_grounded"
+    generation_mode: Literal["graph_rag_course_grounded"] = "graph_rag_course_grounded"
     nodes: list[KnowledgeGraphNode] = Field(default_factory=list)
     edges: list[KnowledgeGraphEdge] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)

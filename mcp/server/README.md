@@ -1,6 +1,6 @@
-# EducationMind MCP Server
+# 涟千言 MCP Server
 
-EducationMind 通过官方 Python MCP SDK 提供真实 stdio Server。MCP Tool 与内部 Agent 共享同一个 `EducationToolRegistry`，每次调用都直接进入既有 Application Service，不通过 HTTP 自调用，也不复制画像、诊断、规划、RAG 或重规划逻辑。
+涟千言通过官方 Python MCP SDK 提供真实 stdio Server。MCP Tool 与内部 Agent 共享同一个 `EducationToolRegistry`，每次调用都直接进入既有 Application Service，不通过 HTTP 自调用，也不复制画像、诊断、规划、RAG 或重规划逻辑。
 
 ```text
 MCP Client → tools/list | tools/call → EducationToolRegistry → Application Service

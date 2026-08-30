@@ -1,4 +1,4 @@
-"""EducationMind —— 忆涟千言—教 教育领域 FastAPI 应用入口。
+"""涟千言教育领域 FastAPI 应用入口。
 
 提供课程、画像、诊断、计划、学习、评估、考试、资源与智能体 API。
 
@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
 from app.auth import models as auth_models  # noqa: F401 - register auth tables
+from app.companion import models as companion_models  # noqa: F401 - register companion tables
 from app.core.config import get_settings
 from app.core.seed import seed_catalog_data
 from app.db.session import SessionLocal, engine
@@ -41,12 +42,11 @@ def create_app() -> FastAPI:
         with SessionLocal() as db:
             seed_catalog_data(db)
             seed_exam_data(db)
-        app.state.voice_provider = None
         async with remote_mcp.session_manager.run():
             yield
 
     application = FastAPI(
-        title="忆涟千言—教 EducationMind",
+        title="涟千言 API",
         description="基于正式账号、真实学习证据、课程知识与动态学习规划的教育智能体",
         version=settings.app_version,
         lifespan=lifespan,

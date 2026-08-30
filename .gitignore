@@ -15,6 +15,7 @@ build/
 # Environment
 .env
 .env.*
+!apps/api/.env.example
 *.pem
 *.key
 *.p12

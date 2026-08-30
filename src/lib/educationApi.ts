@@ -206,7 +206,7 @@ export interface NetworkSearchResult {
 }
 
 export interface NetworkSearchResponse {
-  provider: 'wikipedia';
+  provider: 'anysearch' | 'wikipedia';
   query: string;
   results: NetworkSearchResult[];
 }
@@ -269,6 +269,13 @@ export interface GeneratedResource {
   slides: PresentationSlide[];
 }
 
+export interface GeneratedResourceImage {
+  provider: 'minimax';
+  model: string;
+  prompt: string;
+  imageUrls: string[];
+}
+
 export interface KnowledgeGraphNode {
   id: string;
   label: string;
@@ -287,7 +294,7 @@ export interface KnowledgeGraphEdge {
 
 export interface KnowledgeGraphData {
   courseId: string;
-  generationMode: 'course_grounded';
+  generationMode: 'graph_rag_course_grounded';
   nodes: KnowledgeGraphNode[];
   edges: KnowledgeGraphEdge[];
   sources: string[];
@@ -313,6 +320,7 @@ export interface AgentChatRequest {
   courseId: string;
   message: string;
   capability?: AgentCapability | null;
+  threadId?: string | null;
   knowledgePointId?: string;
 }
 
@@ -361,6 +369,7 @@ export async function chatWithAgents(
     course_id: request.courseId,
     message: request.message,
     capability: request.capability ?? null,
+    thread_id: request.threadId ?? null,
     knowledge_point_id: request.knowledgePointId ?? null,
   });
   const raw = extractApiData(response);
@@ -415,7 +424,7 @@ export function mapNetworkSearch(
   raw: Record<string, unknown>,
 ): NetworkSearchResponse {
   return {
-    provider: raw['provider'] as 'wikipedia',
+    provider: raw['provider'] as NetworkSearchResponse['provider'],
     query: raw['query'] as string,
     results: ((raw['results'] as unknown[]) ?? []).map((item) => {
       const result = item as Record<string, unknown>;
@@ -525,6 +534,33 @@ export async function generateLearningResource(params: {
   return mapGeneratedResource(extractApiData(response));
 }
 
+export async function generateResourceImage(params: { courseId: string; knowledgePointId: string }): Promise<GeneratedResourceImage> {
+  const response = await api.post<Record<string, unknown>>('/api/resources/image', {
+    course_id: params.courseId,
+    knowledge_point_id: params.knowledgePointId,
+    aspect_ratio: '16:9',
+  });
+  const raw = extractApiData(response);
+  return {
+    provider: 'minimax',
+    model: raw['model'] as string,
+    prompt: raw['prompt'] as string,
+    imageUrls: (raw['image_urls'] as string[]) ?? [],
+  };
+}
+
+export async function optimizeLearningResource(content: string): Promise<{ content: string; provider: string; model: string | null }> {
+  const response = await api.post<Record<string, unknown>>('/api/resources/optimize', { content });
+  const raw = extractApiData(response);
+  return { content: raw['content'] as string, provider: raw['provider'] as string, model: (raw['model'] as string | null) ?? null };
+}
+
+export async function summarizeLearnerProfile(learnerId: string, courseId: string): Promise<{ summary: string; provider: string; model: string | null }> {
+  const response = await api.post<Record<string, unknown>>('/api/profile/ai-summary', { learner_id: learnerId, course_id: courseId });
+  const raw = extractApiData(response);
+  return { summary: raw['summary'] as string, provider: raw['provider'] as string, model: (raw['model'] as string | null) ?? null };
+}
+
 export async function searchKnowledge(params: {
   courseId: string;
   query: string;
@@ -562,7 +598,7 @@ export async function fetchKnowledgeGraph(
   const raw = extractApiData(response);
   return {
     courseId: raw['course_id'] as string,
-    generationMode: raw['generation_mode'] as 'course_grounded',
+    generationMode: raw['generation_mode'] as 'graph_rag_course_grounded',
     nodes: ((raw['nodes'] as unknown[]) ?? []).map((item) => {
       const node = item as Record<string, unknown>;
       return {

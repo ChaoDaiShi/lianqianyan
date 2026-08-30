@@ -11,6 +11,7 @@ from app.network.provider import (
 )
 from app.network.service import NetworkSearchService
 from app.network.wikipedia import WikipediaSearchProvider
+from app.network.anysearch import AnySearchProvider
 
 __all__ = [
     "BaseNetworkSearchProvider",
@@ -22,4 +23,5 @@ __all__ = [
     "SearchLanguage",
     "UNAVAILABLE_MESSAGE",
     "WikipediaSearchProvider",
+    "AnySearchProvider",
 ]

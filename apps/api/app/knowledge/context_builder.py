@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from app.knowledge.models import KnowledgeSource, RetrievedKnowledge
-from app.knowledge.retriever import TOP_K, BaseKnowledgeRetriever, LexicalKnowledgeRetriever
+from app.knowledge.graphrag import GraphRAGRetriever
+from app.knowledge.retriever import TOP_K, BaseKnowledgeRetriever
 
 
 class KnowledgeContextBuilder:
     def __init__(self, retriever: BaseKnowledgeRetriever | None = None) -> None:
-        self._retriever = retriever or LexicalKnowledgeRetriever()
+        self._retriever = retriever or GraphRAGRetriever()
 
     def build(
         self,

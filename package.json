@@ -1,13 +1,12 @@
 {
-  "name": "educationmind-web",
+  "name": "lianqianyan-web",
   "version": "1.4.0",
-  "description": "忆涟千言—教 EducationMind 正式账号教育智能体与学习空间",
+  "description": "涟千言正式账号教育智能体与陪伴式学习空间",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev": "vite",
-    "dev:cyrene": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/start-cyrene-web.ps1",
     "build": "tsc && vite build",
     "build:production": "NODE_ENV=production vite build",
     "preview": "vite preview",
@@ -21,8 +20,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "prebuild": "pnpm run clean",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "release": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-platform-release.ps1"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "2.0.1",
@@ -91,8 +89,8 @@
     "learning-evidence",
     "rag",
     "mcp",
-    "educationmind",
+    "lianqianyan",
     "yilian-qianyan"
   ],
-  "author": "YiLianQianYan / EducationMind Project"
+  "author": "涟千言项目组"
 }

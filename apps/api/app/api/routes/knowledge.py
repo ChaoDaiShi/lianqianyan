@@ -14,7 +14,7 @@ from app.knowledge import (
     KnowledgeSearchResponse,
     KnowledgeGraphGenerator,
     KnowledgeGraphOut,
-    LexicalKnowledgeRetriever,
+    GraphRAGRetriever,
 )
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
@@ -33,7 +33,7 @@ class KnowledgePointOptionsOut(BaseModel):
 
 @router.post("/search", response_model=KnowledgeSearchResponse)
 def search(payload: KnowledgeSearchRequest) -> KnowledgeSearchResponse:
-    results = LexicalKnowledgeRetriever().retrieve(
+    results = GraphRAGRetriever().retrieve(
         payload.course_id,
         payload.query,
         payload.knowledge_point_id,

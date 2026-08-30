@@ -1,22 +1,7 @@
 import { AudioLines } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VoiceMode } from './speechPlayback';
-import { VOICE_ATTRIBUTION } from './voiceAttribution';
 import type { VoiceOutputProvider } from '@/lib/voiceApi';
-
-const MODE_LABELS: Record<Exclude<VoiceMode, 'cyrene'>, string> = {
-  browser_fallback: '当前输出：浏览器语音（非昔涟音色）',
-  unavailable: '当前输出：语音讲解不可用',
-};
-
-const CYRENE_PROVIDER_LABELS: Record<'minimax' | 'genie_tts' | 'gpt_sovits', string> = {
-  minimax: '当前输出：MiniMax 语音合成',
-  genie_tts: '当前输出：昔涟 Genie-TTS',
-  gpt_sovits: '当前输出：昔涟 GPT-SoVITS',
-};
-
-export const GENIE_TTS_NOTICE =
-  '推理运行时：Genie-TTS 2.0.2，Copyright (c) 2025 High_Logic，MIT License';
 
 interface VoiceAttributionNoticeProps {
   mode: VoiceMode;
@@ -31,13 +16,9 @@ export function VoiceAttributionNotice({
   error,
   className,
 }: VoiceAttributionNoticeProps) {
-  const label =
-    mode === 'cyrene' &&
-    (provider === 'minimax' || provider === 'genie_tts' || provider === 'gpt_sovits')
-      ? CYRENE_PROVIDER_LABELS[provider]
-      : mode === 'cyrene'
-        ? '当前输出：昔涟语音服务'
-        : MODE_LABELS[mode];
+  const label = mode === 'cyrene' && provider === 'minimax'
+    ? '当前输出：MiniMax 云端语音'
+    : '当前输出：语音讲解不可用';
 
   return (
     <div
@@ -56,10 +37,7 @@ export function VoiceAttributionNotice({
           {error}
         </p>
       )}
-      <p>语音技术来源：{VOICE_ATTRIBUTION}</p>
-      {mode === 'cyrene' && provider === 'genie_tts' && (
-        <p>{GENIE_TTS_NOTICE}</p>
-      )}
+      <p>回答文字仅在播放时发送到部署方配置的 MiniMax 服务。</p>
     </div>
   );
 }

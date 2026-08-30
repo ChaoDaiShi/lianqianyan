@@ -26,6 +26,6 @@ class NetworkSearchResult(BaseModel):
 
 
 class NetworkSearchResponse(BaseModel):
-    provider: Literal["wikipedia"] = "wikipedia"
+    provider: Literal["anysearch", "wikipedia"] = "anysearch"
     query: str
     results: list[NetworkSearchResult] = Field(default_factory=list)

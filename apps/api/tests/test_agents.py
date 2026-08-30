@@ -207,7 +207,8 @@ def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:
         "tutoring",
     ]
     assert body["sources"]
-    assert all(source["knowledge_point_id"] == "kp-deadlock" for source in body["sources"])
+    assert any(source["knowledge_point_id"] == "kp-deadlock" for source in body["sources"])
+    assert len({source["knowledge_point_id"] for source in body["sources"]}) > 1
 
 
 def test_explicit_capability_is_honored(client: TestClient) -> None:

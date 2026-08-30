@@ -75,6 +75,8 @@ describe('profile visualization derivation', () => {
       ['confidence', 70],
       ['coverage', 100],
       ['assessment', 80],
+      ['engagement', 100],
+      ['consistency', 68],
     ]);
     expect(view.assessment?.bestPercentage).toBe(90);
   });

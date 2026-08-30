@@ -39,9 +39,9 @@ describe('formal account information pages', () => {
     expect(html).toContain('再次登录即可恢复');
     expect(html).toContain('原始音频不会上传');
     expect(html).toContain(
-      '语音输出文字会发送到部署方配置的语音服务（Genie-TTS 或 GPT-SoVITS）',
+      '语音输出文字只会发送到部署方配置的 MiniMax 云端服务',
     );
-    expect(html).toContain('GPT-SOVITS项目作者为花儿不哭');
+    expect(html).not.toContain('GPT-SoVITS');
   });
 
   it('links to developer and settings pages without duplicate chat or competition routes', async () => {

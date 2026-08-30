@@ -19,10 +19,10 @@ export function AppShell({ children, companion, scene = 'default' }: AppShellPro
       <NebulaBackground scene={scene} />
       <TopCompanionBar />
       <LearningRail currentPath={location.pathname} />
-      <main className="relative z-10 pb-28 pt-[4.75rem] md:pb-10 md:pl-24">
-        <PageTransition className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 lg:px-10 lg:py-7">
+      <main className="relative z-10 pb-28 pt-[4.05rem] md:pb-9 md:pl-[5.25rem]">
+        <PageTransition className="mx-auto w-full max-w-[1400px] px-3.5 py-3 sm:px-5 sm:py-4 lg:px-8 lg:py-5">
           {companion ? (
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start">
               <div className="min-w-0">{children}</div>
               <aside className="xl:sticky xl:top-24">{companion}</aside>
             </div>

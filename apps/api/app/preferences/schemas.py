@@ -6,8 +6,8 @@ from typing import Literal
 from pydantic import BaseModel, Field, field_validator
 
 ThemePreference = Literal["system", "light", "dark"]
-ModelKind = Literal["llm", "tts"]
-ModelProvider = Literal["openai_chat", "openai_speech", "gpt_sovits"]
+ModelKind = Literal["llm"]
+ModelProvider = Literal["openai_chat"]
 
 
 class ModelProfileCreate(BaseModel):
