@@ -7,10 +7,35 @@ import {
   buildSrt,
   formatSrtTime,
   parseClock,
+  parseFfmpegProbe,
   redactSecrets,
+  sceneDurationsFromEnds,
   selectRecordedVideoFile,
   selectTimelineScenes,
 } from './demo-video-lib.mjs';
+
+test('parseFfmpegProbe reads duration, codecs, dimensions, and streams', () => {
+  const probe = `Duration: 00:02:23.76, start: 0.000000, bitrate: 1400 kb/s
+    Stream #0:0: Video: h264 (High), yuv420p, 1920x1080, 25 fps
+    Stream #0:1: Audio: aac (LC), 48000 Hz, mono, fltp, 160 kb/s`;
+  assert.deepEqual(parseFfmpegProbe(probe), {
+    durationSeconds: 143.76,
+    width: 1920,
+    height: 1080,
+    videoCodec: 'h264',
+    audioCodec: 'aac',
+    hasVideo: true,
+    hasAudio: true,
+  });
+});
+
+test('sceneDurationsFromEnds converts cumulative MiniMax paragraph boundaries', () => {
+  assert.deepEqual(
+    sceneDurationsFromEnds([7.875, 24.459, 56.825]),
+    [7.875, 16.584, 32.366],
+  );
+  assert.throws(() => sceneDurationsFromEnds([7, 6]), /strictly increasing/);
+});
 
 test('demo endpoint patterns match the product API routes used by recorded actions', () => {
   assert.equal(DEMO_ENDPOINT_PATTERNS.tutor.test('/api/agents/chat'), true);

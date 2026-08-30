@@ -73,17 +73,17 @@ function Get-ProcessSnapshot {
 }
 
 function Stop-ValidatedProcessTree {
-    param([int]$ProcessId, [string]$ExpectedPattern)
+    param([int]$ProcessId, [string]$ExpectedPattern, [switch]$ValidatedDescendant)
     $process = Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction SilentlyContinue
     if ($null -eq $process) {
         return
     }
-    if (($process.CommandLine -notmatch $ExpectedPattern) -and ($process.Name -notmatch '^(cmd|python|node|pnpm)')) {
+    if ((-not $ValidatedDescendant) -and ($process.CommandLine -notmatch $ExpectedPattern)) {
         throw "Refusing to stop PID $ProcessId because it is not a demo process"
     }
     $children = Get-CimInstance Win32_Process -Filter "ParentProcessId = $ProcessId" -ErrorAction SilentlyContinue
     foreach ($child in $children) {
-        Stop-ValidatedProcessTree -ProcessId ([int]$child.ProcessId) -ExpectedPattern $ExpectedPattern
+        Stop-ValidatedProcessTree -ProcessId ([int]$child.ProcessId) -ExpectedPattern $ExpectedPattern -ValidatedDescendant
     }
     Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
 }

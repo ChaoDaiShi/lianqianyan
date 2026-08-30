@@ -24,6 +24,23 @@ export function parseClock(text) {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
+export function parseFfmpegProbe(text) {
+  const value = String(text);
+  const durationMatch = value.match(/Duration:\s*(\d+:\d+:\d+(?:\.\d+)?)/);
+  const videoMatch = value.match(/Video:\s*([^\s,]+)[^\n]*?\b(\d{2,5})x(\d{2,5})\b/);
+  const audioMatch = value.match(/Audio:\s*([^\s,]+)/);
+  if (!durationMatch) throw new Error('FFmpeg probe did not report a duration');
+  return {
+    durationSeconds: parseClock(durationMatch[1]),
+    width: videoMatch ? Number(videoMatch[2]) : 0,
+    height: videoMatch ? Number(videoMatch[3]) : 0,
+    videoCodec: videoMatch?.[1] || null,
+    audioCodec: audioMatch?.[1] || null,
+    hasVideo: Boolean(videoMatch),
+    hasAudio: Boolean(audioMatch),
+  };
+}
+
 export function formatSrtTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) {
     throw new Error('SRT time must be a non-negative number');
@@ -90,6 +107,19 @@ export function redactSecrets(value, key = '') {
 
 export function timelineDuration(timeline) {
   return timeline.reduce((total, scene) => total + Number(scene.targetSeconds || 0), 0);
+}
+
+export function sceneDurationsFromEnds(ends) {
+  let previous = 0;
+  return ends.map((rawEnd) => {
+    const end = Number(rawEnd);
+    if (!Number.isFinite(end) || end <= previous) {
+      throw new Error('Scene end times must be finite and strictly increasing');
+    }
+    const duration = Math.round((end - previous) * 1000) / 1000;
+    previous = end;
+    return duration;
+  });
 }
 
 export function timelineToSrtEntries(timeline) {
