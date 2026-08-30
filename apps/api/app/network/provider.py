@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from app.network.models import NetworkSearchResult, SearchLanguage
 
-UNAVAILABLE_MESSAGE = "Wikipedia learning search is temporarily unavailable"
+UNAVAILABLE_MESSAGE = "AnySearch learning search is temporarily unavailable"
 
 
 class NetworkSearchUnavailable(RuntimeError):
@@ -12,6 +12,7 @@ class NetworkSearchUnavailable(RuntimeError):
 
 
 class BaseNetworkSearchProvider(ABC):
+    provider_name: str
     @abstractmethod
     async def search(
         self,

@@ -7,7 +7,6 @@
   "packageManager": "pnpm@11.5.2",
   "scripts": {
     "dev": "vite",
-    "dev:cyrene": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/start-cyrene-web.ps1",
     "build": "tsc && vite build",
     "build:production": "NODE_ENV=production vite build",
     "preview": "vite preview",
@@ -21,8 +20,7 @@
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "prebuild": "pnpm run clean",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "release": "pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/build-platform-release.ps1"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@microsoft/fetch-event-source": "2.0.1",

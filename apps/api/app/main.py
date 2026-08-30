@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
 from app.auth import models as auth_models  # noqa: F401 - register auth tables
+from app.companion import models as companion_models  # noqa: F401 - register companion tables
 from app.core.config import get_settings
 from app.core.seed import seed_catalog_data
 from app.db.session import SessionLocal, engine
@@ -41,7 +42,6 @@ def create_app() -> FastAPI:
         with SessionLocal() as db:
             seed_catalog_data(db)
             seed_exam_data(db)
-        app.state.voice_provider = None
         async with remote_mcp.session_manager.run():
             yield
 

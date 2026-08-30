@@ -11,8 +11,8 @@ export function ExamPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
-        <header className="flex flex-col justify-between gap-4 rounded-[28px] border border-white/70 bg-white/55 p-5 shadow-[0_18px_55px_rgba(97,78,170,0.11)] backdrop-blur-xl sm:flex-row sm:items-end sm:p-7">
-          <div><p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700"><ClipboardCheck className="h-4 w-4" />ASSESSMENT WORKSPACE</p><h1 className="mt-2 text-3xl font-bold">测评工作台</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--em-muted-ink)]">先完成当前测评，再查看结果；需要命题时进入二级工作区。</p></div>
+        <header className="flex flex-col justify-between gap-3 rounded-[30px] border border-white/70 bg-white/55 p-4 shadow-[0_18px_55px_rgba(97,78,170,0.11)] backdrop-blur-xl sm:flex-row sm:items-end sm:p-5">
+          <div><p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.16em] text-primary-700"><ClipboardCheck className="h-4 w-4" />ASSESSMENT WORKSPACE</p><h1 className="mt-1 text-2xl font-bold">测评工作台</h1><p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--em-muted-ink)]">先完成当前测评，再查看结果；需要命题时进入二级工作区。</p></div>
           <p className="max-w-xs rounded-2xl bg-violet-50/70 px-4 py-3 text-xs leading-5 text-[var(--em-muted-ink)]">试卷、作答和成绩均归属当前账号与所选课程；计时、锁定和评分仍由现有服务端规则执行。</p>
         </header>
 

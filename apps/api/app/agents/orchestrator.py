@@ -42,8 +42,18 @@ class EducationAgentOrchestrator:
         self._tutor = TutorAgent(db, llm_provider=llm_provider)
         self._assessment = AssessmentAgent(db, tools=self._tools)
 
-    async def handle(self, request: AgentRequest) -> AgentsChatResponse:
+    async def handle(
+        self,
+        request: AgentRequest,
+        *,
+        memories: list[str] | None = None,
+    ) -> AgentsChatResponse:
         decision = self._router.route(request.message, request.capability)
+        memory_context = (
+            {"long_term_memory": {"summary": "；".join(memories[:20])}}
+            if memories
+            else {}
+        )
         trace: list[AgentTraceItem] = []
         results: list[AgentResult] = []
 
@@ -56,7 +66,7 @@ class EducationAgentOrchestrator:
             knowledge = self._retrieve(request, trace)
             tutor = await self._tutor.run(
                 request,
-                extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump()},
+                extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump(), **memory_context},
                 knowledge=knowledge,
             )
             trace.append(self._trace(tutor))
@@ -83,12 +93,17 @@ class EducationAgentOrchestrator:
                     request,
                     knowledge=knowledge,
                     assessment=assessment.data,
+                    extra_context=memory_context,
                 )
                 trace.append(self._trace(tutor))
                 results.append(tutor)
         else:
             knowledge = self._retrieve(request, trace)
-            result = await self._tutor.run(request, knowledge=knowledge)
+            result = await self._tutor.run(
+                request,
+                knowledge=knowledge,
+                extra_context=memory_context,
+            )
             trace.append(self._trace(result))
             results.append(result)
 
@@ -97,6 +112,8 @@ class EducationAgentOrchestrator:
         if final.agent != AgentCapability.TUTORING and decision.capability != AgentCapability.TUTORING:
             answer = final.summary
         context_used = _unique(item for result in results for item in result.context_used)
+        if memories:
+            context_used = _unique([*context_used, "long_term_memory"])
         actions = _unique_actions(result.suggested_actions for result in results)
         tutor_result = next((result for result in reversed(results) if result.agent == AgentCapability.TUTORING), None)
         return AgentsChatResponse(

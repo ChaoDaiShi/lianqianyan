@@ -6,7 +6,7 @@ describe('NetworkSearchPanel presentation', () => {
   it('names the real provider and keeps a clear evidence boundary', () => {
     const html = renderToStaticMarkup(<NetworkSearchPanel />);
 
-    expect(html).toContain('联网学习检索 · Wikipedia');
+    expect(html).toContain('联网学习检索 · AnySearch');
     expect(html).toContain('补充资料');
     expect(html).toContain('不会写入学习诊断');
     expect(html).toContain('输入至少 2 个字符');

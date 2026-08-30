@@ -13,7 +13,7 @@ import httpx
 
 from app.core.config import Settings
 from app.voice.models import SynthesizedVoiceAudio
-from app.voice.gpt_sovits import VoiceNotConfiguredError, VoiceProviderError
+from app.voice.errors import VoiceNotConfiguredError, VoiceProviderError
 
 T2A_URL = "https://api.minimax.chat/v1/t2a_v2"
 DEFAULT_MODEL = "speech-02-hd"

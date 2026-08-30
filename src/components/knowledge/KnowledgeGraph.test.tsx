@@ -13,7 +13,7 @@ describe('KnowledgeGraph', () => {
       <KnowledgeGraph
         graph={{
           courseId: 'course-os',
-          generationMode: 'course_grounded',
+          generationMode: 'graph_rag_course_grounded',
           nodes: [
             { id: 'course:course-os', label: '操作系统', kind: 'course', knowledgePointId: null, sourceSections: ['死锁 · 定义'] },
             { id: 'point:kp-deadlock', label: '死锁', kind: 'knowledge_point', knowledgePointId: 'kp-deadlock', sourceSections: ['死锁 · 定义'] },

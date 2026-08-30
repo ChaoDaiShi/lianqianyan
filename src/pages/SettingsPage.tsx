@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
-import { AudioLines, BrainCircuit, Check, ChevronRight, Copy, KeyRound, Moon, Palette, Plus, Server, ShieldCheck, Sun, Trash2, UserRound } from 'lucide-react';
+import { BrainCircuit, Check, ChevronRight, Copy, KeyRound, Moon, Palette, Plus, Server, ShieldCheck, Sparkles, Sun, Trash2, UserRound } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { Button } from '@/components/ui/button';
@@ -29,12 +29,12 @@ function messageFor(error: unknown): string {
 }
 
 const fieldClass = 'h-11 rounded-xl border-violet-200/70 bg-white/75 dark:bg-slate-950/45';
-type SettingsSection = 'appearance' | 'models' | 'voice' | 'mcp' | 'account';
+type SettingsSection = 'appearance' | 'models' | 'services' | 'mcp' | 'account';
 
 const SETTINGS_SECTIONS = [
   { id: 'appearance', label: '外观与主题', description: '界面明暗与系统偏好', icon: Palette },
   { id: 'models', label: '模型与智能', description: '对话模型与外部服务', icon: BrainCircuit },
-  { id: 'voice', label: '语音与小涟', description: '讲解音色与语音模型', icon: AudioLines },
+  { id: 'services', label: '云端能力', description: 'MiniMax 与 AnySearch', icon: Sparkles },
   { id: 'mcp', label: 'MCP 与服务', description: '远程连接与访问令牌', icon: Server },
   { id: 'account', label: '账号与安全', description: '数据归属与安全边界', icon: UserRound },
 ] as const;
@@ -46,12 +46,11 @@ export function SettingsPage() {
   const [revealedToken, setRevealedToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [kind, setKind] = useState<ModelKind>('llm');
+  const [kind] = useState<ModelKind>('llm');
   const [provider, setProvider] = useState<ModelProvider>('openai_chat');
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [model, setModel] = useState('');
-  const [voice, setVoice] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [tokenName, setTokenName] = useState('我的智能体');
   const [activeSection, setActiveSection] = useState<SettingsSection>('appearance');
@@ -91,43 +90,35 @@ export function SettingsPage() {
         provider,
         base_url: baseUrl,
         model: model || undefined,
-        voice: voice || undefined,
         api_key: apiKey || undefined,
       });
-      setName(''); setBaseUrl(''); setModel(''); setVoice(''); setApiKey('');
+      setName(''); setBaseUrl(''); setModel(''); setApiKey('');
       await refresh();
     });
   };
 
-  const changeKind = (value: ModelKind) => {
-    setKind(value);
-    setProvider(value === 'llm' ? 'openai_chat' : 'openai_speech');
-  };
-
   const openSection = (section: SettingsSection) => {
     setActiveSection(section);
-    if (section === 'models') changeKind('llm');
-    if (section === 'voice') changeKind('tts');
   };
 
   const modelSettings = (
     <div className="grid gap-5 xl:grid-cols-[1.05fr_.95fr]">
-      <GlassPanel className="p-5 sm:p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><Server className="h-5 w-5 text-primary-600" />{kind === 'llm' ? '当前对话模型' : '当前语音模型'}</h2><p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">优先使用当前账号选择的配置；未选择时回到部署默认模型。</p><label className="mt-5 block text-sm font-medium">当前使用<select className="mt-2 h-11 w-full rounded-xl border border-violet-200 bg-white/75 px-3 dark:bg-slate-950/45" value={(kind === 'llm' ? settings?.selected_llm_profile_id : settings?.selected_tts_profile_id) ?? ''} onChange={(event) => void run(async () => { setSettings(await selectModelProfile(kind, event.target.value || null)); })}><option value="">部署默认模型</option>{profiles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><div className="mt-4 space-y-2">{profiles.length === 0 && <p className="rounded-2xl border border-dashed border-violet-200 bg-white/35 px-4 py-3 text-xs text-[var(--em-muted-ink)]">当前账号还没有添加{kind === 'llm' ? '对话' : '语音'}模型。</p>}{profiles.map((item) => <div key={item.id} className="flex items-center justify-between rounded-2xl border border-violet-100 bg-white/55 p-3 dark:bg-slate-950/30"><div className="min-w-0"><p className="text-sm font-semibold">{item.name}</p><p className="mt-1 truncate text-xs text-[var(--em-muted-ink)]">{item.provider} · {item.model || item.voice || item.base_url}</p></div><button type="button" aria-label={`删除 ${item.name}`} onClick={() => void run(async () => { await deleteModelProfile(item.id); await refresh(); })}><Trash2 className="h-4 w-4 text-rose-500" /></button></div>)}</div></GlassPanel>
-      <GlassPanel className="p-5 sm:p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><Plus className="h-5 w-5 text-primary-600" />添加{kind === 'llm' ? '对话' : '语音'}模型</h2><form className="mt-4 space-y-3" onSubmit={submitModel}><Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="配置名称" className={fieldClass} /><select value={provider} onChange={(e) => setProvider(e.target.value as ModelProvider)} className="h-11 w-full rounded-xl border border-violet-200 bg-white/75 px-3 dark:bg-slate-950/45">{kind === 'llm' ? <option value="openai_chat">OpenAI-compatible Chat</option> : <><option value="openai_speech">OpenAI-compatible Speech</option><option value="gpt_sovits">GPT-SoVITS HTTP</option></>}</select><Input required type="url" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://model.example.com/v1" className={fieldClass} />{provider !== 'gpt_sovits' && <Input required value={model} onChange={(e) => setModel(e.target.value)} placeholder="模型名称" className={fieldClass} />}{kind === 'tts' && <Input required={provider === 'gpt_sovits'} value={voice} onChange={(e) => setVoice(e.target.value)} placeholder={provider === 'gpt_sovits' ? '上游可访问的参考音频路径' : '音色名称（可选）'} className={fieldClass} />}<details className="rounded-2xl border border-violet-100 bg-white/45 p-3"><summary className="cursor-pointer text-xs font-semibold text-primary-700">连接凭据与部署限制</summary><div className="mt-3 space-y-3"><Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API Key（加密保存，可选）" className={fieldClass} /><p className="text-xs leading-5 text-[var(--em-muted-ink)]">部署允许的主机：{settings?.custom_model_hosts.join('、') || '尚未配置'}。{settings?.secret_storage_configured ? '密钥加密存储已启用。' : '部署尚未配置密钥加密，带 API Key 的配置会被拒绝。'}</p></div></details><Button disabled={busy} className="w-full rounded-xl">保存模型配置</Button></form></GlassPanel>
+      <GlassPanel className="p-5 sm:p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><Server className="h-5 w-5 text-primary-600" />当前对话模型</h2><p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">优先使用当前账号选择的配置；未选择时回到部署默认模型。</p><label className="mt-5 block text-sm font-medium">当前使用<select className="mt-2 h-11 w-full rounded-2xl border border-violet-200 bg-white/75 px-3 dark:bg-slate-950/45" value={settings?.selected_llm_profile_id ?? ''} onChange={(event) => void run(async () => { setSettings(await selectModelProfile('llm', event.target.value || null)); })}><option value="">部署默认模型</option>{profiles.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><div className="mt-4 space-y-2">{profiles.length === 0 && <p className="rounded-3xl border border-dashed border-violet-200 bg-white/35 px-4 py-3 text-xs text-[var(--em-muted-ink)]">当前账号还没有添加对话模型。</p>}{profiles.map((item) => <div key={item.id} className="flex items-center justify-between rounded-3xl border border-violet-100 bg-white/55 p-3 dark:bg-slate-950/30"><div className="min-w-0"><p className="text-sm font-semibold">{item.name}</p><p className="mt-1 truncate text-xs text-[var(--em-muted-ink)]">{item.provider} · {item.model || item.base_url}</p></div><button type="button" aria-label={`删除 ${item.name}`} onClick={() => void run(async () => { await deleteModelProfile(item.id); await refresh(); })}><Trash2 className="h-4 w-4 text-rose-500" /></button></div>)}</div></GlassPanel>
+      <GlassPanel className="p-5 sm:p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><Plus className="h-5 w-5 text-primary-600" />添加对话模型</h2><form className="mt-4 space-y-3" onSubmit={submitModel}><Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="配置名称" className={fieldClass} /><select value={provider} onChange={(e) => setProvider(e.target.value as ModelProvider)} className="h-11 w-full rounded-2xl border border-violet-200 bg-white/75 px-3 dark:bg-slate-950/45"><option value="openai_chat">OpenAI-compatible Chat</option></select><Input required type="url" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://model.example.com/v1" className={fieldClass} /><Input required value={model} onChange={(e) => setModel(e.target.value)} placeholder="模型名称" className={fieldClass} /><details className="rounded-3xl border border-violet-100 bg-white/45 p-3"><summary className="cursor-pointer text-xs font-semibold text-primary-700">连接凭据与部署限制</summary><div className="mt-3 space-y-3"><Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API Key（加密保存，可选）" className={fieldClass} /><p className="text-xs leading-5 text-[var(--em-muted-ink)]">部署允许的主机：{settings?.custom_model_hosts.join('、') || '尚未配置'}。{settings?.secret_storage_configured ? '密钥加密存储已启用。' : '部署尚未配置密钥加密，带 API Key 的配置会被拒绝。'}</p></div></details><Button disabled={busy} className="w-full rounded-full">保存模型配置</Button></form></GlassPanel>
     </div>
   );
 
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
-        <header className="relative overflow-hidden rounded-[28px] border border-white/70 bg-violet-100/65 p-6 shadow-[0_18px_55px_rgba(87,73,151,0.13)] sm:p-8"><img src="/brand/cyrene-settings-ripple.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" /><div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/78 to-white/35 dark:from-[#181526]/96 dark:via-[#181526]/80 dark:to-[#181526]/45" /><div className="relative max-w-2xl"><p className="text-xs font-bold tracking-[0.18em] text-primary-700">PREFERENCES & SERVICES</p><h1 className="mt-2 text-3xl font-bold">偏好与服务</h1><p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">先调整日常体验；模型、语音与外部服务按需要进入对应空间。</p></div></header>
+        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-violet-100/65 p-5 shadow-[0_18px_55px_rgba(87,73,151,0.13)] sm:p-6"><img src="/brand/cyrene-settings-ripple.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" /><div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/78 to-white/35 dark:from-[#181526]/96 dark:via-[#181526]/80 dark:to-[#181526]/45" /><div className="relative max-w-2xl"><p className="text-[10px] font-bold tracking-[0.18em] text-primary-700">PREFERENCES & SERVICES</p><h1 className="mt-1 text-2xl font-bold">偏好与服务</h1><p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">集中管理主题、对话模型、MiniMax、AnySearch 与安全连接。</p></div></header>
 
         {error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-950/40">{error}</p>}
 
         <section aria-label="当前偏好摘要" className="grid gap-3 sm:grid-cols-3">
           <button type="button" onClick={() => openSection('appearance')} className="rounded-[20px] border border-violet-100 bg-white/50 p-4 text-left"><p className="text-[10px] text-[var(--em-muted-ink)]">界面主题</p><p className="mt-2 text-sm font-bold">{preference === 'system' ? '跟随系统' : preference === 'light' ? '明亮' : '黑夜'}</p></button>
           <button type="button" onClick={() => openSection('models')} className="rounded-[20px] border border-violet-100 bg-white/50 p-4 text-left"><p className="text-[10px] text-[var(--em-muted-ink)]">对话模型</p><p className="mt-2 truncate text-sm font-bold">{settings ? settings.profiles.find((item) => item.id === settings.selected_llm_profile_id)?.name ?? settings.default_llm.model ?? '部署默认模型' : '正在读取…'}</p></button>
-          <button type="button" onClick={() => openSection('voice')} className="rounded-[20px] border border-violet-100 bg-white/50 p-4 text-left"><p className="text-[10px] text-[var(--em-muted-ink)]">小涟语音</p><p className="mt-2 truncate text-sm font-bold">{settings ? settings.profiles.find((item) => item.id === settings.selected_tts_profile_id)?.name ?? settings.default_tts.model ?? '部署默认语音' : '正在读取…'}</p></button>
+          <button type="button" onClick={() => openSection('services')} className="rounded-[24px] border border-violet-100 bg-white/50 p-4 text-left"><p className="text-[10px] text-[var(--em-muted-ink)]">云端能力</p><p className="mt-2 truncate text-sm font-bold">MiniMax · AnySearch</p></button>
         </section>
 
         <nav aria-label="设置分类" className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">{SETTINGS_SECTIONS.map((section) => { const Icon = section.icon; const active = activeSection === section.id; return <button key={section.id} type="button" onClick={() => openSection(section.id)} aria-pressed={active} className={`flex items-center gap-3 rounded-[20px] border p-3 text-left transition ${active ? 'border-primary-300 bg-violet-50/80 shadow-[0_12px_30px_rgba(108,91,190,.12)]' : 'border-violet-100 bg-white/45 hover:border-primary-200'}`}><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${active ? 'bg-primary-500 text-white' : 'bg-white/70 text-primary-600'}`}><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block text-xs">{section.label}</strong><span className="mt-0.5 block truncate text-[9px] text-[var(--em-muted-ink)]">{section.description}</span></span><ChevronRight className={`h-3.5 w-3.5 ${active ? 'text-primary-600' : 'text-slate-300'}`} /></button>; })}</nav>
@@ -144,7 +135,9 @@ export function SettingsPage() {
           </div>
         </GlassPanel>}
 
-        {(activeSection === 'models' || activeSection === 'voice') && modelSettings}
+        {activeSection === 'models' && modelSettings}
+
+        {activeSection === 'services' && <GlassPanel className="p-5 sm:p-6"><h2 className="flex items-center gap-2 text-lg font-bold"><Sparkles className="h-5 w-5 text-primary-600" />云端能力</h2><p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">密钥由部署环境管理，不在浏览器内展示或保存。</p><div className="mt-5 grid gap-3 md:grid-cols-2"><div className="rounded-3xl border border-violet-100 bg-violet-50/60 p-5"><p className="font-bold">MiniMax</p><p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">统一负责小涟语音输出与资源图片生成；旧本地语音链路已退出。</p></div><div className="rounded-3xl border border-sky-100 bg-sky-50/60 p-5"><p className="font-bold">AnySearch</p><p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">负责延伸阅读的实时联网检索，结果保留原始来源。</p></div></div></GlassPanel>}
 
         {activeSection === 'mcp' && <GlassPanel className="p-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-bold"><KeyRound className="h-5 w-5 text-primary-600" />远程 MCP 访问</h2>

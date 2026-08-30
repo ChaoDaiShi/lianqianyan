@@ -5,7 +5,7 @@ import pytest
 
 from app.core.config import Settings
 from app.voice.minimax import T2A_URL, MiniMaxTTSProvider
-from app.voice.gpt_sovits import VoiceNotConfiguredError, VoiceProviderError
+from app.voice.errors import VoiceNotConfiguredError, VoiceProviderError
 
 
 def make_settings(**overrides: str) -> Settings:

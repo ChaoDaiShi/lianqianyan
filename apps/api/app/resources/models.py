@@ -43,3 +43,26 @@ class GeneratedResource(BaseModel):
     source_sections: list[str] = Field(default_factory=list)
     filename: str
     slides: list[PresentationSlide] = Field(default_factory=list)
+
+
+class ResourceImageRequest(BaseModel):
+    course_id: str = Field(min_length=1, max_length=100)
+    knowledge_point_id: str = Field(min_length=1, max_length=100)
+    aspect_ratio: Literal["1:1", "16:9", "4:3"] = "16:9"
+
+
+class GeneratedResourceImage(BaseModel):
+    provider: Literal["minimax"] = "minimax"
+    model: str
+    prompt: str
+    image_urls: list[str] = Field(default_factory=list)
+
+
+class ResourceOptimizeRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=12_000)
+
+
+class OptimizedResource(BaseModel):
+    content: str
+    provider: str
+    model: str | None = None

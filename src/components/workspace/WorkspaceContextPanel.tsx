@@ -5,8 +5,6 @@ import { ACTION_TYPE_LABEL, DIAGNOSIS_STATUS_LABEL } from '@/domain';
 import { Button } from '@/components/ui/button';
 import { AgentToolTrace } from '@/components/learning/AgentToolTrace';
 import { filterLearningEvidence } from '@/components/learning/learningLoop';
-import { GENIE_TTS_NOTICE } from '@/components/digital-human/VoiceAttributionNotice';
-import { VOICE_ATTRIBUTION } from '@/components/digital-human/voiceAttribution';
 
 export interface WorkspaceContextPanelProps {
   courseName: string;
@@ -158,16 +156,6 @@ export function WorkspaceContextPanel({
         </details>
       )}
 
-      <details className="mt-3 border-t border-violet-100 pt-4">
-        <summary className="cursor-pointer text-xs font-semibold text-[var(--em-muted-ink)]">语音服务详情</summary>
-        <div className="mt-3 space-y-2">
-          <p className="text-[10px] leading-5 text-[var(--em-muted-ink)]">{VOICE_ATTRIBUTION}</p>
-          <p className="text-[10px] leading-5 text-[var(--em-muted-ink)]">{GENIE_TTS_NOTICE}</p>
-          <p className="text-[10px] leading-5 text-[var(--em-muted-ink)]">
-            语音输出文字会发送到部署方配置的语音服务；浏览器不会获得模型权重或参考音频路径。
-          </p>
-        </div>
-      </details>
     </div>
   );
 }

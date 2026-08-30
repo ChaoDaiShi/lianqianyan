@@ -85,7 +85,7 @@ class ModelProfileService:
         profiles = list(
             self.db.scalars(
                 select(ModelProfile)
-                .where(ModelProfile.account_id == account.id)
+                .where(ModelProfile.account_id == account.id, ModelProfile.kind == "llm")
                 .order_by(ModelProfile.created_at, ModelProfile.name)
             ).all()
         )
@@ -93,7 +93,7 @@ class ModelProfileService:
         return AccountSettingsOut(
             theme=preferences.theme,
             selected_llm_profile_id=preferences.selected_llm_profile_id,
-            selected_tts_profile_id=preferences.selected_tts_profile_id,
+            selected_tts_profile_id=None,
             profiles=[self._out(item) for item in profiles],
             default_llm=RuntimeDefaultOut(
                 configured=self.settings.llm_configured(),
@@ -101,9 +101,9 @@ class ModelProfileService:
                 model=(self.settings.llm_model or "").strip() or None,
             ),
             default_tts=RuntimeDefaultOut(
-                configured=self.settings.tts_configured(),
-                provider=self.settings.tts_provider if self.settings.tts_configured() else "unavailable",
-                model=None,
+                configured=self.settings.minimax_configured(),
+                provider="minimax" if self.settings.minimax_configured() else "unavailable",
+                model=(self.settings.minimax_model or "speech-02-hd") if self.settings.minimax_configured() else None,
             ),
             custom_model_hosts=sorted(self.settings.allowed_custom_model_hosts()),
             secret_storage_configured=bool((self.settings.model_secret_key or "").strip()),
@@ -115,17 +115,11 @@ class ModelProfileService:
         return self.get(account)
 
     def create(self, account: AuthAccount, payload: ModelProfileCreate) -> ModelProfileOut:
-        valid_pairs = {
-            ("llm", "openai_chat"),
-            ("tts", "openai_speech"),
-            ("tts", "gpt_sovits"),
-        }
+        valid_pairs = {("llm", "openai_chat")}
         if (payload.kind, payload.provider) not in valid_pairs:
             raise ModelProfileError("model kind and provider do not match")
-        if payload.provider in {"openai_chat", "openai_speech"} and not payload.model:
+        if not payload.model:
             raise ModelProfileError("this provider requires a model name")
-        if payload.provider == "gpt_sovits" and not payload.voice:
-            raise ModelProfileError("GPT-SoVITS requires an upstream reference audio path")
         encrypted = None
         if payload.api_key:
             encrypted = self._fernet().encrypt(payload.api_key.encode("utf-8")).decode("ascii")

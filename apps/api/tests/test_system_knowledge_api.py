@@ -83,7 +83,7 @@ def test_knowledge_endpoints_enforce_course_isolation_and_bounds() -> None:
         json={"course_id": "other-course", "query": "死锁"},
     )
     assert isolated.status_code == 200
-    assert isolated.json() == {"results": []}
+    assert isolated.json() == {"retrieval_mode": "graph_rag_course_grounded", "results": []}
 
     missing = client.get(
         "/api/knowledge/points/kp-deadlock",

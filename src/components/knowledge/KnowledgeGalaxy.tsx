@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, BookOpen, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Loader2, RefreshCw, RotateCcw, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { KnowledgePointDiagnosis, PersistedStudyPlan } from '@/domain';
 import { DIAGNOSIS_STATUS_LABEL } from '@/domain';
@@ -11,6 +11,7 @@ import {
   type KnowledgeSceneNode,
 } from './knowledgePresentation';
 import { computeForceMesh } from './forceMesh';
+import { buildGraphFocus } from './graphFocus';
 
 interface KnowledgeGalaxyProps {
   graph: KnowledgeGraphData | null;
@@ -66,17 +67,13 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
     ?? scene?.nodes.find((node) => node.kind === 'knowledge_point')
     ?? scene?.nodes[0]
     ?? null;
-  const selected = scene?.nodes.find((node) => node.id === selectedId) ?? fallbackSelected;
-  const activeKnowledgePointId = selected?.knowledgePointId ?? null;
-  const visibleNodes = useMemo(
-    () => (scene?.nodes ?? []).filter((node) => node.kind !== 'section' || node.knowledgePointId === activeKnowledgePointId),
-    [activeKnowledgePointId, scene],
+  const focus = useMemo(
+    () => scene ? buildGraphFocus(scene, selectedId ?? fallbackSelected?.id ?? null) : null,
+    [fallbackSelected?.id, scene, selectedId],
   );
-  const visibleIds = useMemo(() => new Set(visibleNodes.map((node) => node.id)), [visibleNodes]);
-  const visibleEdges = useMemo(
-    () => (scene?.edges ?? []).filter((edge) => visibleIds.has(edge.source) && visibleIds.has(edge.target)),
-    [scene, visibleIds],
-  );
+  const selected = focus?.selected ?? null;
+  const visibleNodes = focus?.nodes ?? [];
+  const visibleEdges = focus?.edges ?? [];
   const positions = useMemo(
     () => layoutNodes(visibleNodes, visibleEdges.map((edge) => ({ source: edge.source, target: edge.target }))),
     [visibleNodes, visibleEdges],
@@ -93,11 +90,12 @@ export function KnowledgeGalaxy({ graph, points, plan, primaryFocusId, loading, 
         <div className="min-w-0 p-4 sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3 px-1">
             <div>
-              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-primary-700"><Sparkles className="h-4 w-4" />真实知识星图</p>
-              <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">节点状态来自真实学习评价；连线只使用课程材料中的已有关系。</p>
+              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-primary-700"><Sparkles className="h-4 w-4" />课程型 GraphRAG 知识图</p>
+              <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">选中节点会展开真实课程邻域；关系与学习状态均不由界面虚构。</p>
             </div>
-            <div className="flex flex-wrap gap-2 text-[10px] text-[var(--em-muted-ink)]">
+            <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--em-muted-ink)]">
               {Object.entries(RELATION_LABEL).map(([key, label]) => <span key={key}><strong className="text-primary-700">{key}</strong> · {label}</span>)}
+              <button type="button" onClick={() => setSelectedId(scene.nodes[0]?.id ?? null)} className="inline-flex items-center gap-1 rounded-full border border-violet-100 bg-white/70 px-2 py-1 font-semibold text-primary-700"><RotateCcw className="h-3 w-3" />收起章节</button>
             </div>
           </div>
           <div className="mt-4 overflow-x-auto rounded-[1.75rem] border border-white/80 bg-[radial-gradient(circle_at_50%_18%,rgba(139,124,246,.18),transparent_35%),var(--em-glass-bg)]">

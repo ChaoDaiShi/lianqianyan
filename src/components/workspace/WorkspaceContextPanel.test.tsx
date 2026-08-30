@@ -96,12 +96,10 @@ describe('WorkspaceContextPanel', () => {
     expect(screen.getByText('knowledge.search')).toBeTruthy();
   });
 
-  it('keeps voice attribution inside a collapsed section by default', () => {
+  it('does not expose removed local voice runtime details', () => {
     render(<WorkspaceContextPanel {...baseProps()} />);
-    const details = screen.getByText(/语音服务详情/).closest('details') as HTMLDetailsElement;
-    expect(details.open).toBe(false);
-    fireEvent.click(screen.getByText(/语音服务详情/));
-    expect(details.open).toBe(true);
-    expect(screen.getAllByText(/Genie-TTS 2\.0\.2/).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/语音服务详情/)).toBeNull();
+    expect(screen.queryByText(/Genie-TTS/)).toBeNull();
+    expect(screen.queryByText(/推理包/)).toBeNull();
   });
 });

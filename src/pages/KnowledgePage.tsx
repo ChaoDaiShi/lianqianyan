@@ -5,6 +5,7 @@ import { KnowledgeGalaxy } from '@/components/knowledge/KnowledgeGalaxy';
 import { fetchKnowledgeGraph, type KnowledgeGraphData } from '@/lib/educationApi';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile } from '@/lib/hooks';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
+import { PageIntro } from '@/components/design/PageIntro';
 
 export function KnowledgePage() {
   const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
@@ -38,16 +39,7 @@ export function KnowledgePage() {
   return (
     <AppShell scene="galaxy">
       <div className="space-y-5">
-        <header className="px-1 sm:px-2">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700"><BookOpen className="h-4 w-4" />KNOWLEDGE SPACE</p>
-          <div className="mt-2 flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
-            <div>
-              <h1 className="text-3xl font-bold tracking-[-0.035em] sm:text-4xl">把课程关系与学习状态，看成同一片星海</h1>
-              <p className="mt-3 text-sm leading-7 text-[var(--em-muted-ink)]">{profile.data ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个真实知识点` : '正在读取当前课程的知识关系与学习状态。'}</p>
-            </div>
-            <p className="flex max-w-xl items-start gap-2 text-xs leading-5 text-[var(--em-muted-ink)]"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />未评估不等于薄弱；节点大小只表达当前选择与计划优先级，不虚构新的知识关系。</p>
-          </div>
-        </header>
+        <PageIntro eyebrow="KNOWLEDGE SPACE" title="课程 GraphRAG 知识空间" description={profile.data ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个真实知识点；选择节点查看课程邻域。` : '正在读取当前课程的知识关系与学习状态。'} icon={BookOpen} tone="sky" aside={<p className="flex max-w-sm items-start gap-2 text-xs leading-5 text-[var(--em-muted-ink)]"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />未评估不等于薄弱，关系只来自课程材料。</p>} />
         <KnowledgeGalaxy
           graph={graph}
           points={profile.data?.knowledgePoints ?? []}

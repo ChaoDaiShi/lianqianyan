@@ -47,7 +47,7 @@ def test_network_search_endpoint_returns_typed_source_results() -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "provider": "wikipedia",
+        "provider": "anysearch",
         "query": "银行家算法",
         "results": [
             {
@@ -68,7 +68,7 @@ def test_network_search_endpoint_maps_sanitized_unavailability_to_503() -> None:
 
     assert response.status_code == 503
     assert response.json() == {
-        "detail": "Wikipedia learning search is temporarily unavailable"
+        "detail": "AnySearch learning search is temporarily unavailable"
     }
 
 

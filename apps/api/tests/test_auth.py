@@ -145,6 +145,6 @@ def test_voice_readiness_is_public_but_synthesis_requires_login(monkeypatch) -> 
         )
 
     assert readiness.status_code == 200
-    assert readiness.json()["voice"] == "cyrene"
+    assert readiness.json()["provider"] in {"minimax", "unavailable"}
     assert synthesis.status_code == 401
     assert synthesis.json() == {"detail": "authentication required"}

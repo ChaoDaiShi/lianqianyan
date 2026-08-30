@@ -50,7 +50,7 @@ export function ArchivePage() {
         <header className="flex flex-col gap-4 px-1 sm:flex-row sm:items-end sm:justify-between sm:px-2">
           <div>
             <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700"><FolderOpen className="h-4 w-4" />GROWTH MEMORIES</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] sm:text-4xl">成长不是一组指标，而是一段有出处的故事</h1>
+            <h1 className="mt-1 text-2xl font-bold tracking-[-0.025em] sm:text-3xl">成长不是一组指标，而是一段有出处的故事</h1>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--em-muted-ink)]">按时间回看已经发生的学习、练习与复述；计划只作为路线背景，不会被写成完成记录。</p>
           </div>
           <Button variant="ghost" size="sm" onClick={reloadAll} className="w-fit gap-2 rounded-full text-primary-700"><RotateCw className="h-3.5 w-3.5" />刷新记录</Button>

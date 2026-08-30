@@ -161,6 +161,8 @@ def test_wikipedia_provider_sanitizes_timeout_and_malformed_protocol() -> None:
 
 def test_network_search_service_preserves_provider_and_normalized_query() -> None:
     class FakeProvider:
+        provider_name = "anysearch"
+
         async def search(self, query: str, limit: int, language: str):
             assert (query, limit, language) == ("死锁", 3, "zh")
             return []
@@ -168,6 +170,6 @@ def test_network_search_service_preserves_provider_and_normalized_query() -> Non
     request = NetworkSearchRequest(query="  死锁  ", limit=3, language="zh")
     response = asyncio.run(NetworkSearchService(FakeProvider()).search(request))
 
-    assert response.provider == "wikipedia"
+    assert response.provider == "anysearch"
     assert response.query == "死锁"
     assert response.results == []

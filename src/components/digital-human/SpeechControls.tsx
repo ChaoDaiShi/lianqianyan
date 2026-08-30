@@ -25,10 +25,9 @@ export function SpeechControls({
 }: SpeechControlsProps) {
   const hasText = cleanSpeechText(text).length > 0;
   const available = supported && mode !== 'unavailable';
-  const idleLabel = mode === 'cyrene' ? '昔涟讲解' : '浏览器讲解';
+  const idleLabel = 'MiniMax 讲解';
   const actionLabel = available ? `播放${idleLabel}` : '语音讲解不可用';
-  const stopLabel =
-    mode === 'cyrene' ? '停止讲解 · 昔涟讲解' : '停止讲解 · 浏览器讲解';
+  const stopLabel = '停止 MiniMax 讲解';
 
   return (
     <Button

@@ -21,6 +21,7 @@ class AgentRequest(BaseModel):
     message: str = Field(min_length=1)
     capability: AgentCapability | None = None
     knowledge_point_id: str | None = None
+    thread_id: str | None = Field(default=None, max_length=36)
 
     @field_validator("learner_id", "course_id", "message")
     @classmethod

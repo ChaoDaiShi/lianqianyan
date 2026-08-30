@@ -11,7 +11,7 @@ vi.mock('@/components/digital-human/useSpeechSynthesis', () => ({
     supported: true,
     speaking: true,
     mode: 'cyrene',
-    provider: 'genie_tts',
+    provider: 'minimax',
     error: null,
     speak: vi.fn(),
     stop: vi.fn(),
@@ -39,10 +39,9 @@ describe('SpaceTutor digital-human speech', () => {
       />,
     );
 
-    expect(html).toContain('昔涟讲解');
-    // 语音归属与技术细节已收纳进上下文抽屉，聊天区保持轻量
-    expect(html).not.toContain('当前输出：昔涟 Genie-TTS');
-    expect(html).not.toContain('推理包作者为红血球AE3803和白菜工厂1145号员工');
+    expect(html).toContain('MiniMax 讲解');
+    expect(html).not.toContain('Genie-TTS');
+    expect(html).not.toContain('推理包');
     expect(html).toContain('语音输入');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('你现在正在学习「死锁」');

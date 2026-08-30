@@ -25,7 +25,7 @@ def test_course_graph_contains_traceable_nodes_and_edges() -> None:
         "course-test", course_label="测试课程"
     )
 
-    assert graph.generation_mode == "course_grounded"
+    assert graph.generation_mode == "graph_rag_course_grounded"
     assert graph.nodes[0].label == "测试课程"
     assert {node.kind for node in graph.nodes} == {"course", "knowledge_point", "section"}
     assert {edge.relation for edge in graph.edges} >= {"contains", "explains", "precedes"}

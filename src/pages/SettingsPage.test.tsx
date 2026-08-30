@@ -18,7 +18,8 @@ describe('SettingsPage preference space', () => {
     expect(html).toContain('偏好与服务');
     expect(html).toContain('外观与主题');
     expect(html).toContain('模型与智能');
-    expect(html).toContain('语音与小涟');
+    expect(html).toContain('云端能力');
+    expect(html).toContain('MiniMax · AnySearch');
     expect(html).toContain('MCP 与服务');
     expect(html).toContain('账号与安全');
     expect(html).not.toContain('API Key（加密保存，可选）');

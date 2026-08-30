@@ -13,6 +13,7 @@ from app.knowledge.models import (
 )
 from app.knowledge.repository import KnowledgeRepository
 from app.knowledge.graph import KnowledgeGraphGenerator
+from app.knowledge.graphrag import GraphRAGRetriever
 from app.knowledge.retriever import BaseKnowledgeRetriever, LexicalKnowledgeRetriever, TOP_K
 
 __all__ = [
@@ -23,6 +24,7 @@ __all__ = [
     "KnowledgeGraphGenerator",
     "KnowledgeGraphNode",
     "KnowledgeGraphOut",
+    "GraphRAGRetriever",
     "KnowledgeDocument",
     "KnowledgePointContent",
     "KnowledgeRepository",

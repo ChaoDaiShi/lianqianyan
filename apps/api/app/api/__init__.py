@@ -10,6 +10,7 @@ from app.api.routes import (
     agents,
     auth,
     assessment,
+    companion,
     diagnosis,
     exams,
     health,
@@ -38,6 +39,7 @@ api_router.include_router(voice.router)
 _protected = [Depends(current_account_if_required)]
 api_router.include_router(system.router, dependencies=_protected)
 api_router.include_router(settings.router, dependencies=_protected)
+api_router.include_router(companion.router, dependencies=_protected)
 api_router.include_router(tools.router, dependencies=_protected)
 api_router.include_router(knowledge.router, dependencies=_protected)
 api_router.include_router(network.router, dependencies=_protected)

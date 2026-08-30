@@ -592,6 +592,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | 工作台组件化架构与历史记录体系完成 | 前后端测试、生产构建与桌面/移动端抽屉实测记录 |
 | 2026-08-29 | MiniMax 语音输出与紧凑工作台完成 | 前后端测试、生产构建与浏览器实测记录 |
 | 2026-08-30 | 人机验证后端校验失败自动切换 Vaptcha 完成 | 前端测试、生产构建与登录页降级实测记录 |
+| 2026-08-30 | GraphRAG 与全站体验收敛完成 | 真实图数据稳定性回归、对话持久化、云端能力与关键页面测试记录 |
 
 ## 6. 团队分工与贡献
 
@@ -633,6 +634,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 | 2026-08-29 | 2.1 | 完成 Vaptcha 兜底人机验证：定位 Cloudflare 可达性根因，新增 provider 分发校验、前端自动降级与双源组件测试 |
 | 2026-08-29 | 2.2 | 完成工作台组件化架构：历史/产物/上下文三抽屉、Header icon 化与移动端 ··· 菜单、回答内来源收纳与运行详情折叠，功能零删除 |
 | 2026-08-29 | 2.3 | 完成 MiniMax 语音输出替换与紧凑工作台：MiniMax provider 最高优先级、Genie 启动移除、Header 单行化与 Live2D 右下悬浮 |
+| 2026-08-30 | 2.4 | 修复真实知识图谱节点展开后的非有限坐标；升级为课程约束 GraphRAG；新增对话历史与长期记忆、MiniMax 图文并行生成、富文本预览与 AI 优化、AnySearch、六维画像与 AI 总结、初始化设置；彻底移除旧本地/账号 TTS 运行链与浏览器朗读回退 |
 
 ## 10. 附件与参考链接
 
@@ -642,5 +644,7 @@ EducationMind（忆涟千言—教）是一套围绕学习画像、诊断、计�
 - Product Hardening 实施计划：`docs/superpowers/plans/2026-08-24-educationmind-product-hardening.md`
 - Learning Space Layout Refresh 设计：`docs/superpowers/specs/2026-08-29-learning-space-layout-design.md`
 - Learning Space Layout Refresh 实施计划：`docs/superpowers/plans/2026-08-29-learning-space-layout-refresh.md`
+- GraphRAG 学习体验设计：`docs/superpowers/specs/2026-08-30-graphrag-learning-experience-design.md`
+- GraphRAG 学习体验实施计划：`docs/superpowers/plans/2026-08-30-graphrag-learning-experience.md`
 - 参考布局：<http://122.51.33.232>
 - 开发日志参考模板：`docs/创新赛道——开发日志参考模板.docx`

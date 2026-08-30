@@ -12,8 +12,9 @@ from app.network.models import NetworkSearchResult, SearchLanguage
 from app.network.provider import (
     BaseNetworkSearchProvider,
     NetworkSearchUnavailable,
-    UNAVAILABLE_MESSAGE,
 )
+
+WIKIPEDIA_UNAVAILABLE_MESSAGE = "Wikipedia learning search is temporarily unavailable"
 
 _WIKIPEDIA_HOSTS: dict[SearchLanguage, str] = {
     "zh": "zh.wikipedia.org",
@@ -39,6 +40,7 @@ def _sort_index(page: Mapping[str, Any]) -> tuple[float, str]:
 
 
 class WikipediaSearchProvider(BaseNetworkSearchProvider):
+    provider_name = "wikipedia"
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
         self._client = client
 
@@ -89,7 +91,7 @@ class WikipediaSearchProvider(BaseNetworkSearchProvider):
             payload = response.json()
             pages = self._pages_from_payload(payload)
         except (httpx.HTTPError, TypeError, ValueError) as exc:
-            raise NetworkSearchUnavailable(UNAVAILABLE_MESSAGE) from exc
+            raise NetworkSearchUnavailable(WIKIPEDIA_UNAVAILABLE_MESSAGE) from exc
 
         results: list[NetworkSearchResult] = []
         for page in sorted(pages, key=_sort_index):
