@@ -2,12 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  DEMO_ENDPOINT_PATTERNS,
   assertCompetitionMetrics,
   buildSrt,
   formatSrtTime,
   parseClock,
   redactSecrets,
+  selectRecordedVideoFile,
+  selectTimelineScenes,
 } from './demo-video-lib.mjs';
+
+test('demo endpoint patterns match the product API routes used by recorded actions', () => {
+  assert.equal(DEMO_ENDPOINT_PATTERNS.tutor.test('/api/agents/chat'), true);
+  assert.equal(DEMO_ENDPOINT_PATTERNS.practice.test('/api/practice/evaluate'), true);
+  assert.equal(DEMO_ENDPOINT_PATTERNS.tutor.test('/api/agents/tutor'), false);
+});
 
 test('parseClock converts minute clock strings to seconds', () => {
   assert.equal(parseClock('02:50.250'), 170.25);
@@ -99,4 +108,26 @@ test('redactSecrets removes secret fields and bearer tokens recursively', () => 
     message: 'request used Bearer [REDACTED]',
     nested: [{ cookie: '[REDACTED]' }, { safe: 'visible' }],
   });
+});
+
+test('selectRecordedVideoFile returns the single Playwright WebM artifact', () => {
+  assert.equal(
+    selectRecordedVideoFile(['trace.zip', 'page@abc.webm', 'screenshot.png']),
+    'page@abc.webm',
+  );
+  assert.throws(() => selectRecordedVideoFile([]), /exactly one WebM/);
+  assert.throws(
+    () => selectRecordedVideoFile(['a.webm', 'b.webm']),
+    /exactly one WebM/,
+  );
+});
+
+test('selectTimelineScenes supports independent scene re-recording', () => {
+  const timeline = [{ id: 'opening' }, { id: 'learning-loop' }, { id: 'exam' }];
+  assert.deepEqual(selectTimelineScenes(timeline, []), timeline);
+  assert.deepEqual(selectTimelineScenes(timeline, ['learning-loop']), [timeline[1]]);
+  assert.throws(
+    () => selectTimelineScenes(timeline, ['missing']),
+    /Unknown scene: missing/,
+  );
 });

@@ -1,6 +1,14 @@
 const SECRET_KEY_PATTERN = /(api[_-]?key|authorization|cookie|password|secret|token)/i;
 const BEARER_PATTERN = /Bearer\s+[^\s,;"']+/gi;
 
+export const DEMO_ENDPOINT_PATTERNS = Object.freeze({
+  login: /\/api\/auth\/login$/,
+  tutor: /\/api\/agents\/chat$/,
+  practice: /\/api\/practice\/evaluate$/,
+  examGenerate: /\/api\/exams\/generate$/,
+  resourceGenerate: /\/api\/resources\/generate$/,
+});
+
 export function parseClock(text) {
   const value = String(text).trim();
   const parts = value.split(':');
@@ -90,5 +98,23 @@ export function timelineToSrtEntries(timeline) {
     const start = cursor;
     cursor += Number(scene.targetSeconds);
     return { start, end: cursor, text: scene.caption };
+  });
+}
+
+export function selectRecordedVideoFile(files) {
+  const videos = files.filter((file) => String(file).toLowerCase().endsWith('.webm'));
+  if (videos.length !== 1) {
+    throw new Error(`Expected exactly one WebM recording, found ${videos.length}`);
+  }
+  return videos[0];
+}
+
+export function selectTimelineScenes(timeline, requestedIds) {
+  if (!requestedIds || requestedIds.length === 0) return timeline;
+  const byId = new Map(timeline.map((scene) => [scene.id, scene]));
+  return requestedIds.map((id) => {
+    const scene = byId.get(id);
+    if (!scene) throw new Error(`Unknown scene: ${id}`);
+    return scene;
   });
 }
