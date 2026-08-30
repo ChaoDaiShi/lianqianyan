@@ -1,4 +1,4 @@
-"""EducationMind —— 忆涟千言—教 教育领域 FastAPI 应用入口。
+"""涟千言教育领域 FastAPI 应用入口。
 
 提供课程、画像、诊断、计划、学习、评估、考试、资源与智能体 API。
 
@@ -46,7 +46,7 @@ def create_app() -> FastAPI:
             yield
 
     application = FastAPI(
-        title="忆涟千言—教 EducationMind",
+        title="涟千言 API",
         description="基于正式账号、真实学习证据、课程知识与动态学习规划的教育智能体",
         version=settings.app_version,
         lifespan=lifespan,

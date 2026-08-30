@@ -14,7 +14,7 @@ function RouteLoadingFallback() {
 }
 
 /**
- * 忆涟千言—教 EducationMind —— Hash 路由。
+ * 涟千言 —— Hash 路由。
  * URLs 形如 /#/…，无需服务器重写规则。
  */
 export const router = createHashRouter([

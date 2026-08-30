@@ -42,7 +42,7 @@ export function SettingsPage() {
             <ShieldCheck className="h-5 w-5 text-emerald-700" />
             <h2 className="mt-3 text-base font-bold">隐私边界</h2>
             <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
-              账号保存用户名与显示名称，不要求手机号或邮箱。密码只保存 scrypt 哈希。语音输入只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到 EducationMind 后端。语音输出文字只会发送到部署方配置的 MiniMax 云端服务。
+              账号保存用户名与显示名称，不要求手机号或邮箱。密码只保存 scrypt 哈希。语音输入只在浏览器完成转写，确认后的文字才会发送，原始音频不会上传到涟千言后端。语音输出文字只会发送到部署方配置的 MiniMax 云端服务。
             </p>
             <p className="mt-2 text-[10px] leading-5 text-[var(--em-muted-ink)]">
               语音输出仅使用部署方配置的 MiniMax 云端服务。
@@ -85,9 +85,9 @@ export function AboutPage() {
               <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700">
                 <Info className="h-4 w-4" />MORE & ABOUT
               </p>
-              <h1 className="mt-3 text-3xl font-bold">关于忆涟千言—教</h1>
+              <h1 className="mt-3 text-3xl font-bold">关于涟千言</h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--em-muted-ink)]">
-                一个以真实学习证据、诊断、动态学习规划和课程知识检索为基础的 AI 学姐陪伴式学习空间。当前采用无登录匿名档案，并提供可嵌入其他平台的独立智能体入口。
+                一个以正式账号、真实学习证据、诊断、动态学习规划和课程约束 GraphRAG 为基础的 AI 学姐陪伴式学习空间。学习记录、长期记忆与画像均按当前账号隔离。
               </p>
             </div>
           </div>

@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     custom_model_allow_http: bool = False
     minimax_api_key: str | None = None
     minimax_group_id: str | None = None
+    minimax_base_url: str = "https://api.minimax.io"
     minimax_model: str | None = None
     minimax_voice_id: str | None = None
     minimax_timeout: float = 60.0
@@ -120,10 +121,7 @@ class Settings(BaseSettings):
         )
 
     def minimax_configured(self) -> bool:
-        return bool(
-            (self.minimax_api_key or "").strip()
-            and (self.minimax_group_id or "").strip()
-        )
+        return bool((self.minimax_api_key or "").strip())
 
     def vaptcha_configured(self) -> bool:
         return bool(

@@ -1,4 +1,4 @@
-# EducationMind API
+# 涟千言 API
 
 FastAPI 后端提供正式账号、课程知识、GraphRAG 检索、学习证据、画像、诊断、计划、辅导、考试、资源生成、AnySearch 联网检索、MiniMax 图片生成与 MiniMax 语音输出。
 
@@ -17,7 +17,8 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 | `EDUCATION_CORS_ORIGINS` | 逗号分隔的 HTTP(S) Origin allowlist |
 | `EDUCATION_LLM_BASE_URL` / `API_KEY` / `MODEL` | OpenAI-compatible 对话与 AI 优化 |
 | `EDUCATION_MINIMAX_API_KEY` | MiniMax 语音与图片生成 API Key |
-| `EDUCATION_MINIMAX_GROUP_ID` | MiniMax T2A 所需 GroupId |
+| `EDUCATION_MINIMAX_BASE_URL` | MiniMax API 地址，默认 `https://api.minimax.io` |
+| `EDUCATION_MINIMAX_GROUP_ID` | 旧区域端点可选 GroupId；国际默认端点不需要 |
 | `EDUCATION_MINIMAX_MODEL` / `VOICE_ID` | MiniMax 语音模型与音色 |
 | `EDUCATION_MINIMAX_IMAGE_MODEL` | MiniMax 图片模型，默认 `image-01` |
 | `EDUCATION_ANYSEARCH_API_KEY` | AnySearch API Key（部署需要时配置） |

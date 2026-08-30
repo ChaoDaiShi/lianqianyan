@@ -1,7 +1,7 @@
 {
-  "name": "educationmind-web",
+  "name": "lianqianyan-web",
   "version": "1.4.0",
-  "description": "忆涟千言—教 EducationMind 正式账号教育智能体与学习空间",
+  "description": "涟千言正式账号教育智能体与陪伴式学习空间",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.5.2",
@@ -89,8 +89,8 @@
     "learning-evidence",
     "rag",
     "mcp",
-    "educationmind",
+    "lianqianyan",
     "yilian-qianyan"
   ],
-  "author": "YiLianQianYan / EducationMind Project"
+  "author": "涟千言项目组"
 }

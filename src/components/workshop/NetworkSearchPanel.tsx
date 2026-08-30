@@ -94,7 +94,7 @@ export function NetworkSearchPanel() {
         </form>
 
         <div className="mt-4 rounded-2xl border border-sky-100 bg-sky-50/60 px-4 py-3 text-[11px] leading-5 text-sky-800">
-          课程内检索仍由 EducationMind 的本地知识库负责；这里的外部结果仅作为延伸阅读，并保留原始来源链接。
+          课程内检索仍由涟千言的本地知识库负责；这里的外部结果仅作为延伸阅读，并保留原始来源链接。
         </div>
       </GlassPanel>
 

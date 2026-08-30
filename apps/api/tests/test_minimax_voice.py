@@ -4,14 +4,15 @@ import httpx
 import pytest
 
 from app.core.config import Settings
-from app.voice.minimax import T2A_URL, MiniMaxTTSProvider
+from app.voice.minimax import T2A_PATH, MiniMaxTTSProvider
 from app.voice.errors import VoiceNotConfiguredError, VoiceProviderError
 
 
 def make_settings(**overrides: str) -> Settings:
     values = {
         "minimax_api_key": "key-1",
-        "minimax_group_id": "group-1",
+        "minimax_group_id": "",
+        "minimax_base_url": "https://api.minimax.io",
         "minimax_model": "",
         "minimax_voice_id": "",
     }
@@ -45,8 +46,9 @@ async def test_minimax_provider_decodes_hex_audio() -> None:
     audio = await provider.synthesize("你好，我是小涟。")
     assert audio.media_type == "audio/mpeg"
     assert audio.content == b"ID3mp3bytes"
-    assert requests[0].url.host == "api.minimax.chat"
-    assert "GroupId=group-1" in str(requests[0].url)
+    assert requests[0].url.host == "api.minimax.io"
+    assert requests[0].url.path == T2A_PATH
+    assert "GroupId" not in str(requests[0].url)
     body = (await requests[0].aread()).decode()
     assert "speech-02-hd" in body and "female-shaonv" in body
 
@@ -79,4 +81,30 @@ async def test_minimax_provider_requires_configuration() -> None:
     provider = MiniMaxTTSProvider(make_settings(minimax_api_key=""))
     with pytest.raises(VoiceNotConfiguredError):
         await provider.synthesize("你好")
-    assert T2A_URL.startswith("https://api.minimax.chat")
+
+
+@pytest.mark.anyio
+async def test_minimax_provider_keeps_legacy_group_id_endpoint_compatible() -> None:
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            200,
+            json={
+                "data": {"audio": b"ID3legacy".hex()},
+                "base_resp": {"status_code": 0, "status_msg": "success"},
+            },
+        )
+
+    provider = MiniMaxTTSProvider(
+        make_settings(
+            minimax_base_url="https://api.minimax.chat",
+            minimax_group_id="legacy-group",
+        ),
+        transport=MockTransport(handler),
+    )
+    await provider.synthesize("兼容旧区域接口")
+
+    assert requests[0].url.host == "api.minimax.chat"
+    assert requests[0].url.params["GroupId"] == "legacy-group"

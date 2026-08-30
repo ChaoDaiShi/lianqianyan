@@ -10,7 +10,7 @@
 
 ## MiniMax 与 AnySearch
 
-EducationMind 仅通过服务端 HTTP API 调用部署方配置的 MiniMax 语音/图片服务与 AnySearch 搜索服务，不分发其模型、权重或服务端实现。API 使用仍受对应平台协议、账户权限和配额约束。
+涟千言仅通过服务端 HTTP API 调用部署方配置的 MiniMax 语音/图片服务与 AnySearch 搜索服务，不分发其模型、权重或服务端实现。API 使用仍受对应平台协议、账户权限和配额约束。
 
 ## 项目内技能包
 

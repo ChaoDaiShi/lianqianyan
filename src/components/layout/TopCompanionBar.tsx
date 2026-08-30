@@ -9,7 +9,7 @@ export function TopCompanionBar() {
       <div className="mx-auto flex h-[3.65rem] max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-3 rounded-2xl" aria-label="返回学习首页">
           <img src="/brand/cyrene-icon.jpeg" alt="小涟学姐" className="h-8 w-8 rounded-2xl border border-white object-cover object-top shadow-sm" />
-          <span><strong className="block text-sm text-[var(--em-ink)]">忆涟千言—教</strong><span className="block text-[10px] tracking-[0.16em] text-[var(--em-muted-ink)]">小涟学姐 · 学习空间</span></span>
+          <span><strong className="block text-sm text-[var(--em-ink)]">涟千言</strong><span className="block text-[10px] tracking-[0.16em] text-[var(--em-muted-ink)]">小涟学姐 · 学习空间</span></span>
         </Link>
         <div className="flex items-center gap-2 sm:gap-4">
           <span className="hidden text-xs text-[var(--em-muted-ink)] md:inline">{account?.displayName}</span>
