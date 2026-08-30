@@ -1,0 +1,58 @@
+[
+  {
+    "id": "opening",
+    "targetSeconds": 8,
+    "route": "/#/",
+    "caption": "涟千言｜教 AI 学姐陪伴式学习空间",
+    "narration": "涟千言，让学习从一次回答，走向持续理解与成长。",
+    "featureEvidence": ["品牌入口", "正式账号界面"]
+  },
+  {
+    "id": "auth-home",
+    "targetSeconds": 19,
+    "route": "/#/my-learning",
+    "caption": "正式账号 · 当前课程 · 个性化学习计划",
+    "narration": "学生通过正式账号进入学习空间。首页聚合当前课程、今日任务与陪伴入口；我的学习则把真实诊断生成的计划，整理成清晰、可执行的成长路线。",
+    "featureEvidence": ["真实登录", "首页摘要", "当前学习计划"]
+  },
+  {
+    "id": "learning-loop",
+    "targetSeconds": 48,
+    "route": "/#/space",
+    "caption": "目标—辅导—练习—证据—动态调整",
+    "narration": "从计划任务进入学习工作台，目标、阶段和上下文一目了然。小涟结合课程材料与知识关系进行讲解，并保留来源与工具轨迹。学生完成练习后，系统即时反馈，把过程写入学习证据，更新掌握状态；只有证据发生实质变化时，才会调整后续计划。未知不等于薄弱，每一步都有依据。",
+    "featureEvidence": ["任务进入", "Tutor 对话", "练习提交", "学习证据", "动态重规划"]
+  },
+  {
+    "id": "knowledge",
+    "targetSeconds": 23,
+    "route": "/#/knowledge",
+    "caption": "GraphRAG 知识空间 · 关系可视 · 来源可溯",
+    "narration": "知识空间把课程知识组织成可交互星图。节点可以缩放、拖动与固定，选择知识点即可查看关系、课程内容和溯源信息。诊断页面同时区分已掌握、发展中、证据不足与尚未评估。",
+    "featureEvidence": ["知识星图", "缩放拖动", "节点详情", "诊断状态"]
+  },
+  {
+    "id": "exam",
+    "targetSeconds": 20,
+    "route": "/#/exams",
+    "caption": "考试中心 · 题库、组卷、作答、评分与复盘",
+    "narration": "考试中心覆盖题库、组卷、作答、评分与复盘。题型和知识点范围可以组合，提交后保留真实答案与评分结果，并将可信测评继续纳入学习观察。",
+    "featureEvidence": ["考试中心", "题库与组卷", "真实作答", "评分复盘"]
+  },
+  {
+    "id": "resources",
+    "targetSeconds": 27,
+    "route": "/#/resources",
+    "caption": "学习工坊 · 联网检索 · 图文资源 · PPT 导出",
+    "narration": "学习工坊把一个学习目标转化为可使用的内容。系统能够联网检索延伸资料，生成结构化图文资源，展示真实进度与来源边界，并将结果预览、调整和导出为演示文稿。外部服务不可用时，也会明确显示降级状态。",
+    "featureEvidence": ["资源目标", "联网检索", "生成进度", "内容预览", "PPT 导出"]
+  },
+  {
+    "id": "xiaolian-close",
+    "targetSeconds": 25,
+    "route": "/#/xiaolian",
+    "caption": "小涟对话 · MiniMax 语音 · Live2D 陪伴 · 成长档案",
+    "narration": "小涟支持文字与语音交流，回答可以查看模型、工具和来源，并通过 MiniMax 自然播报，Live2D 形象同步呈现陪伴状态。学习档案持续汇总画像、计划、证据、考试和产物。涟千言，以真实学习证据连接计划、学习、诊断与成长。",
+    "featureEvidence": ["小涟对话", "来源与工具", "MiniMax 语音", "Live2D", "学习档案", "设置"]
+  }
+]
