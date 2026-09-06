@@ -17,7 +17,7 @@ vi.mock('pptxgenjs', () => ({
     lang = '';
     addSlide = addSlide;
     writeFile = writeFile;
-    ShapeType = { rect: 'rect' };
+    ShapeType = { rect: 'rect', roundRect: 'roundRect', ellipse: 'ellipse' };
   },
 }));
 

@@ -21,6 +21,10 @@ from app.resources import (
     ResourceImageRequest,
     ResourceImageUnavailable,
     ResourceOptimizeRequest,
+    TextCheckOut,
+    TextVerifyRequest,
+    plan_image,
+    verify_text,
 )
 
 router = APIRouter(prefix="/resources", tags=["learning-resources"])
@@ -45,6 +49,54 @@ async def generate_resource_image(payload: ResourceImageRequest, settings: Setti
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="course knowledge point not found") from exc
     except ResourceImageUnavailable as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+
+
+@router.post("/image/plan")
+async def plan_resource_image(
+    payload: ResourceImageRequest,
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    account: AuthAccount | None = Depends(optional_current_account),
+) -> dict:
+    """AI 评判是否值得配图并给出图标隐喻构图方案；LLM 不可用时诚实降级为默认方案。"""
+    from app.resources.models import ImagePlanPayload
+
+    point = MiniMaxImageService.point_content(payload.course_id, payload.knowledge_point_id)
+    if point is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="course knowledge point not found")
+    section_titles = [section.title for section in point.sections[:6]]
+    provider = account_llm_provider(db, settings, account)
+    plan = await plan_image(provider, point.title, section_titles)
+    if plan is None:
+        return ImagePlanPayload(
+            should_generate=True,
+            reason="AI 配图方案暂不可用，使用默认章节隐喻方案",
+            central_metaphor="",
+            card_metaphors=section_titles,
+            planned_by="heuristic",
+        ).model_dump()
+    return ImagePlanPayload(
+        should_generate=plan.should_generate,
+        reason=plan.reason,
+        central_metaphor=plan.central_metaphor,
+        card_metaphors=plan.card_metaphors,
+        planned_by="llm",
+    ).model_dump()
+
+
+@router.post("/verify-text", response_model=TextCheckOut)
+async def verify_resource_text(
+    payload: TextVerifyRequest,
+    settings: Settings = Depends(get_settings),
+    db: Session = Depends(get_db),
+    account: AuthAccount | None = Depends(optional_current_account),
+) -> TextCheckOut:
+    """AI 文字质量检查：乱码、截断、占位符、空章节、重复；LLM 不可用时如实返回不可用。"""
+    provider = account_llm_provider(db, settings, account)
+    check = await verify_text(provider, payload.content)
+    if check is None:
+        return TextCheckOut(available=False)
+    return TextCheckOut(available=True, passed=check.passed, summary=check.summary, issues=check.issues, provider=provider.name)
 
 
 @router.post("/optimize", response_model=OptimizedResource)

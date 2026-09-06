@@ -6,9 +6,28 @@ vi.mock('@/components/layout/AppShell', () => ({
   AppShell: ({ children }: { children: ReactNode }) => <main>{children}</main>,
 }));
 
+vi.mock('react-router-dom', () => ({
+  Link: ({ to, children }: { to: string; children: ReactNode }) => <a href={to}>{children}</a>,
+}));
+
 vi.mock('@/lib/hooks', () => ({
   useLlmStatus: () => ({
     data: { provider: 'unavailable', model: null, configured: false },
+    loading: false,
+    error: false,
+    refetch: vi.fn(),
+  }),
+  useCurrentPlan: () => ({
+    summary: null,
+    plan: null,
+    loading: false,
+    error: false,
+    refetch: vi.fn(),
+    generate: vi.fn(),
+    generating: false,
+  }),
+  useDiagnosis: () => ({
+    data: null,
     loading: false,
     error: false,
     refetch: vi.fn(),

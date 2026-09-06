@@ -161,3 +161,10 @@ __pycache__/
 *.sqlite
 *.sqlite3
 *.db.pre-anonymous-*.bak
+
+# Competition media artifacts (too large for Git)
+demo_video_*/
+ppt_work_*/
+*.pptx
+*.pptx.inspect.ndjson
+!public/templates/*.pptx

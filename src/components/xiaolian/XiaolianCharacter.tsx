@@ -1,5 +1,4 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
 import { useLive2dLease } from '@/components/live2d/live2dLease';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
@@ -54,16 +53,17 @@ function XiaolianAvatar({
       data-xiaolian-avatar="true"
       data-character-state={characterState}
       data-live2d-speaking={speaking}
-      className="relative grid h-full w-full place-items-center overflow-hidden rounded-[38%] bg-gradient-to-b from-violet-50/85 to-sky-50/65"
+      className="relative h-full w-full overflow-hidden rounded-[38%] border border-white/80 shadow-[0_18px_50px_rgba(119,94,220,0.18)]"
     >
-      <span className="absolute inset-[13%] rounded-full border border-white/80 bg-white/30 shadow-[0_18px_50px_rgba(119,94,220,0.14)]" />
-      <span className="relative grid aspect-square w-[54%] place-items-center rounded-[38%] bg-gradient-to-br from-primary-500 via-violet-400 to-sky-400 text-white shadow-[0_16px_32px_rgba(119,94,220,0.28)]">
-        <Sparkles className="absolute left-[16%] top-[16%] h-[18%] w-[18%]" />
-        <strong className="text-2xl font-bold sm:text-4xl">涟</strong>
-        {speaking && (
-          <span className="absolute bottom-[12%] h-[6%] w-[32%] animate-pulse rounded-full bg-white/80" />
-        )}
-      </span>
+      <img
+        src="/brand/cyrene-icon.jpeg"
+        alt=""
+        draggable={false}
+        className="h-full w-full object-cover"
+      />
+      {speaking && (
+        <span className="absolute bottom-[10%] left-1/2 h-[6%] w-[30%] -translate-x-1/2 animate-pulse rounded-full bg-white/85" />
+      )}
     </div>
   );
 }

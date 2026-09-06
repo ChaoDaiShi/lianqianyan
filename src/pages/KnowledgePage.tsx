@@ -39,11 +39,12 @@ export function KnowledgePage() {
   return (
     <AppShell scene="galaxy">
       <div className="space-y-5">
-        <PageIntro eyebrow="KNOWLEDGE SPACE" title="课程 GraphRAG 知识空间" description={profile.data ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个真实知识点；选择节点查看课程邻域。` : '正在读取当前课程的知识关系与学习状态。'} icon={BookOpen} tone="sky" aside={<p className="flex max-w-sm items-start gap-2 text-xs leading-5 text-[var(--em-muted-ink)]"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />未评估不等于薄弱，关系只来自课程材料。</p>} />
+        <PageIntro eyebrow="KNOWLEDGE SPACE" title="课程 GraphRAG 知识空间" description={profile.data ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个真实知识点；自由拖拽浏览，点击节点查看详细知识。` : '正在读取当前课程的知识关系与学习状态。'} icon={BookOpen} tone="sky" aside={<p className="flex max-w-sm items-start gap-2 text-xs leading-5 text-[var(--em-muted-ink)]"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />可拖拽平移与缩放；未评估不等于薄弱，关系只来自课程材料。</p>} />
         <KnowledgeGalaxy
           graph={graph}
           points={profile.data?.knowledgePoints ?? []}
           plan={plan.plan}
+          courseId={ACTIVE_COURSE_ID}
           primaryFocusId={diagnosis.data?.primaryFocus?.knowledgePointId}
           loading={graphLoading || profile.loading || diagnosis.loading || plan.loading}
           error={graphError || profile.error || diagnosis.error || plan.error}

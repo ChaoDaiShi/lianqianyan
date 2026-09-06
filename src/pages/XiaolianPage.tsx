@@ -37,6 +37,7 @@ import {
 } from '@/lib/companionApi';
 import { ConversationRail } from '@/components/xiaolian/ConversationRail';
 import { LongTermMemoryPanel } from '@/components/xiaolian/LongTermMemoryPanel';
+import { NextStepGuidanceCard } from '@/components/learning/NextStepGuidance';
 
 const QUICK_QUESTIONS = ['我现在最应该学什么，为什么？', '给我解释死锁四个必要条件。', 'PV 操作掌握了吗？'];
 const CONTEXT_LABELS: Record<string, string> = {
@@ -252,6 +253,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
         <div className="space-y-3">
           <ConversationRail threads={threads} activeId={activeThreadId} onCreate={() => void createThread()} onSelect={(id) => { const thread = threads.find((item) => item.id === id); if (thread) openThread(thread); }} onDelete={(id) => void removeThread(id)} />
           {activeThread ? <LongTermMemoryPanel memories={activeThread.memories} busy={memoryBusy} onAdd={(content) => void remember(content)} onDelete={(id) => void forget(id)} /> : null}
+          <NextStepGuidanceCard />
           {historyLoading ? <p className="flex items-center gap-2 px-3 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />读取历史记录…</p> : null}
           {historyError ? <p role="status" className="rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs leading-5 text-amber-800">{historyError}</p> : null}
         </div>

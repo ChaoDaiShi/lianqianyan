@@ -37,4 +37,16 @@ describe('XiaolianCharacter Live2D facade', () => {
 
     expect(html).toContain('我们继续学习。');
   });
+
+  it('renders the brand icon as the fallback avatar instead of the text glyph', () => {
+    const html = renderToStaticMarkup(
+      <XiaolianCharacter state="teaching" size="sm" speaking />,
+    );
+
+    expect(html).toContain('/brand/cyrene-icon.jpeg');
+    expect(html).toContain('object-cover');
+    expect(html).not.toContain('>涟<');
+    expect(html).not.toContain('<strong');
+    expect(html).toContain('data-live2d-speaking="true"');
+  });
 });

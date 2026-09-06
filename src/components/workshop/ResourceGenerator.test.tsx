@@ -16,7 +16,9 @@ describe('ResourceGenerator presentation', () => {
     expect(html).toContain('课堂 PPT');
     expect(html).toContain('真实 .pptx');
     expect(html).toContain('基于课程材料模板生成');
-    expect(html).toContain('图文并行生成');
+    expect(html).toContain('开始生成');
+    expect(html).toContain('增强预览为主');
+    expect(html).toContain('AI 评估是否配图');
     expect(html).not.toContain('AI 自动生成');
     expect(html).not.toContain('大模型生成');
   });

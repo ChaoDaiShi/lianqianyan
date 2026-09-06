@@ -45,10 +45,21 @@ class GeneratedResource(BaseModel):
     slides: list[PresentationSlide] = Field(default_factory=list)
 
 
+class ImagePlanPayload(BaseModel):
+    """前端/规划端点传递的配图方案。"""
+
+    should_generate: bool = True
+    reason: str = Field(default="", max_length=200)
+    central_metaphor: str = Field(default="", max_length=160)
+    card_metaphors: list[str] = Field(default_factory=list, max_length=8)
+    planned_by: Literal["llm", "heuristic"] = "llm"
+
+
 class ResourceImageRequest(BaseModel):
     course_id: str = Field(min_length=1, max_length=100)
     knowledge_point_id: str = Field(min_length=1, max_length=100)
     aspect_ratio: Literal["1:1", "16:9", "4:3"] = "16:9"
+    plan: ImagePlanPayload | None = None
 
 
 class GeneratedResourceImage(BaseModel):
@@ -56,6 +67,20 @@ class GeneratedResourceImage(BaseModel):
     model: str
     prompt: str
     image_urls: list[str] = Field(default_factory=list)
+    skipped: bool = False
+    skip_reason: str = ""
+
+
+class TextVerifyRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=12_000)
+
+
+class TextCheckOut(BaseModel):
+    available: bool
+    passed: bool = False
+    summary: str = ""
+    issues: list[str] = Field(default_factory=list, max_length=10)
+    provider: str | None = None
 
 
 class ResourceOptimizeRequest(BaseModel):

@@ -274,6 +274,23 @@ export interface GeneratedResourceImage {
   model: string;
   prompt: string;
   imageUrls: string[];
+  skipped: boolean;
+  skipReason: string;
+}
+
+export interface ResourceImagePlan {
+  shouldGenerate: boolean;
+  reason: string;
+  centralMetaphor: string;
+  cardMetaphors: string[];
+  plannedBy: 'llm' | 'heuristic';
+}
+
+export interface ResourceTextCheck {
+  available: boolean;
+  passed: boolean;
+  summary: string;
+  issues: string[];
 }
 
 export interface KnowledgeGraphNode {
@@ -534,18 +551,56 @@ export async function generateLearningResource(params: {
   return mapGeneratedResource(extractApiData(response));
 }
 
-export async function generateResourceImage(params: { courseId: string; knowledgePointId: string }): Promise<GeneratedResourceImage> {
-  const response = await api.post<Record<string, unknown>>('/api/resources/image', {
+export async function planResourceImage(params: { courseId: string; knowledgePointId: string }): Promise<ResourceImagePlan> {
+  const response = await api.post<Record<string, unknown>>('/api/resources/image/plan', {
     course_id: params.courseId,
     knowledge_point_id: params.knowledgePointId,
     aspect_ratio: '16:9',
   });
   const raw = extractApiData(response);
   return {
+    shouldGenerate: raw['should_generate'] !== false,
+    reason: (raw['reason'] as string) ?? '',
+    centralMetaphor: (raw['central_metaphor'] as string) ?? '',
+    cardMetaphors: (raw['card_metaphors'] as string[]) ?? [],
+    plannedBy: raw['planned_by'] === 'heuristic' ? 'heuristic' : 'llm',
+  };
+}
+
+export async function generateResourceImage(params: { courseId: string; knowledgePointId: string; plan?: ResourceImagePlan | null }): Promise<GeneratedResourceImage> {
+  const response = await api.post<Record<string, unknown>>('/api/resources/image', {
+    course_id: params.courseId,
+    knowledge_point_id: params.knowledgePointId,
+    aspect_ratio: '16:9',
+    plan: params.plan
+      ? {
+          should_generate: params.plan.shouldGenerate,
+          reason: params.plan.reason,
+          central_metaphor: params.plan.centralMetaphor,
+          card_metaphors: params.plan.cardMetaphors,
+          planned_by: params.plan.plannedBy,
+        }
+      : null,
+  });
+  const raw = extractApiData(response);
+  return {
     provider: 'minimax',
     model: raw['model'] as string,
-    prompt: raw['prompt'] as string,
+    prompt: (raw['prompt'] as string) ?? '',
     imageUrls: (raw['image_urls'] as string[]) ?? [],
+    skipped: raw['skipped'] === true,
+    skipReason: (raw['skip_reason'] as string) ?? '',
+  };
+}
+
+export async function verifyResourceText(content: string): Promise<ResourceTextCheck> {
+  const response = await api.post<Record<string, unknown>>('/api/resources/verify-text', { content });
+  const raw = extractApiData(response);
+  return {
+    available: raw['available'] === true,
+    passed: raw['passed'] === true,
+    summary: (raw['summary'] as string) ?? '',
+    issues: (raw['issues'] as string[]) ?? [],
   };
 }
 

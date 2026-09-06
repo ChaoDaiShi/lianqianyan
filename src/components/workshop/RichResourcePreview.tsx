@@ -9,7 +9,14 @@ function inline(text: string): ReactNode[] {
   });
 }
 
-export function RichResourcePreview({ content }: { content: string }) {
+interface RichResourcePreviewProps {
+  content: string;
+  /** 课程配图：嵌入预览内容流末尾，而不是悬浮在预览外部顶部。 */
+  imageUrl?: string;
+  imageCaption?: string;
+}
+
+export function RichResourcePreview({ content, imageUrl, imageCaption }: RichResourcePreviewProps) {
   return <article className="min-h-[18rem] space-y-3 rounded-[1.75rem] border border-violet-100 bg-white/70 p-5 leading-7">
     {content.split('\n').map((line, index) => {
       if (line.startsWith('# ')) return <h1 key={index} className="text-2xl font-black text-violet-950">{inline(line.slice(2))}</h1>;
@@ -20,5 +27,11 @@ export function RichResourcePreview({ content }: { content: string }) {
       if (!line.trim()) return <div key={index} className="h-1" />;
       return <p key={index} className="text-sm text-slate-700">{inline(line)}</p>;
     })}
+    {imageUrl ? (
+      <figure className="overflow-hidden rounded-[1.5rem] border border-violet-100 bg-violet-50/70">
+        <img src={imageUrl} alt="课程信息图" className="aspect-video w-full object-cover" loading="lazy" />
+        {imageCaption ? <figcaption className="flex items-center gap-2 px-4 py-2 text-[10px] text-[var(--em-muted-ink)]">{imageCaption}</figcaption> : null}
+      </figure>
+    ) : null}
   </article>;
 }

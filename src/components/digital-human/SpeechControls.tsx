@@ -28,6 +28,7 @@ export function SpeechControls({
   const idleLabel = 'MiniMax 讲解';
   const actionLabel = available ? `播放${idleLabel}` : '语音讲解不可用';
   const stopLabel = '停止 MiniMax 讲解';
+  const visibleLabel = speaking ? '停止讲解' : available ? '讲解' : '不可用';
 
   return (
     <Button
@@ -36,9 +37,10 @@ export function SpeechControls({
       variant="outline"
       disabled={!hasText || !available}
       aria-label={speaking ? stopLabel : actionLabel}
+      title={speaking ? stopLabel : actionLabel}
       onClick={() => (speaking ? onStop() : onSpeak(text))}
       className={cn(
-        'h-8 gap-1.5 rounded-xl border-violet-200 bg-white/70 px-2.5 text-[11px] text-primary-700',
+        'h-8 w-8 gap-0 rounded-xl border-violet-200 bg-white/70 p-0 text-primary-700',
         className,
       )}
     >
@@ -47,7 +49,7 @@ export function SpeechControls({
       ) : (
         <Volume2 className="h-3.5 w-3.5" />
       )}
-      {speaking ? stopLabel : available ? idleLabel : '语音讲解不可用'}
+      <span className="sr-only">{visibleLabel}</span>
     </Button>
   );
 }

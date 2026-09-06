@@ -35,7 +35,7 @@ import {
   useWorkspaceStore,
   useXiaolianRuntimeStore,
 } from '@/store';
-import { getLearningModule } from '@/content/learningContent';
+import { getLearningModule, resolveQuickQuestions } from '@/content/learningContent';
 import { selectLearningSpaceFeedback } from './learningSpacePresentation';
 
 type SidePanelKind = 'guide' | 'artifacts' | 'history' | 'context' | 'sources';
@@ -270,7 +270,7 @@ export function LearningSpacePage() {
             />
           </div>
           <div className="mx-auto w-full max-w-3xl space-y-6">
-            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={module?.quickQuestions} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} onOpenSources={openSourcesPanel} onSpeakingChange={setTutorSpeaking} />
+            <SpaceTutor key={currentTask.id} knowledgePointId={currentTask.knowledgePointId} knowledgePointName={currentTask.knowledgePointName} knowledge={currentKnowledge} quickQuestions={currentTask ? resolveQuickQuestions(currentTask.knowledgePointId, currentTask.knowledgePointName) : undefined} onPendingChange={handleTutorPending} onResponse={handleTutorResponse} onOpenSources={openSourcesPanel} onSpeakingChange={setTutorSpeaking} />
             {module && <ModulePractice key={currentTask.id} taskId={currentTask.id} knowledgePointName={currentTask.knowledgePointName} questions={module.questions} onEvaluationPendingChange={handleEvaluationPending} onEvaluationComplete={handleEvaluationComplete} onPracticeComplete={async (replanning) => { const [profileUpdated, diagnosisUpdated, planUpdated, evidenceUpdated] = await Promise.all([profile.refetch(), diagnosis.refetch(), replanning.status === 'performed' ? refetch() : Promise.resolve(true), evidence.refetch()]); return profileUpdated && diagnosisUpdated && planUpdated && evidenceUpdated; }} />}
           </div>
           {sidePanel === 'guide' && (

@@ -104,3 +104,21 @@ export function getLearningModule(knowledgePointId: string): LearningModule {
   if (knowledgePointId === 'kp-deadlock') return DEADLOCK_MODULE;
   return GENERIC_MODULE;
 }
+
+/**
+ * 嵌入式小涟的预设提问：
+ * - 专讲模块（自带定制练习）直接使用其定制问题；
+ * - 其余知识点用主题名套用覆盖"理解 / 易错点 / 自测"三种意图的模板，
+ *   替代"这个知识点"这类无指向的泛化问法。
+ */
+export function resolveQuickQuestions(knowledgePointId: string, knowledgePointName?: string): string[] {
+  const module = getLearningModule(knowledgePointId);
+  if (module.questions.length > 0) return module.quickQuestions;
+  const topic = knowledgePointName?.trim();
+  if (!topic) return module.quickQuestions;
+  return [
+    `用生活中的例子解释「${topic}」`,
+    `学「${topic}」最容易在哪里出错？`,
+    `考一考我对「${topic}」的掌握`,
+  ];
+}
