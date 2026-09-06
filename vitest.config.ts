@@ -9,6 +9,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    exclude: [...configDefaults.exclude, 'release/**'],
+    exclude: [...configDefaults.exclude, 'release/**', 'scripts/**'],
   },
 });
