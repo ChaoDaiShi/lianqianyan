@@ -8,15 +8,23 @@ interface NavLinkStubProps {
   children?: ReactNode | ((state: { isActive: boolean }) => ReactNode);
   className?: string | ((state: { isActive: boolean }) => string);
   'aria-label'?: string;
+  'data-mobile-dock-item'?: string;
 }
 
 vi.mock('react-router-dom', () => ({
-  NavLink: ({ to, children, className, 'aria-label': ariaLabel }: NavLinkStubProps) => {
+  NavLink: ({
+    to,
+    children,
+    className,
+    'aria-label': ariaLabel,
+    'data-mobile-dock-item': mobileDockItem,
+  }: NavLinkStubProps) => {
     const state = { isActive: to === '/resources' };
     return (
       <a
         href={to}
         aria-label={ariaLabel}
+        data-mobile-dock-item={mobileDockItem}
         className={typeof className === 'function' ? className(state) : className}
       >
         {typeof children === 'function' ? children(state) : children}
@@ -40,15 +48,23 @@ describe('LearningRail assessment and workshop entries', () => {
     expect(
       learningRailItems.filter((item) => item.to === '/settings'),
     ).toHaveLength(1);
-    expect(learningRailItems).toHaveLength(8);
+    expect(
+      learningRailItems.filter((item) => item.to === '/xiaolian'),
+    ).toHaveLength(1);
+    expect(learningRailItems).toHaveLength(9);
   });
 
-  it('uses a horizontally scrollable mobile rail and keeps labels visible', () => {
+  it('uses a five-slot mobile command dock without horizontal scrolling', () => {
     const html = renderToStaticMarkup(
       <LearningRail currentPath="/resources" />,
     );
 
-    expect(html).toContain('overflow-x-auto');
+    expect(html).toContain('data-mobile-dock="primary"');
+    expect(html.match(/data-mobile-dock-item=/g)).toHaveLength(5);
+    expect(html).toContain('data-mobile-dock-item="xiaolian"');
+    expect(html).toContain('aria-label="和小涟聊聊"');
+    expect(html).toContain('aria-label="更多学习入口"');
+    expect(html).not.toContain('overflow-x-auto');
     expect(html).toContain('考试中心');
     expect(html).toContain('学习工坊');
     expect(html).toContain('href="/resources"');
@@ -58,8 +74,10 @@ describe('LearningRail assessment and workshop entries', () => {
     const html = renderToStaticMarkup(<LearningRail currentPath="/" />);
 
     expect(html).toContain('data-learning-rail="primary"');
+    expect(html).toContain('data-learning-rail="desktop"');
     expect(html).toContain('学习星轨');
     expect(html).toContain('首页');
+    expect(html).toContain('小涟');
     expect(html).toContain('设置');
   });
 });
