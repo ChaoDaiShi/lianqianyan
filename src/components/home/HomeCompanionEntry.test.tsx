@@ -70,6 +70,10 @@ describe('home companion task entries', () => {
     expect(html).toContain('data-primary-action="diagnosis"');
     expect(html).toContain('data-learning-command-center="true"');
     expect(html).toContain('data-evidence-orbit="true"');
+    expect(html).toContain('data-home-observation="true"');
+    expect(html).toContain('text-base');
+    expect(html).toContain('data-home-metric="true"');
+    expect(html).toContain('text-xs');
     expect(html).toContain('开始学习诊断');
     expect(html).not.toContain('和小涟聊聊');
     expect(html).not.toContain('查看我的学习');

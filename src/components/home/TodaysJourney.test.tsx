@@ -65,6 +65,9 @@ describe('TodaysJourney', () => {
     expect(html).toContain('data-journey-node="diagnosis"');
     expect(html).toContain('data-journey-state="current"');
     expect(html).toContain('今天从第一次诊断开始');
+    expect(html).toContain('data-journey-summary="true"');
+    expect(html).toContain('text-[15px]');
+    expect(html).toContain('sm:text-base');
     expect(html).toContain('尚未安排');
     expect(html).toContain('--');
     expect(html).not.toContain('<button');

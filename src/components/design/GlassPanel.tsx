@@ -20,7 +20,7 @@ export function GlassPanel({
   return (
     <Component
       whileHover={interactive ? gentleHover : undefined}
-      className={cn('em-glass rounded-[28px]', className)}
+      className={cn('em-glass min-w-0 rounded-[28px]', className)}
     >
       {children}
     </Component>

@@ -36,13 +36,13 @@ export function TodaysJourney({ diagnosis, plan, currentTask, evidence, loading,
       </div>
       <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
-          <h2 className="text-2xl font-bold tracking-[-0.025em]">今天的学习路径</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">{introduction}</p>
+          <h2 className="text-[1.75rem] font-bold tracking-[-0.03em] sm:text-[2rem]">今天的学习路径</h2>
+          <p data-journey-summary="true" className="mt-2 text-[15px] leading-7 text-[var(--em-muted-ink)] sm:text-base">{introduction}</p>
         </div>
-        {current ? <p className="text-xs text-[var(--em-muted-ink)]">当前停留：{current.label}</p> : null}
+        {current ? <p className="text-sm text-[var(--em-muted-ink)]">当前停留：{current.label}</p> : null}
       </div>
 
-      <div className="mt-5 flex flex-col gap-2 border-y border-violet-100/70 py-3 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+      <div className="mt-5 flex flex-col gap-2 border-y border-violet-100/70 py-3.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="flex items-center justify-between gap-4">
           <span className="text-[var(--em-muted-ink)]">学习计划</span>
           <strong className="font-semibold text-[var(--em-ink)]">{plan ? `${plan.tasks.length} 个步骤` : '尚未安排'}</strong>
@@ -69,8 +69,8 @@ export function TodaysJourney({ diagnosis, plan, currentTask, evidence, loading,
                 {node.state === 'completed' ? <Check className="h-4 w-4" /> : node.state === 'current' ? <Circle className="h-3.5 w-3.5 fill-current" /> : index + 1}
               </span>
               <div className="pt-1 sm:pt-4">
-                <strong className={cn('text-sm', node.state === 'waiting' && 'text-slate-400')}>{node.label}</strong>
-                <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">{node.description}</p>
+                <strong className={cn('text-[15px]', node.state === 'waiting' && 'text-slate-400')}>{node.label}</strong>
+                <p className="mt-1 text-sm leading-6 text-[var(--em-muted-ink)]">{node.description}</p>
               </div>
             </li>
           ))}

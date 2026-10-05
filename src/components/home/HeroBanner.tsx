@@ -59,9 +59,9 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="rounded-[20px] border border-violet-100/90 bg-white/58 px-3.5 py-3 backdrop-blur">
-      <p className="text-[10px] font-medium text-[var(--em-muted-ink)]">{label}</p>
-      <strong className="mt-1 block truncate text-sm text-[var(--em-ink)]">{value}</strong>
+    <div data-home-metric="true" className="rounded-[20px] border border-violet-100/90 bg-white/58 px-4 py-3.5 backdrop-blur">
+      <p className="text-xs font-medium text-[var(--em-muted-ink)]">{label}</p>
+      <strong className="mt-1 block truncate text-base text-[var(--em-ink)]">{value}</strong>
     </div>
   );
 }
@@ -171,27 +171,27 @@ export function HeroBanner({
       />
       <div className="relative grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,.98fr)] lg:items-center xl:gap-10">
         <div className="min-w-0 text-center lg:text-left">
-          <p className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/65 px-3 py-1.5 text-xs font-semibold text-primary-700 shadow-sm">
+          <p className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/65 px-3.5 py-2 text-[13px] font-semibold text-primary-700 shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-companion" />
             {runtimeState === 'idle'
               ? COMPANION_TEXT[companionState]
               : RUNTIME_TEXT[runtimeState]}
           </p>
-          <p className="mt-6 text-[11px] font-bold tracking-[0.18em] text-primary-600">
+          <p className="mt-6 text-xs font-bold tracking-[0.17em] text-primary-600">
             TODAY&apos;S LEARNING COMMAND
           </p>
           <h1 className="mt-2 text-[2.15rem] font-bold leading-[1.12] tracking-[-0.04em] sm:text-5xl">
             今天，把这一步做扎实
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--em-muted-ink)] lg:mx-0">
+          <p data-home-observation="true" className="mx-auto mt-4 max-w-xl text-base leading-7 text-[var(--em-muted-ink)] sm:text-[17px] lg:mx-0">
             {observation}
           </p>
           <div className="mx-auto mt-5 max-w-xl rounded-[22px] border border-violet-100/90 bg-white/56 p-4 text-left lg:mx-0">
-            <p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-primary-600">
+            <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-primary-600">
               <Target className="h-3.5 w-3.5" />
               小涟的当前观察
             </p>
-            <p className="mt-2 text-sm font-semibold leading-6">{suggestion}</p>
+            <p className="mt-2 text-[15px] font-semibold leading-7 sm:text-base">{suggestion}</p>
           </div>
           <div
             data-home-primary-action="true"
@@ -202,7 +202,7 @@ export function HeroBanner({
         </div>
 
         <div className="relative min-w-0 rounded-[30px] border border-violet-100/80 bg-gradient-to-br from-white/78 via-violet-50/52 to-sky-50/58 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
-          <div className="absolute right-4 top-4 z-10 hidden items-center gap-2 rounded-full border border-white/80 bg-white/70 px-2.5 py-1.5 text-[10px] font-semibold text-primary-700 shadow-sm sm:flex">
+          <div className="absolute right-4 top-4 z-10 hidden items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-primary-700 shadow-sm sm:flex">
             <BookOpenCheck className="h-3.5 w-3.5" />
             真实证据驱动
           </div>
@@ -215,7 +215,7 @@ export function HeroBanner({
             />
           </div>
           <EvidenceOrbit model={orbit} />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-3">
             <Metric label="当前重点" value={orbit.focusTitle} />
             <Metric label="计划任务" value={`${orbit.taskCount} 项`} />
             <Metric label="学习证据" value={`${orbit.evidenceCount} 条`} />

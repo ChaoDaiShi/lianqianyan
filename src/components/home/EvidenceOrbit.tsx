@@ -153,7 +153,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         textAnchor="middle"
         fill="var(--em-muted-ink)"
         fontFamily="Inter, PingFang SC, Microsoft YaHei, sans-serif"
-        fontSize="10"
+        fontSize="11"
         fontWeight="600"
         letterSpacing="1.5"
       >
@@ -165,7 +165,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         textAnchor="middle"
         fill="var(--em-ink)"
         fontFamily="Inter, PingFang SC, Microsoft YaHei, sans-serif"
-        fontSize="18"
+        fontSize="19"
         fontWeight="700"
       >
         {focusText}
@@ -176,7 +176,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         textAnchor="middle"
         fill="var(--em-primary-deep)"
         fontFamily="Inter, PingFang SC, Microsoft YaHei, sans-serif"
-        fontSize="11"
+        fontSize="12"
         fontWeight="600"
       >
         {model.completedCount}/4 · {model.currentLabel}
@@ -231,7 +231,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
                   : 'var(--em-ink)'
               }
               fontFamily="Inter, PingFang SC, Microsoft YaHei, sans-serif"
-              fontSize="11"
+              fontSize="12"
               fontWeight={node.state === 'current' ? 700 : 600}
             >
               {node.label}
