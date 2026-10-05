@@ -90,6 +90,8 @@ describe('XiaolianPage digital-human speech', () => {
     expect(html).toContain('data-chat-message="true"');
     expect(html).toContain('text-[15px]');
     expect(html).toContain('sm:text-base');
+    expect(html).toContain('h-[calc(100dvh-10rem)]');
+    expect(html).toContain('md:h-[calc(100dvh-5.4rem)]');
     expect(html).not.toContain('小涟学习工作台');
     expect(html).not.toContain('Provider：');
     expect(html).toContain('<details');

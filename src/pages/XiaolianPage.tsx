@@ -436,7 +436,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
           {historyLoading ? <p className="flex items-center gap-2 px-3 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />读取历史记录…</p> : null}
           {historyError ? <p role="status" className="rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs leading-5 text-amber-800">{historyError}</p> : null}
         </div>
-        <GlassPanel className={cn('order-1 flex h-[calc(100dvh-5.4rem)] min-h-[36rem] min-w-0 flex-col overflow-hidden rounded-[2rem] xl:order-2', embedded && 'h-[calc(100dvh-4.5rem)]')}>
+        <GlassPanel className={cn('order-1 flex h-[calc(100dvh-10rem)] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-[2rem] md:h-[calc(100dvh-5.4rem)] md:min-h-[36rem] xl:order-2', embedded && 'h-[calc(100dvh-4.5rem)]')}>
           <header className="border-b border-violet-100 px-4 py-2.5 sm:px-5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">

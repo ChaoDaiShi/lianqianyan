@@ -77,6 +77,8 @@ pnpm build
 - HTTP 4xx/5xx 列表为空；
 - 五个页面在 1440px 下均无文档级横向溢出。
 
+放大控件后曾检测到移动输入框与固定 Dock 约 16px 覆盖。根因是小涟面板仍使用旧控件高度的视口公式；调整移动面板高度后，输入框底部为 706.35px、Dock 顶部为 764.11px，保留约 57.76px 间隔，1024px及以上桌面高度公式保持不变。
+
 ## 视觉证据
 
 本地 Git 忽略目录 `.local/ux-audit-20261005/`：
@@ -88,5 +90,6 @@ pnpm build
 - `r2-after-home-1024.png`：1024px 紧凑轨道；
 - `r2-after-home-390.png`：390px 移动布局；
 - `r2-after-xiaolian-1440.png`、`r2-xiaolian-complete.png`：小涟工作区和最终结果。
+- `r2-after-xiaolian-390.png`：移动输入区与 Dock 间距修复。
 
 这些截图只作为本机验收证据，不提交 Git。
