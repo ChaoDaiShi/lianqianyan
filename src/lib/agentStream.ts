@@ -44,6 +44,30 @@ export interface AgentStreamState {
   complete: boolean;
 }
 
+export interface AgentStreamStartGuard {
+  text: string;
+  pending: boolean;
+  hasActiveStream: boolean;
+  threadId: string | null;
+}
+
+export function canStartAgentStream({
+  text,
+  pending,
+  hasActiveStream,
+  threadId,
+}: AgentStreamStartGuard): boolean {
+  return Boolean(text.trim() && threadId && !pending && !hasActiveStream);
+}
+
+export function canApplyAgentStreamUpdate(
+  mounted: boolean,
+  activeDraftId: string | null,
+  expectedDraftId: string,
+): boolean {
+  return mounted && activeDraftId === expectedDraftId;
+}
+
 export function initialAgentStreamState(): AgentStreamState {
   return {
     status: 'streaming',

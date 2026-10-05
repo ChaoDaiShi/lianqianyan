@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { AgentChatResponse } from './educationApi';
 import {
   buildAgentStreamUrl,
+  canApplyAgentStreamUpdate,
+  canStartAgentStream,
   cancelAgentStream,
   initialAgentStreamState,
   parseAgentStreamMessage,
@@ -145,5 +147,41 @@ describe('agent stream wire format', () => {
     expect(buildAgentStreamUrl('https://learning.example.com/')).toBe(
       'https://learning.example.com/api/agents/chat/stream',
     );
+  });
+});
+
+describe('agent stream lifecycle guards', () => {
+  it('rejects blank, pending, active, and threadless submissions', () => {
+    expect(
+      canStartAgentStream({
+        text: '解释死锁',
+        pending: false,
+        hasActiveStream: false,
+        threadId: 'thread-1',
+      }),
+    ).toBe(true);
+    expect(
+      canStartAgentStream({
+        text: '解释死锁',
+        pending: false,
+        hasActiveStream: true,
+        threadId: 'thread-1',
+      }),
+    ).toBe(false);
+    expect(
+      canStartAgentStream({
+        text: '   ',
+        pending: false,
+        hasActiveStream: false,
+        threadId: 'thread-1',
+      }),
+    ).toBe(false);
+  });
+
+  it('applies async updates only to the mounted owner request', () => {
+    expect(canApplyAgentStreamUpdate(true, 'draft-1', 'draft-1')).toBe(true);
+    expect(canApplyAgentStreamUpdate(false, 'draft-1', 'draft-1')).toBe(false);
+    expect(canApplyAgentStreamUpdate(true, null, 'draft-1')).toBe(false);
+    expect(canApplyAgentStreamUpdate(true, 'draft-2', 'draft-1')).toBe(false);
   });
 });

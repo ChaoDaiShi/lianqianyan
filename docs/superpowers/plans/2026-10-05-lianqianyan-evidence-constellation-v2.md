@@ -457,4 +457,3 @@ Expected: 无空白错误，只剩本轮文档或干净工作区。
 git add -- README.md docs/verification/2026-10-05-evidence-constellation-v2.md
 git commit -m "docs: verify evidence constellation experience"
 ```
-

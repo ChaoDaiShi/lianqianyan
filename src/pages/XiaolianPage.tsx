@@ -15,6 +15,8 @@ import type {
   KnowledgeSource,
 } from '@/lib/educationApi';
 import {
+  canApplyAgentStreamUpdate,
+  canStartAgentStream,
   cancelAgentStream,
   initialAgentStreamState,
   reduceAgentStream,
@@ -141,18 +143,23 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
   const resetRuntime = useXiaolianRuntimeStore((state) => state.reset);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeAbortRef = useRef<AbortController | null>(null);
+  const activeDraftIdRef = useRef<string | null>(null);
   const lastRequestRef = useRef<PendingStreamRequest | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, pending]);
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      activeDraftIdRef.current = null;
       activeAbortRef.current?.abort();
+      activeAbortRef.current = null;
       resetRuntime();
-    },
-    [resetRuntime],
-  );
+    };
+  }, [resetRuntime]);
 
   const applyThread = (thread: CompanionThread) => {
     setThreads((current) => [thread, ...current.filter((item) => item.id !== thread.id)]);
@@ -160,6 +167,8 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
 
   const openThread = (thread: CompanionThread) => {
     activeAbortRef.current?.abort();
+    activeAbortRef.current = null;
+    activeDraftIdRef.current = null;
     setPending(false);
     setActiveThreadId(thread.id);
     setMessages(thread.messages.length > 0 ? thread.messages.map(fromPersisted) : [assistantMessage(GREETING)]);
@@ -210,6 +219,15 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
     draftId: string,
     streamState: AgentStreamState,
   ) => {
+    if (
+      !canApplyAgentStreamUpdate(
+        mountedRef.current,
+        activeDraftIdRef.current,
+        draftId,
+      )
+    ) {
+      return;
+    }
     setMessages((previous) =>
       previous.map((message) =>
         message.id === draftId
@@ -226,6 +244,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
     const controller = new AbortController();
     activeAbortRef.current?.abort();
     activeAbortRef.current = controller;
+    activeDraftIdRef.current = request.draftId;
     let streamState = initialAgentStreamState();
     updateStreamMessage(request.draftId, streamState);
     setPending(true);
@@ -263,6 +282,16 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
         },
       );
 
+      if (
+        !canApplyAgentStreamUpdate(
+          mountedRef.current,
+          activeDraftIdRef.current,
+          request.draftId,
+        )
+      ) {
+        return;
+      }
+
       setMessages((previous) =>
         previous.map((message) =>
           message.id === request.draftId
@@ -288,6 +317,15 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
       }
       setCompanionState('encouraging');
     } catch {
+      if (
+        !canApplyAgentStreamUpdate(
+          mountedRef.current,
+          activeDraftIdRef.current,
+          request.draftId,
+        )
+      ) {
+        return;
+      }
       if (controller.signal.aborted) {
         streamState = cancelAgentStream(streamState);
       } else if (streamState.status !== 'error') {
@@ -301,8 +339,11 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
     } finally {
       if (activeAbortRef.current === controller) {
         activeAbortRef.current = null;
-        setPending(false);
-        setRuntimeState('idle');
+        activeDraftIdRef.current = null;
+        if (mountedRef.current) {
+          setPending(false);
+          setRuntimeState('idle');
+        }
       }
     }
   };
@@ -312,7 +353,17 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
     capability?: AgentCapability | null,
   ) => {
     const text = (rawText ?? input).trim();
-    if (!text || pending || !activeThreadId) return;
+    if (
+      !canStartAgentStream({
+        text,
+        pending,
+        hasActiveStream: activeAbortRef.current !== null,
+        threadId: activeThreadId,
+      })
+    ) {
+      return;
+    }
+    if (!activeThreadId) return;
     voice.stop();
     speech.stop();
     setInput('');
