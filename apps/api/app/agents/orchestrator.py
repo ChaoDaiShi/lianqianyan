@@ -5,8 +5,10 @@ from typing import Protocol
 
 from app.agents.base import (
     AgentCapability,
+    AgentEventSink,
     AgentRequest,
     AgentResult,
+    AgentStreamEvent,
     AgentsChatResponse,
     AgentTraceItem,
 )
@@ -47,8 +49,16 @@ class EducationAgentOrchestrator:
         request: AgentRequest,
         *,
         memories: list[str] | None = None,
+        event_sink: AgentEventSink | None = None,
     ) -> AgentsChatResponse:
         decision = self._router.route(request.message, request.capability)
+        self._emit_status(
+            event_sink,
+            "route",
+            "正在识别需要协作的学习能力"
+            if decision.collaborative
+            else f"正在进入{_LABELS[decision.capability]}",
+        )
         memory_context = (
             {"long_term_memory": {"summary": "；".join(memories[:20])}}
             if memories
@@ -58,28 +68,46 @@ class EducationAgentOrchestrator:
         results: list[AgentResult] = []
 
         if decision.collaborative:
-            diagnosis = self._run_read_agent(self._diagnosis, request, trace)
+            self._emit_status(event_sink, "diagnosis", "正在读取真实学习诊断")
+            diagnosis = self._run_read_agent(
+                self._diagnosis,
+                request,
+                trace,
+                event_sink,
+            )
             results.append(diagnosis)
+            self._emit_status(event_sink, "planning", "正在核对当前学习计划")
             planner = self._planner.run(request, diagnosis=diagnosis)
-            self._append_result_trace(planner, trace)
+            self._append_result_trace(planner, trace, event_sink)
             results.append(planner)
-            knowledge = self._retrieve(request, trace)
+            knowledge = self._retrieve(request, trace, event_sink=event_sink)
+            self._emit_status(event_sink, "tutoring", "正在结合证据与课程知识组织回答")
             tutor = await self._tutor.run(
                 request,
                 extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump(), **memory_context},
                 knowledge=knowledge,
             )
-            trace.append(self._trace(tutor))
+            self._append_trace(self._trace(tutor), trace, event_sink)
             results.append(tutor)
         elif decision.capability == AgentCapability.DIAGNOSIS:
-            results.append(self._run_read_agent(self._diagnosis, request, trace))
+            self._emit_status(event_sink, "diagnosis", "正在读取真实学习诊断")
+            results.append(
+                self._run_read_agent(
+                    self._diagnosis,
+                    request,
+                    trace,
+                    event_sink,
+                )
+            )
         elif decision.capability == AgentCapability.PLANNING:
+            self._emit_status(event_sink, "planning", "正在核对当前学习计划")
             result = self._planner.run(request)
-            self._append_result_trace(result, trace)
+            self._append_result_trace(result, trace, event_sink)
             results.append(result)
         elif decision.capability == AgentCapability.ASSESSMENT:
+            self._emit_status(event_sink, "assessment", "正在读取最近学习证据")
             assessment = self._assessment.run(request)
-            self._append_result_trace(assessment, trace)
+            self._append_result_trace(assessment, trace, event_sink)
             results.append(assessment)
             evidence = assessment.data.get("evidence")
             if evidence is not None:
@@ -88,6 +116,12 @@ class EducationAgentOrchestrator:
                     request,
                     trace,
                     knowledge_point_id=knowledge_point_id,
+                    event_sink=event_sink,
+                )
+                self._emit_status(
+                    event_sink,
+                    "tutoring",
+                    "正在结合练习证据与课程知识解释结果",
                 )
                 tutor = await self._tutor.run(
                     request,
@@ -95,16 +129,17 @@ class EducationAgentOrchestrator:
                     assessment=assessment.data,
                     extra_context=memory_context,
                 )
-                trace.append(self._trace(tutor))
+                self._append_trace(self._trace(tutor), trace, event_sink)
                 results.append(tutor)
         else:
-            knowledge = self._retrieve(request, trace)
+            knowledge = self._retrieve(request, trace, event_sink=event_sink)
+            self._emit_status(event_sink, "tutoring", "正在结合课程知识组织回答")
             result = await self._tutor.run(
                 request,
                 knowledge=knowledge,
                 extra_context=memory_context,
             )
-            trace.append(self._trace(result))
+            self._append_trace(self._trace(result), trace, event_sink)
             results.append(result)
 
         final = results[-1]
@@ -133,7 +168,9 @@ class EducationAgentOrchestrator:
         request: AgentRequest,
         trace: list[AgentTraceItem],
         knowledge_point_id: str | None = None,
+        event_sink: AgentEventSink | None = None,
     ) -> list[RetrievedKnowledge]:
+        self._emit_status(event_sink, "knowledge", "正在检索当前课程的知识依据")
         tool_result = self._tools.execute(
             "search_course_knowledge",
             {
@@ -143,14 +180,16 @@ class EducationAgentOrchestrator:
                 "top_k": 4,
             },
         )
-        trace.append(
+        self._append_trace(
             AgentTraceItem(
                 agent="search_course_knowledge",
                 name="search_course_knowledge",
                 label="课程知识检索",
                 type="tool",
                 status="completed" if tool_result.success else "failed",
-            )
+            ),
+            trace,
+            event_sink,
         )
         if not tool_result.success or not isinstance(tool_result.data, list):
             return []
@@ -165,24 +204,75 @@ class EducationAgentOrchestrator:
         )
 
     @staticmethod
-    def _append_result_trace(result: AgentResult, trace: list[AgentTraceItem]) -> None:
-        trace.append(EducationAgentOrchestrator._trace(result))
+    def _append_result_trace(
+        result: AgentResult,
+        trace: list[AgentTraceItem],
+        event_sink: AgentEventSink | None = None,
+    ) -> None:
+        EducationAgentOrchestrator._append_trace(
+            EducationAgentOrchestrator._trace(result),
+            trace,
+            event_sink,
+        )
         for item in result.tool_trace:
-            trace.append(
+            EducationAgentOrchestrator._append_trace(
                 AgentTraceItem(
                     agent=item.name,
                     name=item.name,
                     label=item.name,
                     status=item.status,
                     type="tool",
+                ),
+                trace,
+                event_sink,
+            )
+
+    @staticmethod
+    def _run_read_agent(
+        agent: ReadAgent,
+        request: AgentRequest,
+        trace: list[AgentTraceItem],
+        event_sink: AgentEventSink | None = None,
+    ) -> AgentResult:
+        result = agent.run(request)
+        EducationAgentOrchestrator._append_result_trace(
+            result,
+            trace,
+            event_sink,
+        )
+        return result
+
+    @staticmethod
+    def _append_trace(
+        item: AgentTraceItem,
+        trace: list[AgentTraceItem],
+        event_sink: AgentEventSink | None,
+    ) -> None:
+        trace.append(item)
+        if event_sink is not None:
+            event_sink(
+                AgentStreamEvent(
+                    kind="trace",
+                    stage="execution",
+                    label=item.label,
+                    item=item,
                 )
             )
 
     @staticmethod
-    def _run_read_agent(agent: ReadAgent, request: AgentRequest, trace: list[AgentTraceItem]) -> AgentResult:
-        result = agent.run(request)
-        EducationAgentOrchestrator._append_result_trace(result, trace)
-        return result
+    def _emit_status(
+        event_sink: AgentEventSink | None,
+        stage: str,
+        label: str,
+    ) -> None:
+        if event_sink is not None:
+            event_sink(
+                AgentStreamEvent(
+                    kind="status",
+                    stage=stage,
+                    label=label,
+                )
+            )
 
 
 def _unique(items: Iterable[str]) -> list[str]:

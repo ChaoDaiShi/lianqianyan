@@ -2,8 +2,10 @@
 
 from app.agents.base import (
     AgentCapability,
+    AgentEventSink,
     AgentRequest,
     AgentResult,
+    AgentStreamEvent,
     AgentTraceItem,
 )
 from app.agents.assessment_agent import AssessmentAgent
@@ -15,8 +17,10 @@ from app.agents.orchestrator import EducationAgentOrchestrator
 
 __all__ = [
     "AgentCapability",
+    "AgentEventSink",
     "AgentRequest",
     "AgentResult",
+    "AgentStreamEvent",
     "AgentTraceItem",
     "AgentRouter",
     "RouteDecision",

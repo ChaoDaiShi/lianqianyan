@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -38,6 +39,18 @@ class AgentTraceItem(BaseModel):
     status: str = "completed"
     type: str = "agent"
     name: str | None = None
+
+
+class AgentStreamEvent(BaseModel):
+    """Public progress emitted while the accepted agent graph is running."""
+
+    kind: Literal["status", "trace"]
+    stage: str
+    label: str
+    item: AgentTraceItem | None = None
+
+
+AgentEventSink = Callable[[AgentStreamEvent], None]
 
 
 class ToolTraceItem(BaseModel):

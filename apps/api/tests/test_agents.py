@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from pathlib import Path
 
 import pytest
@@ -81,6 +82,38 @@ def agent_chat(client: TestClient, message: str, capability: str | None = None):
             "capability": capability,
         },
     )
+
+
+def agent_chat_stream(
+    client: TestClient,
+    message: str,
+    capability: str | None = None,
+) -> list[tuple[str, dict]]:
+    with client.stream(
+        "POST",
+        "/api/agents/chat/stream",
+        json={
+            "learner_id": TEST_LEARNER_ID,
+            "course_id": COURSE_OS,
+            "message": message,
+            "capability": capability,
+        },
+    ) as response:
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/event-stream")
+        events: list[tuple[str, dict]] = []
+        event_name = "message"
+        for line in response.iter_lines():
+            if line.startswith("event: "):
+                event_name = line.removeprefix("event: ")
+            elif line.startswith("data: "):
+                events.append(
+                    (
+                        event_name,
+                        json.loads(line.removeprefix("data: ")),
+                    )
+                )
+    return events
 
 
 def test_router_routes_standard_messages() -> None:
@@ -197,6 +230,44 @@ def test_orchestrator_collaboration_trace_is_dag(client: TestClient) -> None:
     assert body["agent_trace"][-1]["status"] == "completed"
     assert body["provider"] == "unavailable"
     assert body["response_mode"] == "fallback"
+
+
+def test_agents_stream_emits_real_trace_and_complete_result(
+    client: TestClient,
+) -> None:
+    events = agent_chat_stream(client, "我现在最应该学什么，为什么？")
+
+    assert events[0][0] == "status"
+    assert events[-1] == ("done", {"ok": True})
+    trace = [data["item"] for name, data in events if name == "trace"]
+    assert [item["agent"] for item in trace] == [
+        "diagnosis",
+        "get_learning_diagnosis",
+        "planning",
+        "get_current_study_plan",
+        "search_course_knowledge",
+        "tutoring",
+    ]
+    result = next(data for name, data in events if name == "result")
+    streamed_answer = "".join(
+        data["text"] for name, data in events if name == "delta"
+    )
+    assert streamed_answer == result["answer"]
+    assert result["agent_trace"] == trace
+    assert result["sources"]
+
+
+def test_agents_stream_does_not_invent_unexecuted_capabilities(
+    client: TestClient,
+) -> None:
+    events = agent_chat_stream(client, "给我解释死锁四个必要条件。")
+
+    trace = [data["item"] for name, data in events if name == "trace"]
+    assert [item["agent"] for item in trace] == [
+        "search_course_knowledge",
+        "tutoring",
+    ]
+    assert all(item["agent"] not in {"diagnosis", "planning"} for item in trace)
 
 
 def test_tutoring_request_has_no_fake_planner_trace(client: TestClient) -> None:
