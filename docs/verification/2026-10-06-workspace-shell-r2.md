@@ -63,7 +63,7 @@ pnpm check
 pnpm build
 ```
 
-结果：2506 个模块转换完成，生产构建成功。保留既有 `vendor-pixi` 大于 500kB 的构建提示。
+结果：2503 个模块转换完成，生产构建成功。保留既有 `vendor-pixi` 大于 500kB 的构建提示。
 
 本轮没有后端代码变更，因此没有重复运行后端完整套件；运行中的 `/api/health` 返回 `{"status":"ok","service":"education-api"}`。
 
