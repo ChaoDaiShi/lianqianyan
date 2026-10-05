@@ -11,7 +11,11 @@ import {
   type AgentTraceItem,
 } from './educationApi';
 
-export type AgentStreamStatus = 'streaming' | 'complete' | 'error';
+export type AgentStreamStatus =
+  | 'streaming'
+  | 'complete'
+  | 'error'
+  | 'cancelled';
 export type AgentStreamStageState = 'active' | 'completed' | 'error';
 
 export interface AgentStreamStage {
@@ -49,6 +53,20 @@ export function initialAgentStreamState(): AgentStreamState {
     text: '',
     trace: [],
     result: null,
+    error: null,
+    complete: false,
+  };
+}
+
+export function cancelAgentStream(
+  state: AgentStreamState,
+): AgentStreamState {
+  return {
+    ...state,
+    status: 'cancelled',
+    stages: completeActiveStages(state.stages),
+    activeStage: null,
+    activeLabel: null,
     error: null,
     complete: false,
   };

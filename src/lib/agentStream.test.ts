@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { AgentChatResponse } from './educationApi';
 import {
   buildAgentStreamUrl,
+  cancelAgentStream,
   initialAgentStreamState,
   parseAgentStreamMessage,
   reduceAgentStream,
@@ -78,6 +79,21 @@ describe('agent stream state', () => {
     expect(state.trace).toEqual([completedResponse.agentTrace[0]]);
     expect(state.status).toBe('error');
     expect(state.error).toContain('暂时无法完成');
+  });
+
+  it('marks a user stop as cancelled while preserving partial text', () => {
+    const partial = reduceAgentStream(initialAgentStreamState(), {
+      type: 'delta',
+      index: 0,
+      text: '已经生成的部分',
+    });
+
+    const cancelled = cancelAgentStream(partial);
+
+    expect(cancelled.status).toBe('cancelled');
+    expect(cancelled.text).toBe('已经生成的部分');
+    expect(cancelled.error).toBeNull();
+    expect(cancelled.complete).toBe(false);
   });
 });
 

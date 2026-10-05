@@ -112,7 +112,9 @@ async def _stream_agent_response(
                 break
             for index, chunk in enumerate(_answer_chunks(result.answer)):
                 yield _sse("delta", {"index": index, "text": chunk})
-                await asyncio.sleep(0)
+                # A short transport cadence lets browsers paint progressive text
+                # instead of batching every already-computed chunk into one frame.
+                await asyncio.sleep(0.018)
             yield _sse("result", result.model_dump(mode="json"))
             yield _sse("done", {"ok": True})
             break

@@ -323,16 +323,31 @@ body {
   50% { opacity: 0.5; transform: scale(1.12); }
 }
 
+@keyframes em-stream-caret {
+  0%, 48% { opacity: 1; }
+  49%, 100% { opacity: 0.18; }
+}
+
 .em-orbit-pulse {
   transform-box: fill-box;
   transform-origin: center;
   animation: em-orbit-pulse 2.2s ease-in-out infinite;
 }
 
+.em-stream-caret {
+  animation: em-stream-caret 0.9s steps(1, end) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .em-orbit-pulse {
     animation: none;
     opacity: 0.35;
+  }
+
+
+  .em-stream-caret {
+    animation: none;
+    opacity: 1;
   }
 }
 
