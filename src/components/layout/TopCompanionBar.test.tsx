@@ -20,6 +20,7 @@ describe('TopCompanionBar brand identity', () => {
   it('uses the supplied Cyrene artwork and presents Xiaolian as a senior companion', () => {
     const html = renderToStaticMarkup(<TopCompanionBar />);
 
+    expect(html).toContain('data-lian-mark="constellation"');
     expect(html).toContain('/brand/cyrene-icon.jpeg');
     expect(html).toContain('小涟学姐');
     expect(html).not.toContain('昔涟教官');
