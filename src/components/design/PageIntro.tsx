@@ -44,7 +44,7 @@ export function PageIntro({
         <h1 className='mt-2 text-[1.875rem] font-bold leading-tight tracking-[-0.03em] sm:text-4xl'>
           {title}
         </h1>
-        <div className='mt-2 max-w-3xl text-[15px] leading-[1.65] text-[var(--em-muted-ink)] sm:text-base'>
+        <div className='mt-2 max-w-3xl text-[15px] leading-[1.65] text-[var(--em-muted-ink)] sm:text-base sm:leading-[1.65]'>
           {description}
         </div>
       </div>

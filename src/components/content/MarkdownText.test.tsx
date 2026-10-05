@@ -20,6 +20,12 @@ describe('MarkdownText', () => {
     );
 
     expect(html).toContain('<h2');
+    expect(html).toContain('text-[15px]');
+    expect(html).toContain('sm:text-base');
+    expect(html).toContain('leading-7');
+    expect(html).toContain('sm:leading-7');
+    expect(html).toContain('space-y-4');
+    expect(html).toContain('text-xl');
     expect(html).toContain('<ol');
     expect(html).toContain('<strong>互斥</strong>');
     expect(html).toContain('<blockquote');

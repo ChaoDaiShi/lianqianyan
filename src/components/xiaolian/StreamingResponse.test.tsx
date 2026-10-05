@@ -37,6 +37,11 @@ describe('StreamingResponse', () => {
     );
 
     expect(html).toContain('data-streaming-response="active"');
+    expect(html).toContain('p-5');
+    expect(html).toContain('sm:p-6');
+    expect(html).toContain('text-[15px]');
+    expect(html).toContain('sm:text-base');
+    expect(html).toContain('h-10');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('正在检索课程知识');
     expect(html).toContain('死锁是多个进程互相等待');

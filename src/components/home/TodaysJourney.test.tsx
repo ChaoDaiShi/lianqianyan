@@ -68,6 +68,7 @@ describe('TodaysJourney', () => {
     expect(html).toContain('data-journey-summary="true"');
     expect(html).toContain('text-[15px]');
     expect(html).toContain('sm:text-base');
+    expect(html).toContain('sm:leading-7');
     expect(html).toContain('尚未安排');
     expect(html).toContain('--');
     expect(html).not.toContain('<button');

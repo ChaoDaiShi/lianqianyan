@@ -37,7 +37,7 @@ export function TodaysJourney({ diagnosis, plan, currentTask, evidence, loading,
       <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-[1.75rem] font-bold tracking-[-0.03em] sm:text-[2rem]">今天的学习路径</h2>
-          <p data-journey-summary="true" className="mt-2 text-[15px] leading-7 text-[var(--em-muted-ink)] sm:text-base">{introduction}</p>
+          <p data-journey-summary="true" className="mt-2 text-[15px] leading-7 text-[var(--em-muted-ink)] sm:text-base sm:leading-7">{introduction}</p>
         </div>
         {current ? <p className="text-sm text-[var(--em-muted-ink)]">当前停留：{current.label}</p> : null}
       </div>

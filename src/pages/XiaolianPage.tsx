@@ -481,16 +481,18 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                     </div>
                   ) : (
                     <div
+                      data-chat-message="true"
+                      data-chat-role={message.role}
                       className={cn(
-                        'max-w-[92%] rounded-[22px] px-4 py-3 text-sm leading-relaxed sm:max-w-[82%]',
+                        'rounded-[22px] px-4 py-4 text-[15px] leading-7 sm:px-5 sm:text-base sm:leading-7',
                         message.role === 'user'
-                          ? 'bg-primary-600 text-white shadow-[0_10px_26px_rgba(111,95,224,0.18)]'
-                          : 'border border-violet-100 bg-white/70 text-[var(--em-ink)] shadow-[0_12px_32px_rgba(76,62,132,0.06)]',
+                          ? 'max-w-[78%] bg-primary-600 text-white shadow-[0_10px_26px_rgba(111,95,224,0.18)]'
+                          : 'max-w-[86%] border border-violet-100 bg-white/70 text-[var(--em-ink)] shadow-[0_12px_32px_rgba(76,62,132,0.06)]',
                       )}
                     >
                       {message.role === 'assistant' && (
-                        <div className="mb-2 flex items-center gap-1.5 text-[11px] text-primary-600">
-                          <Sparkles className="h-3 w-3" />
+                        <div className="mb-3 flex items-center gap-1.5 text-xs font-medium text-primary-600">
+                          <Sparkles className="h-3.5 w-3.5" />
                           小涟
                           {message.isFallback && (
                             <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
@@ -516,7 +518,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                             onClick={() =>
                               void remember(message.content, message.id)
                             }
-                            className="inline-flex items-center gap-1 rounded-full border border-violet-100 bg-violet-50/70 px-2.5 py-1 text-[10px] font-semibold text-primary-700"
+                            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-violet-100 bg-violet-50/70 px-3 text-xs font-semibold text-primary-700"
                           >
                             <Brain className="h-3 w-3" />
                             记住这条
@@ -529,8 +531,8 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                         message.agentTrace?.length ||
                         message.sources?.length ||
                         message.provider) ? (
-                        <details className="group mt-3 border-t border-violet-100 pt-2">
-                          <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] text-[var(--em-muted-ink)]">
+                        <details className="group mt-4 border-t border-violet-100 pt-3">
+                          <summary className="flex cursor-pointer list-none items-center justify-between py-1 text-sm text-[var(--em-muted-ink)]">
                             <span>回答依据与下一步</span>
                             <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
                           </summary>
@@ -538,13 +540,13 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                             {message.contextUsed &&
                               message.contextUsed.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
-                                  <span className="text-[11px] text-[var(--em-muted-ink)]">
+                                  <span className="text-xs text-[var(--em-muted-ink)]">
                                     已参考：
                                   </span>
                                   {message.contextUsed.map((key) => (
                                     <span
                                       key={key}
-                                      className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] text-primary-700"
+                                      className="rounded-full bg-violet-50 px-2.5 py-1 text-xs text-primary-700"
                                     >
                                       {CONTEXT_LABELS[key] ?? key}
                                     </span>
@@ -553,13 +555,13 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                               )}
                             {message.suggestedActions?.length ? (
                               <div>
-                                <p className="text-[11px] font-semibold text-[var(--em-muted-ink)]">
+                                <p className="text-xs font-semibold text-[var(--em-muted-ink)]">
                                   下一步建议
                                 </p>
                                 {message.suggestedActions.map((action) => (
                                   <p
                                     key={action}
-                                    className="mt-1 text-xs text-[var(--em-muted-ink)]"
+                                    className="mt-1.5 text-sm leading-6 text-[var(--em-muted-ink)]"
                                   >
                                     · {action}
                                   </p>
@@ -574,7 +576,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                               />
                             )}
                             {message.provider && (
-                              <p className="text-[10px] text-[var(--em-muted-ink)]">
+                              <p className="text-xs text-[var(--em-muted-ink)]">
                                 对话服务：{message.provider}
                                 {message.model
                                   ? ` · ${message.model}`

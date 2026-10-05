@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('react-router-dom', () => ({
-  Link: ({ to, children }: { to: string; children: ReactNode }) => <a href={to}>{children}</a>,
+  Link: ({ to, children, className }: { to: string; children: ReactNode; className?: string }) => <a href={to} className={className}>{children}</a>,
 }));
 
 import { NextStepGuidance } from './NextStepGuidance';
@@ -22,6 +22,9 @@ describe('NextStepGuidance', () => {
     expect(html).toContain('data-next-step-guidance');
     expect(html).toContain('下一步 · 学习闭环');
     expect(html).toContain('href="/my-learning"');
+    expect(html).toContain('text-sm');
+    expect(html).toContain('text-[13px]');
+    expect(html).toContain('px-4 py-3');
     expect(html).toContain('去继续');
     expect(html).toContain('去做自测');
   });

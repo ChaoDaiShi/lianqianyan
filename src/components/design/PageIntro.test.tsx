@@ -21,6 +21,7 @@ describe('PageIntro', () => {
     expect(html).toContain('text-[15px]');
     expect(html).toContain('sm:text-base');
     expect(html).toContain('leading-[1.65]');
+    expect(html).toContain('sm:leading-[1.65]');
     expect(html).toContain('<h1');
     expect(html).toContain('创作工作台');
     expect(html).toContain('小涟');

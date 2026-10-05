@@ -81,7 +81,7 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
       blocks.push(
         <pre
           key={`code-${index}`}
-          className="overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100"
+          className="overflow-x-auto rounded-2xl bg-slate-950 p-4 text-[13px] leading-6 text-slate-100 sm:text-sm"
           data-code-language={language || undefined}
         >
           <code>{code.join('\n')}</code>
@@ -96,15 +96,15 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
       const text = inline(heading[2]);
       blocks.push(
         level === 1 ? (
-          <h1 key={`heading-${index}`} className="text-xl font-bold tracking-[-0.02em]">
+          <h1 key={`heading-${index}`} className="text-2xl font-bold tracking-[-0.025em]">
             {text}
           </h1>
         ) : level === 2 ? (
-          <h2 key={`heading-${index}`} className="text-lg font-bold tracking-[-0.015em]">
+          <h2 key={`heading-${index}`} className="text-xl font-bold tracking-[-0.02em]">
             {text}
           </h2>
         ) : (
-          <h3 key={`heading-${index}`} className="font-bold text-primary-800">
+          <h3 key={`heading-${index}`} className="text-[17px] font-bold text-primary-800">
             {text}
           </h3>
         ),
@@ -120,7 +120,7 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
         index += 1;
       }
       blocks.push(
-        <ul key={`unordered-${index}`} className="list-disc space-y-1.5 pl-5 marker:text-primary-500">
+        <ul key={`unordered-${index}`} className="list-disc space-y-2 pl-5 marker:text-primary-500">
           {items.map((item, itemIndex) => (
             <li key={itemIndex}>{inline(item)}</li>
           ))}
@@ -136,7 +136,7 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
         index += 1;
       }
       blocks.push(
-        <ol key={`ordered-${index}`} className="list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-primary-600">
+        <ol key={`ordered-${index}`} className="list-decimal space-y-2 pl-5 marker:font-semibold marker:text-primary-600">
           {items.map((item, itemIndex) => (
             <li key={itemIndex}>{inline(item)}</li>
           ))}
@@ -154,7 +154,7 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
       blocks.push(
         <blockquote
           key={`quote-${index}`}
-          className="rounded-r-2xl border-l-2 border-primary-300 bg-violet-50/65 px-4 py-2 text-[var(--em-muted-ink)]"
+          className="rounded-r-2xl border-l-2 border-primary-300 bg-violet-50/65 px-4 py-3 text-[var(--em-muted-ink)]"
         >
           {inline(quoted.join(' '))}
         </blockquote>,
@@ -175,5 +175,5 @@ export function MarkdownText({ content, className }: MarkdownTextProps) {
     );
   }
 
-  return <div className={cn('space-y-3 break-words', className)}>{blocks}</div>;
+  return <div className={cn('space-y-4 break-words text-[15px] leading-7 sm:text-base sm:leading-7', className)}>{blocks}</div>;
 }

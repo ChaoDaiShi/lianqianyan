@@ -33,5 +33,8 @@ describe('ConversationRail', () => {
     expect(html).toContain('<details');
     expect(html).toContain('对话与记忆上下文');
     expect(html).toContain('死锁复习');
+    expect(html).toContain('text-sm');
+    expect(html).toContain('text-xs');
+    expect(html).toContain('h-10 w-10');
   });
 });

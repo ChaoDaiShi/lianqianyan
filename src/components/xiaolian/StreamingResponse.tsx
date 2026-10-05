@@ -50,7 +50,7 @@ export function StreamingResponse({
       aria-live="polite"
       aria-busy={state.status === 'streaming'}
       className={cn(
-        'relative overflow-hidden rounded-[24px] border px-4 py-4 shadow-[0_14px_36px_rgba(76,62,132,0.08)]',
+        'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_14px_36px_rgba(76,62,132,0.08)] sm:p-6',
         state.status === 'error'
           ? 'border-rose-200 bg-rose-50/55'
           : state.status === 'cancelled'
@@ -64,16 +64,16 @@ export function StreamingResponse({
           className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary-400 to-transparent"
         />
       )}
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-violet-100 to-sky-100 text-primary-700">
-            <Sparkles className="h-4 w-4" />
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-gradient-to-br from-violet-100 to-sky-100 text-primary-700">
+            <Sparkles className="h-5 w-5" />
           </span>
           <div>
             <p className="text-[10px] font-bold tracking-[0.14em] text-primary-600">
               XIAOLIAN COLLABORATION
             </p>
-            <p className="text-xs font-semibold text-[var(--em-ink)]">
+            <p className="text-sm font-semibold text-[var(--em-ink)]">
               {state.activeLabel ?? STATUS_LABEL[state.status]}
             </p>
           </div>
@@ -84,7 +84,7 @@ export function StreamingResponse({
             variant="ghost"
             size="sm"
             onClick={onStop}
-            className="h-8 gap-1.5 rounded-full px-3 text-[11px]"
+            className="h-10 rounded-full px-4 text-sm"
           >
             <Square className="h-3 w-3 fill-current" />
             停止生成
@@ -96,7 +96,7 @@ export function StreamingResponse({
             variant="outline"
             size="sm"
             onClick={onRetry}
-            className="h-8 gap-1.5 rounded-full px-3 text-[11px]"
+            className="h-10 rounded-full px-4 text-sm"
           >
             <RotateCcw className="h-3 w-3" />
             重新生成
@@ -105,14 +105,14 @@ export function StreamingResponse({
       </header>
 
       {state.stages.length > 0 && (
-        <ol className="mt-4 flex max-w-full gap-2 overflow-x-auto pb-1" aria-label="回答生成阶段">
+        <ol className="mt-5 flex max-w-full gap-2.5 overflow-x-auto pb-1" aria-label="回答生成阶段">
           {state.stages.map((stage) => (
             <li
               key={stage.stage}
               data-stream-stage={stage.stage}
               data-stream-stage-state={stage.state}
               className={cn(
-                'flex min-w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium',
+                'flex min-w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium sm:text-xs',
                 stage.state === 'completed' &&
                   'border-emerald-100 bg-emerald-50/70 text-emerald-700',
                 stage.state === 'active' &&
@@ -129,11 +129,11 @@ export function StreamingResponse({
       )}
 
       {state.trace.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5" aria-label="已完成的协作步骤">
+        <div className="mt-4 flex flex-wrap gap-2" aria-label="已完成的协作步骤">
           {state.trace.map((item, index) => (
             <span
               key={`${item.type}-${item.name ?? item.agent}-${index}`}
-              className="inline-flex items-center gap-1 rounded-lg border border-violet-100 bg-white/72 px-2 py-1 text-[9px] font-medium text-[var(--em-muted-ink)]"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-violet-100 bg-white/72 px-2.5 py-1.5 text-[10px] font-medium text-[var(--em-muted-ink)] sm:text-[11px]"
             >
               {item.type === 'tool' ? (
                 <Wrench className="h-2.5 w-2.5 text-primary-600" />
@@ -146,7 +146,7 @@ export function StreamingResponse({
         </div>
       )}
 
-      <div className="mt-4 text-sm leading-7 text-[var(--em-ink)]">
+      <div className="mt-5 text-[15px] leading-7 text-[var(--em-ink)] sm:text-base sm:leading-7">
         {state.text ? (
           <div className="relative">
             <MarkdownText content={state.text} />
@@ -166,12 +166,12 @@ export function StreamingResponse({
       </div>
 
       {state.error && (
-        <p role="alert" className="mt-3 text-xs leading-5 text-rose-700">
+        <p role="alert" className="mt-4 text-sm leading-6 text-rose-700">
           {state.error}
         </p>
       )}
       {state.status === 'cancelled' && (
-        <p className="mt-3 text-xs leading-5 text-amber-700">
+        <p className="mt-4 text-sm leading-6 text-amber-700">
           已停止生成；已收到的内容会保留，但不会保存为完整回答。
         </p>
       )}

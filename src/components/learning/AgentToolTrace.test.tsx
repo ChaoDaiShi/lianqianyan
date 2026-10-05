@@ -26,6 +26,9 @@ describe('AgentToolTrace', () => {
     );
 
     expect(html).toContain('data-agent-trace="timeline"');
+    expect(html).toContain('h-6 w-6');
+    expect(html).toContain('text-[13px]');
+    expect(html).toContain('text-[10px]');
     expect(html).toContain('<ol');
     expect(html).toContain('课程知识检索');
     expect(html).toContain('小涟辅导');

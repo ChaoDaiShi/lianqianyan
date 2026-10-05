@@ -29,12 +29,12 @@ function Timeline({ items }: { items: AgentTraceItem[] }) {
             {index < items.length - 1 && (
               <span
                 aria-hidden="true"
-                className="absolute left-[0.68rem] top-5 h-[calc(100%+0.2rem)] w-px bg-violet-100"
+                className="absolute left-[0.78rem] top-6 h-[calc(100%+0.25rem)] w-px bg-violet-100"
               />
             )}
             <span
               className={cn(
-                'relative z-10 grid h-5 w-5 shrink-0 place-items-center rounded-full border bg-white',
+                'relative z-10 grid h-6 w-6 shrink-0 place-items-center rounded-full border bg-white',
                 failed
                   ? 'border-rose-200 text-rose-600'
                   : item.type === 'tool'
@@ -42,20 +42,20 @@ function Timeline({ items }: { items: AgentTraceItem[] }) {
                     : 'border-sky-200 text-sky-700',
               )}
             >
-              <Icon className="h-2.5 w-2.5" />
+              <Icon className="h-3 w-3" />
             </span>
             <div className="min-w-0 flex-1 pb-1">
               <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-[11px] font-semibold text-[var(--em-ink)]">
+                <span className="truncate text-[13px] font-semibold text-[var(--em-ink)]">
                   {item.label}
                 </span>
                 {failed ? (
-                  <XCircle className="h-3 w-3 shrink-0 text-rose-500" />
+                  <XCircle className="h-3.5 w-3.5 shrink-0 text-rose-500" />
                 ) : (
-                  <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                 )}
               </div>
-              <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-[var(--em-muted-ink)]">
+              <p className="mt-0.5 text-[10px] uppercase tracking-[0.11em] text-[var(--em-muted-ink)]">
                 {item.type === 'tool' ? item.name ?? item.agent : 'Agent'}
               </p>
             </div>
@@ -92,9 +92,9 @@ export function AgentToolTrace({
     return (
       <section
         data-agent-trace="timeline"
-        className="rounded-2xl border border-violet-100 bg-violet-50/38 p-3"
+        className="rounded-2xl border border-violet-100 bg-violet-50/38 p-4"
       >
-        <p className="text-[10px] font-bold tracking-[0.14em] text-primary-700">
+        <p className="text-xs font-bold tracking-[0.13em] text-primary-700">
           协作与来源
         </p>
         <TraceContent items={items} sources={sources} />

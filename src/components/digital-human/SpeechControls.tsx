@@ -40,14 +40,14 @@ export function SpeechControls({
       title={speaking ? stopLabel : actionLabel}
       onClick={() => (speaking ? onStop() : onSpeak(text))}
       className={cn(
-        'h-8 w-8 gap-0 rounded-xl border-violet-200 bg-white/70 p-0 text-primary-700',
+        'h-10 w-10 gap-0 rounded-xl border-violet-200 bg-white/70 p-0 text-primary-700',
         className,
       )}
     >
       {speaking ? (
-        <Square className="h-3 w-3 fill-current" />
+        <Square className="h-3.5 w-3.5 fill-current" />
       ) : (
-        <Volume2 className="h-3.5 w-3.5" />
+        <Volume2 className="h-4 w-4" />
       )}
       <span className="sr-only">{visibleLabel}</span>
     </Button>
