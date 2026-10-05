@@ -29,7 +29,7 @@
 pnpm test -- --run
 ```
 
-结果：`90 passed` 测试文件，`291 passed` 测试项，退出码 0。测试输出保留既有 `CaptchaPanel` mock ref 警告，没有测试失败。
+结果：`90 passed` 测试文件，`293 passed` 测试项，退出码 0。测试输出保留既有 `CaptchaPanel` mock ref 警告，没有测试失败。
 
 ### 项目门禁
 
