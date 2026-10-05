@@ -75,7 +75,15 @@ describe('LearningRail assessment and workshop entries', () => {
 
     expect(html).toContain('data-learning-rail="primary"');
     expect(html).toContain('data-learning-rail="desktop"');
+    expect(html).toContain('data-learning-rail-mode="compact"');
+    expect(html).toContain('data-learning-rail-mode="expanded"');
+    expect(html).toContain('xl:w-[248px]');
     expect(html).toContain('学习星轨');
+    expect(html).toContain('开始学习');
+    expect(html).toContain('探索与训练');
+    expect(html).toContain('记录与设置');
+    expect(html).toContain('今日指挥台');
+    expect(html).toContain('流式陪伴');
     expect(html).toContain('首页');
     expect(html).toContain('小涟');
     expect(html).toContain('设置');

@@ -20,20 +20,28 @@ import { cn } from '@/lib/utils';
 interface RailItem {
   label: string;
   shortLabel?: string;
+  description: string;
+  group: 'start' | 'explore' | 'record';
   to: string;
   icon: LucideIcon;
 }
 
 export const learningRailItems: RailItem[] = [
-  { label: '首页', to: '/', icon: Home },
-  { label: '小涟', shortLabel: '小涟', to: '/xiaolian', icon: MessageCircleHeart },
-  { label: '我的学习', to: '/my-learning', icon: GraduationCap },
-  { label: '学习诊断', to: '/diagnosis', icon: Stethoscope },
-  { label: '知识空间', to: '/knowledge', icon: BookOpen },
-  { label: '考试中心', to: '/exams', icon: ClipboardCheck },
-  { label: '学习工坊', to: '/resources', icon: WandSparkles },
-  { label: '学习档案', to: '/archive', icon: FolderOpen },
-  { label: '设置', to: '/settings', icon: Settings },
+  { label: '首页', description: '今日指挥台', group: 'start', to: '/', icon: Home },
+  { label: '小涟', shortLabel: '小涟', description: '流式陪伴', group: 'start', to: '/xiaolian', icon: MessageCircleHeart },
+  { label: '我的学习', description: '计划与任务', group: 'start', to: '/my-learning', icon: GraduationCap },
+  { label: '学习诊断', description: '看见真实起点', group: 'explore', to: '/diagnosis', icon: Stethoscope },
+  { label: '知识空间', description: 'GraphRAG 关系', group: 'explore', to: '/knowledge', icon: BookOpen },
+  { label: '考试中心', description: '测评与复盘', group: 'explore', to: '/exams', icon: ClipboardCheck },
+  { label: '学习工坊', description: '检索与创作', group: 'explore', to: '/resources', icon: WandSparkles },
+  { label: '学习档案', description: '证据与成长', group: 'record', to: '/archive', icon: FolderOpen },
+  { label: '设置', description: '偏好与连接', group: 'record', to: '/settings', icon: Settings },
+];
+
+const RAIL_GROUPS = [
+  { id: 'start' as const, label: '开始学习' },
+  { id: 'explore' as const, label: '探索与训练' },
+  { id: 'record' as const, label: '记录与设置' },
 ];
 
 const MOBILE_PRIMARY_PATHS = ['/', '/my-learning', '/xiaolian', '/knowledge'];
@@ -42,7 +50,7 @@ function isCurrent(item: RailItem, currentPath?: string) {
   return currentPath === item.to;
 }
 
-function DesktopRailLink({
+function CompactRailLink({
   item,
   currentPath,
 }: {
@@ -57,7 +65,7 @@ function DesktopRailLink({
       aria-label={item.label}
       className={({ isActive }) =>
         cn(
-          'group relative flex w-full flex-col items-center gap-1 rounded-[18px] px-1 py-2 text-[10px] font-semibold transition duration-200',
+          'group relative flex w-full flex-col items-center gap-1.5 rounded-[18px] px-1 py-2.5 text-[11px] font-semibold transition duration-200',
           isActive || isCurrent(item, currentPath)
             ? 'bg-primary-500/10 text-primary-700 ring-1 ring-primary-300/50'
             : 'text-[var(--em-muted-ink)] hover:bg-white/60 hover:text-primary-700',
@@ -76,12 +84,67 @@ function DesktopRailLink({
           )}
           <Icon
             className={cn(
-              'h-5 w-5',
+              'h-[22px] w-[22px]',
               (isActive || isCurrent(item, currentPath)) &&
                 'text-primary-500',
             )}
           />
           <span className="whitespace-nowrap">{item.shortLabel ?? item.label}</span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+function ExpandedRailLink({
+  item,
+  currentPath,
+}: {
+  item: RailItem;
+  currentPath?: string;
+}) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      aria-label={item.label}
+      className={({ isActive }) =>
+        cn(
+          'group relative flex min-h-14 w-full items-center gap-3 rounded-[20px] border px-3 py-2.5 transition duration-200',
+          isActive || isCurrent(item, currentPath)
+            ? 'border-primary-200/80 bg-primary-500/10 text-primary-800 shadow-[0_8px_22px_rgba(111,95,224,0.08)]'
+            : 'border-transparent text-[var(--em-muted-ink)] hover:border-violet-100 hover:bg-white/60 hover:text-primary-700',
+          item.to === '/xiaolian' &&
+            'bg-gradient-to-r from-violet-100/75 to-pink-50/70',
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          {(isActive || isCurrent(item, currentPath)) && (
+            <span
+              aria-hidden="true"
+              className="absolute -left-px top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-gradient-to-b from-primary-400 to-star"
+            />
+          )}
+          <span
+            className={cn(
+              'grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-white/70 text-[var(--em-muted-ink)] ring-1 ring-violet-100 transition',
+              (isActive || isCurrent(item, currentPath)) &&
+                'bg-white text-primary-600 ring-primary-200',
+            )}
+          >
+            <Icon className="h-[21px] w-[21px]" />
+          </span>
+          <span className="min-w-0 text-left">
+            <strong className="block truncate text-sm font-semibold leading-5 text-[var(--em-ink)]">
+              {item.label}
+            </strong>
+            <span className="mt-0.5 block truncate text-[11px] leading-4 text-[var(--em-muted-ink)]">
+              {item.description}
+            </span>
+          </span>
         </>
       )}
     </NavLink>
@@ -149,16 +212,54 @@ export function LearningRail({ currentPath }: { currentPath?: string }) {
       <div data-learning-rail="desktop" className="hidden md:block">
         <nav
           data-learning-rail="primary"
+          data-learning-rail-mode="compact"
           aria-label="学习星轨"
-          className="em-glass fixed left-4 top-1/2 z-40 flex w-[72px] -translate-y-1/2 flex-col rounded-[26px] px-1.5 py-2.5"
+          className="em-glass fixed left-4 top-1/2 z-40 hidden w-[84px] -translate-y-1/2 flex-col rounded-[28px] px-2 py-3 md:flex xl:hidden"
         >
           {learningRailItems.map((item) => (
-            <DesktopRailLink
+            <CompactRailLink
               key={item.to}
               item={item}
               currentPath={currentPath}
             />
           ))}
+        </nav>
+
+        <nav
+          data-learning-rail="primary"
+          data-learning-rail-mode="expanded"
+          aria-label="学习星轨"
+          className="em-glass fixed bottom-5 left-4 top-[4.75rem] z-40 hidden w-0 flex-col overflow-y-auto rounded-[30px] p-3 xl:flex xl:w-[248px]"
+        >
+          <div className="px-2 pb-3 pt-1">
+            <p className="text-sm font-bold text-[var(--em-ink)]">学习工作区</p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--em-muted-ink)]">
+              沿真实证据完成今天的学习闭环
+            </p>
+          </div>
+          <div className="space-y-3">
+            {RAIL_GROUPS.map((group) => (
+              <section key={group.id} aria-labelledby={`rail-group-${group.id}`}>
+                <p
+                  id={`rail-group-${group.id}`}
+                  className="mb-1.5 px-2 text-[10px] font-bold tracking-[0.16em] text-primary-600/80"
+                >
+                  {group.label}
+                </p>
+                <div className="space-y-1">
+                  {learningRailItems
+                    .filter((item) => item.group === group.id)
+                    .map((item) => (
+                      <ExpandedRailLink
+                        key={item.to}
+                        item={item}
+                        currentPath={currentPath}
+                      />
+                    ))}
+                </div>
+              </section>
+            ))}
+          </div>
         </nav>
       </div>
 
