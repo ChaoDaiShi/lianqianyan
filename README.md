@@ -29,6 +29,14 @@ localStorage 只缓存非敏感的账号 ID 与已选课程，用于让现有学
 
 `/demo` 和 `/showcase` 已撤除，不再注册路由。
 
+## 证据星河与小涟协作流
+
+首页以“诊断 → 计划 → 学习 → 验证”四节点证据轨道呈现当前学习闭环。节点状态只由当前账号的真实诊断、ACTIVE 计划、学习任务和持久化学习证据推导；没有数据的节点保持等待，不用预置进度补齐。
+
+小涟对话使用 `POST /api/agents/chat/stream` 返回 SSE。浏览器会依次收到公开的业务阶段、实际执行的 Agent/Tool Trace、答案文本增量、完整结果和结束事件；这里展示的是可审计执行过程，不展示或伪造模型隐含推理。最终回答继续标记真实 Provider、模型、课程来源、上下文和建议动作。旧的 `POST /api/agents/chat` 保留兼容。
+
+用户可以在生成期间停止回答。停止后保留已经收到的正文，但不会把它保存成完整助手消息；重新生成复用原问题，不重复写入用户消息。只有收到完整 `result` 后，助手回答才会进入账号对话历史。
+
 ## 本地运行
 
 ### 前端
@@ -60,6 +68,15 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
 API 文档：`http://localhost:8000/docs`。
 
 后端配置在进程启动时读取并缓存；修改 `apps/api/.env` 后必须停止并重新启动 Uvicorn。
+
+本机受信调试如果需要临时关闭验证码，可以只对当前后端进程设置：
+
+```powershell
+$env:EDUCATION_CAPTCHA_MODE = 'off'
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+```
+
+该变量不会绕过账号密码、会话、学习者或课程范围校验。不要把 `off` 写入生产部署配置；不带该进程变量重新启动后，会恢复 `.env` 中的验证码模式。
 
 默认数据库固定解析到 `apps/api/education.db`，不再随启动 API 的工作目录变化；`.env` 中的相对 SQLite URL 也会按该目录解析。部署时应使用绝对数据库 URL：
 
