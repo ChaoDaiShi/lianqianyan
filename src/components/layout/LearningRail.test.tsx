@@ -78,6 +78,8 @@ describe('LearningRail assessment and workshop entries', () => {
     expect(html).toContain('data-learning-rail-mode="compact"');
     expect(html).toContain('data-learning-rail-mode="expanded"');
     expect(html).toContain('xl:w-[248px]');
+    expect(html).toContain('min-h-[52px]');
+    expect(html).toContain('h-9 w-9');
     expect(html).toContain('学习星轨');
     expect(html).toContain('开始学习');
     expect(html).toContain('探索与训练');

@@ -111,7 +111,7 @@ function ExpandedRailLink({
       aria-label={item.label}
       className={({ isActive }) =>
         cn(
-          'group relative flex min-h-14 w-full items-center gap-3 rounded-[20px] border px-3 py-2.5 transition duration-200',
+          'group relative flex min-h-[52px] w-full items-center gap-3 rounded-[20px] border px-3 py-1.5 transition duration-200',
           isActive || isCurrent(item, currentPath)
             ? 'border-primary-200/80 bg-primary-500/10 text-primary-800 shadow-[0_8px_22px_rgba(111,95,224,0.08)]'
             : 'border-transparent text-[var(--em-muted-ink)] hover:border-violet-100 hover:bg-white/60 hover:text-primary-700',
@@ -130,7 +130,7 @@ function ExpandedRailLink({
           )}
           <span
             className={cn(
-              'grid h-10 w-10 shrink-0 place-items-center rounded-[15px] bg-white/70 text-[var(--em-muted-ink)] ring-1 ring-violet-100 transition',
+              'grid h-9 w-9 shrink-0 place-items-center rounded-[14px] bg-white/70 text-[var(--em-muted-ink)] ring-1 ring-violet-100 transition',
               (isActive || isCurrent(item, currentPath)) &&
                 'bg-white text-primary-600 ring-primary-200',
             )}
@@ -231,18 +231,18 @@ export function LearningRail({ currentPath }: { currentPath?: string }) {
           aria-label="学习星轨"
           className="em-glass fixed bottom-5 left-4 top-[4.75rem] z-40 hidden w-0 flex-col overflow-y-auto rounded-[30px] p-3 xl:flex xl:w-[248px]"
         >
-          <div className="px-2 pb-3 pt-1">
+          <div className="px-2 pb-2 pt-1">
             <p className="text-sm font-bold text-[var(--em-ink)]">学习工作区</p>
             <p className="mt-1 text-[11px] leading-4 text-[var(--em-muted-ink)]">
               沿真实证据完成今天的学习闭环
             </p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {RAIL_GROUPS.map((group) => (
               <section key={group.id} aria-labelledby={`rail-group-${group.id}`}>
                 <p
                   id={`rail-group-${group.id}`}
-                  className="mb-1.5 px-2 text-[10px] font-bold tracking-[0.16em] text-primary-600/80"
+                  className="mb-1 px-2 text-[10px] font-bold tracking-[0.16em] text-primary-600/80"
                 >
                   {group.label}
                 </p>
