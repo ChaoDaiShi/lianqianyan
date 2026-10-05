@@ -31,20 +31,20 @@ export function PageIntro({
     <header
       data-page-intro='compact'
       className={cn(
-        'flex min-h-[7.5rem] items-center justify-between gap-4 rounded-[2rem] border border-white/75 px-5 py-4 shadow-[0_14px_42px_rgba(87,73,151,.09)] backdrop-blur-xl sm:px-6',
+        'flex min-h-36 items-center justify-between gap-6 rounded-[2rem] border border-white/75 px-5 py-5 shadow-[0_14px_42px_rgba(87,73,151,.09)] backdrop-blur-xl sm:px-7 sm:py-6',
         toneClass[tone],
         className
       )}
     >
       <div className='min-w-0'>
-        <p className='flex items-center gap-2 text-[11px] font-bold tracking-[0.15em] text-primary-700'>
-          <Icon className='h-4 w-4' />
+        <p className='flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-primary-700'>
+          <Icon className='h-[18px] w-[18px]' />
           {eyebrow}
         </p>
-        <h1 className='mt-1.5 text-2xl font-bold tracking-[-0.025em] sm:text-3xl'>
+        <h1 className='mt-2 text-[1.875rem] font-bold leading-tight tracking-[-0.03em] sm:text-4xl'>
           {title}
         </h1>
-        <div className='mt-1.5 max-w-3xl text-sm leading-6 text-[var(--em-muted-ink)]'>
+        <div className='mt-2 max-w-3xl text-[15px] leading-[1.65] text-[var(--em-muted-ink)] sm:text-base'>
           {description}
         </div>
       </div>

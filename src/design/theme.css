@@ -20,6 +20,8 @@
   --em-space-6: 1.5rem;
   --em-space-8: 2rem;
   --em-radius-full: 999px;
+  --em-control-height: 2.75rem;
+  --em-content-gap: 1.5rem;
   --em-panel-radius: 32px;
   --em-surface-radius: 24px;
   --em-control-radius: 18px;
@@ -58,6 +60,8 @@ body {
   background: var(--em-canvas);
   color: var(--em-ink);
   font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
 }
 
 .em-nebula {
