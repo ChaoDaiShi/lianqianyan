@@ -353,6 +353,40 @@ export interface AgentChatResponse {
   agentTrace: AgentTraceItem[];
 }
 
+export function mapAgentChatResponse(
+  raw: Record<string, unknown>,
+): AgentChatResponse {
+  return {
+    answer: raw['answer'] as string,
+    selectedCapability: raw['selected_capability'] as AgentCapability,
+    provider: (raw['provider'] as string) ?? 'none',
+    model: (raw['model'] as string | null) ?? null,
+    responseMode:
+      (raw['response_mode'] as 'provider' | 'fallback') ?? 'provider',
+    sources: mapSources(raw['sources']),
+    contextUsed: (raw['context_used'] as string[]) ?? [],
+    suggestedActions: ((raw['suggested_actions'] as unknown[]) ?? []).map(
+      (item) => {
+        const action = item as Record<string, unknown>;
+        return {
+          type: action['type'] as string,
+          label: action['label'] as string,
+        };
+      },
+    ),
+    agentTrace: ((raw['agent_trace'] as unknown[]) ?? []).map((item) => {
+      const trace = item as Record<string, unknown>;
+      return {
+        agent: trace['agent'] as AgentTraceItem['agent'],
+        name: (trace['name'] as string | null) ?? null,
+        label: trace['label'] as string,
+        status: trace['status'] as string,
+        type: (trace['type'] as 'agent' | 'tool') ?? 'agent',
+      };
+    }),
+  };
+}
+
 export async function fetchHealth(): Promise<HealthResponse> {
   const response = await api.get<HealthResponse>('/api/health');
   return extractApiData<HealthResponse>(response);
@@ -390,29 +424,7 @@ export async function chatWithAgents(
     knowledge_point_id: request.knowledgePointId ?? null,
   });
   const raw = extractApiData(response);
-  return {
-    answer: raw['answer'] as string,
-    selectedCapability: raw['selected_capability'] as AgentCapability,
-    provider: (raw['provider'] as string) ?? 'none',
-    model: (raw['model'] as string | null) ?? null,
-    responseMode: (raw['response_mode'] as 'provider' | 'fallback') ?? 'provider',
-    sources: mapSources(raw['sources']),
-    contextUsed: (raw['context_used'] as string[]) ?? [],
-    suggestedActions: ((raw['suggested_actions'] as unknown[]) ?? []).map((item) => {
-      const action = item as Record<string, unknown>;
-      return { type: action['type'] as string, label: action['label'] as string };
-    }),
-    agentTrace: ((raw['agent_trace'] as unknown[]) ?? []).map((item) => {
-      const trace = item as Record<string, unknown>;
-      return {
-        agent: trace['agent'] as AgentTraceItem['agent'],
-        name: (trace['name'] as string | null) ?? null,
-        label: trace['label'] as string,
-        status: trace['status'] as string,
-        type: (trace['type'] as 'agent' | 'tool') ?? 'agent',
-      };
-    }),
-  };
+  return mapAgentChatResponse(raw);
 }
 
 export async function fetchToolCatalog(): Promise<ToolDefinition[]> {
