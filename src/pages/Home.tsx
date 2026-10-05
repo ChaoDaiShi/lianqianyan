@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { TodaysJourney } from '@/components/home/TodaysJourney';
+import { XiaolianDailyInsight } from '@/components/home/XiaolianDailyInsight';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
@@ -49,6 +50,7 @@ function Home() {
   return <AppShell scene="companion"><div className="space-y-6 lg:space-y-8">
     <HeroBanner profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} currentTask={currentTask} loading={loading} error={error} generating={plan.generating} runtimeState={runtimeState} companionState={companionState} onGeneratePlan={() => void plan.generate()} onPrepareTask={() => setEntryOpen(true)} />
     <TodaysJourney diagnosis={diagnosis.data} plan={plan.plan} currentTask={currentTask} evidence={courseEvidence} loading={loading} error={error} onRetry={() => { void profile.refetch(); void diagnosis.refetch(); void plan.refetch(); void evidence.refetch(); }} />
+    <XiaolianDailyInsight profile={profile.data} diagnosis={diagnosis.data} plan={plan.plan} evidence={courseEvidence} loading={loading} error={error} onPrepareTask={() => setEntryOpen(true)} />
     <LearningEntryDialog open={entryOpen} onOpenChange={setEntryOpen} plan={plan.plan} task={currentTask} diagnosis={diagnosis.data} evidence={courseEvidence} dataLoading={diagnosis.loading || evidence.loading} diagnosisError={diagnosis.error} evidenceError={evidence.error} starting={startingTaskId === currentTask?.id} startError={startError} onConfirm={() => { if (plan.plan && currentTask) void startTask(plan.plan, currentTask); }} />
   </div></AppShell>;
 }
