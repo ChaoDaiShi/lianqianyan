@@ -1,0 +1,35 @@
+FROM python:3.12.12-slim-bookworm@sha256:2986c55feb36e6cae00fa1fefb454283e4b33f35e75ff8bdd123b134130be301
+
+ARG SOURCE_COMMIT=unknown
+ARG UV_VERSION=0.11.32
+
+LABEL org.opencontainers.image.title="lianqianyan-api" \
+      org.opencontainers.image.revision="${SOURCE_COMMIT}"
+
+ENV HOME=/tmp \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+WORKDIR /app
+
+RUN python -m pip install --no-cache-dir "uv==${UV_VERSION}"
+
+COPY apps/api/pyproject.toml apps/api/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY apps/api/app ./app
+RUN uv sync --frozen --no-dev \
+    && install -d -o 10001 -g 10001 -m 0700 /data \
+    && chown -R 10001:10001 /app
+
+USER 10001:10001
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=4 \
+  CMD ["/app/.venv/bin/python", "-c", "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=3))['status']=='ok'"]
+
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]

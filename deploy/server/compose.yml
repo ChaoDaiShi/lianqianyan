@@ -1,0 +1,87 @@
+name: lianqianyan
+
+services:
+  api:
+    image: ${LIANQIANYAN_API_IMAGE:?Set the immutable API image}
+    platform: linux/amd64
+    env_file:
+      - ${LIANQIANYAN_SECRETS_ENV_FILE:?Set the private runtime env file}
+    environment:
+      EDUCATION_DATABASE_URL: sqlite:////data/education.db
+      EDUCATION_AUTH_COOKIE_SECURE: "true"
+    user: "10001:10001"
+    volumes:
+      - data:/data
+    networks: [lianqianyan_internal]
+    read_only: true
+    tmpfs:
+      - /tmp:size=67108864,uid=10001,gid=10001
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    cpus: 0.75
+    mem_limit: 768m
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/app/.venv/bin/python",
+          "-c",
+          "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/health',timeout=3))['status']=='ok'",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
+    logging:
+      driver: local
+      options: { max-size: 10m, max-file: "3" }
+    labels: { service: lianqianyan, role: api }
+
+  web:
+    image: ${LIANQIANYAN_WEB_IMAGE:?Set the immutable Web image}
+    platform: linux/amd64
+    depends_on:
+      api: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:${LIANQIANYAN_WEB_PORT:-18001}:8080"
+    networks: [lianqianyan_internal]
+    user: "101:101"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16777216,uid=101,gid=101
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    cpus: 0.25
+    mem_limit: 128m
+    restart: unless-stopped
+    stop_grace_period: 15s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "/dev/null",
+          "http://127.0.0.1:8080/healthz",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options: { max-size: 10m, max-file: "3" }
+    labels: { service: lianqianyan, role: web }
+
+networks:
+  lianqianyan_internal:
+    driver: bridge
+
+volumes:
+  data:
+    name: lianqianyan_data
