@@ -9,5 +9,6 @@ declare global {
 }
 
 interface ImportMetaEnv {
+  readonly VITE_BASE_PATH?: string;
   readonly VITE_EDUCATION_API_URL?: string;
 }

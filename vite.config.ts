@@ -5,6 +5,7 @@ import path from 'path';
 import appdevDesignMode from '@xagi/vite-plugin-design-mode';
 import { resolveManualChunk } from './src/config/buildChunks';
 import { resolveDevIntegrations } from './src/config/devIntegrations';
+import { resolvePublicBasePath } from './src/config/deployment';
 import { relativeLocalLive2dPath } from './src/config/localLive2d';
 
 export { resolveDevIntegrations } from './src/config/devIntegrations';
@@ -94,6 +95,7 @@ if (devIntegrations.monitorUrl) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: resolvePublicBasePath(process.env.VITE_BASE_PATH),
   plugins,
   resolve: {
     alias: {
