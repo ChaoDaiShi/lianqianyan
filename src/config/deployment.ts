@@ -1,5 +1,17 @@
 const PUBLIC_PATH_SEGMENT = /^[A-Za-z0-9._~-]+$/;
-const UNSAFE_PUBLIC_PATH_CHARACTER = /[?#\\\u0000-\u001f\u007f]/;
+
+function hasUnsafePublicPathCharacter(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    return (
+      character === '?' ||
+      character === '#' ||
+      character === '\\' ||
+      codePoint <= 0x1f ||
+      codePoint === 0x7f
+    );
+  });
+}
 
 /**
  * Normalize a Vite public base while rejecting values that can escape a
@@ -12,7 +24,7 @@ export function resolvePublicBasePath(value: unknown): string {
   if (!trimmed || trimmed === '/') return '/';
   if (
     trimmed.startsWith('//') ||
-    UNSAFE_PUBLIC_PATH_CHARACTER.test(trimmed)
+    hasUnsafePublicPathCharacter(trimmed)
   ) {
     return '/';
   }
