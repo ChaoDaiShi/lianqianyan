@@ -137,6 +137,7 @@ release/
 .claude/
 .opencode/
 .codex/
+.worktrees/
 .tmp/
 .logs/
 yarn.lock
