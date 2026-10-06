@@ -122,6 +122,10 @@ describe('server deployment contract', () => {
     expect(script).toContain('regctl image export');
     expect(script).toContain('python-base-linux-amd64.tar');
     expect(script).toContain('nginx-base-linux-amd64.tar');
+    expect(script).toContain(
+      '[IO.File]::WriteAllText($sumPath, ($sumLines -join "`n") + "`n", $utf8)',
+    );
+    expect(script).not.toContain('[IO.File]::WriteAllLines($sumPath');
     expect(script).not.toMatch(/git\s+(clean|reset\s+--hard)/);
   });
 

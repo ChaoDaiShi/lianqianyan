@@ -127,7 +127,7 @@ $sumLines = Get-ChildItem -LiteralPath $context -Recurse -File | Where-Object {
     $relative = $_.FullName.Substring($context.Length + 1).Replace('\', '/')
     "$((Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant())  $relative"
 }
-[IO.File]::WriteAllLines($sumPath, $sumLines, $utf8)
+[IO.File]::WriteAllText($sumPath, ($sumLines -join "`n") + "`n", $utf8)
 
 $contextArchive = Join-Path $releaseRoot "lianqianyan-context-$releaseId.tar.gz"
 Invoke-Checked -FilePath 'tar.exe' -ArgumentList @('-czf', $contextArchive, '-C', $context, '.')
