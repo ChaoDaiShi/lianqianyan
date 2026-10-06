@@ -1,0 +1,4 @@
+deploy/server/*.sh text eol=lf
+deploy/server/Dockerfile.* text eol=lf
+deploy/server/*.yml text eol=lf
+deploy/server/*.py text eol=lf

@@ -105,4 +105,92 @@ describe('server deployment contract', () => {
       expect(ignore, `missing ${pattern}`).toContain(pattern);
     }
   });
+
+  it('builds a clean prefixed release and exports verified base images', () => {
+    const script = deploymentFile('build-release.ps1');
+
+    expect(script).toContain("VITE_BASE_PATH = '/lianqianyan/'");
+    expect(script).toContain("VITE_EDUCATION_API_URL = '/lianqianyan'");
+    expect(script).toContain('git status --porcelain --untracked-files=no');
+    expect(script).toContain(
+      "Invoke-Checked -FilePath 'pnpm' -ArgumentList @('build')",
+    );
+    expect(script).toContain('regctl-windows-amd64.exe');
+    expect(script).toContain(
+      '3dcf16028cbe95ead5d2706c5a646e5614478e4782b5fdd11e274a0d92973267',
+    );
+    expect(script).toContain('regctl image export');
+    expect(script).toContain('python-base-linux-amd64.tar');
+    expect(script).toContain('nginx-base-linux-amd64.tar');
+    expect(script).not.toMatch(/git\s+(clean|reset\s+--hard)/);
+  });
+
+  it('prepares only the dedicated Rootless release and retains an offline image archive', () => {
+    const script = deploymentFile('prepare-release.sh');
+
+    expect(script).toContain('project=lianqianyan');
+    expect(script).toContain('port=18001');
+    expect(script).toContain('/opt/apps/.framework/appctl.py');
+    expect(script).toContain('docker --context rootless load');
+    expect(script).toContain('docker --context rootless build');
+    expect(script).toContain('docker --context rootless save');
+    expect(script).toContain('python3 "$appctl" init');
+    expect(script).toContain('python3 "$appctl" stage');
+    expect(script).toContain('python3 "$appctl" deploy');
+    expect(script).toContain('lianqianyan_data');
+    expect(script).toContain('"$stage_root/deploy/server/backup.sh"');
+    expect(script).toContain('install -m 0700');
+    expect(script).toContain(
+      'runtime_env="$app_root/shared/secrets/api.env"',
+    );
+    expect(script).toContain('yilian-spatial');
+    expect(script).not.toMatch(/docker(?:\s+--context\s+rootless)?\s+(system\s+)?prune/);
+    expect(script).not.toMatch(/docker(?:\s+--context\s+rootless)?\s+compose\s+down/);
+  });
+
+  it('creates a consistent private SQLite backup', () => {
+    const script = deploymentFile('backup.sh');
+
+    expect(script).toContain('sqlite3.Connection.backup');
+    expect(script).toContain('PRAGMA quick_check');
+    expect(script).toContain('lianqianyan-api-1');
+    expect(script).toContain('/opt/apps/lianqianyan/shared/backups');
+    expect(script).toContain('chmod 0600');
+    expect(script).toContain('sha256sum');
+  });
+
+  it('guards the only root change and preserves the existing root proxy', () => {
+    const script = deploymentFile('install-nginx-route.sh');
+
+    expect(script).toContain('[[ "$(id -u)" == 0 ]]');
+    expect(script).toContain('iZ2vc47kmc8j8wtcbhfhclZ');
+    expect(script).toContain('http://127.0.0.1:18001/healthz');
+    expect(script).toContain('proxy_pass http://127.0.0.1:17800;');
+    expect(script).toContain('location ^~ /lianqianyan/');
+    expect(script).toContain('proxy_pass http://127.0.0.1:18001/;');
+    expect(script).toContain('nginx -t');
+    expect(script).toContain('systemctl reload nginx');
+    expect(script).toContain('cp -a "$backup" "$site"');
+    expect(script).toContain('route_state=$(python3');
+    expect(script).toContain('if [[ "$route_state" == present ]]');
+    expect(script).not.toContain('X-YiLian-Proxy-Token');
+  });
+
+  it('documents deploy, status, backup, rollback, and recovery commands', () => {
+    const readme = deploymentFile('README.md');
+
+    for (const command of [
+      'build-release.ps1',
+      'render_runtime_env.py',
+      'prepare-release.sh',
+      'install-nginx-route.sh',
+      'appctl.py status lianqianyan',
+      'backup.sh',
+      'appctl.py rollback lianqianyan',
+    ]) {
+      expect(readme, `missing ${command}`).toContain(command);
+    }
+    expect(readme).toContain('https://8.156.67.132/lianqianyan/');
+    expect(readme).toContain('不得上传本机 SQLite');
+  });
 });

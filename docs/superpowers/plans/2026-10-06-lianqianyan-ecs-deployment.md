@@ -218,15 +218,15 @@ git commit -m "feat: add guarded ecs release workflow"
 ### Task 5: Local gates and immutable release build
 
 **Files:**
-- Create locally and keep ignored: `.local/ecs-lianqianyan-20261006/**`
-- Modify after verification: `docs/verification/2026-10-06-ecs-deployment.md`
+- Create locally and keep ignored: `.local/ecs-lianqianyan-20261007/**`
+- Modify after verification: `docs/verification/2026-10-07-ecs-deployment.md`
 
 Before the steps, compute and retain the immutable identifiers:
 
 ```powershell
 $sourceCommit = (git rev-parse HEAD).Trim()
 $releaseId = (Get-Date -Format 'yyyyMMdd') + '-' + $sourceCommit.Substring(0, 12)
-$localEvidence = 'F:\比赛\智能体 ican 教育skill\.worktrees\server-deployment\.local\ecs-lianqianyan-20261006'
+$localEvidence = 'F:\比赛\智能体 ican 教育skill\.worktrees\server-deployment\.local\ecs-lianqianyan-20261007'
 $remoteRelease = "/home/aiops/.local/lianqianyan-deploy/$releaseId"
 ```
 
@@ -247,7 +247,7 @@ pnpm check
 
 - [ ] **Step 3: Build the exact prefixed artifact**
 
-Run `deploy/server/build-release.ps1`. Verify `dist/index.html` references `/lianqianyan/assets/`, every referenced asset exists, Live2D files are included only when present and permitted, and the archive contains no `.env`, DB, secret, Git, worktree or user artifact.
+Run `deploy/server/build-release.ps1`. Verify `dist/index.html` references `/lianqianyan/assets/`, every referenced asset exists, Live2D files are included only when present and permitted, and the archive contains no `.env`, DB, secret, Git, worktree or user artifact. The script must verify the pinned `regctl` binary, export the two digest-pinned Linux/amd64 base images without Docker Desktop, and write a SHA-256 beside every archive.
 
 - [ ] **Step 4: Create the production env without exposing values**
 
@@ -291,7 +291,7 @@ Check Web 200, API health 200, protected endpoint 401, login/session/logout, Age
 
 **Files:**
 - Root-reviewed script staged inside the exact release directory computed in Task 6 as `install-nginx-route.sh`.
-- Final evidence: `docs/verification/2026-10-06-ecs-deployment.md`
+- Final evidence: `docs/verification/2026-10-07-ecs-deployment.md`
 
 - [ ] **Step 1: Review and hash the exact root script**
 

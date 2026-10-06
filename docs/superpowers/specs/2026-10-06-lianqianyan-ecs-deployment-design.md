@@ -112,8 +112,8 @@ Compose 项目名固定为 `lianqianyan`，使用独立网络和 `lianqianyan_da
 
 1. 本地在精确提交上执行门禁与带前缀生产构建；
 2. 生成不含密钥和数据库的构建上下文并计算 SHA-256；
-3. 上传到 `/home/aiops/.local/lianqianyan-deploy/<version>/`；
-4. 用 Rootless Docker 顺序构建两个固定标签镜像并核对镜像标签；
+3. 使用官方 `regctl` 固定版本与 SHA-256，在可访问 Docker Hub 的开发机导出两个已按 Linux/amd64 manifest digest 固定的基础镜像；
+4. 上传构建上下文、基础镜像归档和各自 SHA-256 到 `/home/aiops/.local/lianqianyan-deploy/<version>/`，在 ECS 离线载入基础镜像后用 Rootless Docker 顺序构建两个固定标签应用镜像并核对源码标签；
 5. 初始化 `/opt/apps/lianqianyan` 与端口 `18001`，准备命名卷权限和私有环境文件；
 6. 通过 `appctl.py` stage/deploy，只有 Web/API 健康才切换 `current`；
 7. 用服务器回环地址验收后，执行哈希固定的 root Nginx 脚本；
