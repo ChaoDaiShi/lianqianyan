@@ -18,6 +18,19 @@ changed=0
 curl -fsS --max-time 10 http://127.0.0.1:18001/api/health \
   | python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"'
 
+wait_for_public_health() {
+  local attempt response
+  for attempt in $(seq 1 30); do
+    response=$(curl -fsS --connect-timeout 1 --max-time 2 \
+      https://8.156.67.132/lianqianyan/healthz 2>/dev/null || true)
+    if [[ "$response" == ok ]]; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  return 1
+}
+
 route_state=$(python3 - "$site" <<'PY'
 import pathlib
 import sys
@@ -65,9 +78,15 @@ trap rollback_site ERR
 if [[ "$route_state" == present ]]; then
   nginx -t
 else
-  [[ "$route_state" == absent && ! -e "$backup" ]]
+  [[ "$route_state" == absent ]]
   install -d -m 0755 /var/lib/yilian-ops
-  cp -a "$site" "$backup"
+  if [[ -e "$backup" ]]; then
+    [[ -f "$backup" && ! -L "$backup" ]]
+    [[ "$(stat -c %U:%G:%a "$backup")" == root:root:600 ]]
+    cmp -s "$backup" "$site"
+  else
+    cp -a "$site" "$backup"
+  fi
   changed=1
 
   python3 - "$site" <<'PY'
@@ -127,7 +146,7 @@ PY
   nginx -t
   systemctl reload nginx
 fi
-[[ "$(curl -fsS --max-time 15 https://8.156.67.132/lianqianyan/healthz)" == ok ]]
+wait_for_public_health
 curl -fsS --max-time 15 https://8.156.67.132/ >/dev/null
 
 changed=0

@@ -180,6 +180,15 @@ describe('server deployment contract', () => {
     expect(script).not.toContain('X-YiLian-Proxy-Token');
   });
 
+  it('waits for the reloaded public route and safely reuses an identical retry backup', () => {
+    const script = deploymentFile('install-nginx-route.sh');
+
+    expect(script).toContain('wait_for_public_health()');
+    expect(script).toContain('for attempt in $(seq 1 30)');
+    expect(script).toContain('sleep 0.5');
+    expect(script).toContain('cmp -s "$backup" "$site"');
+  });
+
   it('documents deploy, status, backup, rollback, and recovery commands', () => {
     const readme = deploymentFile('README.md');
 

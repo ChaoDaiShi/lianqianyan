@@ -1,7 +1,22 @@
-export const LIVE2D_MODEL_URL =
-  '/local-live2d/Cyrene1002/Cyrene.model3.json';
-export const CUBISM_CORE_URL =
-  '/local-live2d/core/live2dcubismcore.min.js';
+import { resolvePublicBasePath } from '../../config/deployment';
+
+const LIVE2D_MODEL_PATH = 'local-live2d/Cyrene1002/Cyrene.model3.json';
+const CUBISM_CORE_PATH = 'local-live2d/core/live2dcubismcore.min.js';
+
+export function live2dModelUrl(
+  basePath: unknown = import.meta.env.BASE_URL,
+): string {
+  return `${resolvePublicBasePath(basePath)}${LIVE2D_MODEL_PATH}`;
+}
+
+export function cubismCoreUrl(
+  basePath: unknown = import.meta.env.BASE_URL,
+): string {
+  return `${resolvePublicBasePath(basePath)}${CUBISM_CORE_PATH}`;
+}
+
+export const LIVE2D_MODEL_URL = live2dModelUrl();
+export const CUBISM_CORE_URL = cubismCoreUrl();
 
 interface Live2dWindow extends Window {
   Live2DCubismCore?: unknown;
@@ -17,10 +32,6 @@ let corePromise: Promise<void> | null = null;
 let runtimePromise:
   | Promise<typeof import('pixi-live2d-display/cubism4')>
   | null = null;
-
-export function live2dModelUrl(): string {
-  return LIVE2D_MODEL_URL;
-}
 
 export function registerLive2dTicker<TTicker>(
   modelClass: { registerTicker: (tickerClass: TTicker) => void },

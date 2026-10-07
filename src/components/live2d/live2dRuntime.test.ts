@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   CUBISM_CORE_URL,
+  cubismCoreUrl,
   fitLive2dModel,
   live2dModelUrl,
   registerLive2dTicker,
@@ -13,6 +14,15 @@ describe('Live2D runtime geometry and asset contract', () => {
     );
     expect(CUBISM_CORE_URL).toBe(
       '/local-live2d/core/live2dcubismcore.min.js',
+    );
+  });
+
+  it('prefixes model and Core assets for a path-based deployment', () => {
+    expect(live2dModelUrl('/lianqianyan/')).toBe(
+      '/lianqianyan/local-live2d/Cyrene1002/Cyrene.model3.json',
+    );
+    expect(cubismCoreUrl('/lianqianyan/')).toBe(
+      '/lianqianyan/local-live2d/core/live2dcubismcore.min.js',
     );
   });
 
