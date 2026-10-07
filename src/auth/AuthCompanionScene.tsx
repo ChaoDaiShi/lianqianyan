@@ -1,3 +1,10 @@
+import { resolvePublicAssetPath } from '@/config/deployment';
+
+const AUTH_SCENE_BACKGROUND = resolvePublicAssetPath(
+  'brand/learning-space-background.png',
+  import.meta.env.BASE_URL,
+);
+
 export function AuthCompanionScene() {
   return (
     <div
@@ -7,7 +14,7 @@ export function AuthCompanionScene() {
       aria-hidden="true"
     >
       <img
-        src="/brand/learning-space-background.png"
+        src={AUTH_SCENE_BACKGROUND}
         alt=""
         loading="eager"
         decoding="async"

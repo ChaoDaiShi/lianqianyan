@@ -1,3 +1,10 @@
+import { resolvePublicAssetPath } from '@/config/deployment';
+
+const LEARNING_SPACE_BACKGROUND = resolvePublicAssetPath(
+  'brand/learning-space-background.png',
+  import.meta.env.BASE_URL,
+);
+
 const PARTICLES = [
   ['left-[8%] top-[18%]', 'h-2 w-2'],
   ['left-[22%] top-[72%]', 'h-1.5 w-1.5'],
@@ -13,7 +20,7 @@ export function NebulaBackground({ scene = 'default' }: { scene?: NebulaScene })
   return (
     <div className="em-nebula pointer-events-none fixed inset-0 overflow-hidden" data-background="learning-space" data-nebula-scene={scene} aria-hidden="true">
       <img
-        src="/brand/learning-space-background.png"
+        src={LEARNING_SPACE_BACKGROUND}
         alt=""
         className="em-learning-background absolute inset-0 h-full w-full object-cover"
       />

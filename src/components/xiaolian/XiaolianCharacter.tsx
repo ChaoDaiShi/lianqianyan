@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
 import { useLive2dLease } from '@/components/live2d/live2dLease';
+import { resolvePublicAssetPath } from '@/config/deployment';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
 import type {
@@ -14,6 +15,11 @@ const SIZE = {
   lg: 'w-48 sm:w-56',
   hero: 'w-52 sm:w-80 lg:w-[23rem]',
 } as const;
+
+const CYRENE_ICON = resolvePublicAssetPath(
+  'brand/cyrene-icon.jpeg',
+  import.meta.env.BASE_URL,
+);
 
 const STATE_LABEL: Record<XiaolianCharacterState, string> = {
   idle: '小涟正在陪伴你',
@@ -56,7 +62,7 @@ function XiaolianAvatar({
       className="relative h-full w-full overflow-hidden rounded-[38%] border border-white/80 shadow-[0_18px_50px_rgba(119,94,220,0.18)]"
     >
       <img
-        src="/brand/cyrene-icon.jpeg"
+        src={CYRENE_ICON}
         alt=""
         draggable={false}
         className="h-full w-full object-cover"

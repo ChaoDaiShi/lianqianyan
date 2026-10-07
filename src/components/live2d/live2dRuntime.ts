@@ -1,4 +1,4 @@
-import { resolvePublicBasePath } from '../../config/deployment';
+import { resolvePublicAssetPath } from '../../config/deployment';
 
 const LIVE2D_MODEL_PATH = 'local-live2d/Cyrene1002/Cyrene.model3.json';
 const CUBISM_CORE_PATH = 'local-live2d/core/live2dcubismcore.min.js';
@@ -6,13 +6,13 @@ const CUBISM_CORE_PATH = 'local-live2d/core/live2dcubismcore.min.js';
 export function live2dModelUrl(
   basePath: unknown = import.meta.env.BASE_URL,
 ): string {
-  return `${resolvePublicBasePath(basePath)}${LIVE2D_MODEL_PATH}`;
+  return resolvePublicAssetPath(LIVE2D_MODEL_PATH, basePath);
 }
 
 export function cubismCoreUrl(
   basePath: unknown = import.meta.env.BASE_URL,
 ): string {
-  return `${resolvePublicBasePath(basePath)}${CUBISM_CORE_PATH}`;
+  return resolvePublicAssetPath(CUBISM_CORE_PATH, basePath);
 }
 
 export const LIVE2D_MODEL_URL = live2dModelUrl();

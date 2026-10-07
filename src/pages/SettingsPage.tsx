@@ -5,6 +5,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { resolvePublicAssetPath } from '@/config/deployment';
 import {
   createMcpToken,
   createModelProfile,
@@ -29,6 +30,10 @@ function messageFor(error: unknown): string {
 }
 
 const fieldClass = 'h-11 rounded-xl border-violet-200/70 bg-white/75 dark:bg-slate-950/45';
+const SETTINGS_RIPPLE = resolvePublicAssetPath(
+  'brand/cyrene-settings-ripple.png',
+  import.meta.env.BASE_URL,
+);
 type SettingsSection = 'appearance' | 'models' | 'services' | 'mcp' | 'account';
 
 const SETTINGS_SECTIONS = [
@@ -111,7 +116,7 @@ export function SettingsPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl space-y-5">
-        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-violet-100/65 p-5 shadow-[0_18px_55px_rgba(87,73,151,0.13)] sm:p-6"><img src="/brand/cyrene-settings-ripple.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" /><div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/78 to-white/35 dark:from-[#181526]/96 dark:via-[#181526]/80 dark:to-[#181526]/45" /><div className="relative max-w-2xl"><p className="text-[10px] font-bold tracking-[0.18em] text-primary-700">PREFERENCES & SERVICES</p><h1 className="mt-1 text-2xl font-bold">偏好与服务</h1><p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">集中管理主题、对话模型、MiniMax、AnySearch 与安全连接。</p></div></header>
+        <header className="relative overflow-hidden rounded-[32px] border border-white/70 bg-violet-100/65 p-5 shadow-[0_18px_55px_rgba(87,73,151,0.13)] sm:p-6"><img src={SETTINGS_RIPPLE} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" /><div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/78 to-white/35 dark:from-[#181526]/96 dark:via-[#181526]/80 dark:to-[#181526]/45" /><div className="relative max-w-2xl"><p className="text-[10px] font-bold tracking-[0.18em] text-primary-700">PREFERENCES & SERVICES</p><h1 className="mt-1 text-2xl font-bold">偏好与服务</h1><p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">集中管理主题、对话模型、MiniMax、AnySearch 与安全连接。</p></div></header>
 
         {error && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:bg-rose-950/40">{error}</p>}
 

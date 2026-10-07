@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolvePublicBasePath } from './deployment';
+import { resolvePublicAssetPath, resolvePublicBasePath } from './deployment';
 
 describe('resolvePublicBasePath', () => {
   it.each([undefined, null, '', '   ', '/'])(
@@ -30,5 +30,22 @@ describe('resolvePublicBasePath', () => {
     '/lianqianyan\u0000',
   ])('rejects unsafe public base path %j', (value) => {
     expect(resolvePublicBasePath(value)).toBe('/');
+  });
+});
+
+describe('resolvePublicAssetPath', () => {
+  it('keeps assets at the root for a root deployment', () => {
+    expect(resolvePublicAssetPath('brand/cyrene-icon.jpeg', '/')).toBe(
+      '/brand/cyrene-icon.jpeg',
+    );
+  });
+
+  it('prefixes assets for a path-based deployment', () => {
+    expect(
+      resolvePublicAssetPath(
+        'brand/learning-space-background.png',
+        '/lianqianyan/',
+      ),
+    ).toBe('/lianqianyan/brand/learning-space-background.png');
   });
 });

@@ -2,6 +2,12 @@ import { Link } from 'react-router-dom';
 import { LogOut, Menu } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { LianMark } from '@/components/brand/LianMark';
+import { resolvePublicAssetPath } from '@/config/deployment';
+
+const CYRENE_ICON = resolvePublicAssetPath(
+  'brand/cyrene-icon.jpeg',
+  import.meta.env.BASE_URL,
+);
 
 export function TopCompanionBar() {
   const { account, logout, busy } = useAuth();
@@ -15,7 +21,7 @@ export function TopCompanionBar() {
         <div className="flex items-center gap-2 sm:gap-4">
           <span className="hidden min-h-10 items-center rounded-full border border-violet-100/80 bg-white/55 px-4 text-sm font-medium text-[var(--em-muted-ink)] md:inline-flex">{account?.displayName}</span>
           <Link to="/xiaolian" className="hidden min-h-10 items-center gap-2 rounded-full border border-violet-100/80 bg-white/70 py-1 pl-1 pr-4 shadow-sm transition hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-md sm:flex">
-            <img src="/brand/cyrene-icon.jpeg" alt="" className="h-8 w-8 rounded-full border border-white object-cover object-top shadow-sm" />
+            <img src={CYRENE_ICON} alt="" className="h-8 w-8 rounded-full border border-white object-cover object-top shadow-sm" />
             <span className="text-sm font-medium text-[var(--em-muted-ink)]">和小涟聊聊</span>
           </Link>
           <Link to="/about" className="grid h-9 w-9 place-items-center rounded-2xl border border-violet-100 bg-white/70 text-[var(--em-muted-ink)] transition hover:text-primary-600" aria-label="打开更多与关于"><Menu className="h-4 w-4" /></Link>

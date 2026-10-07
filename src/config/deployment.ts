@@ -44,3 +44,25 @@ export function resolvePublicBasePath(value: unknown): string {
 
   return `/${segments.join('/')}/`;
 }
+
+export function resolvePublicAssetPath(
+  assetPath: string,
+  basePath: unknown,
+): string {
+  const relativePath = assetPath.replace(/^\/+/, '');
+  const segments = relativePath.split('/');
+  if (
+    !relativePath ||
+    hasUnsafePublicPathCharacter(relativePath) ||
+    segments.some(
+      (segment) =>
+        segment === '.' ||
+        segment === '..' ||
+        !PUBLIC_PATH_SEGMENT.test(segment),
+    )
+  ) {
+    throw new Error(`Unsafe public asset path: ${assetPath}`);
+  }
+
+  return `${resolvePublicBasePath(basePath)}${relativePath}`;
+}
