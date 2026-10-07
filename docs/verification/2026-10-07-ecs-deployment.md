@@ -16,20 +16,20 @@
 
 | 项目 | 最终值 |
 | --- | --- |
-| 源码提交 | `716e045f4df52a8bf101b1a97166f4099c36b7a9` |
-| release | `20261007-716e045f4df5` |
-| 服务器 release | `/opt/apps/lianqianyan/releases/20261007-716e045f4df5` |
+| 源码提交 | `7129efd87579f31ef2b441ae78020af836a39868` |
+| release | `20261007-7129efd87579` |
+| 服务器 release | `/opt/apps/lianqianyan/releases/20261007-7129efd87579` |
 | current | `/opt/apps/lianqianyan/current`，解析到最终 release |
-| 发布上下文 SHA-256 | `d824232112e7d38fc2af87fc4cddb16a8fcab8628d8b878585b32656f8124fde` |
+| 发布上下文 SHA-256 | `fbddfd222e6d609cb0dddb2598aa7e3a85bb7b694f651ffaebfac2e351c12ac7` |
 | Python 基础镜像归档 SHA-256 | `53f65d3f2c8fd7be6ef473a91517a753b60074f6a9a629c9f403cc8f560ca039` |
 | Nginx 基础镜像归档 SHA-256 | `b073ea45dbb284a9d6dde2cc6d76d6c0c0d45f316cf4ac86f47c387a4e647f50` |
-| 应用离线镜像归档 SHA-256 | `cea1da5b4435c12e7a7d12162a6728edae9beb1a2d8f0fca8c531c39c361b1b5` |
-| API 镜像 ID | `sha256:b20f492512d6619f7338b247ff8b874262c802224ee08fdfecd8388ec0e9dc5c` |
-| Web 镜像 ID | `sha256:0656d8ff07d85ba0768c9e17e722cfbe5c30cd8d4263ad649ade0281b98133d4` |
+| 应用离线镜像归档 SHA-256 | `8c7f03ce562c83f79a2e376237d2417f05f4cf9b038da8e95de15d3fd2d62f31` |
+| API 镜像 ID | `sha256:821a4497ed2ac577189c2d62ccaef4bebd1e0e823eaaca54a489543f3e48ed6b` |
+| Web 镜像 ID | `sha256:ba40812d1d1378bb3490bceea175016d73ba5ab5e6c551515ae435497543e416` |
 
 两个应用镜像的 revision label 均与完整源码提交一致。基础镜像按 Linux/amd64 digest 离线导出并在服务器载入；应用镜像也以离线归档交付，服务器不依赖部署时访问 Docker Hub。
 
-构建时使用 `VITE_BASE_PATH=/lianqianyan/`。最终构建处理 2504 个模块并成功生成产物，只有既有 `vendor-pixi` 超过 500 kB 的体积提醒。发布包中的 9 个 HTML 静态引用全部使用 `/lianqianyan/` 前缀且目标存在，7 个 Live2D 文件齐全。课程模板 `dist/templates/lianqianyan-course-template.pptx` 来自 Git 跟踪文件，源码与产物 SHA-256 均为 `96207b73d9a2a0fa132e9b80fff67dd5b5f5471504fcd054d43cca1a148144a8`。
+构建时使用 `VITE_BASE_PATH=/lianqianyan/`。最终构建处理 2504 个模块并成功生成产物，只有既有 `vendor-pixi` 超过 500 kB 的体积提醒。发布包中的 9 个 HTML 静态引用全部使用 `/lianqianyan/` 前缀且目标存在，9 个 Live2D 文件齐全。课程模板 `dist/templates/lianqianyan-course-template.pptx` 来自 Git 跟踪文件，源码与产物 SHA-256 均为 `96207b73d9a2a0fa132e9b80fff67dd5b5f5471504fcd054d43cca1a148144a8`。
 
 ## 本次修复
 
@@ -37,17 +37,20 @@
 - 修复 Windows 生成的 `SHA256SUMS` 使用 CRLF 导致 Linux 校验把 `\r` 识别为文件名字符的问题；清单现为 LF-only，并有契约测试。
 - 修复宿主 Nginx reload 后旧 worker 短时间仍响应、导致安装脚本误判并自动回滚的问题；改为有界轮询公网健康，并允许安全复用内容完全相同的备份。
 - 修复子路径部署下 Live2D Core、模型、登录背景、品牌图标、顶部伙伴图、设置页图片等运行时资源仍请求根路径的问题；统一通过部署前缀解析器生成 URL。
+- 修复 Live2D 冷启动阶段只有透明画布的问题：加载和异常阶段显示同角色占位图，运行时就绪后无闪烁切换；新增对话页半身构图并统一桌面、平板与手机尺寸。
+- 将两张 4096×4096 Live2D 纹理生成 1024×1024 运行时版本，总体积由 10,270,175 字节降到 800,671 字节，减少约 92.2%；保留原始纹理作为源资产，模型清单只引用优化版本。
 - 前端浏览器验收脚本支持 SPA hash 导航、等待图片完成，并区分预期的匿名 401、无当前学习计划 404 与真正的浏览器故障。
 
-上述三个关键缺陷均先由失败测试复现，再修复到通过：Nginx readiness 契约、Live2D 子路径、公共资源路径解析。
+关键缺陷均先由失败测试复现，再修复到通过：Nginx readiness 契约、Live2D 子路径、公共资源路径解析、加载占位、半身构图与资源预加载契约。
 
 ## 本地门禁
 
 | 验证 | 结果 |
 | --- | --- |
 | `pnpm check` | TypeScript 与 ESLint 通过，退出码 0 |
-| `pnpm test -- --run` | 96 个测试文件、331 个测试全部通过 |
+| `pnpm test -- --run` | 97 个测试文件、334 个测试全部通过 |
 | 部署关键回归 | 4 个测试文件、43 个测试全部通过 |
+| Live2D 聚焦回归 | 5 个测试文件、18 个测试全部通过 |
 | `uv run pytest ../../deploy/server/tests/test_render_runtime_env.py -q` | 9 个测试全部通过 |
 | `git diff --check` | 通过 |
 | 最终生产构建 | 2504 个模块，退出码 0 |
@@ -61,10 +64,10 @@
 | 独立端口 | `yilian-spatial=17800`；`lianqianyan=18001` |
 | API | `lianqianyan-api-1`；healthy；无宿主端口 |
 | Web | `lianqianyan-web-1`；healthy；仅 `127.0.0.1:18001→8080` |
-| API 镜像 | `lianqianyan-api:1.4.0-716e045f4df5` |
-| Web 镜像 | `lianqianyan-web:1.4.0-716e045f4df5` |
+| API 镜像 | `lianqianyan-api:1.4.0-7129efd87579` |
+| Web 镜像 | `lianqianyan-web:1.4.0-7129efd87579` |
 | 原项目 | `yilian-spatial-api` 与 `yilian-spatial-web` 均保持 healthy |
-| 应用部署回执 | `/opt/apps/lianqianyan/logs/deployment-20261007-716e045f4df5.json` |
+| 应用部署回执 | `/opt/apps/lianqianyan/logs/deployment-20261007-7129efd87579.json` |
 | Nginx 安装回执 | `/home/aiops/.local/lianqianyan-deploy/20261007-716e045f4df5/root-nginx-route.done.json` |
 
 只重启涟千言 API/Web 后，两容器重新进入 healthy；保留的正式会话、课程选择、LLM/语音配置与公网入口全部恢复。重启过程中原项目容器未被重启。
@@ -120,6 +123,8 @@ Root 路由脚本 SHA-256 为 `0adbd90caaa20de3081c0fa248cef8a36bfcfc1c098b901c2
 
 小涟页面实际发送一次问题并验证流式响应：接口 200，持续约 3694 ms；响应文本逐步出现，完成后输入框重新可用，最终答案可见。该轮回答说明了进程与线程在资源、调度和切换成本上的区别。
 
+Live2D 修复发布后又执行了独立冷浏览器验收。旧版两张纹理约 10.3 MB，透明画布持续约 35 秒，因此早期验收截图没有人物。新版本直接资源探针约 3 秒进入 `ready`；包含整页加载的最终冷启动验收中，桌面为 11.395 秒、手机为 15.714 秒，加载期间同角色占位图始终可见。桌面模型区域为 112×145，手机为 80×103，均为 `portrait` 半身构图、只有一个 WebGL Canvas；1440×900 和 390×844 的 `clientWidth == scrollWidth`，没有横向溢出。桌面端再次发送真实问题，Agent SSE 返回 200 且最终答案可见。浏览器没有页面异常、请求失败或意外 HTTP 错误；仅记录前端已处理的“当前无学习计划”404 和 Chromium 的 preload 建议。
+
 ## 真实业务能力
 
 | 能力 | 实际结果 |
@@ -161,25 +166,29 @@ Root 路由脚本 SHA-256 为 `0adbd90caaa20de3081c0fa248cef8a36bfcfc1c098b901c2
 
 涟千言使用独立 `lianqianyan_data` 卷，没有上传或覆盖开发机 SQLite。最终验收后生成在线备份：
 
-`/opt/apps/lianqianyan/shared/backups/education-20261007-133134.sqlite3`
+`/opt/apps/lianqianyan/shared/backups/education-20261007-142838.sqlite3`
 
-SHA-256：`c74a4e3a29f1fb3f3ae6a1582649ad4aa2d5f7b7fcec6a86af3d3e083ae57fa4`
+SHA-256：`a060a4cc6533333389e4b2c2c1ce1247f4a7fc8b46be3ce62760114dd48da9f7`
 
 数据库与摘要文件权限均为 0600。在线库和备份的 `quick_check` 均为 `ok`，两者计数一致：1 个账号、8 条会话、3 门课程、15 个知识点。
 
 升级前备份：
 
-`/opt/apps/lianqianyan/shared/backups/education-20261007-130018.sqlite3`
+`/opt/apps/lianqianyan/shared/backups/education-20261007-141230.sqlite3`
 
-SHA-256：`25d474d78b853ec569127bc5e0e97a2867e6008bc41f57e24a90032487f6f891`
+SHA-256：`c74a4e3a29f1fb3f3ae6a1582649ad4aa2d5f7b7fcec6a86af3d3e083ae57fa4`
 
 应用回滚时可将 `current` 原子切回前一 release 并重建涟千言项目；宿主路由回滚使用上文的 root-only Nginx 配置备份。两类回滚均不操作原项目容器、卷或数据库。
 
 ## 本机验收证据
 
-最终证据目录：
+基础部署的完整协议、账号、18 组页面、重启恢复与外部能力证据目录：
 
 `.local/ecs-lianqianyan-20261007/20261007-716e045f4df5`
+
+当前 Live2D 修复发布的不可变工件、备份和聚焦浏览器证据目录：
+
+`.local/ecs-lianqianyan-20261007/20261007-7129efd87579`
 
 其中包含：
 
@@ -187,7 +196,9 @@ SHA-256：`25d474d78b853ec569127bc5e0e97a2867e6008bc41f57e24a90032487f6f891`
 - `browser-login-acceptance.json`：登录、会话、退出和再登录；
 - `browser-acceptance.json`：18 组页面与一次真实 SSE；
 - `post-restart-acceptance.json`：重启后的会话、课程、Provider 和原站状态；
+- `live2d-public-probe.json`：Live2D 公网资源、WebGL 和冷启动状态变化；
+- `live2d-final-acceptance.json`：桌面/手机 Live2D 布局、流式回答和错误边界；
 - `acceptance-account.json`：Git 忽略的验收账号凭据；
-- `browser/*.png`：桌面与移动端登录、首页和小涟结果截图。
+- `browser/*.png`：桌面与移动端登录、首页、小涟结果和 Live2D 截图。
 
 证据文件不会提交到 Git；部署文档只记录非敏感摘要。
