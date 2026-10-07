@@ -28,6 +28,8 @@ export interface Live2dLayout {
   y: number;
 }
 
+export type Live2dFraming = 'full' | 'portrait';
+
 let corePromise: Promise<void> | null = null;
 let runtimePromise:
   | Promise<typeof import('pixi-live2d-display/cubism4')>
@@ -45,6 +47,7 @@ export function fitLive2dModel(
   containerHeight: number,
   modelWidth: number,
   modelHeight: number,
+  framing: Live2dFraming = 'full',
 ): Live2dLayout | null {
   const dimensions = [
     containerWidth,
@@ -56,11 +59,21 @@ export function fitLive2dModel(
     return null;
   }
 
+  const containedScale = Math.min(
+    (containerWidth * 0.92) / modelWidth,
+    (containerHeight * 0.98) / modelHeight,
+  );
+
+  if (framing === 'portrait') {
+    return {
+      scale: containedScale * 1.9,
+      x: containerWidth / 2,
+      y: containerHeight * 1.72,
+    };
+  }
+
   return {
-    scale: Math.min(
-      (containerWidth * 0.92) / modelWidth,
-      (containerHeight * 0.98) / modelHeight,
-    ),
+    scale: containedScale,
     x: containerWidth / 2,
     y: containerHeight,
   };

@@ -440,7 +440,14 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
           <header className="border-b border-violet-100 px-4 py-2.5 sm:px-5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <XiaolianCharacter runtimeState={runtimeState} companionState={companionState} size="sm" speaking={speech.speaking} />
+                <XiaolianCharacter
+                  runtimeState={runtimeState}
+                  companionState={companionState}
+                  size="conversation"
+                  speaking={speech.speaking}
+                  framing="portrait"
+                  priority
+                />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold tracking-[0.16em] text-primary-700">XIAOLIAN CONVERSATION</p>
                   <h1 className="mt-0.5 truncate text-lg font-bold">和小涟一起想明白</h1>

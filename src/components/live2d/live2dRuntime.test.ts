@@ -36,6 +36,13 @@ describe('Live2D runtime geometry and asset contract', () => {
     expect((layout?.scale ?? 0) * 5200).toBeLessThanOrEqual(460 * 0.98);
   });
 
+  it('zooms a portrait stage to keep the face and upper body visible', () => {
+    const layout = fitLive2dModel(100, 200, 1000, 2000, 'portrait');
+
+    expect(layout).toMatchObject({ x: 50, y: 344 });
+    expect(layout?.scale).toBeCloseTo(0.1748);
+  });
+
   it.each([
     [0, 460, 3600, 5200],
     [360, -1, 3600, 5200],

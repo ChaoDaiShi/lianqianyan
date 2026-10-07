@@ -17,4 +17,21 @@ describe('application icon', () => {
     expect(existsSync(asset)).toBe(true);
     expect(statSync(asset).size).toBeGreaterThan(1000);
   });
+
+  it('preloads the Live2D runtime and optimized model payload', () => {
+    const html = readFileSync('index.html', 'utf8');
+
+    expect(html).toContain(
+      'href="%BASE_URL%local-live2d/core/live2dcubismcore.min.js"',
+    );
+    expect(html).toContain(
+      'href="%BASE_URL%local-live2d/Cyrene1002/Cyrene.moc3"',
+    );
+    expect(html).toContain(
+      'href="%BASE_URL%local-live2d/Cyrene1002/Cyrene.1024/texture_00.png"',
+    );
+    expect(html).toContain(
+      'href="%BASE_URL%local-live2d/Cyrene1002/Cyrene.1024/texture_01.png"',
+    );
+  });
 });

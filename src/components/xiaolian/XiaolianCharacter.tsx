@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
 import { useLive2dLease } from '@/components/live2d/live2dLease';
+import type { Live2dFraming } from '@/components/live2d/live2dRuntime';
 import { resolvePublicAssetPath } from '@/config/deployment';
 import { characterMotion, type XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
@@ -11,6 +12,7 @@ import type {
 
 const SIZE = {
   sm: 'w-16',
+  conversation: 'w-20 sm:w-24 lg:w-28',
   md: 'w-28',
   lg: 'w-48 sm:w-56',
   hero: 'w-52 sm:w-80 lg:w-[23rem]',
@@ -41,6 +43,7 @@ export interface XiaolianCharacterProps {
   className?: string;
   priority?: boolean;
   speaking?: boolean;
+  framing?: Live2dFraming;
 }
 
 function XiaolianAvatar({
@@ -102,6 +105,7 @@ export function XiaolianCharacter({
   className,
   priority = false,
   speaking = false,
+  framing = 'full',
 }: XiaolianCharacterProps) {
   const reduceMotion = useReducedMotion();
   const hasLive2dLease = useLive2dLease();
@@ -109,7 +113,10 @@ export function XiaolianCharacter({
     ? resolveXiaolianCharacterState(runtimeState, companionState)
     : state;
   return (
-    <div className={cn('flex flex-col items-center', className)}>
+    <div
+      className={cn('flex flex-col items-center', className)}
+      data-live2d-framing={framing}
+    >
       <motion.div
         className={cn('relative aspect-[24/31] shrink-0', SIZE[size])}
         variants={characterMotion}
@@ -122,6 +129,7 @@ export function XiaolianCharacter({
             characterState={displayState}
             speaking={speaking}
             priority={priority}
+            framing={framing}
             className="relative drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
           />
         ) : (

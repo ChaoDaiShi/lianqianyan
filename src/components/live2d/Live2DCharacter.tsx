@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { resolvePublicAssetPath } from '@/config/deployment';
 import { cn } from '@/lib/utils';
 import {
   fitLive2dModel,
   live2dModelUrl,
   loadLive2dRuntime,
   registerLive2dTicker,
+  type Live2dFraming,
 } from './live2dRuntime';
 
 type PixiApplication = import('pixi.js').Application;
@@ -24,10 +26,16 @@ export interface Live2DCharacterProps {
   characterState: string;
   speaking?: boolean;
   priority?: boolean;
+  framing?: Live2dFraming;
   className?: string;
 }
 
 type Availability = 'loading' | 'ready' | 'unavailable';
+
+const FALLBACK_IMAGE_URL = resolvePublicAssetPath(
+  'brand/cyrene-icon.jpeg',
+  import.meta.env.BASE_URL,
+);
 
 function setMouthOpen(model: LiveModel | null, value: number): void {
   if (!model?.internalModel) return;
@@ -47,6 +55,7 @@ export function Live2DCharacter({
   characterState,
   speaking = false,
   priority = false,
+  framing = 'full',
   className,
 }: Live2DCharacterProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -104,6 +113,7 @@ export function Live2DCharacter({
         height,
         model.internalModel.originalWidth,
         model.internalModel.originalHeight,
+        framing,
       );
       if (!layout) return;
       model.scale.set(layout.scale);
@@ -151,7 +161,7 @@ export function Live2DCharacter({
           resolution: pixelRatio,
         });
         const canvas = application.view as HTMLCanvasElement;
-        canvas.className = 'h-full w-full';
+        canvas.className = 'absolute inset-0 h-full w-full';
         canvas.setAttribute('aria-hidden', 'true');
         container.appendChild(canvas);
 
@@ -174,12 +184,13 @@ export function Live2DCharacter({
         });
         animationFrame = window.requestAnimationFrame(animateMouth);
         setAvailability('ready');
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           destroyResources();
           setAvailability('unavailable');
           console.warn(
             'Live2D model is unavailable; install the licensed assets locally to enable it.',
+            error,
           );
         }
       }
@@ -191,9 +202,7 @@ export function Live2DCharacter({
       cancelled = true;
       destroyResources();
     };
-  }, [priority]);
-
-  if (availability === 'unavailable') return null;
+  }, [framing, priority]);
 
   return (
     <div
@@ -204,12 +213,24 @@ export function Live2DCharacter({
       data-character-state={characterState}
       data-live2d-status={availability}
       data-live2d-speaking={speaking}
+      data-live2d-framing={framing}
       className={cn(
         'relative h-full w-full overflow-hidden',
         availability === 'loading' &&
           'animate-pulse rounded-[42%] bg-gradient-to-b from-violet-100/40 to-sky-100/20',
         className,
       )}
-    />
+    >
+      <img
+        src={FALLBACK_IMAGE_URL}
+        alt=""
+        draggable={false}
+        data-live2d-fallback="true"
+        className={cn(
+          'absolute inset-0 h-full w-full object-cover transition-opacity duration-500',
+          availability === 'ready' ? 'opacity-0' : 'opacity-100',
+        )}
+      />
+    </div>
   );
 }

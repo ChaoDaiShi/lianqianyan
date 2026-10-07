@@ -86,6 +86,8 @@ describe('XiaolianPage digital-human speech', () => {
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
+    expect(html).toContain('data-live2d-framing="portrait"');
+    expect(html).toContain('w-20');
     expect(html).toContain('你好，我是小涟');
     expect(html).toContain('data-chat-message="true"');
     expect(html).toContain('text-[15px]');
