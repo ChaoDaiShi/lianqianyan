@@ -114,10 +114,12 @@ export function ResourceGenerator() {
     setTextCheck(null);
     setStages(STAGE_DEFS.map((def, index) => ({ ...def, status: index === 0 ? 'running' as const : 'pending' as const })));
     const request = { courseId: ACTIVE_COURSE_ID, knowledgePointId };
+    let generatedText = '';
 
     try {
       // 阶段 1 · 文字资源
       const textResult = await generateLearningResource({ ...request, resourceType });
+      generatedText = textResult.content;
       setResource(textResult);
       setStage('text', 'done');
     } catch {
@@ -160,7 +162,7 @@ export function ResourceGenerator() {
     // 阶段 4 · AI 文字质量检查（文字是最重要的资产）
     setStage('check', 'running');
     try {
-      const check = await verifyResourceText(resource?.content ?? '');
+      const check = await verifyResourceText(generatedText);
       setTextCheck(check);
       setStage('check', check.available ? 'done' : 'skipped', check.available ? (check.passed ? '通过' : `发现 ${check.issues.length} 个问题`) : '未启用');
     } catch {
