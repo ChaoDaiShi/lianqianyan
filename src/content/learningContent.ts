@@ -122,3 +122,44 @@ export function resolveQuickQuestions(knowledgePointId: string, knowledgePointNa
     `考一考我对「${topic}」的掌握`,
   ];
 }
+
+/**
+ * 第一轮教学干预策略：只根据已提交的真实练习答案提出候选误解。
+ * 这是可解释的教学内容映射，不是对学生心理状态的确定性诊断。
+ * 掌握度与学习证据仍由后端处理；此函数不得生成或写入评价证据。
+ */
+export interface MisconceptionIntervention {
+  code: string;
+  hypothesis: string;
+  explanation: string;
+  independentCheck: string;
+}
+
+const DEADLOCK_INTERVENTIONS: Record<string, MisconceptionIntervention> = {
+  'question-deadlock-001': {
+    code: 'MC-DEADLOCK-CONDITIONS',
+    hypothesis: '可能混淆了死锁的必要条件与相反的资源分配特性。',
+    explanation: '死锁要求“不可剥夺”，可抢占资源反而能破坏这一条件。请将互斥、请求并保持、不可剥夺、循环等待与各自的反例逐一配对。',
+    independentCheck: '假设系统允许强制收回一个进程持有的资源：它打破的是哪一个死锁必要条件？请先独立解释原因。',
+  },
+  'question-deadlock-002': {
+    code: 'MC-DEADLOCK-PREVENTION',
+    hypothesis: '可能把改善系统性能与改变死锁形成条件混为一谈。',
+    explanation: '提高 CPU 主频或增加内存并不能保证死锁被预防；预防策略针对四个必要条件，确保其中至少一个不成立。',
+    independentCheck: '如果只调整调度速度、但仍满足四个必要条件，能否保证不会死锁？请解释。',
+  },
+  'question-deadlock-003': {
+    code: 'MC-DEADLOCK-AVOIDANCE',
+    hypothesis: '可能混淆了死锁预防、避免、检测与解除的作用时机。',
+    explanation: '银行家算法在实际分配资源前判断分配后系统是否仍处于安全状态，因此属于“死锁避免”；预防是破坏必要条件，检测是在运行中发现死锁。',
+    independentCheck: '某算法不禁止四个必要条件，而是在每次资源分配前检查安全序列。它属于哪类方法？为什么？',
+  },
+};
+
+export function getMisconceptionIntervention(
+  questionId: string,
+  isCorrect: boolean,
+): MisconceptionIntervention | null {
+  if (isCorrect) return null;
+  return DEADLOCK_INTERVENTIONS[questionId] ?? null;
+}
