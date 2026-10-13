@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
@@ -17,11 +18,12 @@ import { MyLearningPage } from './MyLearningPage';
 
 describe('MyLearningPage growth route', () => {
   it('uses a compact truthful invitation when no active plan exists', () => {
-    const html = renderToStaticMarkup(<MyLearningPage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/my-learning"><MyLearningPage /></StaticRouter>);
 
     expect(html).toContain('我的成长路线');
     expect(html).toContain('让小涟帮我建立第一条学习路线');
     expect(html).toContain('xiaolian-guide');
+    expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('小涟还没有为你生成学习计划');
     expect(html).not.toContain('生成学习计划');
   });

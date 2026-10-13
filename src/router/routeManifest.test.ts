@@ -3,6 +3,8 @@ import { lazyRoutes } from './routeManifest';
 
 const EXPECTED_PATHS = [
   '/',
+  '/adaptive',
+  '/outcome-lab',
   '/xiaolian',
   '/my-learning',
   '/space',

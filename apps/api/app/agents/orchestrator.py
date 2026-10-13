@@ -214,6 +214,8 @@ class EducationAgentOrchestrator:
         trace: list[AgentTraceItem],
         event_sink: AgentEventSink | None = None,
     ) -> tuple[dict[str, dict[str, str]], bool]:
+        if request.course_id != "course-ds":
+            return {}, False
         self._emit_status(event_sink, "adaptive", "正在读取现有 LEAP 学习记录")
         result = self._tools.execute(
             "get_adaptive_learning_context",

@@ -44,11 +44,14 @@ async def test_mcp_stdio_initialize_list_and_call_diagnosis(tmp_path: Path) -> N
         "get_recent_learning_evidence",
         "generate_study_plan",
         "replan_study_plan",
+        "get_adaptive_learning_context",
     ]
     diagnosis = next(tool for tool in listed.tools if tool.name == "get_learning_diagnosis")
     generate = next(tool for tool in listed.tools if tool.name == "generate_study_plan")
+    adaptive = next(tool for tool in listed.tools if tool.name == "get_adaptive_learning_context")
     assert diagnosis.annotations is not None and diagnosis.annotations.readOnlyHint is True
     assert generate.annotations is not None and generate.annotations.readOnlyHint is False
+    assert adaptive.annotations is not None and adaptive.annotations.readOnlyHint is True
     assert diagnosis.inputSchema["required"] == ["learner_id", "course_id"]
     assert called.isError is False
     assert called.structuredContent is not None
@@ -80,4 +83,4 @@ async def test_mcp_tool_errors_are_clean_and_server_survives(tmp_path: Path) -> 
     assert "traceback" not in invalid.content[0].text.lower()
     assert missing.isError is True
     assert missing.structuredContent["error"]["code"] == "TOOL_NOT_FOUND"
-    assert len(listed.tools) == 7
+    assert len(listed.tools) == 8

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: ReactNode }) => <main>{children}</main> }));
@@ -12,10 +13,11 @@ import DiagnosisPage from './DiagnosisPage';
 
 describe('DiagnosisPage observation space', () => {
   it('frames diagnosis as evidence observation instead of a medical report', () => {
-    const html = renderToStaticMarkup(<DiagnosisPage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/diagnosis"><DiagnosisPage /></StaticRouter>);
 
     expect(html).toContain('学习观察空间');
     expect(html).toContain('真实学习证据');
+    expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('LEARNING HEALTH REPORT');
     expect(html).not.toContain('健康');
   });

@@ -373,6 +373,65 @@ def test_orchestrator_has_no_agent_loop(testdb: _TestDB) -> None:
     ]
 
 
+def test_data_structure_tutoring_reads_real_adaptive_evidence(testdb: _TestDB) -> None:
+    from app.adaptive.models import AdaptiveKnowledgeState, AdaptiveSessionRecord
+    from app.adaptive.service import AdaptiveLearningService
+    from app.domain import LearningEvidence
+    from app.llm.provider import BaseLLMProvider, LLMMessage, LLMResult
+
+    class RecordingProvider(BaseLLMProvider):
+        name = "recording"
+
+        def __init__(self) -> None:
+            self.messages: list[LLMMessage] = []
+            self.calls = 0
+
+        async def chat(self, messages: list[LLMMessage], **kwargs) -> LLMResult:
+            self.calls += 1
+            self.messages = messages
+            return LLMResult(content="先区分查找前驱与修改指针的成本。")
+
+    with testdb.session() as session:
+        adaptive = AdaptiveLearningService(session)
+        created = adaptive.create_session(
+            learner_id=TEST_LEARNER_ID,
+            course_id="course-ds",
+            topic_id="linked-list",
+            policy="leap",
+            experiment_group="D",
+        )
+        diagnosed = adaptive.diagnose(
+            created["id"], TEST_LEARNER_ID, "插入总是 O(1)", "a", 10,
+        )
+        models = (LearningEvidence, AdaptiveSessionRecord, AdaptiveKnowledgeState)
+        before_chat = [session.query(model).count() for model in models]
+        provider = RecordingProvider()
+
+        response = asyncio.run(
+            EducationAgentOrchestrator(session, llm_provider=provider).handle(
+                AgentRequest(
+                    learner_id=TEST_LEARNER_ID,
+                    course_id="course-ds",
+                    knowledge_point_id="kp-linear-list",
+                    message="解释链表插入的两种成本。",
+                    capability=AgentCapability.TUTORING,
+                )
+            )
+        )
+
+        assert [item.agent for item in response.agent_trace] == [
+            "search_course_knowledge",
+            "get_adaptive_learning_context",
+            AgentCapability.TUTORING,
+        ]
+        assert response.agent_trace[1].status == "completed"
+        assert "adaptive_learning" in response.context_used
+        assert provider.calls == 1
+        assert diagnosed["diagnosis"]["misconceptionCode"] in provider.messages[1].content
+        assert diagnosed["topicName"] in provider.messages[1].content
+        assert [session.query(model).count() for model in models] == before_chat
+
+
 def test_learning_space_context_retrieves_implicit_deadlock_question(testdb: _TestDB) -> None:
     grounded_request = AgentRequest(
         learner_id=TEST_LEARNER_ID,

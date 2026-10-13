@@ -51,7 +51,9 @@ describe('LearningRail assessment and workshop entries', () => {
     expect(
       learningRailItems.filter((item) => item.to === '/xiaolian'),
     ).toHaveLength(1);
-    expect(learningRailItems).toHaveLength(9);
+    expect(learningRailItems.filter(item => item.label === '自适应学习' && item.to === '/adaptive')).toHaveLength(1);
+    expect(learningRailItems.filter(item => item.label === '成效观察' && item.to === '/outcome-lab')).toHaveLength(1);
+    expect(learningRailItems).toHaveLength(11);
   });
 
   it('uses a five-slot mobile command dock without horizontal scrolling', () => {

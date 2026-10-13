@@ -19,6 +19,7 @@ EXPECTED_NAMES = [
     "get_recent_learning_evidence",
     "generate_study_plan",
     "replan_study_plan",
+    "get_adaptive_learning_context",
 ]
 
 

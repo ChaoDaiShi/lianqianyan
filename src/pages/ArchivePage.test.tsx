@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { StaticRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   DiagnosisResult,
@@ -345,7 +346,7 @@ beforeEach(() => {
 
 describe('ArchivePage Xiaolian memory integration', () => {
   it('wires real profile, diagnosis, evidence, reflection, practice, and plan data', () => {
-    const html = renderToStaticMarkup(<ArchivePage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/archive"><ArchivePage /></StaticRouter>);
     const storyProps = fixtures.storyProps;
 
     expect(html).not.toContain('learning-identity-card');
@@ -353,6 +354,7 @@ describe('ArchivePage Xiaolian memory integration', () => {
     expect(html).toContain('learner-portrait-dashboard');
     expect(html).not.toContain('memory-capsule');
     expect(html).toContain('learning-story-timeline');
+    expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('growth-timeline');
     expect(html).toContain('Operating Systems');
     expect(html).not.toContain('当前星轨');
@@ -391,7 +393,7 @@ describe('ArchivePage Xiaolian memory integration', () => {
     fixtures.analytics = null;
     fixtures.analyticsError = true;
 
-    const html = renderToStaticMarkup(<ArchivePage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/archive"><ArchivePage /></StaticRouter>);
 
     expect(html).toContain('learner-portrait-dashboard');
     expect(fixtures.portraitProps?.analytics).toBeNull();
@@ -409,7 +411,7 @@ describe('ArchivePage Xiaolian memory integration', () => {
     fixtures.evidenceLoading = true;
     fixtures.evidenceError = false;
 
-    const html = renderToStaticMarkup(<ArchivePage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/archive"><ArchivePage /></StaticRouter>);
 
     expect(html).toContain('learning-story-timeline');
     expect(html).toContain('正在读取当前学习计划');
@@ -427,7 +429,7 @@ describe('ArchivePage Xiaolian memory integration', () => {
       knowledgePoints: [],
     };
 
-    const html = renderToStaticMarkup(<ArchivePage />);
+    const html = renderToStaticMarkup(<StaticRouter location="/archive"><ArchivePage /></StaticRouter>);
 
     expect(fixtures.portraitProps).toBeNull();
     expect(html).not.toContain('展开证据驱动学习画像');
