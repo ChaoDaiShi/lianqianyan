@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { SourceReferences } from './SourceReferences';
 
 describe('SourceReferences', () => {
-  it('renders course sources at a readable result scale', () => {
+  it('keeps the returned course section and excerpt available for inspection', () => {
     const html = renderToStaticMarkup(
       <SourceReferences
         sources={[
@@ -19,8 +19,8 @@ describe('SourceReferences', () => {
     );
 
     expect(html).toContain('data-source-references="true"');
-    expect(html).toContain('text-[13px]');
-    expect(html).toContain('leading-[1.65]');
-    expect(html).toContain('px-4 py-3');
+    expect(html).toContain('死锁 · 必要条件');
+    expect(html).toContain('四个必要条件');
+    expect(html).toContain('互斥、请求并保持、不可抢占和循环等待。');
   });
 });

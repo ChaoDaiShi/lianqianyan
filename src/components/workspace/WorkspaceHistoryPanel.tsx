@@ -58,7 +58,7 @@ function EvidenceEventItem({ item, taskNames }: { item: LearningEvidence; taskNa
   const masteryDelta = percent(item.masteryDelta);
   return (
     <li>
-      <details className="rounded-xl border border-violet-100 bg-white/55 px-3 py-2">
+      <details className="rounded-xl border border-violet-100 bg-[var(--em-surface)]/55 px-3 py-2">
         <summary className="cursor-pointer text-xs font-semibold text-[var(--em-ink)]">
           {EVIDENCE_LABEL[item.evidenceType]} · {pointName}
         </summary>
@@ -107,7 +107,7 @@ export function WorkspaceHistoryPanel({
 
   return (
     <div>
-      <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.16em] text-primary-600">
+      <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.16em] text-[var(--em-primary)]">
         <CurrentIcon className="h-3.5 w-3.5" />
         HISTORY
       </p>
@@ -124,8 +124,8 @@ export function WorkspaceHistoryPanel({
               onClick={() => setSection(item.id)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition ${
                 active
-                  ? 'border-primary-300 bg-violet-50 text-primary-800'
-                  : 'border-violet-100 bg-white/55 text-[var(--em-muted-ink)] hover:bg-violet-50/60'
+                  ? 'border-[var(--em-primary)] bg-violet-50 text-[var(--em-primary-deep)]'
+                  : 'border-violet-100 bg-[var(--em-surface)]/55 text-[var(--em-muted-ink)] hover:bg-violet-50/60'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -138,7 +138,7 @@ export function WorkspaceHistoryPanel({
       <div className="mt-4">
         {section === 'chat' && (
           <section aria-label="对话记录">
-            <p className="rounded-2xl border border-dashed border-violet-200 bg-white/45 px-4 py-3 text-xs leading-5 text-[var(--em-muted-ink)]">
+            <p className="rounded-2xl border border-dashed border-violet-200 bg-[var(--em-surface)]/45 px-4 py-3 text-xs leading-5 text-[var(--em-muted-ink)]">
               当前版本尚未提供可恢复的云端对话历史；对话内容仅保留在当前页面会话中，刷新后即清空。
             </p>
           </section>
@@ -174,13 +174,13 @@ export function WorkspaceHistoryPanel({
           <section aria-label="练习记录">
             {practiceEntries.length > 0 && (
               <>
-                <p className="text-[10px] font-semibold text-primary-700">本次会话 · 服务端评价结果</p>
+                <p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">本次会话 · 服务端评价结果</p>
                 <ul className="mt-2 space-y-2">
                   {practiceEntries.map(([taskId, evaluation]) => {
                     const pointName = taskNames.get(evaluation.evidence.knowledgePointId ?? '') ?? evaluation.evidence.knowledgePointId ?? '练习';
                     return (
                       <li key={taskId}>
-                        <details className="rounded-xl border border-sky-100 bg-white/55 px-3 py-2">
+                        <details className="rounded-xl border border-sky-100 bg-[var(--em-surface)]/55 px-3 py-2">
                           <summary className="cursor-pointer text-xs font-semibold text-[var(--em-ink)]">
                             练习评价 · {pointName}
                           </summary>
@@ -198,7 +198,7 @@ export function WorkspaceHistoryPanel({
                 </ul>
               </>
             )}
-            <p className={`text-[10px] font-semibold text-primary-700 ${practiceEntries.length > 0 ? 'mt-4' : ''}`}>云端学习证据</p>
+            <p className={`text-[10px] font-semibold text-[var(--em-primary-deep)] ${practiceEntries.length > 0 ? 'mt-4' : ''}`}>云端学习证据</p>
             {loading && <p className="mt-2 flex items-center gap-2 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />正在读取…</p>}
             {!loading && !error && (
               <EvidenceList
@@ -218,7 +218,7 @@ export function WorkspaceHistoryPanel({
               <ul className="mt-2 space-y-2">
                 {reflectionEntries.map(([taskId, result]) => (
                   <li key={taskId}>
-                    <details className="rounded-xl border border-fuchsia-100 bg-white/55 px-3 py-2">
+                    <details className="rounded-xl border border-fuchsia-100 bg-[var(--em-surface)]/55 px-3 py-2">
                       <summary className="cursor-pointer text-xs font-semibold text-[var(--em-ink)]">
                         复述 · {result.knowledgePointName}
                       </summary>
@@ -245,7 +245,7 @@ export function WorkspaceHistoryPanel({
             ) : (
               <ol className="mt-2 space-y-2">
                 {[...tasks].sort((left, right) => left.order - right.order).map((task) => (
-                  <li key={task.id} className="rounded-xl border border-violet-100 bg-white/55 px-3 py-2">
+                  <li key={task.id} className="rounded-xl border border-violet-100 bg-[var(--em-surface)]/55 px-3 py-2">
                     <p className="text-xs font-semibold text-[var(--em-ink)]">
                       第 {task.order} 项 · {task.knowledgePointName}
                     </p>

@@ -1,9 +1,8 @@
-import { motion, useReducedMotion } from 'framer-motion';
 import { Live2DCharacter } from '@/components/live2d/Live2DCharacter';
 import { useLive2dLease } from '@/components/live2d/live2dLease';
 import type { Live2dFraming } from '@/components/live2d/live2dRuntime';
 import { resolvePublicAssetPath } from '@/config/deployment';
-import { characterMotion, type XiaolianCharacterState } from '@/design';
+import type { XiaolianCharacterState } from '@/design';
 import { cn } from '@/lib/utils';
 import type {
   XiaolianCompanionState,
@@ -11,11 +10,11 @@ import type {
 } from '@/store/useXiaolianRuntimeStore';
 
 const SIZE = {
-  sm: 'w-16',
-  conversation: 'w-20 sm:w-24 lg:w-28',
-  md: 'w-28',
-  lg: 'w-48 sm:w-56',
-  hero: 'w-52 sm:w-80 lg:w-[23rem]',
+  sm: 'w-7',
+  conversation: 'w-9',
+  md: 'w-9',
+  lg: 'w-9',
+  hero: 'w-9',
 } as const;
 
 const CYRENE_ICON = resolvePublicAssetPath(
@@ -30,8 +29,8 @@ const STATE_LABEL: Record<XiaolianCharacterState, string> = {
   planning: '小涟正在同步学习计划',
   teaching: '小涟正在陪你学习',
   evaluating: '小涟正在评估练习结果',
-  encourage: '小涟正在为你加油',
-  success: '小涟正在庆祝你的学习成果',
+  encourage: '准备开始学习',
+  success: '查看学习记录',
 };
 
 export interface XiaolianCharacterProps {
@@ -62,7 +61,7 @@ function XiaolianAvatar({
       data-xiaolian-avatar="true"
       data-character-state={characterState}
       data-live2d-speaking={speaking}
-      className="relative h-full w-full overflow-hidden rounded-[38%] border border-white/80 shadow-[0_18px_50px_rgba(119,94,220,0.18)]"
+      className="relative h-full w-full overflow-hidden rounded-full border border-[var(--em-border)] bg-[var(--em-surface)] shadow-sm"
     >
       <img
         src={CYRENE_ICON}
@@ -71,7 +70,10 @@ function XiaolianAvatar({
         className="h-full w-full object-cover"
       />
       {speaking && (
-        <span className="absolute bottom-[10%] left-1/2 h-[6%] w-[30%] -translate-x-1/2 animate-pulse rounded-full bg-white/85" />
+        <span
+          aria-hidden="true"
+          className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--em-surface)] bg-[var(--em-action)]"
+        />
       )}
     </div>
   );
@@ -107,22 +109,18 @@ export function XiaolianCharacter({
   speaking = false,
   framing = 'full',
 }: XiaolianCharacterProps) {
-  const reduceMotion = useReducedMotion();
-  const hasLive2dLease = useLive2dLease();
   const displayState = runtimeState
     ? resolveXiaolianCharacterState(runtimeState, companionState)
     : state;
+  const hasLive2dLease = useLive2dLease(size === 'conversation');
+
   return (
     <div
       className={cn('flex flex-col items-center', className)}
       data-live2d-framing={framing}
+      data-companion-size={size === 'sm' ? '28' : '36'}
     >
-      <motion.div
-        className={cn('relative aspect-[24/31] shrink-0', SIZE[size])}
-        variants={characterMotion}
-        animate={reduceMotion ? undefined : displayState}
-      >
-        <div className="absolute inset-x-[12%] bottom-[4%] h-[22%] rounded-full bg-primary-300/25 blur-2xl" />
+      <div className={cn('relative aspect-[24/31] shrink-0', SIZE[size])}>
         {hasLive2dLease ? (
           <Live2DCharacter
             stateLabel={STATE_LABEL[displayState]}
@@ -130,7 +128,7 @@ export function XiaolianCharacter({
             speaking={speaking}
             priority={priority}
             framing={framing}
-            className="relative drop-shadow-[0_24px_32px_rgba(87,73,151,0.18)]"
+            className="relative"
           />
         ) : (
           <XiaolianAvatar
@@ -139,8 +137,12 @@ export function XiaolianCharacter({
             speaking={speaking}
           />
         )}
-      </motion.div>
-      {message && <p className="mt-2 max-w-sm text-center text-sm leading-6 text-[var(--em-muted-ink)]">{message}</p>}
+      </div>
+      {message && (
+        <p className="mt-2 max-w-sm text-center text-sm leading-[1.7] text-[var(--em-muted-ink)]">
+          {message}
+        </p>
+      )}
     </div>
   );
 }

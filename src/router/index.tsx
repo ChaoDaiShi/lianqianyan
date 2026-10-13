@@ -6,7 +6,7 @@ function RouteLoadingFallback() {
   return (
     <div
       role="status"
-      className="grid min-h-screen place-items-center bg-[var(--em-canvas)] text-sm font-medium text-primary-700"
+      className="grid min-h-screen place-items-center bg-[var(--em-canvas)] text-sm font-medium text-[var(--em-primary-deep)]"
     >
       正在进入学习空间…
     </div>

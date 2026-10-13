@@ -5,7 +5,7 @@ import { Input } from './input';
 import { Textarea } from './textarea';
 
 describe('shared control scale', () => {
-  it('uses consistent readable button heights and typography', () => {
+  it('keeps shared button labels available across the supported sizes', () => {
     const html = renderToStaticMarkup(
       <div>
         <Button>默认按钮</Button>
@@ -15,24 +15,23 @@ describe('shared control scale', () => {
       </div>,
     );
 
-    expect(html).toContain('h-11 px-5');
-    expect(html).toContain('h-10 rounded-xl px-4 text-sm');
-    expect(html).toContain('h-[3.25rem]');
-    expect(html).toContain('text-base');
-    expect(html).toContain('h-11 w-11');
-    expect(html).toContain('text-[15px]');
+    expect(html).toContain('默认按钮');
+    expect(html).toContain('紧凑按钮');
+    expect(html).toContain('主行动');
+    expect(html).toContain('aria-label="图标按钮"');
   });
 
-  it('keeps text inputs and textareas on the same readable scale', () => {
+  it('preserves accessible names and placeholders on text controls', () => {
     const html = renderToStaticMarkup(
       <div>
-        <Input placeholder="输入内容" />
-        <Textarea placeholder="输入长内容" />
+        <Input aria-label="短文本" placeholder="输入内容" />
+        <Textarea aria-label="长文本" placeholder="输入长内容" />
       </div>,
     );
 
-    expect(html).toContain('h-11');
-    expect(html).toContain('min-h-[104px]');
-    expect(html.match(/text-\[15px\]/g)).toHaveLength(2);
+    expect(html).toContain('aria-label="短文本"');
+    expect(html).toContain('placeholder="输入内容"');
+    expect(html).toContain('aria-label="长文本"');
+    expect(html).toContain('placeholder="输入长内容"');
   });
 });

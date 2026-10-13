@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { ArrowRight, LockKeyhole, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { MarkdownText } from '@/components/content/MarkdownText';
 import { cn } from '@/lib/utils';
 import type { LeapAnswer, LeapQuestion } from '@/lib/adaptiveApi';
 
@@ -41,14 +42,14 @@ export function LeapQuestionForm({
   return (
     <form
       onSubmit={submit}
-      className='rounded-[26px] border border-violet-100 bg-white/90 p-5 shadow-sm sm:p-7'
+      className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-sm sm:p-7'
     >
       <div className='flex flex-wrap items-center justify-between gap-3'>
-        <p className='flex items-center gap-2 text-xs font-semibold text-violet-700'>
+        <h3 className='flex items-center gap-2 text-sm font-semibold text-[var(--em-primary)]'>
           <MessageSquareText className='h-4 w-4' />
           {label}
-        </p>
-        <span className='rounded-lg bg-slate-50 px-2 py-1 font-mono text-[10px] text-slate-400'>
+        </h3>
+        <span className='rounded-lg bg-[var(--em-surface-subtle)] px-2 py-1 font-mono text-[10px] text-[var(--em-muted-ink)]'>
           {question.id}
         </span>
       </div>
@@ -58,9 +59,9 @@ export function LeapQuestionForm({
           这一题请独立完成，教学内容已收起。结果将作为无提示学习证据。
         </p>
       )}
-      <h3 className='mt-5 whitespace-pre-line text-lg font-semibold leading-8 tracking-tight text-slate-800'>
-        {question.prompt}
-      </h3>
+      <div className='mt-5 text-base leading-7 text-[var(--em-ink)]'>
+        <MarkdownText content={question.prompt} className='text-base leading-7' />
+      </div>
       {question.options.length > 0 && (
         <div className='mt-5 space-y-3'>
           {question.options.map((option, index) => (
@@ -69,8 +70,8 @@ export function LeapQuestionForm({
               className={cn(
                 'flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm leading-6 transition',
                 selected === option.id
-                  ? 'border-violet-400 bg-violet-50 text-violet-900 shadow-[0_0_0_2px_rgba(139,92,246,.06)]'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:bg-violet-50/30'
+                  ? 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)] text-[var(--em-primary)] '
+                  : 'border-[var(--em-border)] bg-[var(--em-surface)] text-[var(--em-muted-ink)] hover:border-[var(--em-primary)] hover:bg-[var(--em-primary-subtle)]'
               )}
             >
               <input
@@ -86,8 +87,8 @@ export function LeapQuestionForm({
                 className={cn(
                   'grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-semibold',
                   selected === option.id
-                    ? 'bg-violet-600 text-white'
-                    : 'bg-slate-100 text-slate-500'
+                    ? 'bg-[var(--em-action)] text-white'
+                    : 'bg-[var(--em-surface-subtle)] text-[var(--em-muted-ink)]'
                 )}
               >
                 {String.fromCharCode(65 + index)}
@@ -98,7 +99,7 @@ export function LeapQuestionForm({
         </div>
       )}
       <label
-        className='mt-5 block text-xs font-semibold text-slate-500'
+        className='mt-5 block text-xs font-semibold text-[var(--em-muted-ink)]'
         htmlFor={`reason-${question.id}`}
       >
         {question.responseMode === 'choice'
@@ -111,10 +112,10 @@ export function LeapQuestionForm({
         onChange={event => setReasoning(event.target.value)}
         disabled={busy}
         placeholder='试着说明你为什么这样判断…'
-        className='mt-2 min-h-[96px] resize-y rounded-2xl border-slate-200 bg-slate-50/50 text-sm'
+        className='mt-2 min-h-[96px] resize-y rounded-2xl border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-sm'
       />
       <div className='mt-5 flex flex-wrap items-center justify-between gap-3'>
-        <p className='text-[11px] text-slate-400'>
+        <p className='text-[11px] text-[var(--em-muted-ink)]'>
           {independent
             ? '提交后查看评分依据与下一步'
             : '答案与推导将关联到这次学习会话'}

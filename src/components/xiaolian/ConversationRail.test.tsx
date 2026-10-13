@@ -1,4 +1,5 @@
-import { renderToStaticMarkup } from 'react-dom/server';
+// @vitest-environment jsdom
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { CompanionThread } from '@/lib/companionApi';
 import { ConversationRail } from './ConversationRail';
@@ -17,24 +18,27 @@ const thread: CompanionThread = {
 };
 
 describe('ConversationRail', () => {
-  it('collapses history into a mobile context bar while keeping a desktop rail', () => {
-    const html = renderToStaticMarkup(
+  it('opens the real thread list and exposes select, create, and delete actions', () => {
+    const onCreate = vi.fn();
+    const onSelect = vi.fn();
+    const onDelete = vi.fn();
+    render(
       <ConversationRail
         threads={[thread]}
         activeId={thread.id}
-        onCreate={vi.fn()}
-        onSelect={vi.fn()}
-        onDelete={vi.fn()}
+        onCreate={onCreate}
+        onSelect={onSelect}
+        onDelete={onDelete}
       />,
     );
 
-    expect(html).toContain('data-conversation-context="collapsible"');
-    expect(html).toContain('data-conversation-context="desktop"');
-    expect(html).toContain('<details');
-    expect(html).toContain('对话与记忆上下文');
-    expect(html).toContain('死锁复习');
-    expect(html).toContain('text-sm');
-    expect(html).toContain('text-xs');
-    expect(html).toContain('h-10 w-10');
+    fireEvent.click(screen.getByText(/对话历史/));
+    fireEvent.click(screen.getByRole('button', { name: '打开对话 死锁复习' }));
+    fireEvent.click(screen.getByRole('button', { name: '新建对话' }));
+    fireEvent.click(screen.getByRole('button', { name: '删除对话 死锁复习' }));
+
+    expect(onSelect).toHaveBeenCalledWith(thread.id);
+    expect(onCreate).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledWith(thread.id);
   });
 });

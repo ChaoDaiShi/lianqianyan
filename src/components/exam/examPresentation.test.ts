@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { ExamDraftInput, ExamResult } from '@/domain';
+import type { LeapTopic } from '@/lib/adaptiveApi';
 import {
   answerIsComplete,
   buildResultCsv,
+  buildLeapRemediationTargets,
   formatExamScore,
   gradingStrategyLabel,
   responseKindLabel,
   shouldSyncAnswersBeforeSubmit,
+  summarizeExamPointLoss,
   validateExamDraft,
 } from './examPresentation';
 
@@ -35,6 +38,46 @@ describe('exam presentation helpers', () => {
     expect(shouldSyncAnswersBeforeSubmit(1)).toBe(true);
     expect(shouldSyncAnswersBeforeSubmit(0)).toBe(false);
     expect(shouldSyncAnswersBeforeSubmit(-1)).toBe(false);
+  });
+
+  it('reports graded point loss and leaves manual review points unknown', () => {
+    const result = {
+      id: 'attempt-1', examId: 'exam-1', learnerId: 'learner-1', examTitle: '测评',
+      status: 'needs_review', startedAt: '2026-10-13T08:00:00Z', expiresAt: '2026-10-13T08:30:00Z',
+      submittedAt: '2026-10-13T08:20:00Z', awardedScore: 6, maxScore: 20, pendingScore: 10,
+      percentage: 30, passed: null,
+      answers: [
+        { answerId: 'a1', questionId: 'q1', questionTypeName: '选择题', responseKind: 'single_choice', gradingStrategy: 'exact', prompt: '问题一', options: [], userAnswer: 'A', correctAnswer: 'B', keywords: [], explanation: '', points: 10, awardedScore: 6, isCorrect: false, gradingStatus: 'auto', feedback: '' },
+        { answerId: 'a2', questionId: 'q2', questionTypeName: '简答题', responseKind: 'short_text', gradingStrategy: 'manual', prompt: '问题二', options: [], userAnswer: '答案', correctAnswer: '参考', keywords: [], explanation: '', points: 10, awardedScore: null, isCorrect: null, gradingStatus: 'pending_manual', feedback: '' },
+      ],
+    } satisfies ExamResult;
+
+    expect(summarizeExamPointLoss(result)).toEqual({ lostPoints: 4, gradedCount: 1, pendingCount: 1 });
+  });
+
+  it('links only wrong questions whose real knowledge point matches a supported LEAP topic', () => {
+    const result = {
+      id: 'attempt-1', examId: 'exam-1', learnerId: 'learner-1', examTitle: '测评',
+      status: 'graded', startedAt: '2026-10-13T08:00:00Z', expiresAt: '2026-10-13T08:30:00Z',
+      submittedAt: '2026-10-13T08:20:00Z', awardedScore: 10, maxScore: 20, pendingScore: 0,
+      percentage: 50, passed: false,
+      answers: [
+        { answerId: 'a1', questionId: 'q-wrong', questionTypeName: '选择题', responseKind: 'single_choice', gradingStrategy: 'exact', prompt: '问题一', options: [], userAnswer: 'A', correctAnswer: 'B', keywords: [], explanation: '', points: 10, awardedScore: 0, isCorrect: false, gradingStatus: 'auto', feedback: '' },
+        { answerId: 'a2', questionId: 'q-right', questionTypeName: '选择题', responseKind: 'single_choice', gradingStrategy: 'exact', prompt: '问题二', options: [], userAnswer: 'B', correctAnswer: 'B', keywords: [], explanation: '', points: 10, awardedScore: 10, isCorrect: true, gradingStatus: 'auto', feedback: '' },
+      ],
+    } satisfies ExamResult;
+    const questions = [
+      { id: 'q-wrong', knowledgePointId: 'kp-supported' },
+      { id: 'q-right', knowledgePointId: 'kp-other' },
+    ];
+    const topics = [
+      { id: 'linked-list', name: '链表', knowledgePointId: 'kp-supported' },
+    ] as LeapTopic[];
+
+    expect(buildLeapRemediationTargets(result, questions, topics)).toEqual([
+      { topicId: 'linked-list', topicName: '链表', questionIds: ['q-wrong'] },
+    ]);
+    expect(buildLeapRemediationTargets(result, questions, [])).toEqual([]);
   });
 
   it('validates the full publishable draft instead of only the title', () => {

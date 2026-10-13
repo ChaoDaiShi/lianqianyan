@@ -4,6 +4,7 @@ import type { KnowledgePointContent } from '@/lib/educationApi';
 import {
   buildLearningSpaceHref,
   buildReflectionHref,
+  composeReflectionAnswers,
   getReflectionPageStatus,
   getReflectionTaskStatus,
   REFLECTION_FEEDBACK_DISCLAIMER,
@@ -40,6 +41,14 @@ const plan: PersistedStudyPlan = {
 };
 
 describe('reflection presentation', () => {
+  it('composes all three metacognitive answers in order for the existing feedback flow', () => {
+    expect(composeReflectionAnswers({
+      blindSpot: '没有先检查循环等待。',
+      keyLogic: '先调整指针，再更新前驱关系。',
+      firstCheck: '先画出节点连接，再核对边界。',
+    })).toBe('1. 没有先检查循环等待。\n\n2. 先调整指针，再更新前驱关系。\n\n3. 先画出节点连接，再核对边界。');
+  });
+
   it('carries the exact current task identity into the reflection route', () => {
     expect(
       buildReflectionHref({

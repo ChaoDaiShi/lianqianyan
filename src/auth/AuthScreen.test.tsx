@@ -23,24 +23,21 @@ describe('AuthScreen', () => {
       />
     );
 
-  it('presents the supplied learning-space background as the companion scene', () => {
+  it('presents a focused account entry in the learning workbench', () => {
     const html = renderScreen();
 
-    expect(html).toContain('data-auth-entry="companion"');
-    expect(html).toContain('data-auth-scene="illustrated"');
-    expect(html).toContain('data-auth-background="learning-space"');
-    expect(html).toContain('/brand/learning-space-background.png');
+    expect(html).toContain('data-auth-entry="workbench"');
+    expect(html).toContain('data-background="workbench"');
     expect(html).toContain('data-auth-card="true"');
     expect(html).toContain('data-auth-brand="true"');
     expect(html).toContain('进入我的学习空间');
     expect(html).toContain('没有账号？');
     expect(html).toContain('涟千言');
-    expect(html).toContain('bg-[#7766E8]');
     expect(html).not.toContain('bg-gradient-to-r');
     expect(html).not.toContain('新账号没有预设计划');
     expect(html).not.toContain('学习记录与账号隔离');
     expect(html).not.toContain('持续调整辅导');
-    expect(html).not.toContain('/brand/cyrene-learning-welcome.webp');
+    expect(html).toContain('/brand/cyrene-learning-welcome.webp');
   });
 
   it('keeps truthful login and registration states in the focused entry', () => {
@@ -81,6 +78,5 @@ describe('AuthScreen', () => {
     expect(busyHtml).not.toContain('小涟正在思考');
     expect(errorHtml).toContain('role="alert"');
     expect(errorHtml).toContain('用户名或密码不正确。');
-    expect(errorHtml).toContain('bg-[#FFF5F6]');
   });
 });

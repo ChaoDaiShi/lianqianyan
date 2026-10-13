@@ -1,7 +1,5 @@
-import type { ElementType, ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { gentleHover } from '@/design';
+import type { ReactNode } from 'react';
+import { SolidPanel } from './SolidPanel';
 
 export interface GlassPanelProps {
   children: ReactNode;
@@ -10,19 +8,7 @@ export interface GlassPanelProps {
   interactive?: boolean;
 }
 
-export function GlassPanel({
-  children,
-  className,
-  as = 'section',
-  interactive = false,
-}: GlassPanelProps) {
-  const Component = motion[as] as ElementType;
-  return (
-    <Component
-      whileHover={interactive ? gentleHover : undefined}
-      className={cn('em-glass min-w-0 rounded-[28px]', className)}
-    >
-      {children}
-    </Component>
-  );
+/** Compatibility entry while existing pages migrate to SolidPanel. */
+export function GlassPanel(props: GlassPanelProps) {
+  return <SolidPanel {...props} />;
 }

@@ -64,7 +64,7 @@ describe('buildNextStepActions', () => {
   it('falls back to plan generation guidance when nothing exists yet', () => {
     const actions = buildNextStepActions({ plan: null, diagnosis: diagnosisWith(null) });
     expect(actions).toHaveLength(1);
-    expect(actions[0].title).toContain('第一条学习路线');
+    expect(actions[0].title).toContain('建立学习计划');
     expect(actions[0].to).toBe('/my-learning');
   });
 

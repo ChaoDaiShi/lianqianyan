@@ -5,16 +5,11 @@ import {
   Circle,
   LoaderCircle,
   RotateCcw,
-  Sparkles,
   Square,
-  Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MarkdownText } from '@/components/content/MarkdownText';
-import type {
-  AgentStreamStage,
-  AgentStreamState,
-} from '@/lib/agentStream';
+import type { AgentStreamStage, AgentStreamState } from '@/lib/agentStream';
 import { cn } from '@/lib/utils';
 
 interface StreamingResponseProps {
@@ -24,9 +19,9 @@ interface StreamingResponseProps {
 }
 
 function StageIcon({ stage }: { stage: AgentStreamStage }) {
-  if (stage.state === 'completed') return <Check className="h-3 w-3" />;
-  if (stage.state === 'error') return <AlertCircle className="h-3 w-3" />;
-  return <LoaderCircle className="h-3 w-3 animate-spin motion-reduce:animate-none" />;
+  if (stage.state === 'completed') return <Check className="h-3.5 w-3.5" />;
+  if (stage.state === 'error') return <AlertCircle className="h-3.5 w-3.5" />;
+  return <LoaderCircle className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />;
 }
 
 const STATUS_LABEL = {
@@ -36,11 +31,7 @@ const STATUS_LABEL = {
   cancelled: '已停止生成',
 } as const;
 
-export function StreamingResponse({
-  state,
-  onStop,
-  onRetry,
-}: StreamingResponseProps) {
+export function StreamingResponse({ state, onStop, onRetry }: StreamingResponseProps) {
   const dataState = state.status === 'streaming' ? 'active' : state.status;
   const canRetry = state.status === 'error' || state.status === 'cancelled';
 
@@ -50,75 +41,46 @@ export function StreamingResponse({
       aria-live="polite"
       aria-busy={state.status === 'streaming'}
       className={cn(
-        'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_14px_36px_rgba(76,62,132,0.08)] sm:p-6',
-        state.status === 'error'
-          ? 'border-rose-200 bg-rose-50/55'
-          : state.status === 'cancelled'
-            ? 'border-amber-200 bg-amber-50/55'
-            : 'border-violet-100 bg-white/72',
+        'overflow-hidden rounded-xl border bg-[var(--em-surface)] p-4 sm:p-5',
+        state.status === 'error' ? 'border-rose-300' : 'border-[var(--em-border)]',
       )}
     >
-      {state.status === 'streaming' && (
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary-400 to-transparent"
-        />
-      )}
-      <header className="flex flex-wrap items-center justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-gradient-to-br from-violet-100 to-sky-100 text-primary-700">
-            <Sparkles className="h-5 w-5" />
+          <span className="grid h-9 w-9 place-items-center rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-[var(--em-ink)]">
+            <Bot className="h-4 w-4" />
           </span>
           <div>
-            <p className="text-[10px] font-bold tracking-[0.14em] text-primary-600">
-              XIAOLIAN COLLABORATION
-            </p>
-            <p className="text-sm font-semibold text-[var(--em-ink)]">
-              {state.activeLabel ?? STATUS_LABEL[state.status]}
-            </p>
+            <p className="text-sm font-semibold text-[var(--em-ink)]">回答生成过程</p>
+            <p className="text-sm text-[var(--em-muted-ink)]">{state.activeLabel ?? STATUS_LABEL[state.status]}</p>
           </div>
         </div>
         {state.status === 'streaming' && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onStop}
-            className="h-10 rounded-full px-4 text-sm"
-          >
-            <Square className="h-3 w-3 fill-current" />
+          <Button type="button" variant="outline" size="sm" onClick={onStop} className="h-9 rounded-lg px-3">
+            <Square className="h-3.5 w-3.5 fill-current" />
             停止生成
           </Button>
         )}
         {canRetry && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onRetry}
-            className="h-10 rounded-full px-4 text-sm"
-          >
-            <RotateCcw className="h-3 w-3" />
+          <Button type="button" variant="outline" size="sm" onClick={onRetry} className="h-9 rounded-lg px-3">
+            <RotateCcw className="h-3.5 w-3.5" />
             重新生成
           </Button>
         )}
       </header>
 
       {state.stages.length > 0 && (
-        <ol className="mt-5 flex max-w-full gap-2.5 overflow-x-auto pb-1" aria-label="回答生成阶段">
+        <ol className="mt-4 flex max-w-full gap-2 overflow-x-auto pb-1" aria-label="回答生成阶段">
           {state.stages.map((stage) => (
             <li
               key={stage.stage}
               data-stream-stage={stage.stage}
               data-stream-stage-state={stage.state}
               className={cn(
-                'flex min-w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium sm:text-xs',
-                stage.state === 'completed' &&
-                  'border-emerald-100 bg-emerald-50/70 text-emerald-700',
-                stage.state === 'active' &&
-                  'border-primary-200 bg-violet-50 text-primary-700',
-                stage.state === 'error' &&
-                  'border-rose-200 bg-rose-50 text-rose-700',
+                'flex min-w-fit items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm',
+                stage.state === 'completed' && 'border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-[var(--em-ink)]',
+                stage.state === 'active' && 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)] text-[var(--em-primary)]',
+                stage.state === 'error' && 'border-rose-300 bg-rose-50 text-rose-900',
               )}
             >
               <StageIcon stage={stage} />
@@ -129,49 +91,32 @@ export function StreamingResponse({
       )}
 
       {state.trace.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-2" aria-label="已完成的协作步骤">
+        <ul className="mt-3 flex flex-wrap gap-2" aria-label="已完成的协作步骤">
           {state.trace.map((item, index) => (
-            <span
+            <li
               key={`${item.type}-${item.name ?? item.agent}-${index}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-violet-100 bg-white/72 px-2.5 py-1.5 text-[10px] font-medium text-[var(--em-muted-ink)] sm:text-[11px]"
+              className="rounded-md border border-[var(--em-border)] bg-[var(--em-surface-subtle)] px-2.5 py-1.5 text-xs text-[var(--em-ink)]"
             >
-              {item.type === 'tool' ? (
-                <Wrench className="h-2.5 w-2.5 text-primary-600" />
-              ) : (
-                <Bot className="h-2.5 w-2.5 text-sky-600" />
-              )}
               {item.label}
-            </span>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
-      <div className="mt-5 text-[15px] leading-7 text-[var(--em-ink)] sm:text-base sm:leading-7">
+      <div className="mt-4 text-[15px] leading-7 text-[var(--em-ink)] sm:text-base sm:leading-7">
         {state.text ? (
-          <div className="relative">
-            <MarkdownText content={state.text} />
-            {state.status === 'streaming' && (
-              <span
-                aria-hidden="true"
-                className="em-stream-caret ml-1 inline-block h-[1.05em] w-0.5 translate-y-[0.14em] rounded-full bg-primary-500 align-baseline"
-              />
-            )}
-          </div>
+          <div><MarkdownText content={state.text} /></div>
         ) : (
-          <p className="flex items-center gap-2 text-[var(--em-muted-ink)]">
-            <Circle className="h-2.5 w-2.5 fill-primary-400 text-primary-400" />
+          <p className="flex items-center gap-2 text-sm text-[var(--em-muted-ink)]">
+            <Circle className="h-2.5 w-2.5 fill-current" />
             正在建立回答上下文…
           </p>
         )}
       </div>
 
-      {state.error && (
-        <p role="alert" className="mt-4 text-sm leading-6 text-rose-700">
-          {state.error}
-        </p>
-      )}
+      {state.error && <p role="alert" className="mt-3 text-sm leading-6 text-rose-800">{state.error}</p>}
       {state.status === 'cancelled' && (
-        <p className="mt-4 text-sm leading-6 text-amber-700">
+        <p className="mt-3 text-sm leading-6 text-[var(--em-ink)]">
           已停止生成；已收到的内容会保留，但不会保存为完整回答。
         </p>
       )}

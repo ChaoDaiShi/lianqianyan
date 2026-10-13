@@ -8,9 +8,7 @@ import {
   Fingerprint,
   FlaskConical,
   GitBranch,
-  LockKeyhole,
   RefreshCw,
-  Sparkles,
   Target,
   TrendingUp,
 } from 'lucide-react';
@@ -20,14 +18,27 @@ import { useApi } from '@/lib/services';
 import {
   exportLeapExperiments,
   fetchLeapOverview,
-  type LeapExperiment,
   type LeapSession,
 } from '@/lib/adaptiveApi';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { cn } from '@/lib/utils';
+import {
+  independentOutcomes,
+  independentSessions,
+  isIndependentOutcome,
+  serializeGroupOutcomeCsv,
+  serializeOutcomeCsv,
+  summarizeByGroup,
+  summarizeOutcomes,
+  type LeapExportPayload,
+} from './outcomePresentation';
 
-const percent = (score: number | null) =>
-  score === null ? '待采集' : `${Math.round(score * 100)}%`;
+const percent = (score: number | null | undefined) =>
+  score === null || score === undefined
+    ? '待采集'
+    : `${Math.round(score * 100)}%`;
+const isUnsetScore = (score: number | null | undefined) =>
+  score === null || score === undefined;
 const groupNames = {
   A: '通用固定基线',
   B: '课程固定策略',
@@ -45,12 +56,17 @@ export function OutcomeLabPage() {
   );
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportPayload, setExportPayload] = useState<LeapExportPayload | null>(null);
   const [selectedId, setSelectedId] = useState('');
   const data = overview.data;
-  const completed = data?.sessions.filter(session => session.outcome) ?? [];
+  const completed = data ? independentSessions(data.sessions) : [];
+  const outcomes = data ? independentOutcomes(data.sessions) : [];
+  const summary = summarizeOutcomes(outcomes);
+  const groupSummaries = data ? summarizeByGroup(data.sessions) : [];
   const selected =
     completed.find(session => session.id === selectedId) ?? completed[0];
-  const exportData = async () => {
+  const openExport = async () => {
     setExporting(true);
     setExportError(null);
     try {
@@ -58,54 +74,62 @@ export function OutcomeLabPage() {
         ACTIVE_LEARNER_ID,
         ACTIVE_COURSE_ID
       );
-      const url = URL.createObjectURL(
-        new Blob([JSON.stringify(payload, null, 2)], {
-          type: 'application/json;charset=utf-8',
-        })
-      );
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `lian-leap-outcomes-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+      setExportPayload(payload);
+      setExportOpen(true);
     } catch (cause) {
       setExportError(
-        cause instanceof Error ? cause.message : '导出未完成，请重试。'
+        cause instanceof Error ? cause.message : '导出数据暂时无法读取。'
       );
     } finally {
       setExporting(false);
     }
   };
+  const downloadExport = (format: 'json' | 'csv' | 'groups') => {
+    if (!exportPayload) return;
+    const stamp = new Date().toISOString().slice(0, 10);
+    const content = format === 'json'
+      ? JSON.stringify(exportPayload, null, 2)
+      : format === 'csv'
+        ? serializeOutcomeCsv(exportPayload)
+        : serializeGroupOutcomeCsv(exportPayload.sessions);
+    const mime = format === 'json' ? 'application/json;charset=utf-8' : 'text/csv;charset=utf-8';
+    const extension = format === 'groups' ? 'groups.csv' : `${format}`;
+    const url = URL.createObjectURL(new Blob([content], { type: mime }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lian-leap-outcomes-${stamp}.${extension}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   return (
-    <AppShell scene='galaxy'>
+    <AppShell scene='companion'>
       <div
         className='mx-auto max-w-[1280px] space-y-5'
         data-testid='leap-outcome-lab'
       >
-        <header className='relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-br from-white/95 via-violet-50/80 to-sky-50/80 p-5 sm:p-7'>
-          <div className='pointer-events-none absolute -right-6 -top-12 h-64 w-64 rounded-full border-[38px] border-sky-100/40' />
-          <div className='relative flex flex-wrap items-start justify-between gap-4'>
+        <header className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
             <div>
-              <p className='flex items-center gap-2 text-[11px] font-semibold tracking-[.18em] text-violet-600'>
+              <p className='flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]'>
                 <FlaskConical className='h-4 w-4' />
-                OUTCOME LAB · 成效观察
+                数据结构 · 学习成效审计
               </p>
-              <h1 className='mt-3 text-2xl font-bold tracking-tight text-slate-800 sm:text-[30px]'>
-                帮助是否有效，让独立作答说话。
+              <h1 className='mt-2 text-2xl font-semibold tracking-tight text-[var(--em-ink)]'>
+                成效观察实验室
               </h1>
-              <p className='mt-3 max-w-2xl text-sm leading-7 text-slate-500'>
-                追溯每次误解、教学决策与新题验证，观察即时变化与延迟保持。
+              <p className='mt-2 max-w-2xl text-sm leading-6 text-[var(--em-muted-ink)]'>
+                仅汇总无提示独立作答；前测、即时后测与延迟复测分别呈现，只有后端标记可比的结果才计算增益。
               </p>
             </div>
             <div className='flex gap-2'>
               <Button
                 disabled={!data || exporting}
-                onClick={() => void exportData()}
+                onClick={() => void openExport()}
                 variant='outline'
                 size='sm'
               >
                 <Download className='h-4 w-4' />
-                {exporting ? '导出中…' : '导出记录'}
+                {exporting ? '读取导出数据…' : '数据审计与导出'}
               </Button>
               <Button asChild size='sm'>
                 <Link to='/adaptive'>
@@ -117,7 +141,7 @@ export function OutcomeLabPage() {
           </div>
         </header>
         {overview.loading && (
-          <p role='status' className='p-12 text-center text-sm text-violet-600'>
+          <p role='status' className='p-12 text-center text-sm text-[var(--em-primary)]'>
             正在读取真实学习结果…
           </p>
         )}
@@ -146,9 +170,9 @@ export function OutcomeLabPage() {
           </p>
         )}
         {ACTIVE_COURSE_ID !== 'course-ds' && (
-          <div className='rounded-[26px] border border-violet-100 bg-white/80 p-8 text-center'>
+          <div className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-8 text-center'>
             <h2 className='text-lg font-bold'>当前成效观察支持数据结构课程</h2>
-            <p className='mt-3 text-sm text-slate-500'>
+            <p className='mt-3 text-sm text-[var(--em-muted-ink)]'>
               进入自适应学习后可切换课程，再开始采集真实结果。
             </p>
             <Button asChild className='mt-5'>
@@ -158,57 +182,69 @@ export function OutcomeLabPage() {
         )}
         {data && (
           <>
-            <div className='grid grid-cols-2 gap-3 lg:grid-cols-4'>
+            <div className='grid grid-cols-2 gap-3 xl:grid-cols-5'>
               <Stat
                 icon={Fingerprint}
-                label='真实学习会话'
-                value={String(data.stats.totalSessions)}
-                detail={`${data.stats.completedSessions} 次完成独立验证`}
+                label='独立样本 N'
+                value={String(summary.n)}
+                detail='仅含 independent=true 且 hintUsed=false'
               />
               <Stat
-                icon={LockKeyhole}
-                label='无提示验证通过'
-                value={`${data.stats.independentCorrect} / ${data.stats.independentTotal}`}
-                detail='仅统计独立新题作答'
-                accent
+                icon={TrendingUp}
+                label='前测均值 / 即时后测均值'
+                value={`${summary.preMean === null ? '待采集' : percent(summary.preMean)} / ${summary.postMean === null ? '待采集' : percent(summary.postMean)}`}
+                detail={`分别呈现原始均值；前测有效样本 n=${summary.preN}，后测 n=${summary.postN}`}
+              />
+              <Stat
+                icon={Target}
+                label='后测样本标准差 SD'
+                value={summary.postSd === null ? '待采集' : `${(summary.postSd * 100).toFixed(1)} 分`}
+                detail={summary.n < 2 ? '至少需要 2 个独立样本' : `样本标准差 · n=${summary.n}`}
               />
               <Stat
                 icon={GitBranch}
-                label='误解修复证据'
-                value={String(data.stats.misconceptionsRepaired)}
-                detail='依据目标误解的变式题'
+                label='可比增益均值'
+                value={summary.meanGain === null ? '未计算' : `${summary.meanGain > 0 ? '+' : ''}${Math.round(summary.meanGain * 100)} 个百分点`}
+                detail={summary.gainN === 0 ? '当前没有后端标记为可比的前后测；保留两项原始成绩。' : `仅汇总后端标记 scoreComparable=true 的样本 · n=${summary.gainN}`}
               />
               <Stat
                 icon={CalendarClock}
-                label='到期延迟复测'
-                value={String(data.stats.delayedDue)}
-                detail='7 天后观察知识保持'
+                label='实际延迟复测均值'
+                value={summary.retestMean === null ? '待采集' : percent(summary.retestMean)}
+                detail={`已有复测样本 n=${summary.retestN}`}
               />
             </div>
+            <dl aria-label='服务端会话计数' className='grid grid-cols-2 gap-3 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] px-4 py-3 text-xs sm:grid-cols-4'>
+              <MetricCount label='总会话' value={data.stats.totalSessions} />
+              <MetricCount label='服务端完成会话' value={data.stats.completedSessions} />
+              <MetricCount label='误解修复记录' value={data.stats.misconceptionsRepaired} />
+              <MetricCount label='到期复测' value={data.stats.delayedDue} />
+            </dl>
             <div className='grid items-stretch gap-5 xl:grid-cols-[1.18fr_1fr]'>
-              <section className='rounded-[26px] border border-violet-100 bg-white/85 p-5 sm:p-6'>
+              <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
                 <PanelTitle
                   icon={TrendingUp}
-                  title='不同策略的独立学习变化'
-                  description='相同课程范围下的真实前测与无提示后测，空组保持待采集。'
+                  title='A–D 策略组描述统计'
+                  description='柱条分别呈现独立、无提示会话的前测、即时后测与复测均值；未标记可比的前后测不计算差值。'
                 />
-                <GroupComparison groups={data.experiments} />
-                <div className='mt-3 flex flex-wrap gap-4 text-[10px] text-slate-400'>
+                <GroupComparison groups={groupSummaries} />
+                <div className='mt-3 flex flex-wrap gap-4 text-[10px] text-[var(--em-muted-ink)]'>
                   <span className='flex items-center gap-1.5'>
-                    <i className='h-2 w-2 rounded bg-violet-200' />
-                    初次诊断
+                    <i className='h-2 w-2 rounded bg-slate-400' />
+                    前测
                   </span>
                   <span className='flex items-center gap-1.5'>
-                    <i className='h-2 w-2 rounded bg-violet-500' />
-                    独立新题
+                    <i className='h-2 w-2 rounded bg-[var(--em-action)]' />
+                    即时后测
                   </span>
+                  <span className='flex items-center gap-1.5'><i className='h-2 w-2 rounded bg-blue-700' />延迟复测</span>
                   <span>单位：作答成绩 %</span>
                 </div>
-                <p className='mt-4 rounded-xl bg-slate-50 p-3 text-[10px] leading-5 text-slate-400'>
-                  当前为个人会话的描述性记录。策略组之间可能存在题目难度、起点与样本差异，不据此推断因果效果。
+                <p className='mt-4 rounded-lg bg-[var(--em-surface-subtle)] p-3 text-xs leading-5 text-[var(--em-muted-ink)]'>
+                  前测与独立后测的题型或评分标准尚未校准，当前只分别展示实际分数，不计算增益。这里是个人会话的描述性记录，不据此推断因果效果。
                 </p>
               </section>
-              <section className='rounded-[26px] border border-violet-100 bg-white/85 p-5 sm:p-6'>
+              <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
                 <PanelTitle
                   icon={CalendarClock}
                   title='即时表现与延迟保持'
@@ -219,7 +255,7 @@ export function OutcomeLabPage() {
                 ) : (
                   <EmptyChart label='完成一次独立验证后开始记录' />
                 )}
-                <p className='mt-3 text-[10px] leading-6 text-slate-400'>
+                <p className='mt-3 text-xs leading-5 text-[var(--em-muted-ink)]'>
                   {selected?.outcome?.retestScore !== null &&
                   selected?.outcome?.retestScore !== undefined
                     ? '延迟点来自实际复测作答。'
@@ -227,7 +263,8 @@ export function OutcomeLabPage() {
                 </p>
               </section>
             </div>
-            <section className='rounded-[26px] border border-violet-100 bg-white/85 p-5 sm:p-6'>
+            <MechanismMatrix />
+            <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
               <div className='flex flex-wrap items-start justify-between gap-3'>
                 <PanelTitle
                   icon={GitBranch}
@@ -239,7 +276,7 @@ export function OutcomeLabPage() {
                     aria-label='选择学习过程'
                     value={selected?.id ?? ''}
                     onChange={event => setSelectedId(event.target.value)}
-                    className='max-w-full rounded-xl border border-violet-200 bg-white p-2 text-xs text-slate-600'
+                    className='max-w-full rounded-lg border border-[var(--em-border-strong)] bg-[var(--em-surface)] p-2 text-xs text-[var(--em-muted-ink)]'
                   >
                     {completed.map(session => (
                       <option key={session.id} value={session.id}>
@@ -253,10 +290,9 @@ export function OutcomeLabPage() {
               {selected ? (
                 <ProcessTrace session={selected} />
               ) : (
-                <div className='mt-5 rounded-2xl border border-dashed border-violet-200 bg-violet-50/30 p-7 text-center'>
-                  <Sparkles className='mx-auto h-6 w-6 text-violet-300' />
-                  <p className='mt-3 text-sm text-slate-500'>
-                    这里等待你的第一段学习过程。
+                <div className='mt-5 rounded-xl border border-dashed border-[var(--em-border-strong)] bg-[var(--em-surface-subtle)] p-7 text-center'>
+                  <p className='mt-3 text-sm text-[var(--em-muted-ink)]'>
+                    尚无符合条件的无提示独立验证记录。
                   </p>
                   <Button asChild variant='link' className='mt-2'>
                     <Link to='/adaptive'>
@@ -267,7 +303,7 @@ export function OutcomeLabPage() {
                 </div>
               )}
             </section>
-            <section className='overflow-hidden rounded-[26px] border border-violet-100 bg-white/85'>
+            <section className='overflow-hidden rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] shadow-[var(--em-shadow-sm)]'>
               <div className='p-5 sm:p-6'>
                 <PanelTitle
                   icon={Target}
@@ -276,13 +312,13 @@ export function OutcomeLabPage() {
                 />
               </div>
               {data.sessions.length === 0 ? (
-                <p className='px-6 pb-6 text-sm text-slate-400'>
+                <p className='px-6 pb-6 text-sm text-[var(--em-muted-ink)]'>
                   还没有学习会话。
                 </p>
               ) : (
                 <div className='overflow-x-auto'>
-                  <table className='w-full min-w-[640px] text-left text-xs'>
-                    <thead className='border-y border-violet-100 bg-violet-50/50 text-[10px] text-slate-400'>
+                  <table className='w-full min-w-[720px] text-left text-xs'>
+                    <thead className='border-y border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-xs text-[var(--em-muted-ink)]'>
                       <tr>
                         <th className='px-6 py-3 font-medium'>
                           学习概念 / 策略
@@ -298,19 +334,19 @@ export function OutcomeLabPage() {
                       {data.sessions.map(session => (
                         <tr
                           key={session.id}
-                          className='transition hover:bg-violet-50/40'
+                          className='hover:bg-[var(--em-surface-subtle)]'
                         >
                           <td className='px-6 py-4'>
-                            <p className='font-semibold text-slate-700'>
+                            <p className='font-semibold text-[var(--em-ink)]'>
                               {session.topicName}
                             </p>
-                            <p className='mt-1 text-[10px] text-slate-400'>
+                            <p className='mt-1 text-[10px] text-[var(--em-muted-ink)]'>
                               {session.experimentGroup} ·{' '}
                               {session.decision?.label ??
                                 groupNames[session.experimentGroup]}
                             </p>
                           </td>
-                          <td className='px-3 py-4 text-slate-500'>
+                          <td className='px-3 py-4 text-[var(--em-muted-ink)]'>
                             {percent(
                               session.outcome?.preScore ??
                                 session.evidence.find(
@@ -319,28 +355,28 @@ export function OutcomeLabPage() {
                                 null
                             )}
                           </td>
-                          <td className='px-3 py-4 font-semibold text-violet-600'>
-                            {percent(session.outcome?.postScore ?? null)}
+                          <td className='px-3 py-4 font-semibold text-[var(--em-ink)]'>
+                            {isIndependentOutcome(session.outcome) ? percent(session.outcome.postScore) : session.outcome ? '非独立结果' : '待采集'}
                           </td>
-                          <td className='px-3 py-4 text-slate-500'>
-                            {percent(session.outcome?.retestScore ?? null)}
+                          <td className='px-3 py-4 text-[var(--em-muted-ink)]'>
+                            {isIndependentOutcome(session.outcome) ? percent(session.outcome.retestScore) : session.outcome ? '未纳入' : '待采集'}
                           </td>
                           <td className='px-3 py-4'>
                             <span
                               className={cn(
-                                'rounded-full px-2 py-1 text-[10px]',
-                                session.outcome
+                                'rounded-md px-2 py-1 text-xs',
+                                isIndependentOutcome(session.outcome)
                                   ? 'bg-emerald-50 text-emerald-700'
-                                  : 'bg-violet-50 text-violet-600'
+                                  : 'bg-[var(--em-surface-subtle)] text-[var(--em-muted-ink)]'
                               )}
                             >
-                              {session.outcome ? '已独立验证' : '进行中'}
+                              {isIndependentOutcome(session.outcome) ? '已独立验证' : session.outcome ? '非独立结果' : session.phase === 'completed' ? '待独立验证' : '进行中'}
                             </span>
                           </td>
                           <td className='px-6 py-4'>
                             <Link
-                              to={`/adaptive?session=${session.id}${session.retestDueAt && Date.parse(session.retestDueAt) <= Date.now() && session.outcome?.retestScore === null ? '&retest=1' : ''}`}
-                              className='inline-flex items-center gap-1 text-violet-600'
+                              to={`/adaptive?session=${session.id}${session.retestDueAt && Date.parse(session.retestDueAt) <= Date.now() && isUnsetScore(session.outcome?.retestScore) ? '&retest=1' : ''}`}
+                              className='inline-flex items-center gap-1 font-medium text-[var(--em-primary)]'
                             >
                               {session.phase === 'completed'
                                 ? '查看结果'
@@ -355,11 +391,11 @@ export function OutcomeLabPage() {
                 </div>
               )}
             </section>
-            <div className='rounded-[22px] border border-violet-100 bg-white/50 px-5 py-4'>
-              <p className='text-xs font-semibold text-slate-500'>
+            <div className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] px-5 py-4'>
+              <p className='text-xs font-semibold text-[var(--em-muted-ink)]'>
                 当前证据的边界
               </p>
-              <ul className='mt-2 space-y-1 text-[11px] leading-6 text-slate-400'>
+              <ul className='mt-2 space-y-1 text-xs leading-5 text-[var(--em-muted-ink)]'>
                 {data.limitations.map(limitation => (
                   <li key={limitation}>· {limitation}</li>
                 ))}
@@ -368,8 +404,8 @@ export function OutcomeLabPage() {
                 </li>
               </ul>
             </div>
-            <footer className='flex flex-wrap justify-between gap-2 px-1 text-[10px] leading-5 text-slate-400'>
-              <p>Outcome Lab · 真实作答 / 可追溯决策</p>
+            <footer className='flex flex-wrap justify-between gap-2 px-1 text-xs leading-5 text-[var(--em-muted-ink)]'>
+              <p>真实作答与可追溯决策</p>
               <p>
                 {data.catalogVersion} · {data.policyVersion}
               </p>
@@ -377,6 +413,34 @@ export function OutcomeLabPage() {
           </>
         )}
       </div>
+      {exportOpen && exportPayload && (
+        <div className='fixed inset-0 z-50 bg-slate-950/40'>
+          <section
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='outcome-export-title'
+            className='absolute inset-y-0 right-0 flex w-full max-w-2xl flex-col border-l border-[var(--em-border)] bg-[var(--em-surface)] shadow-2xl'
+          >
+            <header className='flex items-start justify-between gap-4 border-b border-[var(--em-border)] px-5 py-4 sm:px-6'>
+              <div>
+                <p className='text-xs font-semibold text-[var(--em-primary)]'>数据审计</p>
+                <h2 id='outcome-export-title' className='mt-1 text-lg font-semibold text-[var(--em-ink)]'>JSON 预览与导出</h2>
+                <p className='mt-1 text-xs text-[var(--em-muted-ink)]'>版本 {exportPayload.version} · 导出时间 {new Date(exportPayload.exportedAt).toLocaleString('zh-CN')}</p>
+              </div>
+              <Button variant='outline' size='sm' onClick={() => setExportOpen(false)}>关闭</Button>
+            </header>
+            <div className='flex flex-wrap gap-2 border-b border-[var(--em-border)] px-5 py-3 sm:px-6'>
+              <Button size='sm' onClick={() => downloadExport('json')}>下载完整 JSON</Button>
+              <Button size='sm' variant='outline' onClick={() => downloadExport('csv')}>下载会话 CSV</Button>
+              <Button size='sm' variant='outline' onClick={() => downloadExport('groups')}>下载分组汇总 CSV</Button>
+            </div>
+            <p className='px-5 pt-3 text-xs leading-5 text-[var(--em-muted-ink)] sm:px-6'>预览来自真实导出接口。CSV 空白字段表示后端未记录该值；可比性与说明单独导出。只有后端标记可比并提供观察增益的样本才进入可比增益均值。</p>
+            <pre className='m-5 min-h-0 flex-1 overflow-auto rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-4 font-mono text-[11px] leading-5 text-[var(--em-ink)] sm:m-6'>
+              {JSON.stringify(exportPayload, null, 2)}
+            </pre>
+          </section>
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -386,36 +450,31 @@ function Stat({
   label,
   value,
   detail,
-  accent = false,
 }: {
   icon: typeof Fingerprint;
   label: string;
   value: string;
   detail: string;
-  accent?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        'rounded-[24px] border p-4 sm:p-5',
-        accent
-          ? 'border-violet-200 bg-gradient-to-br from-violet-50 to-white'
-          : 'border-violet-100 bg-white/80'
-      )}
-    >
-      <p className='flex items-center gap-2 text-[11px] text-slate-500'>
-        <Icon className='h-4 w-4 text-violet-400' />
+    <div className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4 shadow-[var(--em-shadow-sm)]'>
+      <p className='flex items-center gap-2 text-xs text-[var(--em-muted-ink)]'>
+        <Icon className='h-4 w-4 text-[var(--em-primary)]' />
         {label}
       </p>
-      <p
-        className={cn(
-          'mt-4 text-3xl font-bold tracking-tight',
-          accent ? 'text-violet-600' : 'text-slate-700'
-        )}
-      >
+      <p className='mt-3 text-xl font-semibold tracking-tight tabular-nums text-[var(--em-ink)]'>
         {value}
       </p>
-      <p className='mt-2 text-[10px] leading-5 text-slate-400'>{detail}</p>
+      <p className='mt-2 text-xs leading-5 text-[var(--em-muted-ink)]'>{detail}</p>
+    </div>
+  );
+}
+
+function MetricCount({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <dt className='text-[var(--em-muted-ink)]'>{label}</dt>
+      <dd className='mt-1 font-semibold tabular-nums text-[var(--em-ink)]'>{value}</dd>
     </div>
   );
 }
@@ -431,109 +490,105 @@ function PanelTitle({
 }) {
   return (
     <div>
-      <h2 className='flex items-center gap-2 text-base font-bold text-slate-700'>
-        <Icon className='h-4 w-4 text-violet-500' />
+      <h2 className='flex items-center gap-2 text-base font-semibold text-[var(--em-ink)]'>
+        <Icon className='h-4 w-4 text-[var(--em-primary)]' />
         {title}
       </h2>
-      <p className='mt-2 text-[11px] leading-6 text-slate-400'>{description}</p>
+      <p className='mt-2 text-sm leading-6 text-[var(--em-muted-ink)]'>{description}</p>
     </div>
   );
 }
 
-function GroupComparison({ groups }: { groups: LeapExperiment[] }) {
+function GroupComparison({ groups }: { groups: ReturnType<typeof summarizeByGroup> }) {
   return (
-    <div
-      className='mt-5 space-y-4'
-      role='img'
-      aria-label='各策略组的真实前测和无提示后测成绩'
-    >
-      {groups.map(group => (
-        <div
-          key={group.group}
-          className='grid grid-cols-[100px_1fr_45px] items-center gap-3'
-        >
-          <div>
-            <p className='text-[11px] font-semibold text-slate-600'>
-              {group.group} · {groupNames[group.group]}
-            </p>
-            <p className='mt-1 text-[9px] text-slate-400'>
-              {group.completed} 次完成 / {group.count} 会话
-            </p>
+    <div className='mt-5 space-y-3' aria-label='各策略组前测、即时后测与延迟复测真实均值'>
+      {groups.map(({ group, sessions, summary }) => (
+        <section key={group} className='rounded-lg border border-[var(--em-border)] p-3'>
+          <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
+            <h3 className='text-sm font-semibold text-[var(--em-ink)]'>{group} · {groupNames[group]}</h3>
+            <p className='text-xs text-[var(--em-muted-ink)]'>{summary.n} 个独立样本 / {sessions} 个会话 · 可比增益样本 {summary.gainN}{summary.meanGain === null ? '' : ` · 均值 ${summary.meanGain > 0 ? '+' : ''}${Math.round(summary.meanGain * 100)} 个百分点`}</p>
           </div>
-          <div className='relative space-y-1.5 border-x border-slate-100 px-0.5'>
-            {group.postMean === null ? (
-              <div className='flex h-8 items-center rounded border border-dashed border-slate-200 bg-slate-50/60 px-3 text-[10px] text-slate-400'>
-                等待真实作答
+          <div className='mt-3 space-y-2'>
+            {[
+              { label: '前测', value: summary.preMean, color: 'bg-slate-400' },
+              { label: '即时后测', value: summary.postMean, color: 'bg-[var(--em-action)]' },
+              { label: '延迟复测', value: summary.retestMean, color: 'bg-blue-700' },
+            ].map(metric => (
+              <div key={metric.label} className='grid grid-cols-[72px_minmax(0,1fr)_44px] items-center gap-2 text-xs'>
+                <span className='text-[var(--em-muted-ink)]'>{metric.label}</span>
+                {metric.value === null ? (
+                  <span className='text-[var(--em-subtle-ink)]'>待采集</span>
+                ) : (
+                  <div className='h-2 overflow-hidden rounded-full bg-[var(--em-surface-subtle)]'>
+                    <div className={`h-full rounded-full ${metric.color}`} style={{ width: `${metric.value * 100}%` }} />
+                  </div>
+                )}
+                <span className='text-right tabular-nums text-[var(--em-ink)]'>{metric.value === null ? '—' : percent(metric.value)}</span>
               </div>
-            ) : (
-              <>
-                <div
-                  className='h-3.5 min-w-[2px] rounded-r bg-violet-200'
-                  style={{ width: `${(group.preMean ?? 0) * 100}%` }}
-                />
-                <div
-                  className={cn(
-                    'h-3.5 min-w-[2px] rounded-r',
-                    group.group === 'D'
-                      ? 'bg-gradient-to-r from-violet-500 to-sky-400'
-                      : 'bg-violet-400'
-                  )}
-                  style={{ width: `${group.postMean * 100}%` }}
-                />
-              </>
-            )}
+            ))}
           </div>
-          <div className='text-right'>
-            <p className='text-xs font-semibold text-violet-600'>
-              {group.postMean === null ? '—' : percent(group.postMean)}
-            </p>
-            <p className='mt-1 text-[9px] text-slate-400'>
-              {group.meanGain === null
-                ? '待采集'
-                : `${group.meanGain > 0 ? '+' : ''}${Math.round(group.meanGain * 100)} 分`}
-            </p>
-          </div>
-        </div>
+        </section>
       ))}
-      <div className='ml-[112px] mr-[57px] flex justify-between text-[9px] text-slate-300'>
-        <span>0</span>
-        <span>25</span>
-        <span>50</span>
-        <span>75</span>
-        <span>100</span>
-      </div>
     </div>
+  );
+}
+
+function MechanismMatrix() {
+  const rows = [
+    { group: 'A', strategy: groupNames.A, misconception: '不匹配', ranking: '通用固定动作', probe: '无提示新题' },
+    { group: 'B', strategy: groupNames.B, misconception: '不匹配', ranking: '课程固定动作', probe: '无提示新题' },
+    { group: 'C', strategy: groupNames.C, misconception: '不匹配', ranking: '依据掌握证据与前置状态', probe: '无提示新题' },
+    { group: 'D', strategy: groupNames.D, misconception: '按候选误解匹配', ranking: '按误解、前置、证据与时间排序', probe: '无提示新题' },
+  ] as const;
+
+  return (
+    <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
+      <PanelTitle icon={GitBranch} title='A–D 教学机制对照' description='按服务端策略规则标注机制。D 组会话若启用消融，以该会话记录的消融设置为准。' />
+      <div className='mt-4 overflow-x-auto'>
+        <table className='w-full min-w-[760px] border-collapse text-left text-xs'>
+          <thead className='bg-[var(--em-surface-subtle)] text-[var(--em-muted-ink)]'>
+            <tr>
+              <th className='border border-[var(--em-border)] px-3 py-2 font-semibold'>策略组</th>
+              <th className='border border-[var(--em-border)] px-3 py-2 font-semibold'>误解匹配决策</th>
+              <th className='border border-[var(--em-border)] px-3 py-2 font-semibold'>动作选择依据</th>
+              <th className='border border-[var(--em-border)] px-3 py-2 font-semibold'>验证环节</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => (
+              <tr key={row.group}>
+                <th scope='row' className='border border-[var(--em-border)] px-3 py-2 font-semibold text-[var(--em-ink)]'>{row.group} · {row.strategy}</th>
+                <td className='border border-[var(--em-border)] px-3 py-2 text-[var(--em-muted-ink)]'>{row.misconception}</td>
+                <td className='border border-[var(--em-border)] px-3 py-2 text-[var(--em-muted-ink)]'>{row.ranking}</td>
+                <td className='border border-[var(--em-border)] px-3 py-2 font-medium text-emerald-700'>{row.probe}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
 function RetentionChart({ session }: { session: LeapSession }) {
   const outcome = session.outcome!;
   const points = [
-    { x: 50, value: outcome.preScore, label: '初次诊断' },
-    { x: 195, value: outcome.postScore, label: '独立新题' },
+    { x: 50, value: outcome.preScore, label: '前测' },
+    { x: 195, value: outcome.postScore, label: '即时后测' },
     { x: 340, value: outcome.retestScore, label: '7 天复测' },
   ];
   const y = (value: number) => 162 - value * 120;
-  const available = points.filter(
-    (point): point is typeof point & { value: number } => point.value !== null
-  );
   return (
     <div className='mt-4'>
-      <p className='mb-2 text-[10px] font-semibold text-violet-600'>
+      <p className='mb-2 text-xs font-semibold text-[var(--em-primary)]'>
         {session.topicName}
       </p>
       <svg
         viewBox='0 0 390 218'
         className='w-full'
         role='img'
-        aria-label='诊断、独立新题与七天复测的实际成绩曲线'
+        aria-label='诊断、独立新题与七天复测分阶段实际成绩点，不连接未校准的前后测'
       >
-        <defs>
-          <linearGradient id='leap-line' x1='0' x2='1'>
-            <stop offset='0%' stopColor='#a78bfa' />
-            <stop offset='100%' stopColor='#38bdf8' />
-          </linearGradient>
-        </defs>
         {[0, 0.5, 1].map(value => (
           <g key={value}>
             <line
@@ -556,45 +611,17 @@ function RetentionChart({ session }: { session: LeapSession }) {
           </g>
         ))}
         <line x1='40' x2='352' y1='163' y2='163' stroke='#e5e7eb' />
-        <polyline
-          fill='none'
-          stroke='url(#leap-line)'
-          strokeWidth='3'
-          strokeLinejoin='round'
-          strokeLinecap='round'
-          points={available
-            .map(point => `${point.x},${y(point.value)}`)
-            .join(' ')}
-        />
         {points.map(point => (
           <g key={point.label}>
-            {point.value === null ? (
-              <>
-                <circle
-                  cx={point.x}
-                  cy='103'
-                  r='5'
-                  fill='white'
-                  stroke='#cbd5e1'
-                  strokeDasharray='2 2'
-                />
-                <text
-                  x={point.x}
-                  y='87'
-                  textAnchor='middle'
-                  fill='#94a3b8'
-                  fontSize='10'
-                >
-                  待采集
-                </text>
-              </>
+            {typeof point.value !== 'number' ? (
+              <text x={point.x} y='112' textAnchor='middle' fill='#64748b' fontSize='10'>{point.label === '7 天复测' ? '待复测' : '未记录'}</text>
             ) : (
               <>
                 <circle
                   cx={point.x}
                   cy={y(point.value)}
                   r='5'
-                  fill='#8b5cf6'
+                  fill={point.label === '前测' ? '#64748b' : point.label === '即时后测' ? 'var(--em-primary)' : '#1d4ed8'}
                   stroke='white'
                   strokeWidth='2'
                 />
@@ -602,7 +629,7 @@ function RetentionChart({ session }: { session: LeapSession }) {
                   x={point.x}
                   y={y(point.value) - 14}
                   textAnchor='middle'
-                  fill='#7c3aed'
+                  fill={point.label === '前测' ? '#475569' : point.label === '即时后测' ? 'var(--em-primary)' : '#1d4ed8'}
                   fontWeight='600'
                   fontSize='12'
                 >
@@ -622,8 +649,8 @@ function RetentionChart({ session }: { session: LeapSession }) {
           </g>
         ))}
       </svg>
-      <div className='flex justify-between gap-2 rounded-xl bg-slate-50/70 px-3 py-2 text-[10px] text-slate-400'>
-        <span>本次实际作答</span>
+      <div className='flex justify-between gap-2 rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2 text-xs text-[var(--em-muted-ink)]'>
+        <span>仅连接已记录的实际分数</span>
         <span>
           复测日期{' '}
           {session.retestDueAt
@@ -637,11 +664,8 @@ function RetentionChart({ session }: { session: LeapSession }) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className='mt-5 grid min-h-[235px] place-items-center rounded-2xl border border-dashed border-violet-200 bg-violet-50/20'>
-      <div className='text-center'>
-        <TrendingUp className='mx-auto h-8 w-8 text-violet-200' />
-        <p className='mt-3 text-xs text-slate-400'>{label}</p>
-      </div>
+    <div className='mt-5 grid min-h-[235px] place-items-center rounded-xl border border-dashed border-[var(--em-border-strong)] bg-[var(--em-surface-subtle)] px-4 text-center'>
+      <p className='text-sm text-[var(--em-muted-ink)]'>{label}</p>
     </div>
   );
 }
@@ -652,22 +676,22 @@ function ProcessTrace({ session }: { session: LeapSession }) {
     {
       title: '真实作答',
       label: diagnostic?.questionId ?? '诊断题',
-      body: diagnostic?.answer ?? '原始作答已关联',
+      body: diagnostic?.answer ?? '接口未返回诊断作答文本',
       icon: Fingerprint,
-      color: 'bg-violet-50 text-violet-500',
+      color: 'bg-[var(--em-primary-subtle)] text-[var(--em-primary)]',
     },
     {
       title: '误解假设',
-      label: session.diagnosis?.misconceptionCode ?? '继续观察',
-      body: session.diagnosis?.title ?? '未识别出明确误解',
+      label: session.diagnosis?.misconceptionCode ?? '未识别候选',
+      body: session.diagnosis?.title ?? '接口未返回误解诊断',
       icon: BrainTraceIcon,
       color: 'bg-amber-50 text-amber-500',
     },
     {
       title: '教学干预',
-      label: session.decision?.label ?? '教学行动',
-      body: session.decision?.reason ?? '',
-      icon: Sparkles,
+      label: session.decision?.label ?? '未返回决策',
+      body: session.decision?.reason ?? '接口未返回教学决策依据',
+      icon: Target,
       color: 'bg-sky-50 text-sky-500',
     },
     {
@@ -684,7 +708,7 @@ function ProcessTrace({ session }: { session: LeapSession }) {
         {items.map((item, i) => (
           <div
             key={item.title}
-            className='relative rounded-2xl border border-slate-100 bg-slate-50/40 p-4'
+            className='relative rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-4'
           >
             <span
               className={cn(
@@ -694,29 +718,29 @@ function ProcessTrace({ session }: { session: LeapSession }) {
             >
               <item.icon className='h-4 w-4' />
             </span>
-            <p className='mt-3 text-[10px] text-slate-400'>
+            <p className='mt-3 text-[10px] text-[var(--em-muted-ink)]'>
               0{i + 1} · {item.title}
             </p>
-            <p className='mt-2 text-xs font-semibold leading-6 text-slate-700'>
+            <p className='mt-2 text-xs font-semibold leading-6 text-[var(--em-ink)]'>
               {item.label}
             </p>
-            <p className='mt-2 line-clamp-4 whitespace-pre-line text-[11px] leading-6 text-slate-500'>
+            <p className='mt-2 line-clamp-4 whitespace-pre-line text-[11px] leading-6 text-[var(--em-muted-ink)]'>
               {item.body}
             </p>
             {i < items.length - 1 && (
-              <ArrowRight className='absolute -right-[15px] top-9 z-10 hidden h-4 w-4 text-violet-300 md:block' />
+              <ArrowRight className='absolute -right-[15px] top-9 z-10 hidden h-4 w-4 text-[var(--em-primary)] md:block' />
             )}
           </div>
         ))}
       </div>
-      <div className='mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-violet-50/60 p-3'>
-        <p className='flex items-center gap-2 text-xs text-violet-700'>
+      <div className='mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[var(--em-primary-subtle)] p-3'>
+        <p className='flex items-center gap-2 text-xs text-[var(--em-primary)]'>
           <GitBranch className='h-4 w-4' />
           {session.nextStep?.title ?? '根据新证据继续规划'}
         </p>
         <Link
           to={`/adaptive?session=${session.id}`}
-          className='inline-flex items-center gap-1 text-[11px] font-semibold text-violet-600'
+          className='inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--em-primary)]'
         >
           查看完整依据
           <ArrowRight className='h-3 w-3' />

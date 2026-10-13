@@ -33,8 +33,8 @@ export function XiaolianMemoryCard({
   return (
     <section className="p-1">
       <div className="flex items-center gap-2">
-        <Eye className="h-4 w-4 text-primary-600" />
-        <p className="text-[10px] font-bold text-primary-600">
+        <Eye className="h-4 w-4 text-[var(--em-primary)]" />
+        <p className="text-[10px] font-bold text-[var(--em-primary)]">
           XIAOLIAN OBSERVATIONS
         </p>
       </div>
@@ -50,15 +50,15 @@ export function XiaolianMemoryCard({
               <p className="text-sm leading-6 text-[var(--em-ink)]">
                 {observation.text}
               </p>
-              <p className="mt-1 text-[10px] font-semibold text-primary-700">
+              <p className="mt-1 text-[10px] font-semibold text-[var(--em-primary-deep)]">
                 来源：{observation.source}
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <div className="mt-5 flex gap-3 rounded-lg border border-violet-100 bg-white/50 p-4">
-          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" />
+        <div className="mt-5 flex gap-3 rounded-lg border border-violet-100 bg-[var(--em-surface)] p-4">
+          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[var(--em-primary)]" />
           <p className="text-sm leading-6 text-[var(--em-muted-ink)]">
             当前可用数据尚未形成可展示的学习观察。
           </p>

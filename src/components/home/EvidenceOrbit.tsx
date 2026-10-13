@@ -57,9 +57,9 @@ const POSITION = {
 } as const;
 
 const STATE_COLOR = {
-  completed: 'var(--em-success)',
+  completed: '#15803d',
   current: 'var(--em-primary)',
-  waiting: 'var(--em-glass-border)',
+  waiting: 'var(--em-border-strong)',
 } as const;
 
 export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
@@ -81,7 +81,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
       data-evidence-orbit="true"
       className="mx-auto h-auto w-full max-w-[18rem] overflow-visible sm:max-w-[25rem]"
     >
-      <title id={titleId}>学习证据星河</title>
+      <title id={titleId}>学习四阶段进度</title>
       <desc id={descriptionId}>
         诊断、计划、学习和验证四个真实阶段，当前位于{model.currentLabel}。
       </desc>
@@ -94,17 +94,10 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
           y2="314"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="var(--em-accent)" />
-          <stop offset="0.48" stopColor="var(--em-primary)" />
-          <stop offset="1" stopColor="var(--em-secondary)" />
+          <stop stopColor="var(--em-primary)" />
+          <stop offset="0.48" stopColor="var(--em-sky)" />
+          <stop offset="1" stopColor="#475569" />
         </linearGradient>
-        <filter id={`${gradientId}-glow`} x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="5" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
 
       <circle
@@ -112,7 +105,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         cy="180"
         r="122"
         fill="none"
-        stroke="var(--em-glass-border)"
+        stroke="var(--em-border)"
         strokeWidth="2"
         strokeDasharray="3 9"
       />
@@ -133,8 +126,8 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         cx="180"
         cy="180"
         r="78"
-        fill="var(--em-glass-bg)"
-        stroke="var(--em-glass-border)"
+        fill="var(--em-surface)"
+        stroke="var(--em-border)"
         strokeWidth="1.5"
       />
       <circle
@@ -142,7 +135,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         cy="180"
         r="66"
         fill="none"
-        stroke={`url(#${gradientId})`}
+        stroke="var(--em-primary)"
         strokeWidth="1.5"
         opacity="0.3"
       />
@@ -174,7 +167,7 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
         x="180"
         y="208"
         textAnchor="middle"
-        fill="var(--em-primary-deep)"
+        fill="var(--em-primary)"
         fontFamily="Inter, PingFang SC, Microsoft YaHei, sans-serif"
         fontSize="12"
         fontWeight="600"
@@ -192,32 +185,17 @@ export function EvidenceOrbit({ model }: { model: EvidenceOrbitModel }) {
             data-orbit-node={node.id}
             data-orbit-state={node.state}
           >
-            {node.state === 'current' && (
-              <circle
-                className="em-orbit-pulse"
-                r="27"
-                fill="none"
-                stroke="var(--em-primary)"
-                strokeWidth="2"
-                opacity="0.35"
-              />
-            )}
             <circle
               r="19"
-              fill="var(--em-surface-raised)"
+              fill="var(--em-surface-subtle)"
               stroke={color}
               strokeWidth={node.state === 'current' ? 3 : 2}
-              filter={
-                node.state === 'current'
-                  ? `url(#${gradientId}-glow)`
-                  : undefined
-              }
             />
             <circle
               r={node.state === 'current' ? 7 : 5}
               fill={
                 node.state === 'waiting'
-                  ? 'var(--em-glass-border)'
+                  ? 'var(--em-border-strong)'
                   : color
               }
             />

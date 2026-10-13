@@ -23,9 +23,9 @@ describe('learning workshop presentation model', () => {
   });
 
   it('maps stage and result states to stable student-facing labels', () => {
-    expect(stageTone('passed')).toContain('emerald');
-    expect(stageTone('failed')).toContain('rose');
-    expect(stageTone('skipped')).toContain('slate');
+    expect(stageTone('passed')).toContain('--em-success');
+    expect(stageTone('failed')).toContain('--em-danger');
+    expect(stageTone('skipped')).toContain('--em-unknown');
     expect(resultCountLabel(0)).toBe('未找到联网资料');
     expect(resultCountLabel(1)).toBe('找到 1 条资料');
     expect(resultCountLabel(4)).toBe('找到 4 条资料');

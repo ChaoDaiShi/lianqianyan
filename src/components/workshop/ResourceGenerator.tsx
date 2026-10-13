@@ -114,10 +114,11 @@ export function ResourceGenerator() {
     setTextCheck(null);
     setStages(STAGE_DEFS.map((def, index) => ({ ...def, status: index === 0 ? 'running' as const : 'pending' as const })));
     const request = { courseId: ACTIVE_COURSE_ID, knowledgePointId };
+    let textResult: GeneratedResource;
 
     try {
       // 阶段 1 · 文字资源
-      const textResult = await generateLearningResource({ ...request, resourceType });
+      textResult = await generateLearningResource({ ...request, resourceType });
       setResource(textResult);
       setStage('text', 'done');
     } catch {
@@ -160,7 +161,7 @@ export function ResourceGenerator() {
     // 阶段 4 · AI 文字质量检查（文字是最重要的资产）
     setStage('check', 'running');
     try {
-      const check = await verifyResourceText(resource?.content ?? '');
+      const check = await verifyResourceText(textResult.content);
       setTextCheck(check);
       setStage('check', check.available ? 'done' : 'skipped', check.available ? (check.passed ? '通过' : `发现 ${check.issues.length} 个问题`) : '未启用');
     } catch {
@@ -205,14 +206,14 @@ export function ResourceGenerator() {
   };
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(15rem,1fr)_minmax(15rem,1fr)_minmax(0,2fr)]">
       <GlassPanel className="p-5 sm:p-6">
         <div className="flex items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-violet-100 text-primary-700">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--em-primary-subtle)] text-[var(--em-primary-deep)]">
             <BookOpenCheck className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[10px] font-semibold text-primary-700">01 · 选择目标</p>
+            <p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">01 · 输入参数</p>
             <h2 className="mt-1 text-lg font-bold">课程资源生成</h2>
             <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
               基于课程材料模板生成；AI 评估是否配图，最后做文字质量检查。
@@ -222,12 +223,12 @@ export function ResourceGenerator() {
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <label className="block text-xs font-semibold text-[var(--em-muted-ink)]">
-            选择知识点
+            知识点
             <select
               value={knowledgePointId}
               disabled={loading || pointsLoading || points.length === 0}
               onChange={(event) => setKnowledgePointId(event.target.value)}
-              className="mt-2 h-11 w-full rounded-2xl border border-violet-200 bg-white/80 px-3 text-sm text-[var(--em-ink)]"
+              className="mt-2 h-11 w-full rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] px-3 text-sm text-[var(--em-ink)]"
             >
               {pointsLoading && <option value="">正在读取课程知识点…</option>}
               {!pointsLoading && points.length === 0 && <option value="">当前课程暂无知识点</option>}
@@ -240,14 +241,14 @@ export function ResourceGenerator() {
           </label>
 
           <label className="block text-xs font-semibold text-[var(--em-muted-ink)]">
-            02 · 选择生成模式
+            产物类型
             <select
               value={resourceType}
               disabled={loading}
               onChange={(event) =>
                 setResourceType(event.target.value as ResourceType)
               }
-              className="mt-2 h-11 w-full rounded-2xl border border-violet-200 bg-white/80 px-3 text-sm text-[var(--em-ink)]"
+              className="mt-2 h-11 w-full rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] px-3 text-sm text-[var(--em-ink)]"
             >
               {RESOURCE_TYPES.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -260,43 +261,43 @@ export function ResourceGenerator() {
           <Button
             type="submit"
             disabled={loading || !knowledgePointId}
-            className="h-11 w-full gap-2 rounded-2xl bg-primary-500"
+            className="h-11 w-full gap-2 rounded-lg bg-[var(--em-action)]"
           >
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Sparkles className="h-4 w-4" />
             )}
-            {loading ? '正在按阶段生成…' : '03 · 开始生成'}
+            {loading ? '正在按阶段生成…' : '开始生成'}
           </Button>
         </form>
-
-        {(loading || stages.some((stage) => stage.status !== 'pending')) && (
-          <div className="mt-4">
-            <GenerationProgress stages={stages} />
-          </div>
-        )}
 
         {pointsError && (
           <div
             role="alert"
-            className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800"
+            className="mt-4 rounded-xl border border-[var(--em-warning)] bg-[var(--em-surface-subtle)] px-4 py-3 text-xs leading-5 text-[var(--em-warning)]"
           >
             课程知识点暂时没有加载成功，不使用其他课程的列表代替。请稍后重试。
           </div>
         )}
-        {error && (
-          <div
-            role="alert"
-            className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs leading-5 text-rose-700"
-          >
-            资源生成暂时不可用。没有生成结果被保留，请稍后重试。
-          </div>
+      </GlassPanel>
+
+      <GlassPanel className="p-5 sm:p-6">
+        <div className="mb-4 border-b border-[var(--em-border)] pb-4">
+          <p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">02 · 处理过程</p>
+          <h2 className="mt-1 text-lg font-bold">生成阶段</h2>
+          <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">只显示本次请求产生的阶段状态。</p>
+        </div>
+        {loading || stages.some((stage) => stage.status !== 'pending') ? (
+          <GenerationProgress stages={stages} />
+        ) : (
+          <p className="rounded-lg border border-dashed border-[var(--em-border)] px-3 py-4 text-xs leading-5 text-[var(--em-muted-ink)]">提交生成参数后，这里显示文字生成、配图方案、配图和质量检查的实际返回状态。</p>
         )}
+        {error && <p role="alert" className="mt-3 rounded-lg border border-[var(--em-danger)] bg-[var(--em-surface-subtle)] px-3 py-2 text-xs leading-5 text-[var(--em-danger)]">文字资源生成失败，没有产物可预览。</p>}
       </GlassPanel>
 
       <GlassPanel className="min-h-[30rem] overflow-hidden p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3 border-b border-violet-100 pb-4"><div><p className="text-[10px] font-semibold text-primary-700">04 · 生成与预览</p><h2 className="mt-1 text-lg font-bold">资源画布</h2></div><span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] text-primary-700">增强预览为主</span></div>
+        <div className="mb-4 flex items-center justify-between gap-3 border-b border-[var(--em-border)] pb-4"><div><p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">03 · 产物预览</p><h2 className="mt-1 text-lg font-bold">生成结果</h2></div><span className="rounded-lg bg-[var(--em-primary-subtle)] px-2.5 py-1 text-[10px] text-[var(--em-primary-deep)]">仅展示本次返回</span></div>
         {loading && !resource ? (
           <GenerationProgress stages={stages} />
         ) : resource ? (
@@ -304,33 +305,33 @@ export function ResourceGenerator() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700">
+                  <span className="rounded-full bg-[var(--em-surface-subtle)] px-2.5 py-1 text-[10px] font-semibold text-[var(--em-success)]">
                     基于课程材料模板生成
                   </span>
-                  <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-primary-700">
+                  <span className="rounded-full bg-[var(--em-primary-subtle)] px-2.5 py-1 text-[10px] font-semibold text-[var(--em-primary-deep)]">
                     {resource.format === 'presentation' ? 'PPTX' : 'Markdown'}
                   </span>
                 </div>
                 <h3 className="mt-3 text-xl font-bold">{resource.title}</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {resource.format === 'markdown' && <Button type="button" size="sm" variant="outline" disabled={optimizing} onClick={() => void optimize()} className="gap-1.5 rounded-xl bg-white/70"><Sparkles className="h-3.5 w-3.5" />{optimizing ? 'AI 优化中…' : 'AI 优化'}</Button>}
+                {resource.format === 'markdown' && <Button type="button" size="sm" variant="outline" disabled={optimizing} onClick={() => void optimize()} className="gap-1.5 rounded-xl bg-[var(--em-surface)]"><Sparkles className="h-3.5 w-3.5" />{optimizing ? 'AI 优化中…' : 'AI 优化'}</Button>}
                 {resource.format === 'markdown' && <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={() => void copyMarkdown()}
-                  className="gap-1.5 rounded-xl bg-white/70"
+                  className="gap-1.5 rounded-xl bg-[var(--em-surface)]"
                 >
                   <Copy className="h-3.5 w-3.5" />复制 Markdown
                 </Button>}
-                {resource.format === 'presentation' && <Button asChild type="button" size="sm" variant="outline" className="gap-1.5 rounded-xl bg-white/70"><a href="templates/lianqianyan-course-template.pptx" download><FileDown className="h-3.5 w-3.5" />下载 PPT 模板</a></Button>}
+                {resource.format === 'presentation' && <Button asChild type="button" size="sm" variant="outline" className="gap-1.5 rounded-xl bg-[var(--em-surface)]"><a href="templates/lianqianyan-course-template.pptx" download><FileDown className="h-3.5 w-3.5" />下载 PPT 模板</a></Button>}
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={() => void downloadResource()}
-                  className="gap-1.5 rounded-xl bg-white/70"
+                  className="gap-1.5 rounded-xl bg-[var(--em-surface)]"
                 >
                   <Download className="h-3.5 w-3.5" />{resource.format === 'presentation' ? '下载真实 .pptx' : '下载 .md'}
                 </Button>
@@ -344,7 +345,7 @@ export function ResourceGenerator() {
               {resource.sourceSections.map((section) => (
                 <span
                   key={section}
-                  className="rounded-full border border-violet-100 bg-white/70 px-2 py-0.5 text-[11px] text-primary-700"
+                  className="rounded-full border border-[var(--em-border)] bg-[var(--em-surface)] px-2 py-0.5 text-[11px] text-[var(--em-primary-deep)]"
                 >
                   {section}
                 </span>
@@ -352,8 +353,8 @@ export function ResourceGenerator() {
             </div>
 
             {plan ? (
-              <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50/60 px-4 py-3 text-xs leading-5 text-[var(--em-muted-ink)]">
-                <span className="mr-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-primary-700">{plan.plannedBy === 'llm' ? 'AI 配图方案' : '默认配图方案'}</span>
+              <div className="mt-4 rounded-xl border border-[var(--em-border)] bg-[var(--em-primary-subtle)] px-4 py-3 text-xs leading-5 text-[var(--em-muted-ink)]">
+                <span className="mr-2 rounded-full bg-[var(--em-surface)] px-2 py-0.5 text-[10px] font-semibold text-[var(--em-primary-deep)]">{plan.plannedBy === 'llm' ? 'AI 配图方案' : '默认配图方案'}</span>
                 {plan.shouldGenerate
                   ? plan.centralMetaphor
                     ? `中心图标：${plan.centralMetaphor}；卡片隐喻按章节概念生成。`
@@ -362,10 +363,10 @@ export function ResourceGenerator() {
               </div>
             ) : null}
 
-            {optimizeError ? <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-800">AI 优化暂时不可用，原内容保持不变。</p> : null}
+            {optimizeError ? <p className="mt-3 rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2 text-xs text-[var(--em-warning)]">AI 优化暂时不可用，原内容保持不变。</p> : null}
 
             <div className="mt-5">
-              <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-[var(--em-muted-ink)]"><Sparkles className="h-3.5 w-3.5 text-primary-600" />增强预览{image?.imageUrls[0] ? '（含课程配图）' : ''}</p>
+              <p className="mb-2 flex items-center gap-2 text-xs font-semibold text-[var(--em-muted-ink)]"><Sparkles className="h-3.5 w-3.5 text-[var(--em-primary)]" />增强预览{image?.imageUrls[0] ? '（含课程配图）' : ''}</p>
               <RichResourcePreview
                 content={previewText}
                 imageUrl={image?.imageUrls[0]}
@@ -373,18 +374,18 @@ export function ResourceGenerator() {
               />
             </div>
 
-            {image?.skipped ? <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-800">AI 判断此知识点暂不配图：{image.skipReason}（文字资源不受影响）。</p> : null}
-            {imageError ? <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs text-amber-800">文字已生成；MiniMax 图片暂时不可用，没有用占位图冒充结果。</p> : null}
+            {image?.skipped ? <p className="mt-3 rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2 text-xs text-[var(--em-warning)]">AI 判断此知识点暂不配图：{image.skipReason}（文字资源不受影响）。</p> : null}
+            {imageError ? <p className="mt-3 rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2 text-xs text-[var(--em-warning)]">文字已生成；MiniMax 图片暂时不可用，没有用占位图冒充结果。</p> : null}
 
             {textCheck ? (
               textCheck.available ? (
                 textCheck.passed ? (
-                  <div className="mt-4 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3 text-xs text-emerald-800">
+                  <div className="mt-4 flex items-center gap-2 rounded-xl border border-[var(--em-success)] bg-[var(--em-surface-subtle)] px-4 py-3 text-xs text-[var(--em-success)]">
                     <ShieldCheck className="h-4 w-4 shrink-0" />
                     <span>文字质量检查通过{textCheck.summary ? `：${textCheck.summary}` : '：无乱码、截断或占位符。'}</span>
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">
+                  <div className="mt-4 rounded-xl border border-[var(--em-warning)] bg-[var(--em-surface-subtle)] px-4 py-3 text-xs leading-5 text-[var(--em-warning)]">
                     <p className="font-semibold">文字质量检查发现问题{textCheck.summary ? `：${textCheck.summary}` : ''}</p>
                     <ul className="mt-1.5 list-inside list-disc space-y-1">{textCheck.issues.map((issue, index) => <li key={index}>{issue}</li>)}</ul>
                   </div>
@@ -394,13 +395,13 @@ export function ResourceGenerator() {
               )
             ) : null}
 
-            <details className="group mt-4 rounded-[1.5rem] border border-violet-100 bg-white/55">
+            <details className="group mt-4 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)]">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-5 py-3 text-xs font-semibold text-[var(--em-muted-ink)]">
-                <span className="flex items-center gap-2">编辑 Markdown 源码<span className="text-primary-600 group-open:hidden">▸ 展开</span><span className="hidden text-primary-600 group-open:inline">▾ 收起</span></span>
+                <span className="flex items-center gap-2">编辑 Markdown 源码<span className="text-[var(--em-primary)] group-open:hidden">▸ 展开</span><span className="hidden text-[var(--em-primary)] group-open:inline">▾ 收起</span></span>
                 <span className="text-[10px] font-normal">默认收起 · 修改仅作用于当前预览与导出</span>
               </summary>
               <div className="px-5 pb-5">
-                <textarea value={previewText} readOnly={resource.format === 'presentation'} onChange={(event) => setPreviewText(event.target.value)} className="min-h-[18rem] w-full resize-y rounded-[18px] border border-violet-100 bg-white/65 p-4 text-sm font-normal leading-7 text-[var(--em-ink)] outline-none focus:border-primary-300 read-only:cursor-default read-only:bg-violet-50/35" />
+                <textarea value={previewText} readOnly={resource.format === 'presentation'} onChange={(event) => setPreviewText(event.target.value)} className="min-h-[18rem] w-full resize-y rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4 text-sm font-normal leading-7 text-[var(--em-ink)] outline-none focus:border-[var(--em-primary)] read-only:cursor-default read-only:bg-[var(--em-primary-subtle)]" />
               </div>
             </details>
 
@@ -409,8 +410,8 @@ export function ResourceGenerator() {
               title="生成完成 · 下一步"
               actions={[
                 { key: 'understand', title: `理解「${knowledgePointName}」在课程里的位置`, reason: '知识图谱展示它的前置、后继与章节结构', to: '/knowledge', cta: '看知识图谱' },
-                { key: 'assess', title: `做「${knowledgePointName}」相关自测`, reason: '自测结果会沉淀为诊断证据，更新学习路线', to: '/exams', cta: '去做自测' },
-                { key: 'route', title: '回到学习路线安排下一步', reason: '按诊断优先级继续成长路线', to: '/my-learning', cta: '看路线' },
+                { key: 'assess', title: `做「${knowledgePointName}」相关自测`, reason: '自测结果会沉淀为诊断证据，更新学习计划', to: '/exams', cta: '去做自测' },
+                { key: 'route', title: '查看学习计划中的下一项', reason: '按诊断优先级继续当前计划', to: '/my-learning', cta: '看学习计划' },
               ]}
             />
             <p aria-live="polite" className="mt-2 text-xs text-[var(--em-muted-ink)]">
@@ -422,8 +423,8 @@ export function ResourceGenerator() {
             </p>
           </div>
         ) : (
-          <div className="min-h-[24rem] rounded-[22px] border border-dashed border-violet-200 bg-white/35 p-5">
-            <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 text-primary-600"><BookOpenCheck className="h-5 w-5" /></span><div><h3 className="font-bold">预览尚未生成</h3><p className="mt-1 text-xs text-[var(--em-muted-ink)]">左侧选择目标与模式后显式生成。</p></div></div><div className="mt-6 space-y-3" aria-label="预览结构说明"><div className="h-5 w-2/5 rounded-full bg-violet-100/80" /><div className="h-3 w-full rounded-full bg-slate-100" /><div className="h-3 w-5/6 rounded-full bg-slate-100" /><div className="mt-6 h-24 rounded-2xl border border-violet-100 bg-white/55" /></div><p className="mt-6 text-xs leading-6 text-[var(--em-muted-ink)]">这里只展示画布结构，不是生成结果。生成后增强预览为主显示，Markdown 源码默认收起；配图先经 AI 评估，最后做文字质量检查。</p>
+          <div className="grid min-h-[18rem] place-items-center rounded-lg border border-dashed border-[var(--em-border)] bg-[var(--em-surface)] p-5 text-center">
+            <div><h3 className="font-semibold">尚无生成结果</h3><p className="mt-2 max-w-sm text-xs leading-6 text-[var(--em-muted-ink)]">填写知识点与产物类型后开始生成。生成完成后，真实返回内容会显示在这里。</p></div>
           </div>
         )}
       </GlassPanel>

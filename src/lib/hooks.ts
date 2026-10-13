@@ -297,5 +297,11 @@ export function useLlmStatus(): AsyncState<LlmStatus> {
 
 /** GET /api/learning/evidence —— 最近学习行为（报告展示用）。 */
 export function useRecentEvidence(): AsyncState<LearningEvidence[]> {
-  return useAsync(() => fetchRecentEvidence(), []);
+  const state = useAsync(() => fetchRecentEvidence(), []);
+  useEffect(() => {
+    const refresh = () => { void state.refetch(); };
+    window.addEventListener('educationmind:evidence-updated', refresh);
+    return () => window.removeEventListener('educationmind:evidence-updated', refresh);
+  }, [state.refetch]);
+  return state;
 }

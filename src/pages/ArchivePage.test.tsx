@@ -9,6 +9,8 @@ import type {
   PersistedStudyPlan,
 } from '@/domain';
 import type { LearningStoryTimelineProps } from '@/components/archive/LearningStoryTimeline';
+import type { EvidenceLedgerProps } from '@/components/archive/EvidenceLedger';
+import type { ArchiveDossierSnapshot } from '@/components/archive/ArchiveDossierExport';
 import type { ReflectionResult } from '@/components/learning/learningLoop';
 import type { LearnerPortraitDashboardProps } from '@/components/profile/LearnerPortraitDashboard';
 import type { MemoryCapsuleProps } from '@/components/xiaolian/MemoryCapsule';
@@ -20,6 +22,8 @@ import type {
 
 const fixtures = vi.hoisted(() => ({
   storyProps: null as LearningStoryTimelineProps | null,
+  ledgerProps: null as EvidenceLedgerProps | null,
+  dossierSnapshot: null as ArchiveDossierSnapshot | null,
   memoryProps: null as XiaolianMemoryCardProps | null,
   capsuleProps: null as MemoryCapsuleProps | null,
   portraitProps: null as LearnerPortraitDashboardProps | null,
@@ -50,6 +54,20 @@ vi.mock('@/components/archive/LearningStoryTimeline', () => ({
   LearningStoryTimeline: (props: LearningStoryTimelineProps) => {
     fixtures.storyProps = props;
     return <div>learning-story-timeline</div>;
+  },
+}));
+
+vi.mock('@/components/archive/EvidenceLedger', () => ({
+  EvidenceLedger: (props: EvidenceLedgerProps) => {
+    fixtures.ledgerProps = props;
+    return <div>evidence-ledger</div>;
+  },
+}));
+
+vi.mock('@/components/archive/ArchiveDossierExport', () => ({
+  ArchiveDossierExport: ({ snapshot }: { snapshot: ArchiveDossierSnapshot }) => {
+    fixtures.dossierSnapshot = snapshot;
+    return <div>archive-dossier-export</div>;
   },
 }));
 
@@ -191,6 +209,8 @@ function createEvaluation(
 
 beforeEach(() => {
   fixtures.storyProps = null;
+  fixtures.ledgerProps = null;
+  fixtures.dossierSnapshot = null;
   fixtures.memoryProps = null;
   fixtures.capsuleProps = null;
   fixtures.portraitProps = null;
@@ -354,6 +374,8 @@ describe('ArchivePage Xiaolian memory integration', () => {
     expect(html).toContain('learner-portrait-dashboard');
     expect(html).not.toContain('memory-capsule');
     expect(html).toContain('learning-story-timeline');
+    expect(html).toContain('evidence-ledger');
+    expect(html).toContain('archive-dossier-export');
     expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('growth-timeline');
     expect(html).toContain('Operating Systems');
@@ -382,6 +404,15 @@ describe('ArchivePage Xiaolian memory integration', () => {
     expect(storyProps?.courseId).toBe('course-1');
     expect(storyProps?.loading).toBe(false);
     expect(storyProps?.error).toBe(true);
+    expect(fixtures.ledgerProps?.rows.map((row) => row.id)).toEqual([
+      'practice-2',
+      'practice-1',
+      'local-reflection:task-1:2026-08-22T08:30:00.000Z',
+      'evidence-learning-1',
+    ]);
+    expect(fixtures.dossierSnapshot?.learnerId).toBe('learner-1');
+    expect(fixtures.dossierSnapshot?.courseId).toBe('course-1');
+    expect(fixtures.dossierSnapshot?.overview.submittedExamCount).toBe(2);
 
     storyProps?.onRetry();
 

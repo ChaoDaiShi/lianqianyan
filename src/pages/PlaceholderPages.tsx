@@ -22,7 +22,7 @@ export function SettingsPage() {
     <AppShell>
       <div className="mx-auto max-w-4xl space-y-5">
         <GlassPanel className="p-6 sm:p-8">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700">
+          <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-[var(--em-primary-deep)]">
             <Settings className="h-4 w-4" />RUNTIME & PRIVACY
           </p>
           <h1 className="mt-3 text-3xl font-bold">账号与学习设置</h1>
@@ -32,7 +32,7 @@ export function SettingsPage() {
         </GlassPanel>
         <div className="grid gap-4 sm:grid-cols-2">
           <GlassPanel className="p-5">
-            <Database className="h-5 w-5 text-primary-600" />
+            <Database className="h-5 w-5 text-[var(--em-primary)]" />
             <h2 className="mt-3 text-base font-bold">档案来源</h2>
             <p className="mt-2 text-xs leading-6 text-[var(--em-muted-ink)]">
               {identityLabel}。当前课程上下文为 {ACTIVE_LEARNER_CONTEXT.courseId}。
@@ -70,7 +70,7 @@ const EXTRA_LINKS = [
     title: '账号与隐私设置',
     description: '了解当前账号档案、课程上下文、会话与语音数据边界。',
     icon: Settings,
-    tone: 'text-primary-700 bg-violet-50',
+    tone: 'text-[var(--em-primary-deep)] bg-violet-50',
   },
 ] as const;
 
@@ -82,7 +82,7 @@ export function AboutPage() {
           <div className="grid gap-6 md:grid-cols-[10rem_minmax(0,1fr)] md:items-center">
             <XiaolianCharacter state="idle" size="lg" />
             <div>
-              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-primary-700">
+              <p className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-[var(--em-primary-deep)]">
                 <Info className="h-4 w-4" />MORE & ABOUT
               </p>
               <h1 className="mt-3 text-3xl font-bold">关于涟千言</h1>
@@ -103,7 +103,7 @@ export function AboutPage() {
                   </span>
                   <h2 className="mt-4 text-lg font-bold">{item.title}</h2>
                   <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">{item.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-primary-700">
+                  <span className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-[var(--em-primary-deep)]">
                     打开页面<ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </GlassPanel>

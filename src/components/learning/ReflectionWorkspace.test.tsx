@@ -46,7 +46,7 @@ describe('ReflectionWorkspace', () => {
     expect(html).toContain('循环等待');
     expect(html).toContain(result.nextSuggestion);
     expect(html).toContain('小涟观察到');
-    expect(html).toContain('不会更新学习者画像、LearningEvidence 或 mastery');
+    expect(html).toContain('当前没有写入服务端学习画像、LearningEvidence 或掌握度的接口');
     expect(onComplete).not.toHaveBeenCalled();
   });
 });

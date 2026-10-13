@@ -93,7 +93,10 @@ describe('buildEvidenceOrbit', () => {
       task,
       evidence: [
         evidence('learning_started'),
-        evidence('practice_answer_evaluated'),
+        {
+          ...evidence('practice_answer_evaluated'),
+          payload: { independent: true, hintUsed: false },
+        },
       ],
     });
 
@@ -103,6 +106,25 @@ describe('buildEvidenceOrbit', () => {
     expect(model.taskCount).toBe(1);
     expect(model.progress).toBe(1);
     expect(model.currentLabel).toBe('闭环完成');
+  });
+
+  it('keeps ordinary practice out of the independent validation stage', () => {
+    const model = buildEvidenceOrbit({
+      diagnosis,
+      plan,
+      task,
+      evidence: [
+        evidence('learning_started'),
+        {
+          ...evidence('practice_answer_evaluated'),
+          payload: { score: 0.8, hintUsed: false },
+        },
+      ],
+    });
+
+    expect(model.nodes[2].state).toBe('completed');
+    expect(model.nodes[3].state).toBe('current');
+    expect(model.currentLabel).toBe('独立验证');
   });
 });
 
@@ -121,7 +143,7 @@ describe('EvidenceOrbit', () => {
 
     expect(html).toContain('<svg');
     expect(html).toContain('data-evidence-orbit="true"');
-    expect(html).toContain('学习证据星河');
+    expect(html).toContain('学习四阶段进度');
     expect(html.match(/data-orbit-node=/g)).toHaveLength(4);
     expect(html).toContain('data-orbit-state="current"');
     expect(html).toContain('死锁');

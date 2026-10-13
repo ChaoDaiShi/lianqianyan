@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlarmClock, ArrowLeft, CheckCircle2, Cloud, CloudOff, Send } from 'lucide-react';
+import { AlarmClock, ArrowLeft, CheckCircle2, Cloud, CloudOff, Flag, Send } from 'lucide-react';
 import type {
   ExamAnswerValue,
   ExamAttempt,
@@ -57,7 +57,7 @@ function QuestionAnswer({
     return (
       <div className="grid gap-2 sm:grid-cols-2">
         {question.options.map((option) => (
-          <label key={option} className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-violet-100 bg-white/55 p-3 text-sm hover:border-primary-200">
+          <label key={option} className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-3 text-sm hover:border-[var(--em-border)]">
             <input
               type="radio"
               name={`question-${question.questionId}`}
@@ -78,7 +78,7 @@ function QuestionAnswer({
     return (
       <div className="grid gap-2 sm:grid-cols-2">
         {question.options.map((option) => (
-          <label key={option} className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-violet-100 bg-white/55 p-3 text-sm hover:border-primary-200">
+          <label key={option} className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-3 text-sm hover:border-[var(--em-border)]">
             <input
               type="checkbox"
               value={option}
@@ -104,7 +104,7 @@ function QuestionAnswer({
           { label: '正确', answer: true },
           { label: '错误', answer: false },
         ].map((item) => (
-          <label key={item.label} className="flex min-w-28 cursor-pointer items-center gap-3 rounded-[16px] border border-violet-100 bg-white/55 p-3 text-sm">
+          <label key={item.label} className="flex min-w-28 cursor-pointer items-center gap-3 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-3 text-sm">
             <input
               type="radio"
               name={`question-${question.questionId}`}
@@ -127,7 +127,7 @@ function QuestionAnswer({
         rows={question.responseKind === 'long_text' ? 6 : 3}
         maxLength={8_000}
         placeholder="在这里作答；停止输入约 700ms 后自动保存"
-        className="rounded-[18px] border-violet-100 bg-white/65 leading-6"
+        className="rounded-xl border-[var(--em-border)] bg-[var(--em-surface)] leading-6"
       />
       <div className="mt-2 flex flex-wrap items-start justify-between gap-2">
         <VoiceInputButton
@@ -152,10 +152,13 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
       attempt.questions.map((question) => [question.questionId, question.userAnswer]),
     ),
   );
+  const [reviewMarks, setReviewMarks] = useState<Record<string, boolean>>({});
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [saveStatus, setSaveStatus] = useState<Record<string, SaveStatus>>({});
   const [now, setNow] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const [voiceQuestionId, setVoiceQuestionId] = useState<string | null>(null);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const expiredSubmissionStarted = useRef(false);
@@ -235,6 +238,13 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
   const answeredCount = attempt.questions.filter((question) =>
     answerIsComplete(answers[question.questionId] ?? null),
   ).length;
+  const unansweredCount = attempt.questions.length - answeredCount;
+  const currentQuestion = attempt.questions[currentQuestionIndex];
+  const jumpToQuestion = (index: number) => {
+    setCurrentQuestionIndex(index);
+    document.getElementById(`question-${attempt.questions[index].questionId}`)!
+      .scrollIntoView({ block: 'start' });
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1_000);
@@ -262,14 +272,14 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
       <GlassPanel className="sticky top-20 z-20 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.15em] text-primary-600">ACTIVE EXAM</p>
+            <p className="text-[10px] font-bold tracking-[0.15em] text-[var(--em-primary)]">ACTIVE EXAM</p>
             <h2 className="mt-1 text-xl font-bold">{attempt.examTitle}</h2>
             <p className="mt-1 text-xs text-[var(--em-muted-ink)]">
               已答 {answeredCount}/{attempt.questions.length} · 自动保存以服务端返回为准
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className={`rounded-2xl px-4 py-2 text-center ${remaining <= 5 * 60_000 ? 'bg-rose-50 text-rose-700' : 'bg-violet-50 text-primary-700'}`}>
+            <div className={`rounded-2xl px-4 py-2 text-center ${remaining <= 5 * 60_000 ? 'bg-rose-50 text-rose-700' : 'bg-[var(--em-primary-subtle)] text-[var(--em-primary-deep)]'}`}>
               <p className="flex items-center gap-1 text-[10px]"><AlarmClock className="h-3 w-3" />剩余时间</p>
               <strong className="font-mono text-lg">{formatRemaining(remaining)}</strong>
             </div>
@@ -284,15 +294,17 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
         <VoiceAttributionNotice mode={speech.mode} provider={speech.provider} error={speech.error} className="mt-3" />
       </GlassPanel>
 
-      {attempt.questions.map((question) => {
-        const status = saveStatus[question.questionId] ?? (question.savedAt ? 'saved' : 'idle');
-        return (
-          <GlassPanel key={question.questionId} className="p-5 sm:p-6">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
+        <div className="min-w-0 space-y-4">
+          {attempt.questions.map((question, index) => {
+            const status = saveStatus[question.questionId] ?? (question.savedAt ? 'saved' : 'idle');
+            return <div id={`question-${question.questionId}`} key={question.questionId} className="scroll-mt-4">
+            <GlassPanel className={`p-5 sm:p-6 ${currentQuestionIndex === index ? 'border-[var(--em-primary)]' : ''}`}>
             <fieldset>
               <legend className="w-full">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold text-primary-600">
+                    <p className="text-xs font-semibold text-[var(--em-primary)]">
                       第 {question.position} 题 · {question.questionTypeName} · {question.points} 分
                     </p>
                     <h3 className="mt-2 text-base font-bold leading-7">{question.prompt}</h3>
@@ -327,25 +339,109 @@ export function ExamRunner({ attempt, onSubmitted, onExit }: ExamRunnerProps) {
               {status === 'error' && <><CloudOff className="h-3 w-3 text-rose-500" /><span className="text-rose-700">保存失败，交卷前会重试</span></>}
               {status === 'idle' && <span className="text-[var(--em-muted-ink)]">作答后自动保存</span>}
             </div>
-          </GlassPanel>
-        );
-      })}
+            </GlassPanel>
+            </div>
+          })}
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={currentQuestionIndex === 0}
+              onClick={() => jumpToQuestion(currentQuestionIndex - 1)}
+            >
+              上一题
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-pressed={Boolean(reviewMarks[currentQuestion.questionId])}
+              aria-label={reviewMarks[currentQuestion.questionId] ? `取消标记第 ${currentQuestion.position} 题待核验` : `标记第 ${currentQuestion.position} 题待核验`}
+              onClick={() => setReviewMarks((marks) => ({
+                ...marks,
+                [currentQuestion.questionId]: !marks[currentQuestion.questionId],
+              }))}
+              className="gap-2"
+            >
+              <Flag className="h-4 w-4" />
+              {reviewMarks[currentQuestion.questionId] ? '取消待核验' : '标记待核验'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={currentQuestionIndex === attempt.questions.length - 1}
+              onClick={() => jumpToQuestion(currentQuestionIndex + 1)}
+            >
+              下一题
+            </Button>
+          </div>
+        </div>
+
+        <aside className="rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4 lg:sticky lg:top-28" aria-label="答题卡">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold">答题卡</h3>
+              <p className="mt-1 text-xs text-[var(--em-muted-ink)]">已答 {answeredCount} · 未答 {unansweredCount}</p>
+            </div>
+            <span className="rounded-md border border-[var(--em-border)] px-2 py-1 text-[10px] text-[var(--em-muted-ink)]">已标记 {Object.values(reviewMarks).filter(Boolean).length}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-7 lg:grid-cols-4">
+            {attempt.questions.map((question, index) => {
+              const answered = answerIsComplete(answers[question.questionId] ?? null);
+              const marked = Boolean(reviewMarks[question.questionId]);
+              return (
+                <button
+                  key={question.questionId}
+                  type="button"
+                  aria-label={`第 ${question.position} 题${answered ? '，已作答' : '，未作答'}${marked ? '，待核验' : ''}`}
+                  aria-current={currentQuestionIndex === index ? 'step' : undefined}
+                  onClick={() => jumpToQuestion(index)}
+                  className={`relative grid aspect-square place-items-center rounded-lg border text-sm font-semibold ${answered ? 'bg-emerald-50 text-emerald-800' : 'bg-[var(--em-surface)] text-[var(--em-muted-ink)]'} ${currentQuestionIndex === index ? 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)] text-[var(--em-primary-deep)]' : 'border-[var(--em-border)]'}`}
+                >
+                  {question.position}
+                  {marked ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-700 ring-2 ring-white" aria-hidden="true" /> : null}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 space-y-1 border-t border-[var(--em-border)] pt-3 text-[10px] text-[var(--em-muted-ink)]">
+            <p>绿色：已作答</p>
+            <p>蓝色标记：待核验</p>
+            <p>作答状态按本页当前答案显示，自动保存状态显示在题目下方。</p>
+          </div>
+        </aside>
+      </div>
 
       <GlassPanel className="flex flex-col items-center justify-between gap-4 p-5 sm:flex-row">
         <div>
-          <p className="font-semibold">交卷前请确认所有答案</p>
+          <p className="font-semibold">交卷前请复核答题卡</p>
           <p className="mt-1 text-xs text-[var(--em-muted-ink)]">
             客观题立即评分，人工题显示待批；交卷后不能修改。
           </p>
           {submitError && <p className="mt-2 text-xs text-rose-700" role="alert">保存或交卷失败，请检查连接后重试。</p>}
+          {confirmingSubmit ? (
+            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3" role="alertdialog" aria-label="交卷确认">
+              <p className="text-sm font-semibold">{unansweredCount > 0 ? `仍有 ${unansweredCount} 道题未作答` : '所有题目均已作答'}</p>
+              <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">交卷后答案将锁定，并由考试服务端评分或安排人工批阅。</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => setConfirmingSubmit(false)}>返回检查</Button>
+                <Button type="button" size="sm" disabled={submitting} onClick={() => { setConfirmingSubmit(false); void handleSubmit(shouldSyncAnswersBeforeSubmit(remaining)); }}>
+                  {submitting ? '正在交卷…' : '确认交卷'}
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
         <Button
           type="button"
-          onClick={() => void handleSubmit(shouldSyncAnswersBeforeSubmit(remaining))}
+          onClick={() => setConfirmingSubmit(true)}
           disabled={submitting}
-          className="gap-2 rounded-2xl bg-primary-500 px-6"
+          className="gap-2 rounded-2xl bg-[var(--em-action)] px-6"
         >
-          <Send className="h-4 w-4" />{submitting ? '正在交卷…' : '交卷'}
+          <Send className="h-4 w-4" />交卷
         </Button>
       </GlassPanel>
     </div>

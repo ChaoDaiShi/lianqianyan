@@ -10,8 +10,11 @@ export type ActionType =
 export type ExperimentGroup = 'A' | 'B' | 'C' | 'D';
 export type LeapAblation =
   'none' | 'misconception' | 'prerequisites' | 'ranking';
+export type QuestionNovelty = 'new' | 'review';
 export interface LeapQuestion {
   id: string;
+  version?: string;
+  novelty?: QuestionNovelty;
   prompt: string;
   options: { id: string; text: string }[];
   responseMode: 'choice' | 'text';
@@ -110,7 +113,7 @@ export interface LeapTeaching {
 }
 export interface LeapOutcome {
   id: string;
-  interventionId: string;
+  interventionId: string | null;
   questionId: string;
   correct: boolean;
   score: number;
@@ -118,9 +121,11 @@ export interface LeapOutcome {
   independent: boolean;
   hintUsed: boolean;
   durationSeconds: number;
-  preScore: number;
+  preScore: number | null;
   postScore: number;
-  observedGain: number;
+  scoreComparable: boolean;
+  comparisonReason: string | null;
+  observedGain: number | null;
   misconceptionStatus: 'repaired' | 'persisting' | 'uncertain';
   retestScore: number | null;
   completedAt: string;
@@ -157,6 +162,37 @@ export interface LeapSession {
     topicId: string;
   } | null;
   retestDueAt: string | null;
+  assessmentStatus: 'pending' | 'saved';
+  replanning: {
+    status: 'not_needed' | 'performed' | 'failed' | string;
+    reasonCodes: string[];
+    previousPlanId: string | null;
+    newPlanId: string | null;
+  };
+  questionAvailability: Record<
+    'practice' | 'probe' | 'retest',
+    {
+      status: 'available' | 'exhausted';
+      novelty: QuestionNovelty | null;
+      message: string;
+    }
+  >;
+  /** POST answer endpoints add these fields when a saved assessment is replayed. */
+  alreadyRecorded?: boolean;
+  savedAssessment?: LeapSavedAssessment;
+}
+export interface LeapSavedAssessment {
+  questionId: string;
+  questionVersion?: string;
+  stage?: 'diagnostic' | 'practice' | 'probe' | 'retest';
+  gradingVersion?: string;
+  score: number;
+  isCorrect?: boolean;
+  feedback?: string | null;
+  independent?: boolean;
+  hintUsed?: boolean;
+  countsForMastery?: boolean;
+  evidenceId?: string | null;
 }
 export interface LeapExperiment {
   group: ExperimentGroup;
@@ -170,6 +206,7 @@ export interface LeapExperiment {
 }
 export interface LeapOverview {
   catalogVersion: string;
+  questionBankVersion: string | null;
   policyVersion: string;
   sessions: LeapSession[];
   states: LeapKnowledgeState[];
@@ -249,6 +286,9 @@ export const practiceLeapSession = async (
   ).data;
 export const prepareLeapProbe = async (id: string) =>
   (await api.post<LeapSession>(`/api/adaptive/sessions/${id}/ready-probe`, {}))
+    .data;
+export const prepareLeapRetest = async (id: string) =>
+  (await api.post<LeapSession>(`/api/adaptive/sessions/${id}/ready-retest`, {}))
     .data;
 export const submitLeapProbe = async (id: string, payload: LeapAnswer) =>
   (await api.post<LeapSession>(`/api/adaptive/sessions/${id}/probe`, payload))

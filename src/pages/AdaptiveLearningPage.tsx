@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -18,10 +18,8 @@ import {
   LockKeyhole,
   Network,
   RefreshCw,
-  Sparkles,
   Target,
   Timer,
-  WandSparkles,
 } from 'lucide-react';
 import { AxiosError } from 'axios';
 import { AppShell } from '@/components/layout/AppShell';
@@ -40,6 +38,7 @@ import {
   fetchLeapSessions,
   practiceLeapSession,
   prepareLeapProbe,
+  prepareLeapRetest,
   startLeapIntervention,
   submitLeapProbe,
   submitLeapRetest,
@@ -47,6 +46,7 @@ import {
   type ExperimentGroup,
   type LeapAblation,
   type LeapCatalog,
+  type LeapSavedAssessment,
   type LeapSession,
   type LeapTopic,
 } from '@/lib/adaptiveApi';
@@ -57,11 +57,13 @@ const PHASES = [
   { label: '针对性学习', detail: '选择适合的帮助', icon: Lightbulb },
   { label: '独立验证', detail: '用新题确认理解', icon: CheckCircle2 },
 ];
-const TOPIC_ICONS = [GitBranch, Layers3, Network, WandSparkles];
+const TOPIC_ICONS = [GitBranch, Layers3, Network, Target];
 const phaseIndex = (phase: LeapSession['phase']) =>
   ({ diagnostic: 0, decision: 1, teaching: 2, probe: 3, completed: 4 })[phase];
-const percent = (value: number | null) =>
-  value === null ? '未知' : `${Math.round(value * 100)}%`;
+const percent = (value: number | null | undefined) =>
+  value === null || value === undefined ? '未记录' : `${Math.round(value * 100)}%`;
+const isUnsetScore = (value: number | null | undefined) =>
+  value === null || value === undefined;
 const evidenceNames = {
   diagnostic: '初次诊断',
   intervention: '教学干预',
@@ -99,6 +101,9 @@ export function AdaptiveLearningPage() {
   const [showEvidence, setShowEvidence] = useState(false);
   const [showPractice, setShowPractice] = useState(false);
   const [showRetest, setShowRetest] = useState(initialQuery.retest);
+  const [replayedAssessment, setReplayedAssessment] =
+    useState<LeapSavedAssessment | null>(null);
+  const autoPreparedRetests = useRef(new Set<string>());
   const supported = ACTIVE_COURSE_ID === 'course-ds';
 
   const load = useCallback(async () => {
@@ -155,28 +160,50 @@ export function AdaptiveLearningPage() {
     setShowRetest(requestedRetest);
   }, [requestedRetest]);
 
-  const run = async (operation: () => Promise<LeapSession>) => {
+  const run = useCallback(async (
+    operation: () => Promise<LeapSession>,
+    preserveRetestQuery = false,
+  ) => {
     setBusy(true);
     setError(null);
+    setReplayedAssessment(null);
     try {
       const next = await operation();
+      window.dispatchEvent(new Event('educationmind:evidence-updated'));
       setSession(next);
+      if (next.alreadyRecorded && next.savedAssessment) {
+        setReplayedAssessment(next.savedAssessment);
+        if (next.savedAssessment.stage === 'practice') setShowPractice(false);
+      }
       setSessions(current => [
         next,
         ...current.filter(item => item.id !== next.id),
       ]);
-      setSearchParams({ session: next.id });
+      setSearchParams({
+        session: next.id,
+        ...(preserveRetestQuery ? { retest: '1' } : {}),
+      });
       setAdjusting(false);
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
       setBusy(false);
     }
+  }, [setSearchParams]);
+  const openRetest = () => {
+    if (!session) return;
+    setShowRetest(true);
+    setSearchParams({ session: session.id, retest: '1' });
+    if (session.retestQuestion) return;
+    autoPreparedRetests.current.add(session.id);
+    void run(() => prepareLeapRetest(session.id), true);
   };
   const startTopic = (topicId: string, fromSessionId?: string) => {
     setShowRetest(false);
     setShowPractice(false);
     setShowEvidence(false);
+    setReplayedAssessment(null);
+    autoPreparedRetests.current.clear();
     void run(() =>
       createLeapSession({
         learnerId: ACTIVE_LEARNER_ID,
@@ -207,37 +234,69 @@ export function AdaptiveLearningPage() {
     (showRetest &&
       completed &&
       retestDue &&
-      session?.outcome?.retestScore === null);
+    session?.outcome && isUnsetScore(session.outcome.retestScore));
+  const practiceAlreadyRecorded = Boolean(
+    session?.practiceQuestion && (
+      session.evidence.some(
+        item => item.kind === 'practice' && item.questionId === session.practiceQuestion?.id,
+      ) || (
+        replayedAssessment?.stage === 'practice' &&
+        replayedAssessment.questionId === session.practiceQuestion.id
+      )
+    ),
+  );
+  const probePoolExhausted = Boolean(
+    session?.phase === 'teaching' &&
+    !session.probeQuestion &&
+    session.questionAvailability.probe.status === 'exhausted',
+  );
+  const retestPoolExhausted = Boolean(
+    showRetest &&
+    completed &&
+    retestDue &&
+    session?.outcome && isUnsetScore(session.outcome.retestScore) &&
+    !session.retestQuestion &&
+    session.questionAvailability.retest.status === 'exhausted',
+  );
+  useEffect(() => {
+    if (
+      !requestedRetest ||
+      !session ||
+      !completed ||
+      !retestDue ||
+      !isUnsetScore(session.outcome?.retestScore) ||
+      session.retestQuestion ||
+      autoPreparedRetests.current.has(session.id)
+    ) return;
+    autoPreparedRetests.current.add(session.id);
+    void run(() => prepareLeapRetest(session.id), true);
+  }, [completed, requestedRetest, retestDue, run, session]);
 
   return (
-    <AppShell scene='galaxy'>
+    <AppShell scene='companion'>
       <div
         className='mx-auto max-w-[1280px] space-y-5'
         data-testid='leap-workbench'
       >
-        <header className='relative overflow-hidden rounded-[28px] border border-white/90 bg-gradient-to-br from-white/95 via-violet-50/90 to-sky-50/80 p-5 shadow-[0_8px_36px_rgba(97,74,153,.05)] sm:p-7'>
-          <div className='pointer-events-none absolute -right-12 -top-16 h-72 w-72 rounded-full border-[45px] border-violet-200/15' />
-          <div className='relative flex flex-wrap items-start justify-between gap-4'>
+        <header className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5  sm:p-6'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
             <div className='max-w-2xl'>
-              <p className='flex items-center gap-2 text-[11px] font-semibold tracking-[.18em] text-violet-600'>
-                <Sparkles className='h-4 w-4' />
-                LIAN-LEAP · 自适应教学
-              </p>
-              <h1 className='mt-3 text-2xl font-bold leading-tight tracking-tight text-slate-800 sm:text-[30px]'>
-                让每一次帮助，都有学习证据。
+              <p className='text-xs font-semibold text-[var(--em-primary)]'>LIAN-LEAP · 自适应教学</p>
+              <h1 className='mt-2 text-2xl font-semibold leading-tight tracking-tight text-[var(--em-ink)]'>
+                自适应教学控制台
               </h1>
-              <p className='mt-3 text-sm leading-6 text-slate-500'>
-                找到理解中的卡点，选择适合你的教学方式，再用一道新题确认：你真的会了。
+              <p className='mt-2 text-sm leading-6 text-[var(--em-muted-ink)]'>
+                查看每次诊断、教学决策与独立新题验证之间的真实关联。
               </p>
             </div>
-            <Button asChild variant='outline' size='sm' className='bg-white/70'>
+            <Button asChild variant='outline' size='sm'>
               <Link to='/outcome-lab'>
                 <FlaskConical className='h-4 w-4' />
                 成效观察
               </Link>
             </Button>
           </div>
-          <div className='relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4'>
+          <div className='mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4'>
             {PHASES.map((phase, index) => {
               const Icon = phase.icon;
               const position = session ? phaseIndex(session.phase) : 0;
@@ -247,10 +306,10 @@ export function AdaptiveLearningPage() {
                 <div
                   key={phase.label}
                   className={cn(
-                    'flex items-center gap-3 rounded-2xl border px-3 py-3 transition sm:px-4',
+                    'flex items-center gap-3 rounded-lg border px-3 py-3 sm:px-4',
                     active
-                      ? 'border-violet-200 bg-white shadow-sm'
-                      : 'border-transparent bg-white/45'
+                      ? 'border-[var(--em-border)] bg-[var(--em-surface)] shadow-sm'
+                      : 'border-transparent bg-[var(--em-surface)]'
                   )}
                 >
                   <span
@@ -259,8 +318,8 @@ export function AdaptiveLearningPage() {
                       done
                         ? 'bg-emerald-100 text-emerald-600'
                         : active
-                          ? 'bg-violet-600 text-white shadow-[0_4px_12px_rgba(124,58,237,.2)]'
-                          : 'bg-violet-100/70 text-violet-400'
+                          ? 'bg-[var(--em-action)] text-white '
+                          : 'bg-[var(--em-primary-subtle)] text-[var(--em-primary)]'
                     )}
                   >
                     {done ? (
@@ -273,7 +332,7 @@ export function AdaptiveLearningPage() {
                     <p
                       className={cn(
                         'text-xs font-semibold',
-                        active ? 'text-violet-800' : 'text-slate-600'
+                        active ? 'text-[var(--em-primary)]' : 'text-[var(--em-muted-ink)]'
                       )}
                     >
                       <span className='mr-1 text-[10px] opacity-50'>
@@ -281,7 +340,7 @@ export function AdaptiveLearningPage() {
                       </span>
                       {phase.label}
                     </p>
-                    <p className='mt-1 text-[10px] text-slate-400'>
+                    <p className='mt-1 text-[10px] text-[var(--em-muted-ink)]'>
                       {phase.detail}
                     </p>
                   </div>
@@ -292,12 +351,11 @@ export function AdaptiveLearningPage() {
         </header>
 
         {!supported && (
-          <section className='rounded-[26px] border border-violet-100 bg-white/80 p-8 text-center'>
-            <BookOpen className='mx-auto h-10 w-10 text-violet-400' />
+          <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-8 text-center'>
+            <BookOpen className='mx-auto h-10 w-10 text-[var(--em-primary)]' />
             <h2 className='mt-4 text-xl font-bold'>从《数据结构与算法》开始</h2>
-            <p className='mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-500'>
-              LEAP
-              本轮提供链表、栈与队列、二叉搜索树和图搜索的完整教学闭环。切换课程后，你可以开始一次真实诊断。
+            <p className='mx-auto mt-3 max-w-lg text-sm leading-7 text-[var(--em-muted-ink)]'>
+              LEAP 本轮读取数据结构课程目录中的真实题目与学习证据。切换课程后，你可以开始一次真实诊断。
             </p>
             <Button
               className='mt-5'
@@ -317,7 +375,7 @@ export function AdaptiveLearningPage() {
         {supported && loading && (
           <div
             role='status'
-            className='rounded-[26px] border border-violet-100 bg-white/70 p-12 text-center text-sm text-violet-600'
+            className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-12 text-center text-sm text-[var(--em-primary)]'
           >
             正在恢复学习会话与课程证据…
           </div>
@@ -341,15 +399,15 @@ export function AdaptiveLearningPage() {
           <>
             <div className='flex flex-wrap items-center justify-between gap-3'>
               <div>
-                <h2 className='text-lg font-bold text-slate-800'>
+                <h2 className='text-lg font-bold text-[var(--em-ink)]'>
                   今天，我们先弄懂一个问题。
                 </h2>
-                <p className='mt-1 text-xs leading-6 text-slate-500'>
+                <p className='mt-1 text-xs leading-6 text-[var(--em-muted-ink)]'>
                   从短诊断开始。你的回答会决定接下来怎么学。
                 </p>
               </div>
-              <span className='rounded-full border border-violet-100 bg-white/80 px-3 py-1.5 text-[11px] text-violet-600'>
-                数据结构与算法 · 4 个核心概念
+              <span className='rounded-full border border-[var(--em-border)] bg-[var(--em-surface)] px-3 py-1.5 text-[11px] text-[var(--em-primary)]'>
+                数据结构与算法 · {catalog.topics.length} 个学习概念
               </span>
             </div>
             <div className='grid gap-4 sm:grid-cols-2'>
@@ -365,10 +423,10 @@ export function AdaptiveLearningPage() {
               ))}
             </div>
             <div className='grid gap-4 lg:grid-cols-[1fr_1fr]'>
-              <section className='rounded-[24px] border border-violet-100 bg-white/75 p-5'>
+              <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
                 <div className='flex items-center gap-2'>
-                  <Timer className='h-4 w-4 text-violet-500' />
-                  <h3 className='text-sm font-semibold text-slate-700'>
+                  <Timer className='h-4 w-4 text-[var(--em-primary)]' />
+                  <h3 className='text-sm font-semibold text-[var(--em-ink)]'>
                     这次留给学习的时间
                   </h3>
                 </div>
@@ -380,41 +438,41 @@ export function AdaptiveLearningPage() {
                       className={cn(
                         'rounded-xl border px-4 py-2 text-xs font-semibold',
                         timeBudget === minutes
-                          ? 'border-violet-400 bg-violet-50 text-violet-700'
-                          : 'border-slate-200 bg-white text-slate-500'
+                          ? 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)] text-[var(--em-primary)]'
+                          : 'border-[var(--em-border)] bg-[var(--em-surface)] text-[var(--em-muted-ink)]'
                       )}
                     >
                       {minutes} 分钟
                     </button>
                   ))}
                 </div>
-                <p className='mt-3 text-[11px] leading-5 text-slate-400'>
+                <p className='mt-3 text-[11px] leading-5 text-[var(--em-muted-ink)]'>
                   教学行动会综合概念误解、前置关系和你的时间预算。
                 </p>
               </section>
-              <section className='rounded-[24px] border border-violet-100 bg-white/75 p-5'>
-                <p className='flex items-center gap-2 text-sm font-semibold text-slate-700'>
+              <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
+                <p className='flex items-center gap-2 text-sm font-semibold text-[var(--em-ink)]'>
                   <LockKeyhole className='h-4 w-4 text-emerald-500' />
                   以独立作答确认学习结果
                 </p>
-                <p className='mt-3 text-xs leading-6 text-slate-500'>
+                <p className='mt-3 text-xs leading-6 text-[var(--em-muted-ink)]'>
                   “听懂了”和“能独立解决”是两种证据。教学结束后会收起讲解，用另一道题验证理解；结果将直接影响下一次学习建议。
                 </p>
               </section>
             </div>
-            <details className='rounded-[22px] border border-violet-100 bg-white/55 px-5 py-4'>
-              <summary className='cursor-pointer text-xs font-semibold text-slate-500'>
+            <details className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] px-5 py-4'>
+              <summary className='cursor-pointer text-xs font-semibold text-[var(--em-muted-ink)]'>
                 策略对照与消融设置 · 用于比较同一课程下的教学机制
               </summary>
               <div className='mt-4 grid gap-4 sm:grid-cols-2'>
-                <label className='text-xs text-slate-500'>
+                <label className='text-xs text-[var(--em-muted-ink)]'>
                   本次策略
                   <select
                     value={selectedGroup}
                     onChange={event =>
                       setSelectedGroup(event.target.value as ExperimentGroup)
                     }
-                    className='mt-2 block w-full rounded-xl border border-violet-200 bg-white p-3 text-sm'
+                    className='mt-2 block w-full rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-3 text-sm'
                   >
                     <option value='D'>D · LEAP 完整机制（默认）</option>
                     <option value='C'>C · 学习证据动态策略</option>
@@ -422,7 +480,7 @@ export function AdaptiveLearningPage() {
                     <option value='A'>A · 通用固定讲解基线</option>
                   </select>
                 </label>
-                <label className='text-xs text-slate-500'>
+                <label className='text-xs text-[var(--em-muted-ink)]'>
                   关闭单个决策要素
                   <select
                     value={ablation}
@@ -430,7 +488,7 @@ export function AdaptiveLearningPage() {
                       setAblation(event.target.value as LeapAblation)
                     }
                     disabled={selectedGroup !== 'D'}
-                    className='mt-2 block w-full rounded-xl border border-violet-200 bg-white p-3 text-sm disabled:opacity-50'
+                    className='mt-2 block w-full rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-3 text-sm disabled:opacity-50'
                   >
                     <option value='none'>完整机制</option>
                     <option value='misconception'>关闭误解匹配</option>
@@ -439,7 +497,7 @@ export function AdaptiveLearningPage() {
                   </select>
                 </label>
               </div>
-              <p className='mt-3 text-[11px] leading-5 text-slate-400'>
+              <p className='mt-3 text-[11px] leading-5 text-[var(--em-muted-ink)]'>
                 策略标签用于记录机制对照。本页不会将规则策略成绩包装为已完成的随机对照研究。
               </p>
             </details>
@@ -459,24 +517,40 @@ export function AdaptiveLearningPage() {
         {supported && !loading && session && (
           <>
             <div className='flex flex-wrap items-center justify-between gap-3'>
-              <div className='flex items-center gap-2 text-xs text-slate-500'>
-                <span className='rounded-lg bg-violet-100/70 px-2 py-1 text-violet-600'>
+              <div className='flex items-center gap-2 text-xs text-[var(--em-muted-ink)]'>
+                <span className='rounded-lg bg-[var(--em-primary-subtle)] px-2 py-1 text-[var(--em-primary)]'>
                   数据结构
                 </span>
                 <ChevronDown className='h-3 w-3 -rotate-90' />
-                <strong className='font-semibold text-slate-700'>
+                <strong className='font-semibold text-[var(--em-ink)]'>
                   {session.topicName}
                 </strong>
               </div>
               <button
                 onClick={chooseTopic}
-                className='flex items-center gap-1.5 text-xs font-medium text-violet-600 hover:text-violet-800'
+                className='flex items-center gap-1.5 text-xs font-medium text-[var(--em-primary)] hover:text-[var(--em-primary)]'
               >
                 <ArrowLeft className='h-3.5 w-3.5' />
                 选择其他概念
               </button>
             </div>
-            <div className='grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_290px]'>
+            {session.assessmentStatus === 'saved' && (
+              <section className='space-y-1 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs text-emerald-900' role='status'>
+                <p className='font-semibold'>评估结果已保存。</p>
+                {session.replanning.status === 'performed' && (
+                  <p>服务端已完成学习路线重排。</p>
+                )}
+                {session.replanning.status === 'failed' && (
+                  <p role='alert' className='text-amber-900'>评估和证据已保存，但学习路线重排未完成。{session.replanning.reasonCodes.length ? ` 原因：${session.replanning.reasonCodes.join('、')}` : ''}</p>
+                )}
+              </section>
+            )}
+            {replayedAssessment && (
+              <section className='rounded-xl border border-sky-100 bg-sky-50 px-4 py-3 text-xs leading-5 text-sky-900' role='status'>
+                本题此前已保存，当前显示原评估结果（{Math.round(replayedAssessment.score * 100)}%）；本次没有重复计入证据或掌握度。
+              </section>
+            )}
+            <div className='grid items-start gap-5 lg:grid-cols-2'>
               <div className='min-w-0 space-y-4'>
                 {session.phase === 'diagnostic' && (
                   <LeapQuestionForm
@@ -521,14 +595,14 @@ export function AdaptiveLearningPage() {
                 )}
                 {session.phase === 'teaching' && session.teaching && (
                   <>
-                    <div className='flex items-center justify-between rounded-2xl border border-violet-100 bg-white/60 px-4 py-3'>
-                      <span className='flex items-center gap-2 text-xs font-semibold text-violet-700'>
-                        <Sparkles className='h-4 w-4' />
+                    <div className='flex items-center justify-between rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] px-4 py-3'>
+                      <span className='flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]'>
+                        <Target className='h-4 w-4' />
                         当前方式：{session.decision?.label}
                       </span>
                       <button
                         onClick={() => setAdjusting(!adjusting)}
-                        className='text-xs text-slate-500 underline decoration-violet-200 underline-offset-4'
+                        className='text-xs text-[var(--em-muted-ink)] underline decoration-[var(--em-border)] underline-offset-4'
                       >
                         换一种方式
                       </button>
@@ -537,15 +611,27 @@ export function AdaptiveLearningPage() {
                       teaching={session.teaching}
                       topicId={session.topicId}
                       busy={busy}
+                      probeUnavailable={
+                        !session.probeQuestion &&
+                        session.questionAvailability.probe.status === 'exhausted'
+                      }
                       onProbe={() =>
                         void run(() => prepareLeapProbe(session.id))
                       }
                     />
+                    {probePoolExhausted && (
+                      <QuestionPoolRecovery
+                        stage='独立验证题'
+                        busy={busy}
+                        onReview={() => startTopic(session.topicId)}
+                        onChooseTopic={chooseTopic}
+                      />
+                    )}
                     {session.practiceQuestion && (
                       <>
                         <button
                           onClick={() => setShowPractice(!showPractice)}
-                          className='flex items-center gap-2 px-2 text-xs font-semibold text-violet-600'
+                          className='flex items-center gap-2 px-2 text-xs font-semibold text-[var(--em-primary)]'
                         >
                           <BookOpen className='h-4 w-4' />
                           {showPractice
@@ -559,21 +645,34 @@ export function AdaptiveLearningPage() {
                           />
                         </button>
                         {showPractice && (
-                          <LeapQuestionForm
-                            key={session.practiceQuestion.id}
-                            question={session.practiceQuestion}
-                            label='辅助练习 · 可参考上方讲解'
-                            busy={busy}
-                            submitLabel='记录练习结果'
-                            onSubmit={answer =>
-                              void run(() =>
-                                practiceLeapSession(session.id, {
-                                  ...answer,
-                                  hintUsed: true,
-                                })
-                              )
-                            }
-                          />
+                          practiceAlreadyRecorded ? (
+                            <p className='rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-900' role='status'>
+                              这道辅助练习已有保存结果。继续做独立验证，或重新开始本主题继续复习。
+                            </p>
+                          ) : (
+                            <div className='space-y-2'>
+                              <p role='note' className='rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900'>
+                                {session.practiceQuestion.novelty === 'review'
+                                  ? '当前分配的是复习题；本次带提示练习只保留过程记录，不会作为新的掌握度或独立后测证据。'
+                                  : '当前分配的是新训练题；本阶段允许参考讲解，带提示结果只保留为过程证据，不计入无提示独立验证。'}
+                              </p>
+                              <LeapQuestionForm
+                                key={session.practiceQuestion.id}
+                                question={session.practiceQuestion}
+                                label={session.practiceQuestion.novelty === 'review' ? '辅助练习 · 复习题' : '辅助练习 · 新训练题'}
+                                busy={busy}
+                                submitLabel='记录练习结果'
+                                onSubmit={answer =>
+                                  void run(() =>
+                                    practiceLeapSession(session.id, {
+                                      ...answer,
+                                      hintUsed: true,
+                                    })
+                                  )
+                                }
+                              />
+                            </div>
+                          )
                         )}
                       </>
                     )}
@@ -594,10 +693,17 @@ export function AdaptiveLearningPage() {
                 )}
                 {completed && session.outcome && (
                   <>
-                    {showRetest &&
+                    {retestPoolExhausted ? (
+                      <QuestionPoolRecovery
+                        stage='延迟复测题'
+                        busy={busy}
+                        onReview={() => startTopic(session.topicId)}
+                        onChooseTopic={chooseTopic}
+                      />
+                    ) : showRetest &&
                     retestDue &&
                     session.retestQuestion &&
-                    session.outcome.retestScore === null ? (
+                    isUnsetScore(session.outcome.retestScore) ? (
                       <LeapQuestionForm
                         key={session.retestQuestion.id}
                         question={session.retestQuestion}
@@ -614,12 +720,12 @@ export function AdaptiveLearningPage() {
                         session={session}
                         busy={busy}
                         onNext={() =>
-                          startTopic(
-                            session.nextStep?.topicId ?? session.topicId,
-                            session.id
-                          )
+                          session.nextStep
+                            ? startTopic(session.nextStep.topicId, session.id)
+                            : startTopic(session.topicId)
                         }
-                        onRetest={() => setShowRetest(true)}
+                        onNextLabel={session.nextStep ? '开始下一步' : '重新开始本主题'}
+                        onRetest={openRetest}
                       />
                     )}
                     {!independentMode && (
@@ -638,9 +744,9 @@ export function AdaptiveLearningPage() {
                   session={session}
                   independent={Boolean(independentMode)}
                 />
-                <section className='rounded-[22px] border border-violet-100 bg-white/60 p-4'>
-                  <p className='flex items-center gap-2 text-xs font-semibold text-slate-600'>
-                    <GitBranch className='h-4 w-4 text-violet-400' />
+                <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4'>
+                  <p className='flex items-center gap-2 text-xs font-semibold text-[var(--em-muted-ink)]'>
+                    <GitBranch className='h-4 w-4 text-[var(--em-primary)]' />
                     课程前置关系
                   </p>
                   <div className='mt-3 space-y-2'>
@@ -654,16 +760,16 @@ export function AdaptiveLearningPage() {
                     ).map(point => (
                       <div
                         key={point.id}
-                        className='flex items-center justify-between gap-2 rounded-xl bg-slate-50/80 p-2.5 text-[11px]'
+                        className='flex items-center justify-between gap-2 rounded-xl bg-[var(--em-surface-subtle)] p-2.5 text-[11px]'
                       >
-                        <span className='text-slate-600'>{point.name}</span>
+                        <span className='text-[var(--em-muted-ink)]'>{point.name}</span>
                         <span
                           className={
                             point.status === 'gap'
                               ? 'text-amber-600'
                               : point.status === 'supported'
                                 ? 'text-emerald-600'
-                                : 'text-slate-400'
+                                : 'text-[var(--em-muted-ink)]'
                           }
                         >
                           {point.status === 'gap'
@@ -675,7 +781,7 @@ export function AdaptiveLearningPage() {
                       </div>
                     ))}
                   </div>
-                  <p className='mt-3 text-[10px] leading-5 text-slate-400'>
+                  <p className='mt-3 text-[10px] leading-5 text-[var(--em-muted-ink)]'>
                     会话自动保存 · 再次进入可继续学习
                   </p>
                 </section>
@@ -684,7 +790,7 @@ export function AdaptiveLearningPage() {
           </>
         )}
         {catalog && (
-          <footer className='flex flex-wrap justify-between gap-2 px-1 text-[10px] leading-5 text-slate-400'>
+          <footer className='flex flex-wrap justify-between gap-2 px-1 text-[10px] leading-5 text-[var(--em-muted-ink)]'>
             <p>
               Learning Evidence–Driven Adaptive Pedagogy · {catalog.version}
             </p>
@@ -713,8 +819,8 @@ function TopicCard({
   return (
     <article
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[26px] border bg-white/85 p-5 transition hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(105,82,185,.07)] sm:p-6',
-        selected ? 'border-violet-400' : 'border-violet-100/90'
+        'group relative flex flex-col overflow-hidden rounded-2xl border bg-[var(--em-surface)] p-5 transition sm:p-6',
+        selected ? 'border-[var(--em-primary)]' : 'border-[var(--em-border)]'
       )}
     >
       <div className='flex items-start justify-between'>
@@ -723,31 +829,31 @@ function TopicCard({
             'grid h-11 w-11 place-items-center rounded-2xl',
             index % 2
               ? 'bg-sky-50 text-sky-500'
-              : 'bg-violet-50 text-violet-500'
+              : 'bg-[var(--em-primary-subtle)] text-[var(--em-primary)]'
           )}
         >
           <Icon className='h-5 w-5' />
         </span>
-        <span className='font-mono text-[10px] text-slate-300'>
+        <span className='font-mono text-[10px] text-[var(--em-subtle-ink)]'>
           CONCEPT / 0{index + 1}
         </span>
       </div>
-      <h3 className='mt-5 text-lg font-bold text-slate-800'>{topic.name}</h3>
-      <p className='mt-2 min-h-[48px] text-xs leading-6 text-slate-500'>
+      <h3 className='mt-5 text-lg font-bold text-[var(--em-ink)]'>{topic.name}</h3>
+      <p className='mt-2 min-h-[48px] text-xs leading-6 text-[var(--em-muted-ink)]'>
         {topic.description}
       </p>
       <div className='mt-4 flex flex-wrap gap-1.5'>
         {topic.prerequisites.map(point => (
           <span
             key={point.id}
-            className='rounded-full bg-slate-50 px-2.5 py-1 text-[10px] text-slate-500'
+            className='rounded-full bg-[var(--em-surface-subtle)] px-2.5 py-1 text-[10px] text-[var(--em-muted-ink)]'
           >
             {point.name}
           </span>
         ))}
       </div>
-      <div className='mt-5 flex items-center justify-between border-t border-slate-100 pt-4'>
-        <p className='flex items-center gap-1.5 text-[11px] text-slate-400'>
+      <div className='mt-5 flex items-center justify-between border-t border-[var(--em-border)] pt-4'>
+        <p className='flex items-center gap-1.5 text-[11px] text-[var(--em-muted-ink)]'>
           <Clock3 className='h-3 w-3' />
           一次诊断 → 一次独立验证
         </p>
@@ -763,9 +869,9 @@ function TopicCard({
 function MisconceptionNotice({ session }: { session: LeapSession }) {
   const diagnosis = session.diagnosis!;
   return (
-    <section className='rounded-[24px] border border-amber-100 bg-amber-50/75 p-5'>
+    <section className='rounded-2xl border border-amber-100 bg-amber-50 p-5'>
       <div className='flex items-start gap-3'>
-        <span className='grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-white text-amber-500'>
+        <span className='grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[var(--em-surface)] text-amber-500'>
           <Lightbulb className='h-5 w-5' />
         </span>
         <div>
@@ -774,13 +880,13 @@ function MisconceptionNotice({ session }: { session: LeapSession }) {
               ? `发现一个可能的概念误解 · ${diagnosis.misconceptionCode}`
               : '从你的作答观察理解状态'}
           </p>
-          <h2 className='mt-2 text-base font-bold text-slate-800'>
+          <h2 className='mt-2 text-base font-bold text-[var(--em-ink)]'>
             {diagnosis.title}
           </h2>
-          <p className='mt-2 text-sm leading-7 text-slate-600'>
+          <p className='mt-2 text-sm leading-7 text-[var(--em-muted-ink)]'>
             {diagnosis.reason}
           </p>
-          <p className='mt-3 text-[10px] text-amber-700/70'>
+          <p className='mt-3 text-[10px] text-amber-700'>
             {diagnosis.needsProbe
               ? '这是待验证的误解假设，独立新题会提供进一步证据。'
               : '结论依据当前作答，仍会通过独立新题验证。'}
@@ -794,51 +900,63 @@ function MisconceptionNotice({ session }: { session: LeapSession }) {
 function KnowledgeStateCard({ session }: { session: LeapSession }) {
   const state = session.state;
   return (
-    <section className='rounded-[24px] border border-violet-100 bg-white/85 p-5'>
-      <p className='flex items-center gap-2 text-xs font-semibold text-slate-700'>
-        <BrainCircuit className='h-4 w-4 text-violet-500' />
-        你的学习状态
+    <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 '>
+      <p className='flex items-center gap-2 text-sm font-semibold text-[var(--em-ink)]'>
+        <BrainCircuit className='h-4 w-4 text-[var(--em-primary)]' />
+        ATS 算法状态与证据
       </p>
-      <div className='mt-5 grid grid-cols-2 gap-3'>
-        <div>
-          <p className='text-[10px] text-slate-400'>M · 掌握度估计</p>
-          <p className='mt-2 text-2xl font-bold tracking-tight text-violet-600'>
-            {percent(state.mastery)}
-          </p>
-        </div>
-        <div>
-          <p className='text-[10px] text-slate-400'>U · 不确定性</p>
-          <p className='mt-2 text-2xl font-bold tracking-tight text-slate-600'>
-            {percent(state.uncertainty)}
-          </p>
-        </div>
+      <div className='mt-4 grid gap-3 sm:grid-cols-3'>
+        <AlgorithmMetric label='M · 掌握度' value={percent(state.mastery)} />
+        <AlgorithmMetric label='U · 不确定性' value={percent(state.uncertainty)} />
+        <AlgorithmMetric label='评价证据数' value={String(state.evidenceCount)} />
       </div>
-      <div className='mt-4 h-1.5 overflow-hidden rounded-full bg-violet-50'>
-        <div
-          className='h-full rounded-full bg-gradient-to-r from-violet-400 to-sky-400 transition-all'
-          style={{ width: `${(state.mastery ?? 0) * 100}%` }}
-        />
-      </div>
-      <p className='mt-3 text-[10px] leading-5 text-slate-400'>
-        基于 {state.evidenceCount} 条评价证据。掌握估计与独立测评成绩分别记录。
+      <p className='mt-3 text-xs leading-5 text-[var(--em-muted-ink)]'>
+        M 与 U 来自当前知识状态；接口未返回 M 更新前值或掌握度置信区间。两者不以独立后测分数替代。
       </p>
+      {session.diagnosis && (
+        <p className='mt-2 text-xs text-[var(--em-muted-ink)]'>
+          误解假设置信度 {percent(session.diagnosis.confidence)} · {session.diagnosis.needsProbe ? '仍待独立新题验证' : '依据当前诊断作答'}
+        </p>
+      )}
       {state.misconceptions.length > 0 && (
-        <div className='mt-4 border-t border-slate-100 pt-4'>
-          <p className='text-[10px] text-slate-400'>Q · 误解候选</p>
-          {state.misconceptions.map(item => (
-            <div
-              key={item.code}
-              className='mt-2 flex items-center justify-between rounded-lg bg-amber-50/70 px-3 py-2 text-[11px]'
-            >
-              <span className='font-mono text-amber-700'>{item.code}</span>
-              <span className='font-semibold text-amber-600'>
-                {percent(item.probability)}
-              </span>
-            </div>
-          ))}
+        <div className='mt-4 border-t border-[var(--em-border)] pt-4'>
+          <p className='text-xs font-semibold text-[var(--em-ink)]'>Q · 误解候选分布</p>
+          <ul className='mt-3 space-y-3'>
+            {state.misconceptions.map(item => (
+              <li key={item.code}>
+                <div className='flex items-center justify-between gap-3 text-xs'>
+                  <span className='font-mono text-[var(--em-muted-ink)]'>{item.code}</span>
+                  <span className='font-semibold text-[var(--em-ink)]'>{percent(item.probability)}</span>
+                </div>
+                <div
+                  className='mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--em-surface-subtle)]'
+                  role='progressbar'
+                  aria-label={`${item.code} 误解候选概率`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(item.probability * 100)}
+                >
+                  <div className='h-full rounded-full bg-amber-600' style={{ width: `${item.probability * 100}%` }} />
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
+      {state.misconceptions.length === 0 && (
+        <p className='mt-4 border-t border-[var(--em-border)] pt-4 text-xs text-[var(--em-muted-ink)]'>Q · 当前没有返回误解候选。</p>
+      )}
+      <p className='mt-4 border-t border-[var(--em-border)] pt-3 font-mono text-[10px] text-[var(--em-muted-ink)]'>模型版本：{state.modelVersion}</p>
     </section>
+  );
+}
+
+function AlgorithmMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className='rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-3'>
+      <p className='text-xs text-[var(--em-muted-ink)]'>{label}</p>
+      <p className='mt-1 text-lg font-semibold tabular-nums text-[var(--em-ink)]'>{value}</p>
+    </div>
   );
 }
 
@@ -851,30 +969,30 @@ function EvidenceRail({
 }) {
   if (independent)
     return (
-      <section className='rounded-[24px] border border-emerald-100 bg-white/80 p-5'>
+      <section className='rounded-2xl border border-emerald-100 bg-[var(--em-surface)] p-5'>
         <p className='flex items-center gap-2 text-xs font-semibold text-emerald-700'>
           <LockKeyhole className='h-4 w-4' />
           独立验证进行中
         </p>
-        <p className='mt-3 text-xs leading-6 text-slate-400'>
+        <p className='mt-3 text-xs leading-6 text-[var(--em-muted-ink)]'>
           已有 {session.evidence.length}{' '}
           条学习证据保存。作答结束后，可以回看原始答案、教学过程和评分依据。
         </p>
       </section>
     );
   return (
-    <section className='rounded-[24px] border border-violet-100 bg-white/80 p-5'>
+    <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
       <div className='flex items-center justify-between'>
-        <p className='flex items-center gap-2 text-xs font-semibold text-slate-700'>
-          <Fingerprint className='h-4 w-4 text-violet-500' />
+        <p className='flex items-center gap-2 text-xs font-semibold text-[var(--em-ink)]'>
+          <Fingerprint className='h-4 w-4 text-[var(--em-primary)]' />
           本次学习证据
         </p>
-        <span className='rounded-full bg-violet-50 px-2 py-0.5 text-[10px] text-violet-500'>
+        <span className='rounded-full bg-[var(--em-primary-subtle)] px-2 py-0.5 text-[10px] text-[var(--em-primary)]'>
           {session.evidence.length}
         </span>
       </div>
       {session.evidence.length === 0 ? (
-        <p className='mt-4 text-xs leading-6 text-slate-400'>
+        <p className='mt-4 text-xs leading-6 text-[var(--em-muted-ink)]'>
           你的第一次回答将成为学习的起点。
         </p>
       ) : (
@@ -885,28 +1003,28 @@ function EvidenceRail({
                 <span
                   className={cn(
                     'relative z-10 block h-2 w-2 rounded-full ring-4 ring-white',
-                    item.kind === 'probe' ? 'bg-emerald-400' : 'bg-violet-300'
+                    item.kind === 'probe' ? 'bg-emerald-400' : 'bg-[var(--em-action)]'
                   )}
                 />
                 {index < session.evidence.slice(-4).length - 1 && (
-                  <span className='absolute left-[3px] top-3 h-[calc(100%+20px)] w-px bg-violet-100' />
+                  <span className='absolute left-[3px] top-3 h-[calc(100%+20px)] w-px bg-[var(--em-primary-subtle)]' />
                 )}
               </div>
               <div className='min-w-0 flex-1'>
                 <div className='flex items-center justify-between gap-2'>
-                  <p className='text-[11px] font-semibold text-slate-600'>
+                  <p className='text-[11px] font-semibold text-[var(--em-muted-ink)]'>
                     {evidenceNames[item.kind]}
                   </p>
                   {item.score !== null && (
-                    <p className='text-[10px] font-semibold text-violet-600'>
+                    <p className='text-[10px] font-semibold text-[var(--em-primary)]'>
                       {percent(item.score)}
                     </p>
                   )}
                 </div>
-                <p className='mt-1 break-words text-[11px] leading-5 text-slate-400'>
+                <p className='mt-1 break-words text-[11px] leading-5 text-[var(--em-muted-ink)]'>
                   {item.summary}
                 </p>
-                <p className='mt-1 font-mono text-[9px] text-slate-300'>
+                <p className='mt-1 font-mono text-[9px] text-[var(--em-subtle-ink)]'>
                   {item.questionId ?? item.id.slice(0, 8)}
                 </p>
               </div>
@@ -930,11 +1048,11 @@ function StrategyPicker({
   onChoose: (action: ActionType) => void;
 }) {
   return (
-    <section className='rounded-[24px] border border-violet-100 bg-white/85 p-5'>
-      <h3 className='text-sm font-semibold text-slate-700'>
+    <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
+      <h3 className='text-sm font-semibold text-[var(--em-ink)]'>
         选择更适合你的教学方式
       </h3>
-      <p className='mt-1 text-xs leading-6 text-slate-400'>
+      <p className='mt-1 text-xs leading-6 text-[var(--em-muted-ink)]'>
         调整会作为本次教学决策的一部分记录。
       </p>
       <div className='mt-4 grid gap-2 sm:grid-cols-2'>
@@ -944,19 +1062,19 @@ function StrategyPicker({
             disabled={busy}
             onClick={() => onChoose(action.type)}
             className={cn(
-              'rounded-xl border p-3 text-left transition hover:border-violet-300 disabled:opacity-50',
+              'rounded-xl border p-3 text-left transition hover:border-[var(--em-primary)] disabled:opacity-50',
               action.type === session.decision?.actionType
-                ? 'border-violet-300 bg-violet-50'
-                : 'border-slate-200 bg-white'
+                ? 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)]'
+                : 'border-[var(--em-border)] bg-[var(--em-surface)]'
             )}
           >
-            <p className='text-xs font-semibold text-slate-700'>
+            <p className='text-xs font-semibold text-[var(--em-ink)]'>
               {action.label}
-              <span className='float-right text-[10px] font-normal text-slate-400'>
+              <span className='float-right text-[10px] font-normal text-[var(--em-muted-ink)]'>
                 {action.minutes} 分钟
               </span>
             </p>
-            <p className='mt-1 text-[11px] leading-5 text-slate-500'>
+            <p className='mt-1 text-[11px] leading-5 text-[var(--em-muted-ink)]'>
               {action.description}
             </p>
           </button>
@@ -968,18 +1086,18 @@ function StrategyPicker({
 
 function EvidenceDetail({ session }: { session: LeapSession }) {
   return (
-    <section className='rounded-[24px] border border-violet-100 bg-white/85 p-5'>
-      <h3 className='flex items-center gap-2 text-sm font-semibold text-slate-700'>
-        <FileText className='h-4 w-4 text-violet-500' />
+    <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
+      <h3 className='flex items-center gap-2 text-sm font-semibold text-[var(--em-ink)]'>
+        <FileText className='h-4 w-4 text-[var(--em-primary)]' />
         为什么推荐这个学习行动？
       </h3>
       <div className='mt-4 space-y-3'>
         {session.evidence.map(item => (
-          <div key={item.id} className='rounded-xl bg-slate-50/80 p-3'>
-            <p className='text-[11px] font-semibold text-slate-600'>
+          <div key={item.id} className='rounded-xl bg-[var(--em-surface-subtle)] p-3'>
+            <p className='text-[11px] font-semibold text-[var(--em-muted-ink)]'>
               {evidenceNames[item.kind]} · {item.questionId ?? '教学记录'}
             </p>
-            <p className='mt-2 whitespace-pre-line text-xs leading-6 text-slate-500'>
+            <p className='mt-2 whitespace-pre-line text-xs leading-6 text-[var(--em-muted-ink)]'>
               {item.answer ?? item.summary}
             </p>
           </div>
@@ -987,26 +1105,26 @@ function EvidenceDetail({ session }: { session: LeapSession }) {
       </div>
       {session.decision && (
         <div className='mt-5'>
-          <p className='mb-3 text-xs font-semibold text-slate-600'>
+          <p className='mb-3 text-xs font-semibold text-[var(--em-muted-ink)]'>
             候选行动排序
           </p>
           {session.decision.candidates.map(candidate => (
             <div
               key={candidate.actionType}
-              className='mt-2 rounded-xl border border-slate-100 p-3'
+              className='mt-2 rounded-xl border border-[var(--em-border)] p-3'
             >
               <div className='flex items-center justify-between text-xs'>
-                <span className='font-semibold text-slate-600'>
+                <span className='font-semibold text-[var(--em-muted-ink)]'>
                   {candidate.label}
                 </span>
-                <span className='font-mono text-violet-600'>
+                <span className='font-mono text-[var(--em-primary)]'>
                   {candidate.score.toFixed(2)}
                 </span>
               </div>
-              <p className='mt-1 text-[11px] leading-5 text-slate-400'>
+              <p className='mt-1 text-[11px] leading-5 text-[var(--em-muted-ink)]'>
                 {candidate.reason}
               </p>
-              <div className='mt-2 flex flex-wrap gap-2 text-[9px] text-slate-400'>
+              <div className='mt-2 flex flex-wrap gap-2 text-[9px] text-[var(--em-muted-ink)]'>
                 <span>
                   误解匹配 {candidate.factors.misconception.toFixed(2)}
                 </span>
@@ -1019,7 +1137,7 @@ function EvidenceDetail({ session }: { session: LeapSession }) {
               </div>
             </div>
           ))}
-          <p className='mt-3 text-[10px] text-slate-400'>
+          <p className='mt-3 text-[10px] text-[var(--em-muted-ink)]'>
             规则策略版本：{session.policyVersion} · 分数表示策略排序依据。
           </p>
         </div>
@@ -1028,15 +1146,46 @@ function EvidenceDetail({ session }: { session: LeapSession }) {
   );
 }
 
+function QuestionPoolRecovery({
+  stage,
+  busy,
+  onReview,
+  onChooseTopic,
+}: {
+  stage: string;
+  busy: boolean;
+  onReview: () => void;
+  onChooseTopic: () => void;
+}) {
+  return (
+    <section className='rounded-2xl border border-amber-200 bg-amber-50 p-5' role='status'>
+      <h3 className='text-sm font-semibold text-amber-950'>当前没有未见过的{stage}</h3>
+      <p className='mt-2 text-xs leading-6 text-amber-900'>
+        系统不会把旧题当作新题提交。你可以重新开始本主题，完成诊断后继续复习训练题，或选择其他主题开始新的学习会话。
+      </p>
+      <div className='mt-4 flex flex-wrap gap-2'>
+        <Button size='sm' disabled={busy} onClick={onReview}>
+          重新开始本主题并复习
+        </Button>
+        <Button size='sm' variant='outline' disabled={busy} onClick={onChooseTopic}>
+          选择其他主题
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 function OutcomeCard({
   session,
   busy,
   onNext,
+  onNextLabel,
   onRetest,
 }: {
   session: LeapSession;
   busy: boolean;
   onNext: () => void;
+  onNextLabel: string;
   onRetest: () => void;
 }) {
   const outcome = session.outcome!;
@@ -1044,7 +1193,7 @@ function OutcomeCard({
     ? Date.parse(session.retestDueAt) <= Date.now()
     : false;
   return (
-    <section className='overflow-hidden rounded-[26px] border border-emerald-100 bg-white/90 p-5 sm:p-7'>
+    <section className='overflow-hidden rounded-2xl border border-emerald-100 bg-[var(--em-surface)] p-5 sm:p-7'>
       <div className='flex items-start gap-4'>
         <span
           className={cn(
@@ -1058,14 +1207,14 @@ function OutcomeCard({
         </span>
         <div>
           <p className='text-[11px] font-semibold text-emerald-600'>
-            本次独立验证已记录
+            评估结果已保存
           </p>
-          <h2 className='mt-2 text-xl font-bold text-slate-800'>
+          <h2 className='mt-2 text-xl font-bold text-[var(--em-ink)]'>
             {outcome.correct
               ? '这次，你能独立解决了。'
               : '找到还需要再练的地方。'}
           </h2>
-          <p className='mt-2 text-sm leading-7 text-slate-500'>
+          <p className='mt-2 text-sm leading-7 text-[var(--em-muted-ink)]'>
             {outcome.feedback}
           </p>
         </div>
@@ -1074,18 +1223,22 @@ function OutcomeCard({
         <ScoreTile label='初次诊断' value={percent(outcome.preScore)} />
         <ScoreTile label='独立新题' value={percent(outcome.postScore)} accent />
         <ScoreTile
-          label='观察到的变化'
-          value={`${outcome.observedGain > 0 ? '+' : ''}${Math.round(outcome.observedGain * 100)} 分`}
+          label='前后测可比增益'
+          value={
+            outcome.scoreComparable && typeof outcome.observedGain === 'number'
+              ? `${outcome.observedGain > 0 ? '+' : ''}${Math.round(outcome.observedGain * 100)} 个百分点`
+              : '未计算'
+          }
         />
       </div>
-      <p className='mt-3 text-[10px] leading-5 text-slate-400'>
-        以上是本次实际作答成绩，单次前后变化不能用于证明教学的因果效果。
+      <p className='mt-3 text-[10px] leading-5 text-[var(--em-muted-ink)]'>
+        {outcome.comparisonReason ?? '前测与后测可比性未提供。'}
       </p>
       <div className='mt-5 flex flex-wrap gap-2'>
         <span className='rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] text-emerald-700'>
           无提示 · {outcome.durationSeconds} 秒
         </span>
-        <span className='rounded-full bg-violet-50 px-3 py-1.5 text-[11px] text-violet-700'>
+        <span className='rounded-full bg-[var(--em-primary-subtle)] px-3 py-1.5 text-[11px] text-[var(--em-primary)]'>
           {outcome.misconceptionStatus === 'repaired'
             ? '目标误解在新题中得到修复证据'
             : outcome.misconceptionStatus === 'persisting'
@@ -1093,23 +1246,23 @@ function OutcomeCard({
               : '误解假设继续观察'}
         </span>
       </div>
-      <div className='mt-5 rounded-2xl border border-violet-100 bg-violet-50/50 p-4'>
-        <p className='flex items-center gap-2 text-xs font-semibold text-violet-700'>
+      <div className='mt-5 rounded-2xl border border-[var(--em-border)] bg-[var(--em-primary-subtle)] p-4'>
+        <p className='flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]'>
           <GitBranch className='h-4 w-4' />
-          学习路线已更新
+          下一步学习建议
         </p>
-        <h3 className='mt-2 text-sm font-semibold text-slate-700'>
-          {session.nextStep?.title}
+        <h3 className='mt-2 text-sm font-semibold text-[var(--em-ink)]'>
+          {session.nextStep?.title ?? '重新开始本主题，或选择其他主题继续'}
         </h3>
-        <p className='mt-2 text-xs leading-6 text-slate-500'>
-          {session.nextStep?.reason}
+        <p className='mt-2 text-xs leading-6 text-[var(--em-muted-ink)]'>
+          {session.nextStep?.reason ?? '本会话没有后续主题建议，可从已有学习目录开始新的会话。'}
         </p>
       </div>
       {session.retestDueAt && (
-        <div className='mt-4 flex items-start gap-2 rounded-xl bg-slate-50 p-3 text-xs leading-6 text-slate-500'>
-          <Clock3 className='mt-1 h-4 w-4 shrink-0 text-slate-400' />
+        <div className='mt-4 flex items-start gap-2 rounded-xl bg-[var(--em-surface-subtle)] p-3 text-xs leading-6 text-[var(--em-muted-ink)]'>
+          <Clock3 className='mt-1 h-4 w-4 shrink-0 text-[var(--em-muted-ink)]' />
           <p>
-            {outcome.retestScore === null
+            {isUnsetScore(outcome.retestScore)
               ? `延迟复测安排在 ${new Date(session.retestDueAt).toLocaleDateString('zh-CN')}，到期后用另一道题观察保持情况。`
               : `延迟复测已完成，独立成绩 ${percent(outcome.retestScore)}。`}
           </p>
@@ -1117,12 +1270,12 @@ function OutcomeCard({
       )}
       <div className='mt-5 flex flex-wrap gap-2'>
         <Button onClick={onNext} disabled={busy}>
-          开始下一步
+          {onNextLabel}
           <ArrowRight className='h-4 w-4' />
         </Button>
-        {due && outcome.retestScore === null && (
-          <Button onClick={onRetest} variant='outline'>
-            开始延迟复测
+        {due && isUnsetScore(outcome.retestScore) && (
+          <Button onClick={onRetest} variant='outline' disabled={busy}>
+            {session.retestQuestion ? '开始延迟复测' : '准备延迟复测'}
           </Button>
         )}
         <Button asChild variant='ghost'>
@@ -1147,15 +1300,15 @@ function ScoreTile({
       className={cn(
         'rounded-2xl border p-3 sm:p-4',
         accent
-          ? 'border-emerald-100 bg-emerald-50/70'
-          : 'border-slate-100 bg-slate-50/70'
+          ? 'border-emerald-100 bg-emerald-50'
+          : 'border-[var(--em-border)] bg-[var(--em-surface-subtle)]'
       )}
     >
-      <p className='text-[10px] text-slate-500'>{label}</p>
+      <p className='text-[10px] text-[var(--em-muted-ink)]'>{label}</p>
       <p
         className={cn(
           'mt-2 text-xl font-bold tracking-tight sm:text-2xl',
-          accent ? 'text-emerald-600' : 'text-slate-700'
+          accent ? 'text-emerald-600' : 'text-[var(--em-ink)]'
         )}
       >
         {value}
@@ -1172,9 +1325,9 @@ function RecentSessions({
   onResume: (session: LeapSession) => void;
 }) {
   return (
-    <section className='rounded-[24px] border border-violet-100 bg-white/75 p-5'>
-      <h3 className='flex items-center gap-2 text-sm font-semibold text-slate-700'>
-        <Target className='h-4 w-4 text-violet-500' />
+    <section className='rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5'>
+      <h3 className='flex items-center gap-2 text-sm font-semibold text-[var(--em-ink)]'>
+        <Target className='h-4 w-4 text-[var(--em-primary)]' />
         最近的学习会话
       </h3>
       <div className='mt-3 divide-y divide-slate-100'>
@@ -1185,10 +1338,10 @@ function RecentSessions({
             className='flex w-full items-center justify-between gap-3 py-3 text-left'
           >
             <div>
-              <p className='text-xs font-semibold text-slate-700'>
+              <p className='text-xs font-semibold text-[var(--em-ink)]'>
                 {item.topicName}
               </p>
-              <p className='mt-1 text-[10px] text-slate-400'>
+              <p className='mt-1 text-[10px] text-[var(--em-muted-ink)]'>
                 {new Date(item.updatedAt).toLocaleString('zh-CN', {
                   month: 'numeric',
                   day: 'numeric',
@@ -1198,7 +1351,7 @@ function RecentSessions({
                 · {item.phase === 'completed' ? '已完成独立验证' : '可以继续'}
               </p>
             </div>
-            <span className='flex items-center gap-1 text-xs text-violet-600'>
+            <span className='flex items-center gap-1 text-xs text-[var(--em-primary)]'>
               {item.phase === 'completed' ? '查看结果' : '继续学习'}
               <ArrowRight className='h-3 w-3' />
             </span>

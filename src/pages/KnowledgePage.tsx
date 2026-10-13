@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { BookOpen, Info } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
-import { KnowledgeGalaxy } from '@/components/knowledge/KnowledgeGalaxy';
+import { KnowledgeDAG } from '@/components/knowledge/KnowledgeDAG';
 import { fetchKnowledgeGraph, type KnowledgeGraphData } from '@/lib/educationApi';
-import { useCurrentPlan, useDiagnosis, useLearnerProfile } from '@/lib/hooks';
+import { useDiagnosis, useLearnerProfile } from '@/lib/hooks';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
 import { PageIntro } from '@/components/design/PageIntro';
 
 export function KnowledgePage() {
   const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const diagnosis = useDiagnosis(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
-  const plan = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const [graph, setGraph] = useState<KnowledgeGraphData | null>(null);
   const [graphLoading, setGraphLoading] = useState(true);
   const [graphError, setGraphError] = useState(false);
@@ -21,35 +20,59 @@ export function KnowledgePage() {
     try {
       setGraph(await fetchKnowledgeGraph(ACTIVE_COURSE_ID));
     } catch {
+      setGraph(null);
       setGraphError(true);
     } finally {
       setGraphLoading(false);
     }
   }, []);
 
-  useEffect(() => { void loadGraph(); }, [loadGraph]);
+  useEffect(() => {
+    void loadGraph();
+  }, [loadGraph]);
 
   const reload = () => {
     void loadGraph();
     void profile.refetch();
     void diagnosis.refetch();
-    void plan.refetch();
   };
 
+  const loading = graphLoading || profile.loading || diagnosis.loading;
+  const error = graphError || profile.error || diagnosis.error;
+
   return (
-    <AppShell scene="galaxy">
+    <AppShell>
       <div className="space-y-5">
-        <PageIntro eyebrow="KNOWLEDGE SPACE" title="课程 GraphRAG 知识空间" description={profile.data ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个真实知识点；自由拖拽浏览，点击节点查看详细知识。` : '正在读取当前课程的知识关系与学习状态。'} icon={BookOpen} tone="sky" aside={<p className="flex max-w-sm items-start gap-2 text-xs leading-5 text-[var(--em-muted-ink)]"><Info className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" />可拖拽平移与缩放；未评估不等于薄弱，关系只来自课程材料。</p>} />
-        <KnowledgeGalaxy
+        <PageIntro
+          eyebrow="KNOWLEDGE SPACE"
+          title="课程知识空间"
+          description={profile.data
+            ? `${profile.data.courseName} · ${profile.data.knowledgePoints.length} 个画像知识点。先修箭头来自课程知识库的明确声明。`
+            : '正在读取当前课程的教材结构、知识状态与先修目录。'}
+          icon={BookOpen}
+          aside={(
+            <p className="flex max-w-sm items-start gap-2 text-sm leading-6 text-[var(--em-muted-ink)]">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--em-primary)]" />
+              未评估或没有先修状态时，知识点仍保持可查看，不会自动锁定。
+            </p>
+          )}
+        />
+        {error && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm text-amber-900">
+              {graphError ? '课程 GraphRAG 数据暂不可用。' : '学习状态暂不可用。'} 仍展示成功读取的真实数据。
+            </p>
+            <button type="button" onClick={reload} className="text-sm font-semibold text-amber-900 underline underline-offset-2">重新加载</button>
+          </div>
+        )}
+        <KnowledgeDAG
           graph={graph}
           points={profile.data?.knowledgePoints ?? []}
-          plan={plan.plan}
+          topics={[]}
           courseId={ACTIVE_COURSE_ID}
           primaryFocusId={diagnosis.data?.primaryFocus?.knowledgePointId}
-          loading={graphLoading || profile.loading || diagnosis.loading || plan.loading}
-          error={graphError || profile.error || diagnosis.error || plan.error}
-          onRetry={reload}
         />
+        {loading && <p className="text-sm text-[var(--em-muted-ink)]">正在读取课程知识数据…</p>}
       </div>
     </AppShell>
   );

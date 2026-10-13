@@ -74,8 +74,8 @@ export function LearningJourneyTimeline({
   return (
     <GlassPanel className="p-5 sm:p-6">
       <div className="flex items-center gap-2">
-        <BookOpen className="h-4 w-4 text-primary-600" />
-        <p className="text-[10px] font-bold tracking-[0.18em] text-primary-600">
+        <BookOpen className="h-4 w-4 text-[var(--em-primary)]" />
+        <p className="text-[10px] font-bold tracking-[0.18em] text-[var(--em-primary)]">
           LEARNING JOURNEY
         </p>
       </div>
@@ -85,7 +85,7 @@ export function LearningJourneyTimeline({
       </p>
 
       {loading && (
-        <p className="mt-4 border-l-2 border-violet-200 py-1 pl-3 text-sm text-[var(--em-muted-ink)]">
+        <p className="mt-4 border-l-2 border-[var(--em-border)] py-1 pl-3 text-sm text-[var(--em-muted-ink)]">
           正在读取最近学习证据，当前计划上下文仍可查看。
         </p>
       )}
@@ -106,7 +106,7 @@ export function LearningJourneyTimeline({
       )}
 
       {!loading && !error && events.length === 0 && (
-        <div className="mt-5 border-t border-dashed border-violet-200 pt-4">
+        <div className="mt-5 border-t border-dashed border-[var(--em-border)] pt-4">
           <p className="text-sm font-semibold">还没有可展示的学习旅程记录。</p>
           <p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">
             这里仅展示真实来源记录，也不会把计划任务当作已完成学习。
@@ -122,13 +122,13 @@ export function LearningJourneyTimeline({
 
             return (
               <li key={event.id} className="relative flex gap-3">
-                <div className="relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-md border border-violet-100 bg-white text-primary-600">
+                <div className="relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-md border border-[var(--em-border)] bg-[var(--em-surface)] text-[var(--em-primary)]">
                   <Icon className="h-4 w-4" />
                 </div>
                 {index < events.length - 1 && (
-                  <span className="absolute bottom-[-1rem] left-[17px] top-9 w-px bg-violet-100" />
+                  <span className="absolute bottom-[-1rem] left-[17px] top-9 w-px bg-[var(--em-primary-subtle)]" />
                 )}
-                <article className="min-w-0 flex-1 border-b border-violet-100 pb-4">
+                <article className="min-w-0 flex-1 border-b border-[var(--em-border)] pb-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <strong className="text-sm">{event.title}</strong>
                     <time
@@ -148,7 +148,7 @@ export function LearningJourneyTimeline({
                       计划上下文，不表示已完成学习
                     </p>
                   )}
-                  <p className="mt-3 text-[10px] font-semibold text-primary-700">
+                  <p className="mt-3 text-[10px] font-semibold text-[var(--em-primary-deep)]">
                     来源：{event.sourceLabel}
                   </p>
                 </article>

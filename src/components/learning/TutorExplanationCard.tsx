@@ -30,7 +30,7 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
 
     return (
       <GlassPanel className="p-5">
-        <p className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+        <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary-deep)]">
           <Sparkles className="h-4 w-4" />
           小涟课前引导
         </p>
@@ -44,7 +44,7 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
             正在读取课程内容…
           </p>
         ) : props.error && !props.knowledge ? (
-          <p className="mt-4 text-sm text-amber-700">
+          <p className="mt-4 text-sm text-[var(--em-warning)]">
             课程内容暂时没有加载成功，不生成替代讲解。
           </p>
         ) : !content ? (
@@ -54,7 +54,7 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
         ) : (
           <div className="mt-4 space-y-4">
             <section>
-              <p className="flex items-center gap-2 text-xs font-semibold text-sky-700">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]">
                 <BookOpen className="h-4 w-4" />
                 核心概念
               </p>
@@ -62,9 +62,9 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
                 {content.coreConcepts.map((concept, index) => (
                   <div
                     key={`${concept.title}:${index}`}
-                    className="rounded-lg border border-sky-100 bg-sky-50/55 p-3"
+                    className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-3"
                   >
-                    <strong className="text-sm text-sky-900">
+                    <strong className="text-sm text-[var(--em-ink)]">
                       {concept.title}
                     </strong>
                     <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
@@ -75,8 +75,8 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
               </div>
             </section>
 
-            <section className="rounded-lg border border-violet-100 bg-violet-50/60 p-3">
-              <p className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-primary-subtle)] p-3">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary-deep)]">
                 <Brain className="h-4 w-4" />
                 学习重点
               </p>
@@ -88,12 +88,12 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
               </p>
             </section>
 
-            <section className="rounded-lg border border-amber-100 bg-amber-50/60 p-3">
-              <p className="flex items-center gap-2 text-xs font-semibold text-amber-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-3">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-warning)]">
                 <Lightbulb className="h-4 w-4" />
                 小涟提醒
               </p>
-              <p className="mt-2 text-xs leading-5 text-amber-900">
+              <p className="mt-2 text-xs leading-5 text-[var(--em-ink)]">
                 {content.reminder}
               </p>
             </section>
@@ -110,33 +110,33 @@ export function TutorExplanationCard(props: TutorExplanationCardProps) {
 
   return (
     <article>
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] text-primary-600"><Sparkles className="h-3 w-3" />小涟讲解{response.responseMode === 'fallback' && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">基础辅导模式</span>}</div>
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] text-[var(--em-primary)]"><Sparkles className="h-3 w-3" />小涟讲解{response.responseMode === 'fallback' && <span className="rounded bg-[var(--em-surface-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--em-warning)]">基础辅导模式</span>}</div>
       <h3 className="text-sm font-bold">{knowledge?.title ?? knowledgePointName}</h3>
 
       <section className="mt-3">
-        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-primary-700"><Brain className="h-3 w-3" />分步骤解释</p>
+        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-[var(--em-primary-deep)]"><Brain className="h-3 w-3" />分步骤解释</p>
         <p className="mt-1 text-[10px] leading-4 text-[var(--em-muted-ink)]">以下直接展示 Agent 返回原文；步骤结构以原文为准。</p>
         <p className="mt-2 whitespace-pre-wrap text-[13px] leading-relaxed">{response.answer}</p>
       </section>
 
-      <section className="mt-3 border-t border-violet-100 pt-3">
-        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-sky-700"><BookOpen className="h-3 w-3" />核心知识点</p>
-        {knowledge?.sections.length ? <div className="mt-2 space-y-2">{knowledge.sections.map((section, index) => <div key={`${section.title}:${index}`} className="rounded-xl bg-sky-50/55 px-3 py-2"><p className="text-[11px] font-semibold text-sky-800">{section.title}</p><p className="mt-1 text-[11px] leading-5 text-[var(--em-muted-ink)]">{section.content}</p></div>)}</div> : <p className="mt-2 text-[11px] leading-5 text-[var(--em-muted-ink)]">当前课程内容没有返回可展示的核心章节。</p>}
+      <section className="mt-3 border-t border-[var(--em-border)] pt-3">
+        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-[var(--em-primary)]"><BookOpen className="h-3 w-3" />核心知识点</p>
+        {knowledge?.sections.length ? <div className="mt-2 space-y-2">{knowledge.sections.map((section, index) => <div key={`${section.title}:${index}`} className="rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2"><p className="text-[11px] font-semibold text-[var(--em-ink)]">{section.title}</p><p className="mt-1 text-[11px] leading-5 text-[var(--em-muted-ink)]">{section.content}</p></div>)}</div> : <p className="mt-2 text-[11px] leading-5 text-[var(--em-muted-ink)]">当前课程内容没有返回可展示的核心章节。</p>}
       </section>
 
-      <section className="mt-3 rounded-xl bg-amber-50/60 px-3 py-2.5">
-        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-amber-700"><Lightbulb className="h-3 w-3" />记忆提示</p>
+      <section className="mt-3 rounded-lg bg-[var(--em-surface-subtle)] px-3 py-2.5">
+        <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wide text-[var(--em-warning)]"><Lightbulb className="h-3 w-3" />记忆提示</p>
         {memoryAnchors.length > 0
-          ? <p className="mt-1 text-[11px] leading-5 text-amber-900">课程章节：{memoryAnchors.join('、')}</p>
-          : <p className="mt-1 text-[11px] leading-5 text-amber-900">当前 Knowledge Content 未返回可展示的记忆提示。</p>}
+          ? <p className="mt-1 text-[11px] leading-5 text-[var(--em-ink)]">课程章节：{memoryAnchors.join('、')}</p>
+          : <p className="mt-1 text-[11px] leading-5 text-[var(--em-ink)]">当前 Knowledge Content 未返回可展示的记忆提示。</p>}
       </section>
 
-      {response.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-violet-100 pt-2"><span className="text-[10px] text-[var(--em-muted-ink)]">回答使用上下文：</span>{response.contextUsed.map((key) => <span key={key} className="rounded-full bg-violet-50 px-2 py-0.5 text-[10px] text-primary-700">{key}</span>)}</div>}
+      {response.contextUsed.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5 border-t border-[var(--em-border)] pt-2"><span className="text-[10px] text-[var(--em-muted-ink)]">回答使用上下文：</span>{response.contextUsed.map((key) => <span key={key} className="rounded-full bg-[var(--em-primary-subtle)] px-2 py-0.5 text-[10px] text-[var(--em-primary-deep)]">{key}</span>)}</div>}
       {response.sources.length > 0 && (
         <button
           type="button"
           onClick={() => props.onOpenSources?.(response.sources)}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50/60 px-3 py-1 text-[11px] font-semibold text-sky-700 transition hover:bg-sky-100"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[var(--em-border)] bg-[var(--em-primary-subtle)] px-3 py-1 text-[11px] font-semibold text-[var(--em-primary)] transition hover:bg-[var(--em-primary-subtle)]"
         >
           <BookOpen className="h-3 w-3" />
           课程来源 · {response.sources.length}

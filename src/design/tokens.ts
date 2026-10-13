@@ -7,19 +7,30 @@ export type XiaolianCharacterState =
   | 'evaluating'
   | 'encourage'
   | 'success';
+
 export const designTokens = {
   color: {
-    primary: '#8B7CF6',
-    secondary: '#6CA8FF',
-    accent: '#FF9FCB',
-    ink: '#29234A',
-    mutedInk: '#6F6A8A',
-    canvas: '#F7F4FF',
+    primary: '#9B4F6B',
+    primaryDeep: '#7D3C57',
+    active: '#FBEEF3',
+    sky: '#477795',
+    gold: '#9A793B',
+    ink: '#302733',
+    mutedInk: '#6E5D6B',
+    canvas: '#FBF8FA',
+    surface: '#FFFFFF',
+    border: '#E8DCE2',
+    borderStrong: '#D1BDC7',
+    success: '#15803D',
+    warning: '#D97706',
+    danger: '#DC2626',
+    unknown: '#64748B',
+    decision: '#1D4ED8',
   },
-  radius: { panel: 28, surface: 20, control: 14 },
-  duration: { quick: 180, standard: 280, ambient: 420 },
+  radius: { panel: 16, surface: 12, control: 8 },
+  duration: { quick: 120, standard: 180 },
   shadow: {
-    glass: '0 24px 70px rgba(87, 73, 151, 0.12)',
-    glow: '0 16px 42px rgba(139, 124, 246, 0.24)',
+    panel: '0 1px 2px rgba(15, 23, 42, 0.05)',
+    raised: '0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04)',
   },
 } as const;

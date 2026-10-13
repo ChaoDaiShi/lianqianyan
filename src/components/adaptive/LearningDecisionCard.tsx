@@ -5,7 +5,6 @@ import {
   Fingerprint,
   Layers3,
   SlidersHorizontal,
-  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,25 +45,24 @@ export function LearningDecisionCard({
   return (
     <section
       className={cn(
-        'relative overflow-hidden rounded-[26px] border border-violet-200/80 bg-gradient-to-br from-white via-violet-50/80 to-indigo-50/80 shadow-[0_14px_44px_rgba(105,82,185,.08)]',
+        'rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] shadow-[var(--em-shadow-sm)]',
         compact ? 'p-4' : 'p-6 sm:p-7'
       )}
       data-testid='learning-decision-card'
     >
-      <div className='pointer-events-none absolute -right-10 -top-12 h-48 w-48 rounded-full border-[28px] border-violet-200/20' />
       <div className='relative'>
         <div className='flex flex-wrap items-center justify-between gap-3'>
-          <span className='inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-violet-700'>
-            <Sparkles className='h-4 w-4' />
+          <span className='inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--em-primary)]'>
+            <Fingerprint className='h-4 w-4' />
             你的下一步学习
           </span>
-          <span className='rounded-full border border-violet-200 bg-white/80 px-3 py-1 text-[10px] font-semibold text-violet-600'>
+          <span className='rounded-full border border-[var(--em-border)] bg-[var(--em-surface)] px-3 py-1 text-[10px] font-semibold text-[var(--em-primary)]'>
             {session.policy === 'leap' ? 'LEAP · 证据驱动' : '固定策略 · 对照'}
           </span>
         </div>
         <h2
           className={cn(
-            'mt-4 font-bold leading-snug tracking-tight text-slate-800',
+            'mt-4 font-bold leading-snug tracking-tight text-[var(--em-ink)]',
             compact ? 'text-lg' : 'text-2xl'
           )}
         >
@@ -72,10 +70,10 @@ export function LearningDecisionCard({
             ? (session.nextStep?.title ?? '安排一次无提示巩固')
             : decision.title}
         </h2>
-        <p className='mt-2 text-sm font-medium text-violet-700'>
+        <p className='mt-2 text-sm font-medium text-[var(--em-primary)]'>
           建议方式：{decision.label} + 独立验证
         </p>
-        <p className='mt-3 text-sm leading-6 text-slate-600'>
+        <p className='mt-3 text-sm leading-6 text-[var(--em-muted-ink)]'>
           {finished ? session.nextStep?.reason : explanation}
         </p>
         <dl
@@ -105,7 +103,7 @@ export function LearningDecisionCard({
             value='新题独立作答'
           />
         </dl>
-        <div className='mt-5 flex flex-wrap items-center gap-2 border-t border-violet-200/60 pt-4'>
+        <div className='mt-5 flex flex-wrap items-center gap-2 border-t border-[var(--em-border)] pt-4'>
           {onStart ? (
             <Button onClick={onStart} disabled={busy} size='sm'>
               {finished ? '开始下一步' : '开始这次学习'}
@@ -152,11 +150,11 @@ function DecisionDetail({
 }) {
   return (
     <div className='min-w-0'>
-      <dt className='flex items-center gap-1.5 text-[11px] text-slate-500'>
-        <Icon className='h-3.5 w-3.5 text-violet-400' />
+      <dt className='flex items-center gap-1.5 text-[11px] text-[var(--em-muted-ink)]'>
+        <Icon className='h-3.5 w-3.5 text-[var(--em-primary)]' />
         {label}
       </dt>
-      <dd className='mt-1.5 text-xs font-semibold leading-5 text-slate-700'>
+      <dd className='mt-1.5 text-xs font-semibold leading-5 text-[var(--em-ink)]'>
         {value}
       </dd>
     </div>

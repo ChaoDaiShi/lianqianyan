@@ -43,11 +43,11 @@ int main(void) {
 export function stageTone(status: CompileStage['status']): string {
   switch (status) {
     case 'passed':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+      return 'border-[var(--em-success)] bg-[var(--em-surface-subtle)] text-[var(--em-success)]';
     case 'failed':
-      return 'border-rose-200 bg-rose-50 text-rose-700';
+      return 'border-[var(--em-danger)] bg-[var(--em-surface-subtle)] text-[var(--em-danger)]';
     case 'skipped':
-      return 'border-slate-200 bg-slate-50 text-slate-500';
+      return 'border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-[var(--em-unknown)]';
   }
 }
 

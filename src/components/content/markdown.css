@@ -1,0 +1,45 @@
+.hljs {
+  color: var(--em-ink);
+  background: transparent;
+}
+
+.hljs-keyword, .hljs-selector-tag, .hljs-type {
+  color: var(--em-primary);
+}
+
+.hljs-title, .hljs-number, .hljs-literal, .hljs-attr {
+  color: var(--em-decision);
+}
+
+.hljs-string, .hljs-regexp {
+  color: var(--em-success);
+}
+
+.hljs-comment, .hljs-quote {
+  color: var(--em-muted-ink);
+}
+
+.markdown-code-with-lines {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 1rem;
+}
+
+.markdown-code-line-numbers,
+.markdown-code-source {
+  white-space: pre;
+  line-height: 1.5rem;
+}
+
+.markdown-code-line-numbers {
+  color: var(--em-muted-ink);
+  text-align: right;
+  user-select: none;
+}
+
+.markdown-code-with-lines > .hljs {
+  display: block;
+  overflow: visible;
+  padding: 0;
+  background: transparent;
+}

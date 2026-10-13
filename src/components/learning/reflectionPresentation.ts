@@ -4,6 +4,21 @@ import type { KnowledgePointContent } from '@/lib/educationApi';
 export const REFLECTION_FEEDBACK_DISCLAIMER =
   '当前为前端教学反馈演示，不代表 AI 自动评分';
 
+export const REFLECTION_PROMPTS = [
+  { key: 'blindSpot', question: '本次练习中，我最初的思维盲区在哪里？' },
+  { key: 'keyLogic', question: '关键转折点（如指针转移顺序）的核心逻辑是什么？' },
+  { key: 'firstCheck', question: '未来遇到同类变形题时，我的第一排查步骤是什么？' },
+] as const;
+
+export type ReflectionPromptKey = (typeof REFLECTION_PROMPTS)[number]['key'];
+export type ReflectionAnswers = Record<ReflectionPromptKey, string>;
+
+export function composeReflectionAnswers(answers: ReflectionAnswers): string {
+  return REFLECTION_PROMPTS
+    .map(({ key }, index) => `${index + 1}. ${answers[key].trim()}`)
+    .join('\n\n');
+}
+
 export type ReflectionPageStatus =
   | 'missing-id'
   | 'loading'

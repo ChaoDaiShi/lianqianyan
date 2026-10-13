@@ -69,9 +69,35 @@ export interface PracticeEvaluationRequest {
   courseId: string;
   knowledgePointId: string;
   questionId: string;
+  optionId: string;
+  sessionId?: string;
+}
+
+export interface PracticeQuestionOption {
+  id: string;
+  label: string;
+}
+
+export interface RecordedPracticeResult {
+  optionId: string;
   isCorrect: boolean;
   score: number;
-  difficulty: number;
+  feedback: string;
+}
+
+export interface PracticeQuestion {
+  id: string;
+  version: string;
+  knowledgePointId: string;
+  objectiveId: string;
+  prompt: string;
+  options: PracticeQuestionOption[];
+  recordedResult: RecordedPracticeResult | null;
+}
+
+export interface PracticeQuestionCatalog {
+  version: string;
+  questions: PracticeQuestion[];
 }
 
 export type ReplanningReasonCode =
@@ -109,6 +135,11 @@ export interface PracticeEvaluationResponse {
   evidenceCount: number;
   message: string;
   replanning: ReplanningResult;
+  isCorrect?: boolean;
+  score?: number;
+  feedback?: string;
+  gradingVersion?: string;
+  alreadyRecorded?: boolean;
 }
 
 export interface MasteryState {
@@ -141,6 +172,11 @@ export interface KnowledgeSource {
   section: string;
   knowledgePointId: string;
   excerpt: string;
+  version?: string;
+  materialPath?: string;
+  sourceRefs?: KnowledgeReference[];
+  objectives?: KnowledgeObjective[];
+  prerequisiteIds?: string[];
 }
 
 export interface RetrievedKnowledge {
@@ -152,12 +188,53 @@ export interface RetrievedKnowledge {
   content: string;
   score: number;
   source: string;
+  version?: string;
+  materialPath?: string;
+  sourceRefs?: KnowledgeReference[];
+  objectives?: KnowledgeObjective[];
+  prerequisiteIds?: string[];
 }
 
 export interface KnowledgePointContent {
   knowledgePointId: string;
   title: string;
   sections: Array<{ title: string; content: string }>;
+  version?: string;
+  materialPath?: string;
+  sourceRefs?: KnowledgeReference[];
+  objectives?: KnowledgeObjective[];
+  prerequisiteIds?: string[];
+}
+
+export interface KnowledgeReference {
+  title: string;
+  url: string | null;
+  locator: string;
+  verificationStatus: string;
+}
+
+export interface KnowledgeObjective {
+  id: string;
+  text: string;
+}
+
+export interface CurriculumKnowledgePoint {
+  id: string;
+  name: string;
+  order: number;
+  difficulty: number;
+  material: string;
+  prerequisiteIds: string[];
+  aliases: string[];
+  objectives: KnowledgeObjective[];
+  sourceRefs: KnowledgeReference[];
+}
+
+export interface CourseCurriculum {
+  courseId: string;
+  version: string;
+  reviewStatus: string;
+  knowledgePoints: CurriculumKnowledgePoint[];
 }
 
 export interface KnowledgePointOption {
@@ -182,6 +259,40 @@ export async function listKnowledgePoints(
       difficulty: (value['difficulty'] as number) ?? 1,
     };
   });
+}
+
+export function mapCurriculum(raw: Record<string, unknown>): CourseCurriculum {
+  return {
+    courseId: raw['courseId'] as string,
+    version: raw['version'] as string,
+    reviewStatus: raw['reviewStatus'] as string,
+    knowledgePoints: ((raw['knowledgePoints'] as unknown[]) ?? []).map((item) => {
+      const point = item as Record<string, unknown>;
+      return {
+        id: point['id'] as string,
+        name: point['name'] as string,
+        order: point['order'] as number,
+        difficulty: point['difficulty'] as number,
+        material: point['material'] as string,
+        prerequisiteIds: (point['prerequisiteIds'] as string[]) ?? [],
+        aliases: (point['aliases'] as string[]) ?? [],
+        objectives: ((point['objectives'] as unknown[]) ?? []).map((objective) => {
+          const value = objective as Record<string, unknown>;
+          return { id: value['id'] as string, text: value['text'] as string };
+        }),
+        sourceRefs: ((point['sourceRefs'] as unknown[]) ?? []).map(mapKnowledgeReference),
+      };
+    }),
+  };
+}
+
+export async function fetchCurriculum(
+  courseId = 'course-ds',
+): Promise<CourseCurriculum> {
+  const response = await api.get<Record<string, unknown>>('/api/knowledge/curriculum', {
+    params: { course_id: courseId },
+  });
+  return mapCurriculum(extractApiData(response));
 }
 
 export interface LlmStatus {
@@ -299,6 +410,7 @@ export interface KnowledgeGraphNode {
   kind: 'course' | 'knowledge_point' | 'section';
   knowledgePointId: string | null;
   sourceSections: string[];
+  order?: number;
 }
 
 export interface KnowledgeGraphEdge {
@@ -315,6 +427,7 @@ export interface KnowledgeGraphData {
   nodes: KnowledgeGraphNode[];
   edges: KnowledgeGraphEdge[];
   sources: string[];
+  catalogVersion?: string;
 }
 
 export type AgentCapability = 'diagnosis' | 'planning' | 'tutoring' | 'assessment';
@@ -652,6 +765,11 @@ export async function searchKnowledge(params: {
       content: value['content'] as string,
       score: value['score'] as number,
       source: value['source'] as string,
+      version: value['version'] as string | undefined,
+      materialPath: value['material_path'] as string | undefined,
+      sourceRefs: ((value['source_refs'] as unknown[]) ?? []).map(mapKnowledgeReference),
+      objectives: ((value['objectives'] as unknown[]) ?? []).map(mapKnowledgeObjective),
+      prerequisiteIds: (value['prerequisite_ids'] as string[]) ?? [],
     };
   });
 }
@@ -666,6 +784,7 @@ export async function fetchKnowledgeGraph(
   return {
     courseId: raw['course_id'] as string,
     generationMode: raw['generation_mode'] as 'graph_rag_course_grounded',
+    catalogVersion: raw['catalog_version'] as string | undefined,
     nodes: ((raw['nodes'] as unknown[]) ?? []).map((item) => {
       const node = item as Record<string, unknown>;
       return {
@@ -674,6 +793,7 @@ export async function fetchKnowledgeGraph(
         kind: node['kind'] as KnowledgeGraphNode['kind'],
         knowledgePointId: (node['knowledge_point_id'] as string | null) ?? null,
         sourceSections: (node['source_sections'] as string[]) ?? [],
+        order: node['order'] as number | undefined,
       };
     }),
     edges: ((raw['edges'] as unknown[]) ?? []).map((item) => {
@@ -698,14 +818,89 @@ export async function fetchKnowledgePoint(
     `/api/knowledge/points/${knowledgePointId}`,
     { params: { course_id: courseId } }
   );
-  const raw = extractApiData(response);
+  return mapKnowledgePointContent(extractApiData(response));
+}
+
+export function mapKnowledgePointContent(
+  raw: Record<string, unknown>,
+): KnowledgePointContent {
   return {
     knowledgePointId: raw['knowledge_point_id'] as string,
     title: raw['title'] as string,
+    version: raw['version'] as string | undefined,
+    materialPath: raw['material_path'] as string | undefined,
+    sourceRefs: ((raw['source_refs'] as unknown[]) ?? []).map(mapKnowledgeReference),
+    objectives: ((raw['objectives'] as unknown[]) ?? []).map(mapKnowledgeObjective),
+    prerequisiteIds: (raw['prerequisite_ids'] as string[]) ?? [],
     sections: ((raw['sections'] as unknown[]) ?? []).map((item) => {
       const section = item as Record<string, unknown>;
       return { title: section['title'] as string, content: section['content'] as string };
     }),
+  };
+}
+
+export function mapPracticeQuestionCatalog(
+  raw: Record<string, unknown>,
+): PracticeQuestionCatalog {
+  return {
+    version: raw['version'] as string,
+    questions: ((raw['questions'] as unknown[]) ?? []).map((item) => {
+      const question = item as Record<string, unknown>;
+      const recorded = question['recordedResult'] as Record<string, unknown> | null;
+      return {
+        id: question['id'] as string,
+        version: question['version'] as string,
+        knowledgePointId: question['knowledgePointId'] as string,
+        objectiveId: question['objectiveId'] as string,
+        prompt: question['prompt'] as string,
+        options: ((question['options'] as unknown[]) ?? []).map((option) => {
+          const value = option as Record<string, unknown>;
+          return { id: value['id'] as string, label: value['label'] as string };
+        }),
+        recordedResult: recorded
+          ? {
+              optionId: recorded['optionId'] as string,
+              isCorrect: recorded['isCorrect'] as boolean,
+              score: recorded['score'] as number,
+              feedback: recorded['feedback'] as string,
+            }
+          : null,
+      };
+    }),
+  };
+}
+
+export async function fetchPracticeQuestions(params: {
+  learnerId: string;
+  courseId: string;
+  knowledgePointId: string;
+}): Promise<PracticeQuestionCatalog> {
+  const response = await api.get<Record<string, unknown>>('/api/practice/questions', {
+    params: {
+      learner_id: params.learnerId,
+      course_id: params.courseId,
+      knowledge_point_id: params.knowledgePointId,
+    },
+  });
+  return mapPracticeQuestionCatalog(extractApiData(response));
+}
+
+export function mapPracticeEvaluationResponse(
+  raw: Record<string, unknown>,
+): PracticeEvaluationResponse {
+  return {
+    evidence: mapEvidence(raw['evidence'] as Record<string, unknown>),
+    masteryBefore: raw['mastery_before'] as number,
+    masteryAfter: raw['mastery_after'] as number,
+    confidence: raw['confidence'] as number,
+    evidenceCount: raw['evidence_count'] as number,
+    message: raw['message'] as string,
+    replanning: mapReplanningResult(raw['replanning'] as Record<string, unknown>),
+    isCorrect: raw['is_correct'] as boolean | undefined,
+    score: raw['score'] as number | undefined,
+    feedback: raw['feedback'] as string | undefined,
+    gradingVersion: raw['grading_version'] as string | undefined,
+    alreadyRecorded: raw['already_recorded'] as boolean | undefined,
   };
 }
 
@@ -740,20 +935,10 @@ export async function evaluatePractice(
     course_id: request.courseId,
     knowledge_point_id: request.knowledgePointId,
     question_id: request.questionId,
-    is_correct: request.isCorrect,
-    score: request.score,
-    difficulty: request.difficulty,
+    option_id: request.optionId,
+    ...(request.sessionId ? { session_id: request.sessionId } : {}),
   });
-  const raw = extractApiData(response);
-  return {
-    evidence: mapEvidence(raw['evidence'] as Record<string, unknown>),
-    masteryBefore: raw['mastery_before'] as number,
-    masteryAfter: raw['mastery_after'] as number,
-    confidence: raw['confidence'] as number,
-    evidenceCount: raw['evidence_count'] as number,
-    message: raw['message'] as string,
-    replanning: mapReplanningResult(raw['replanning'] as Record<string, unknown>),
-  };
+  return mapPracticeEvaluationResponse(extractApiData(response));
 }
 
 export async function replanPlan(
@@ -934,8 +1119,31 @@ function mapSources(raw: unknown): KnowledgeSource[] {
       section: source['section'] as string,
       knowledgePointId: source['knowledge_point_id'] as string,
       excerpt: source['excerpt'] as string,
+      version: source['version'] as string | undefined,
+      materialPath: source['material_path'] as string | undefined,
+      sourceRefs: ((source['source_refs'] as unknown[]) ?? []).map(mapKnowledgeReference),
+      objectives: ((source['objectives'] as unknown[]) ?? []).map(mapKnowledgeObjective),
+      prerequisiteIds: (source['prerequisite_ids'] as string[]) ?? [],
     };
   });
+}
+
+function mapKnowledgeReference(raw: unknown): KnowledgeReference {
+  const reference = raw as Record<string, unknown>;
+  return {
+    title: reference['title'] as string,
+    url: (reference['url'] as string | null) ?? null,
+    locator: (reference['locator'] as string) ?? '',
+    verificationStatus: (reference['verificationStatus'] as string) ?? 'reference_only',
+  };
+}
+
+function mapKnowledgeObjective(raw: unknown): KnowledgeObjective {
+  const objective = raw as Record<string, unknown>;
+  return {
+    id: objective['id'] as string,
+    text: objective['text'] as string,
+  };
 }
 
 function mapEvidence(raw: Record<string, unknown>): LearningEvidence {

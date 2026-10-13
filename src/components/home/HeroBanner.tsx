@@ -59,7 +59,7 @@ function Metric({
   value: string;
 }) {
   return (
-    <div data-home-metric="true" className="rounded-[20px] border border-violet-100/90 bg-white/58 px-4 py-3.5 backdrop-blur">
+    <div data-home-metric="true" className="rounded-[20px] border border-violet-100/90 bg-[var(--em-surface)] px-4 py-3.5 backdrop-blur">
       <p className="text-xs font-medium text-[var(--em-muted-ink)]">{label}</p>
       <strong className="mt-1 block truncate text-base text-[var(--em-ink)]">{value}</strong>
     </div>
@@ -159,7 +159,7 @@ export function HeroBanner({
   return (
     <section
       data-learning-command-center="true"
-      className="relative isolate overflow-hidden rounded-[2rem] border border-white/75 bg-[color:var(--em-surface)]/76 px-5 py-6 shadow-[0_28px_80px_rgba(76,62,132,0.12)] backdrop-blur-2xl sm:px-8 sm:py-8 lg:px-10"
+      className="relative isolate overflow-hidden rounded-[2rem] border border-[var(--em-border)] bg-[color:var(--em-surface)]/76 px-5 py-6 shadow-[0_28px_80px_rgba(76,62,132,0.12)] backdrop-blur-2xl sm:px-8 sm:py-8 lg:px-10"
     >
       <div
         aria-hidden="true"
@@ -171,13 +171,13 @@ export function HeroBanner({
       />
       <div className="relative grid min-w-0 gap-7 lg:grid-cols-[minmax(0,1.02fr)_minmax(22rem,.98fr)] lg:items-center xl:gap-10">
         <div className="min-w-0 text-center lg:text-left">
-          <p className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-white/65 px-3.5 py-2 text-[13px] font-semibold text-primary-700 shadow-sm">
+          <p className="inline-flex items-center gap-2 rounded-full border border-violet-100 bg-[var(--em-surface)] px-3.5 py-2 text-[13px] font-semibold text-[var(--em-primary-deep)] shadow-sm">
             <Sparkles className="h-3.5 w-3.5 text-companion" />
             {runtimeState === 'idle'
               ? COMPANION_TEXT[companionState]
               : RUNTIME_TEXT[runtimeState]}
           </p>
-          <p className="mt-6 text-xs font-bold tracking-[0.17em] text-primary-600">
+          <p className="mt-6 text-xs font-bold tracking-[0.17em] text-[var(--em-primary)]">
             TODAY&apos;S LEARNING COMMAND
           </p>
           <h1 className="mt-2 text-[2.15rem] font-bold leading-[1.12] tracking-[-0.04em] sm:text-5xl">
@@ -186,8 +186,8 @@ export function HeroBanner({
           <p data-home-observation="true" className="mx-auto mt-4 max-w-xl text-base leading-7 text-[var(--em-muted-ink)] sm:text-[17px] lg:mx-0">
             {observation}
           </p>
-          <div className="mx-auto mt-5 max-w-xl rounded-[22px] border border-violet-100/90 bg-white/56 p-4 text-left lg:mx-0">
-            <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-primary-600">
+          <div className="mx-auto mt-5 max-w-xl rounded-[22px] border border-violet-100/90 bg-[var(--em-surface)] p-4 text-left lg:mx-0">
+            <p className="flex items-center gap-2 text-xs font-bold tracking-[0.12em] text-[var(--em-primary)]">
               <Target className="h-3.5 w-3.5" />
               小涟的当前观察
             </p>
@@ -202,7 +202,7 @@ export function HeroBanner({
         </div>
 
         <div className="relative min-w-0 rounded-[30px] border border-violet-100/80 bg-gradient-to-br from-white/78 via-violet-50/52 to-sky-50/58 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:p-5">
-          <div className="absolute right-4 top-4 z-10 hidden items-center gap-2 rounded-full border border-white/80 bg-white/70 px-3 py-1.5 text-xs font-semibold text-primary-700 shadow-sm sm:flex">
+          <div className="absolute right-4 top-4 z-10 hidden items-center gap-2 rounded-full border border-[var(--em-border)] bg-[var(--em-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--em-primary-deep)] shadow-sm sm:flex">
             <BookOpenCheck className="h-3.5 w-3.5" />
             真实证据驱动
           </div>

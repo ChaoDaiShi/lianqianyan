@@ -12,18 +12,9 @@ import { GlassPanel } from '@/components/design/GlassPanel';
 import {
   simulateCompile,
   type CompileSimulationResponse,
-  type CompileStage,
 } from '@/lib/educationApi';
 import { cn } from '@/lib/utils';
 import { COMPILER_EXAMPLES, stageTone } from './workshopPresentation';
-
-const INITIAL_STAGES: CompileStage[] = [
-  { name: 'preprocess', label: '预处理', status: 'skipped' },
-  { name: 'syntax', label: '语法分析', status: 'skipped' },
-  { name: 'semantic', label: '语义检查', status: 'skipped' },
-  { name: 'link', label: '链接', status: 'skipped' },
-  { name: 'run', label: '模拟运行', status: 'skipped' },
-];
 
 export function CompilerLab() {
   const [code, setCode] = useState<string>(COMPILER_EXAMPLES[0].code);
@@ -31,7 +22,7 @@ export function CompilerLab() {
     useState<CompileSimulationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const stages = response?.stages ?? INITIAL_STAGES;
+  const stages = response?.stages ?? [];
 
   const runSimulation = async () => {
     if (!code.trim() || loading) return;
@@ -48,21 +39,21 @@ export function CompilerLab() {
   };
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)]">
+    <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(15rem,1fr)_minmax(15rem,1fr)_minmax(0,2fr)]">
       <GlassPanel className="overflow-hidden p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-900 text-violet-200">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[var(--em-surface-subtle)] text-[var(--em-primary)]">
               <Code2 className="h-5 w-5" />
             </span>
             <div>
               <h2 className="text-lg font-bold">C 教学编译模拟</h2>
               <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
-                观察预处理、语法、语义、链接与运行阶段；教学模拟，不执行本机程序。
+                受约束的语义模拟执行器；阶段结果来自服务端响应，不执行本机程序。
               </p>
             </div>
           </div>
-          <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-semibold text-amber-700">
+          <span className="rounded-full border border-[var(--em-warning)] bg-[var(--em-surface-subtle)] px-3 py-1 text-[10px] font-semibold text-[var(--em-warning)]">
             c-edu 受限子集
           </span>
         </div>
@@ -78,7 +69,7 @@ export function CompilerLab() {
                 setResponse(null);
                 setError(false);
               }}
-              className="rounded-xl border border-violet-200 bg-white/70 px-3 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-violet-50 disabled:opacity-50"
+              className="rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--em-primary-deep)] transition hover:bg-[var(--em-primary-subtle)] disabled:opacity-50"
             >
               {example.label}
             </button>
@@ -93,7 +84,7 @@ export function CompilerLab() {
             maxLength={4_000}
             spellCheck={false}
             onChange={(event) => setCode(event.target.value)}
-            className="mt-2 min-h-[25rem] w-full resize-y rounded-[22px] border border-slate-700 bg-slate-950 p-4 font-mono text-[13px] leading-6 text-slate-100 shadow-inner"
+            className="mt-2 min-h-[25rem] w-full resize-y rounded-xl border border-[var(--em-border-strong)] bg-slate-950 p-4 font-mono text-[13px] leading-6 text-[var(--em-subtle-ink)] shadow-inner"
           />
         </label>
 
@@ -101,7 +92,7 @@ export function CompilerLab() {
           type="button"
           disabled={loading || !code.trim()}
           onClick={() => void runSimulation()}
-          className="mt-4 h-11 w-full gap-2 rounded-2xl bg-primary-500"
+          className="mt-4 h-11 w-full gap-2 rounded-lg bg-[var(--em-action)]"
         >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -112,18 +103,20 @@ export function CompilerLab() {
         </Button>
       </GlassPanel>
 
-      <div className="space-y-5">
-        <GlassPanel className="p-5 sm:p-6">
+      <GlassPanel className="p-5 sm:p-6">
+          <p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">02 · 处理过程</p>
           <div className="flex items-center gap-2">
-            <TerminalSquare className="h-5 w-5 text-primary-600" />
-            <h3 className="font-bold">编译阶段</h3>
+            <TerminalSquare className="h-5 w-5 text-[var(--em-primary)]" />
+            <h3 className="font-bold">语义模拟阶段</h3>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5 xl:grid-cols-2">
+          {loading && <p role="status" className="mt-3 text-xs text-[var(--em-muted-ink)]">正在等待服务端模拟阶段结果…</p>}
+          {!loading && !response && !error && <p className="mt-3 rounded-lg border border-dashed border-[var(--em-border)] px-3 py-4 text-xs leading-5 text-[var(--em-muted-ink)]">提交代码后，显示服务端返回的阶段与诊断信息。</p>}
+          {response && <div className="mt-4 space-y-2">
             {stages.map((stage) => (
               <div
                 key={stage.name}
                 className={cn(
-                  'rounded-2xl border px-3 py-3 text-xs font-semibold',
+                  'rounded-lg border px-3 py-3 text-xs font-semibold',
                   stageTone(stage.status),
                 )}
               >
@@ -142,7 +135,8 @@ export function CompilerLab() {
                 </span>
               </div>
             ))}
-          </div>
+          </div>}
+          <p className="mt-3 text-[11px] leading-5 text-[var(--em-muted-ink)]">响应提供阶段、诊断和标准输出；当前没有栈帧或指针快照字段，因此不展示内存动画。</p>
 
           {response?.diagnostics.length ? (
             <div className="mt-4 space-y-2">
@@ -150,10 +144,10 @@ export function CompilerLab() {
                 <div
                   key={`${diagnostic.code}-${diagnostic.line ?? 'global'}-${index}`}
                   className={cn(
-                    'rounded-2xl border px-3 py-2.5 text-xs leading-5',
+                  'rounded-lg border px-3 py-2.5 text-xs leading-5',
                     diagnostic.severity === 'error'
-                      ? 'border-rose-200 bg-rose-50 text-rose-700'
-                      : 'border-amber-200 bg-amber-50 text-amber-700',
+                      ? 'border-[var(--em-danger)] bg-[var(--em-surface-subtle)] text-[var(--em-danger)]'
+                      : 'border-[var(--em-warning)] bg-[var(--em-surface-subtle)] text-[var(--em-warning)]',
                   )}
                 >
                   <strong>{diagnostic.code}</strong>
@@ -165,17 +159,18 @@ export function CompilerLab() {
           ) : null}
 
           {error && (
-            <div role="alert" className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs text-rose-700">
+            <div role="alert" className="mt-4 rounded-lg border border-[var(--em-danger)] bg-[var(--em-surface-subtle)] px-3 py-2.5 text-xs text-[var(--em-danger)]">
               编译模拟服务暂时不可用；没有在本机尝试执行代码。
             </div>
           )}
-        </GlassPanel>
+      </GlassPanel>
 
-        <GlassPanel className="overflow-hidden p-0">
-          <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900 px-4 py-3 text-slate-100">
+      <GlassPanel className="overflow-hidden p-0">
+          <div className="border-b border-[var(--em-border)] bg-[var(--em-surface)] px-4 py-3"><p className="text-[10px] font-semibold text-[var(--em-primary-deep)]">03 · 产物预览</p></div>
+          <div className="flex items-center justify-between border-b border-[var(--em-border-strong)] bg-slate-900 px-4 py-3 text-[var(--em-subtle-ink)]">
             <span className="text-xs font-semibold">标准输出</span>
             {response && (
-              <span className={cn('text-[10px] font-semibold', response.success ? 'text-emerald-300' : 'text-rose-300')}>
+              <span className={cn('text-[10px] font-semibold', response.success ? 'text-[var(--em-success)]' : 'text-[var(--em-danger)]')}>
                 {response.success ? '模拟完成' : '模拟失败'}
               </span>
             )}
@@ -185,12 +180,11 @@ export function CompilerLab() {
               ? response.stdout || '(程序没有标准输出)'
               : '等待开始模拟编译…'}
           </pre>
-          <div className="border-t border-amber-100 bg-amber-50 px-4 py-3 text-[11px] leading-5 text-amber-800">
+          <div className="border-t border-[var(--em-border)] bg-[var(--em-surface-subtle)] px-4 py-3 text-[11px] leading-5 text-[var(--em-muted-ink)]">
             {response?.safetyNotice ??
               '教学模拟，不执行本机程序或任意系统命令。支持整数、赋值、算术表达式与受限 printf。'}
           </div>
-        </GlassPanel>
-      </div>
+      </GlassPanel>
     </div>
   );
 }

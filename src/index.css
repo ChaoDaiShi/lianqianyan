@@ -5,30 +5,30 @@
 
 @layer base {
   :root {
-    --background: 252 100% 98%;
-    --foreground: 248 36% 21%;
+    --background: 320 27% 98%;
+    --foreground: 285 13% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 248 36% 21%;
+    --card-foreground: 285 13% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 248 36% 21%;
-    --primary: 248 82% 73%;
+    --popover-foreground: 285 13% 18%;
+    --primary: 338 32% 46%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 215 100% 71%;
-    --secondary-foreground: 248 36% 21%;
-    --muted: 250 44% 95%;
-    --muted-foreground: 249 13% 48%;
-    --accent: 332 100% 81%;
-    --accent-foreground: 248 36% 21%;
-    --destructive: 0 72% 55%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 285 13% 18%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 337 62% 96%;
+    --accent-foreground: 338 32% 46%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 249 58% 90%;
-    --input: 249 58% 90%;
-    --ring: 248 82% 73%;
-    --radius: 1.125rem;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 338 32% 46%;
+    --radius: 0.5rem;
   }
 
   * {
-    @apply border-violet-100;
+    border-color: var(--em-border);
   }
 
   body {
@@ -42,38 +42,35 @@
   }
 
   .btn-primary {
-    @apply bg-violet-500 text-white hover:bg-violet-600 focus:ring-violet-400;
+    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-400;
   }
 
   .btn-secondary {
-    @apply bg-violet-50 text-violet-900 hover:bg-violet-100 focus:ring-violet-300;
+    @apply bg-primary-50 text-primary-800 hover:bg-primary-100 focus:ring-primary-300;
   }
 
   .btn-outline {
-    @apply border border-violet-200 bg-white/80 text-violet-800 hover:bg-violet-50 focus:ring-violet-400;
+    @apply border border-[var(--em-border-strong)] bg-white text-primary-800 hover:bg-primary-50 focus:ring-primary-400;
   }
 
   .card {
-    @apply rounded-[24px] border border-violet-100 bg-white/75 shadow-sm backdrop-blur-xl;
+    @apply rounded-xl border bg-white shadow-sm;
   }
 
   .card-hover {
-    @apply transition duration-200 hover:-translate-y-0.5 hover:shadow-lg;
+    @apply transition-shadow duration-150 hover:shadow-md;
   }
 
   .input {
-    @apply flex h-10 w-full rounded-[14px] border border-violet-200 bg-white/80 px-3 py-2 text-sm;
+    @apply flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm;
   }
 
   .input-focus {
-    @apply focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-offset-2;
   }
 
   .text-balance { text-wrap: balance; }
-
-  .text-gradient {
-    @apply bg-gradient-to-r from-violet-600 via-indigo-500 to-sky-500 bg-clip-text text-transparent;
-  }
+  .text-gradient { color: var(--em-primary); }
 }
 
 @layer utilities {

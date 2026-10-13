@@ -29,15 +29,16 @@ describe('ResourcesPage learning workshop', () => {
     const html = renderToStaticMarkup(<ResourcesPage />);
 
     expect(html).toContain('创作工作台');
-    expect(html).toContain('选择目标');
-    expect(html).toContain('生成与预览');
+    expect(html).toContain('输入参数');
+    expect(html).toContain('处理过程');
+    expect(html).toContain('产物预览');
     expect(html).toContain('资源生成');
     expect(html).toContain('联网检索');
     expect(html).toContain('编译实验');
     expect(html).toContain('resource-generator-panel');
     expect(html).toContain('network-search-panel');
     expect(html).toContain('compiler-lab-panel');
-    expect(html).toContain('课程来源可追溯');
+    expect(html).toContain('输入参数');
     expect(html).toContain('扩展工具');
     expect(html).toContain('live2d-xiaolian');
   });

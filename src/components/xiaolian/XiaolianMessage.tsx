@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 export type XiaolianMessageTone = 'observe' | 'suggest' | 'encourage' | 'success' | 'notice';
 
 const TONE = {
-  observe: { icon: Search, label: '小涟观察', surface: 'border-violet-100 bg-violet-50/65', ink: 'text-primary-700' },
+  observe: { icon: Search, label: '小涟观察', surface: 'border-violet-100 bg-violet-50/65', ink: 'text-[var(--em-primary-deep)]' },
   suggest: { icon: Lightbulb, label: '小涟建议', surface: 'border-sky-100 bg-sky-50/65', ink: 'text-sky-700' },
   encourage: { icon: Heart, label: '小涟陪你', surface: 'border-pink-100 bg-pink-50/60', ink: 'text-pink-700' },
   success: { icon: CheckCircle2, label: '小涟发现', surface: 'border-emerald-100 bg-emerald-50/60', ink: 'text-emerald-700' },

@@ -22,7 +22,7 @@ interface AuthScreenProps {
 type AuthMode = 'login' | 'register';
 
 const inputClassName =
-  'mt-2 h-12 rounded-xl border-[#E4E1EB] bg-white px-4 text-[#2B2935] shadow-none placeholder:text-[#AAA6B5] focus-visible:border-[#8A7BEA] focus-visible:ring-[#7766E8]/10 focus-visible:ring-offset-0';
+  'mt-2 h-11 rounded-lg border-[var(--em-border-strong)] bg-[var(--em-surface)] px-4 text-[var(--em-ink)] shadow-none placeholder:text-[var(--em-subtle-ink)] focus-visible:border-[var(--em-primary)] focus-visible:ring-[var(--em-focus-ring)] focus-visible:ring-offset-0';
 
 export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps) {
   const { captchaServiceFailed } = useAuth();
@@ -107,45 +107,44 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
   return (
     <main
-      data-auth-entry="companion"
-      className="relative min-h-screen overflow-hidden bg-[#c8c1f1] px-4 py-4 text-[#292733] sm:px-6 sm:py-6 lg:px-10 lg:py-8"
+      data-auth-entry="workbench"
+      className="relative min-h-screen overflow-hidden bg-[var(--em-canvas)] px-4 py-4 text-[var(--em-ink)] sm:px-6 sm:py-6 lg:px-10 lg:py-8"
     >
       <AuthCompanionScene />
 
       <div className="relative z-10 mx-auto flex min-w-0 min-h-[calc(100vh-2rem)] w-full max-w-[1240px] items-center sm:min-h-[calc(100vh-3rem)] lg:min-h-[calc(100vh-4rem)]">
         <div className="grid min-w-0 w-full items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(390px,450px)] lg:gap-16 xl:gap-24">
-          <section data-auth-brand="true" className="hidden max-w-xl px-4 text-white drop-shadow-[0_3px_24px_rgba(46,35,91,0.2)] lg:block lg:px-8">
-            <p className="flex items-center gap-3 text-sm font-semibold tracking-[0.2em] text-white/85">
-              <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#ffd1e8] shadow-[0_0_0_5px_rgba(255,255,255,0.2)]" />
+          <section data-auth-brand="true" className="hidden max-w-xl px-4 text-[var(--em-ink)] lg:block lg:px-8">
+            <p className="flex items-center gap-3 text-sm font-semibold text-[var(--em-primary)]">
+              <span className="h-2.5 w-2.5 rounded-sm bg-[var(--em-action)]" />
               涟千言
             </p>
-            <h1 className="mt-8 max-w-lg text-5xl font-semibold leading-[1.12] tracking-[-0.04em] xl:text-6xl">
-              把今天的学习，
-              <br />
-              放回自己的节奏里。
+            <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--em-border)] bg-[var(--em-sky-subtle)]"><img src={`${import.meta.env.BASE_URL}brand/cyrene-learning-welcome.webp`} alt="昔涟，与你一起研读" className="h-72 w-full object-cover object-[center_25%] xl:h-80" /></div>
+            <h1 className="mt-6 max-w-lg text-2xl font-bold leading-relaxed">
+              从真实作答开始，建立自己的学习路径。
             </h1>
-            <p className="mt-6 max-w-md text-base leading-7 text-white/80">
-              小涟学姐会记住你的学习记录，陪你从下一步开始，把每一次理解留在成长路上。
+            <p className="mt-4 max-w-md text-base leading-7 text-[var(--em-muted-ink)]">
+              在课程材料中研读、完成针对性练习，再用独立新题确认理解。学习记录、教学依据和结果来源均可查阅。
             </p>
           </section>
 
           <section
             data-auth-card="true"
             data-auth-card-width="viewport-clamped"
-            className="mx-auto min-w-0 w-full max-w-full overflow-hidden rounded-[28px] border border-white/70 bg-white/95 shadow-[0_28px_80px_rgba(48,39,99,0.2)] backdrop-blur-xl"
+            className="mx-auto min-w-0 w-full max-w-full overflow-hidden rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] shadow-[var(--em-shadow-md)]"
           >
-            <header className="flex min-w-0 flex-wrap items-center justify-between gap-y-1 border-b border-[#F0EDF4] px-6 py-5 sm:px-8">
+            <header className="flex min-w-0 flex-wrap items-center justify-between gap-y-1 border-b border-[var(--em-border)] px-6 py-5 sm:px-8">
               <div className="flex items-center gap-2.5 lg:hidden">
-                <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[#EFB8D3]" />
-                <span className="text-sm font-semibold tracking-[0.08em] text-[#393545]">涟千言</span>
+                <span className="h-2.5 w-2.5 rotate-45 rounded-[3px] bg-[var(--em-action)]" />
+                <span className="text-sm font-semibold tracking-[0.08em] text-[var(--em-ink)]">涟千言</span>
               </div>
-              <span className="hidden text-xs text-[#AAA6B5] sm:inline">AI 学习空间</span>
-              <p className="text-right text-sm text-[#777386]">
+              <span className="hidden text-xs text-[var(--em-subtle-ink)] sm:inline">循证学习工作台</span>
+              <p className="text-right text-sm text-[var(--em-muted-ink)]">
                 <span>{isLogin ? '没有账号？' : '已经有账号？'}</span>{' '}
                 <button
                   type="button"
                   onClick={switchMode}
-                  className="rounded-lg px-1.5 py-1 font-medium text-[#7766E8] transition-colors duration-200 hover:text-[#6958D5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7766E8]"
+                  className="rounded-lg px-1.5 py-1 font-medium text-[var(--em-primary)] transition-colors duration-200 hover:text-[var(--em-primary-deep)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--em-primary)]"
                 >
                   {isLogin ? '创建账号' : '返回登录'}
                 </button>
@@ -154,18 +153,18 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
 
             <div className="px-6 py-8 sm:px-8 sm:py-9">
               <div>
-                <p className="text-sm font-medium text-[#7766E8]">{isLogin ? '学习空间入口' : '建立学习账号'}</p>
-                <h2 className="mt-2 text-[30px] font-semibold leading-tight tracking-[-0.03em] text-[#292733]">
+                <p className="text-sm font-medium text-[var(--em-primary)]">{isLogin ? '学习空间入口' : '建立学习账号'}</p>
+                <h2 className="mt-2 text-2xl font-semibold leading-tight tracking-[-0.03em] text-[var(--em-ink)]">
                   {isLogin ? '欢迎回来' : '创建账号'}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-[#777386]">
+                <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">
                   {isLogin ? '登录后继续你的学习计划。' : '创建后继续选择你的学习课程。'}
                 </p>
               </div>
 
               <form className="mt-7 space-y-4" onSubmit={submit} aria-describedby={error ? 'auth-error' : undefined}>
                 {!isLogin && (
-                  <label htmlFor="auth-display-name" className="block text-[13px] font-medium text-[#393545]">
+                  <label htmlFor="auth-display-name" className="block text-[13px] font-medium text-[var(--em-ink)]">
                     显示名称
                     <Input
                       id="auth-display-name"
@@ -176,12 +175,12 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                       value={displayName}
                       onChange={(event) => setDisplayName(event.target.value)}
                       className={inputClassName}
-                      placeholder="小涟怎么称呼你"
+                      placeholder="你的显示名称"
                     />
                   </label>
                 )}
 
-                <label htmlFor="auth-username" className="block text-[13px] font-medium text-[#393545]">
+                <label htmlFor="auth-username" className="block text-[13px] font-medium text-[var(--em-ink)]">
                   用户名
                   <Input
                     id="auth-username"
@@ -197,7 +196,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                   />
                 </label>
 
-                <label htmlFor="auth-password" className="block text-[13px] font-medium text-[#393545]">
+                <label htmlFor="auth-password" className="block text-[13px] font-medium text-[var(--em-ink)]">
                   密码
                   <Input
                     type="password"
@@ -215,7 +214,7 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                 </label>
 
                 {error && (
-                  <p id="auth-error" role="alert" className="rounded-xl border border-[#F2D7DC] bg-[#FFF5F6] px-4 py-3 text-sm leading-5 text-[#A34E5B]">
+                  <p id="auth-error" role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-700">
                     {error}
                   </p>
                 )}
@@ -223,17 +222,17 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                 {captchaRequired && (
                   <div>
                     {(fallbackProvider || forcedProvider) && !captchaUnavailable && (
-                      <p className="mb-2 rounded-xl border border-[#E4DEF7] bg-[#F6F3FF] px-3 py-2 text-xs leading-5 text-[#6A5DC8]">
+                      <p className="mb-2 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface-subtle)] px-3 py-2 text-xs leading-5 text-[var(--em-muted-ink)]">
                         Cloudflare 验证暂不可用，已切换到 Vaptcha 人机验证，完成后重新提交即可。
                       </p>
                     )}
                     {captchaUnavailable ? (
-                      <div className="rounded-xl border border-[#F2D7DC] bg-[#FFF5F6] px-4 py-3">
-                        <p className="text-sm leading-5 text-[#A34E5B]">人机验证组件暂时无法加载，请检查网络后重试。</p>
+                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                        <p className="text-sm leading-5 text-red-700">人机验证组件暂时无法加载，请检查网络后重试。</p>
                         <button
                           type="button"
                           onClick={() => { setCaptchaUnavailable(false); setFallbackProvider(null); setForcedProvider(null); setCaptchaGeneration((current) => current + 1); }}
-                          className="mt-2 rounded-lg px-2 py-1 text-xs font-medium text-[#7766E8] underline underline-offset-2 hover:text-[#6958D5]"
+                          className="mt-2 rounded-lg px-2 py-1 text-xs font-medium text-[var(--em-primary)] underline underline-offset-2 hover:text-[var(--em-primary-deep)]"
                         >
                           重新加载验证
                         </button>
@@ -260,14 +259,14 @@ export function AuthScreen({ onLogin, onRegister, busy, error }: AuthScreenProps
                   type="submit"
                   disabled={busy || Boolean(captchaRequired && !credential)}
                   aria-busy={busy}
-                  className="h-12 w-full rounded-xl bg-[#7766E8] px-5 text-sm font-medium text-white shadow-[0_6px_16px_rgba(119,102,232,0.18)] transition-colors duration-200 hover:bg-[#6958D5] active:bg-[#5F50C8] focus-visible:ring-[#7766E8]/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#AAA6D5]"
+                  className="h-11 w-full rounded-lg px-5 text-sm font-medium"
                 >
                   {busy ? (isLogin ? '正在登录…' : '正在创建…') : isLogin ? '进入我的学习空间' : '创建账号'}
                   {!busy && <ArrowRight aria-hidden="true" className="h-4 w-4" />}
                 </Button>
               </form>
 
-              <p className="mt-5 text-center text-xs leading-5 text-[#777386]">登录后将加载与你账号关联的学习记录。</p>
+              <p className="mt-5 text-center text-xs leading-5 text-[var(--em-muted-ink)]">登录后将加载与你账号关联的学习记录。</p>
             </div>
           </section>
         </div>

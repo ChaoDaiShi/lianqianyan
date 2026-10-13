@@ -47,7 +47,7 @@ export function VoiceInputButton({
             : 'h-9 gap-1.5 rounded-xl px-3 text-xs',
           listening
             ? 'border-rose-200 bg-rose-50 text-rose-700'
-            : 'border-violet-200 bg-white/70 text-primary-700',
+            : 'border-violet-200 bg-[var(--em-surface)]/70 text-[var(--em-primary-deep)]',
         )}
       >
         {!supported ? (

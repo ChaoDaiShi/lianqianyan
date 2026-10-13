@@ -10,12 +10,12 @@ export interface DiagnosisTone {
 }
 
 const TONES: Record<DiagnosisStatus, DiagnosisTone> = {
-  unassessed: { label: DIAGNOSIS_STATUS_LABEL.unassessed, node: 'bg-slate-300', glow: 'shadow-slate-300/40', badge: 'bg-slate-100 text-slate-600', text: 'text-slate-600' },
-  insufficient_evidence: { label: DIAGNOSIS_STATUS_LABEL.insufficient_evidence, node: 'bg-slate-300', glow: 'shadow-slate-300/40', badge: 'bg-slate-100 text-slate-600', text: 'text-slate-600' },
-  weak: { label: DIAGNOSIS_STATUS_LABEL.weak, node: 'bg-fuchsia-500', glow: 'shadow-fuchsia-400/50', badge: 'bg-fuchsia-50 text-fuchsia-700', text: 'text-fuchsia-700' },
-  developing: { label: DIAGNOSIS_STATUS_LABEL.developing, node: 'bg-sky-500', glow: 'shadow-sky-400/50', badge: 'bg-sky-50 text-sky-700', text: 'text-sky-700' },
-  proficient: { label: DIAGNOSIS_STATUS_LABEL.proficient, node: 'bg-gradient-to-br from-sky-400 to-amber-300', glow: 'shadow-sky-300/50', badge: 'bg-sky-50 text-sky-700', text: 'text-sky-700' },
-  mastered: { label: DIAGNOSIS_STATUS_LABEL.mastered, node: 'bg-amber-300', glow: 'shadow-amber-300/60', badge: 'bg-amber-50 text-amber-700', text: 'text-amber-700' },
+  unassessed: { label: DIAGNOSIS_STATUS_LABEL.unassessed, node: 'bg-slate-500', glow: 'shadow-slate-300/30', badge: 'bg-slate-100 text-slate-700', text: 'text-slate-700' },
+  insufficient_evidence: { label: DIAGNOSIS_STATUS_LABEL.insufficient_evidence, node: 'bg-slate-500', glow: 'shadow-slate-300/30', badge: 'bg-slate-100 text-slate-700', text: 'text-slate-700' },
+  weak: { label: DIAGNOSIS_STATUS_LABEL.weak, node: 'bg-amber-600', glow: 'shadow-amber-300/30', badge: 'bg-amber-50 text-amber-800', text: 'text-amber-800' },
+  developing: { label: DIAGNOSIS_STATUS_LABEL.developing, node: 'bg-blue-700', glow: 'shadow-blue-300/30', badge: 'bg-blue-50 text-blue-800', text: 'text-blue-800' },
+  proficient: { label: DIAGNOSIS_STATUS_LABEL.proficient, node: 'bg-green-700', glow: 'shadow-green-300/30', badge: 'bg-green-50 text-green-800', text: 'text-green-800' },
+  mastered: { label: DIAGNOSIS_STATUS_LABEL.mastered, node: 'bg-green-800', glow: 'shadow-green-300/30', badge: 'bg-green-50 text-green-900', text: 'text-green-900' },
 };
 
 export function isAssessedDiagnosis(status: DiagnosisStatus) {

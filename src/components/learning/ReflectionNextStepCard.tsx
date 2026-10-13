@@ -19,8 +19,8 @@ export function ReflectionNextStepCard({
   onPrepareNext,
 }: ReflectionNextStepCardProps) {
   return (
-    <GlassPanel className="border border-violet-100 p-6 sm:p-7">
-      <div className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+    <GlassPanel className="border border-[var(--em-border)] p-6 sm:p-7">
+      <div className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary-deep)]">
         <Route className="h-4 w-4" />
         小涟下一步引导
       </div>
@@ -30,9 +30,9 @@ export function ReflectionNextStepCard({
       </p>
 
       {nextTask ? (
-        <div className="mt-5 flex flex-col gap-4 rounded-lg border border-violet-100 bg-white/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-5 flex flex-col gap-4 rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold text-primary-700">
+            <p className="text-xs font-semibold text-[var(--em-primary-deep)]">
               当前计划下一任务
             </p>
             <strong className="mt-1 block">{nextTask.knowledgePointName}</strong>
@@ -44,7 +44,7 @@ export function ReflectionNextStepCard({
           <Button
             onClick={onPrepareNext}
             disabled={starting}
-            className="shrink-0 gap-2 bg-primary-500 hover:bg-primary-600"
+            className="shrink-0 gap-2 bg-[var(--em-action)] hover:bg-[var(--em-action-hover)]"
           >
             {starting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

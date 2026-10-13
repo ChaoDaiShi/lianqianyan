@@ -2,9 +2,9 @@ import { ACTION_TYPE_LABEL } from '@/domain';
 import type { DiagnosisResult, KnowledgePointDiagnosis, PersistedStudyPlan } from '@/domain';
 
 /**
- * 学习闭环引导：把真实学习状态（当前路线 / 诊断聚焦点 / 证据覆盖）转成
+ * 学习闭环引导：把真实学习状态（当前计划 / 诊断聚焦点 / 证据覆盖）转成
  * 最多 3 条"下一步做什么"的行动建议。只陈述数据里存在的事实，
- * 排序 = 学习闭环顺序：继续路线 → 弄懂薄弱点 → 留下证据。
+ * 排序 = 学习闭环顺序：继续计划任务 → 弄懂薄弱点 → 留下证据。
  */
 
 export type NextStepActionKey = 'route' | 'understand' | 'assess';
@@ -63,10 +63,10 @@ export function buildNextStepActions({
   if (nextTask) {
     actions.push({
       key: 'route',
-      title: `继续学习路线：${nextTask.knowledgePointName}`,
-      reason: `${ACTION_TYPE_LABEL[nextTask.actionType]} · 路线共 ${tasks.length} 步，按诊断优先级排序`,
+      title: `继续学习计划：${nextTask.knowledgePointName}`,
+      reason: `${ACTION_TYPE_LABEL[nextTask.actionType]} · 当前计划共 ${tasks.length} 项，按诊断优先级排序`,
       to: '/my-learning',
-      cta: '去继续',
+      cta: '看学习计划',
     });
   }
 
@@ -80,7 +80,7 @@ export function buildNextStepActions({
     actions.push({
       key: 'assess',
       title: '用一次章节自测留下学习证据',
-      reason: unassessedCount > 0 ? `还有 ${unassessedCount} 个知识点未评估，自测结果会更新诊断与路线` : '自测结果会更新诊断与学习路线',
+      reason: unassessedCount > 0 ? `还有 ${unassessedCount} 个知识点未评估，自测结果会更新诊断与学习计划` : '自测结果会更新诊断与学习计划',
       to: '/exams',
       cta: '去做自测',
     });
@@ -89,7 +89,7 @@ export function buildNextStepActions({
   if (actions.length === 0) {
     actions.push({
       key: 'route',
-      title: '让小涟生成第一条学习路线',
+      title: '基于当前诊断建立学习计划',
       reason: '根据当前课程的真实诊断安排学习顺序',
       to: '/my-learning',
       cta: '去生成',

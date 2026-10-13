@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Brain, ChevronDown, Loader2, Send, Sparkles } from 'lucide-react';
+import { Brain, ChevronDown, Loader2, Send } from 'lucide-react';
 import { AppShell } from '@/components/layout/AppShell';
 import { GlassPanel } from '@/components/design/GlassPanel';
 import { XiaolianCharacter } from '@/components/xiaolian/XiaolianCharacter';
@@ -48,6 +48,7 @@ import { ConversationRail } from '@/components/xiaolian/ConversationRail';
 import { LongTermMemoryPanel } from '@/components/xiaolian/LongTermMemoryPanel';
 import { NextStepGuidanceCard } from '@/components/learning/NextStepGuidance';
 import { LeapEntryCard } from '@/components/adaptive/LeapEntryCard';
+import { StudyMaterialPanel } from '@/components/xiaolian/StudyMaterialPanel';
 
 const QUICK_QUESTIONS = ['我现在最应该学什么，为什么？', '给我解释死锁四个必要条件。', 'PV 操作掌握了吗？'];
 const CONTEXT_LABELS: Record<string, string> = {
@@ -427,39 +428,38 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
   return (
       <div
         data-agent-workspace={embedded ? 'embedded' : 'full'}
-        className={cn('mx-auto max-w-7xl', embedded ? 'min-h-[calc(100vh-4.5rem)]' : 'min-h-[calc(100vh-4.75rem)]')}
+        className={cn('mx-auto max-w-[1500px]', embedded ? 'min-h-[calc(100vh-4.5rem)]' : 'min-h-[calc(100vh-4.75rem)]')}
       >
-        <div className="grid min-w-0 gap-3 xl:grid-cols-[17rem_minmax(0,1fr)]">
-        <div className="order-2 min-w-0 space-y-3 xl:order-1">
-          <ConversationRail threads={threads} activeId={activeThreadId} onCreate={() => void createThread()} onSelect={(id) => { const thread = threads.find((item) => item.id === id); if (thread) openThread(thread); }} onDelete={(id) => void removeThread(id)} />
-          <LeapEntryCard compact />
-          {activeThread ? <LongTermMemoryPanel memories={activeThread.memories} busy={memoryBusy} onAdd={(content) => void remember(content)} onDelete={(id) => void forget(id)} /> : null}
-          <NextStepGuidanceCard />
-          {historyLoading ? <p className="flex items-center gap-2 px-3 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />读取历史记录…</p> : null}
-          {historyError ? <p role="status" className="rounded-2xl border border-amber-100 bg-amber-50/70 px-3 py-2 text-xs leading-5 text-amber-800">{historyError}</p> : null}
-        </div>
-        <GlassPanel className={cn('order-1 flex h-[calc(100dvh-10rem)] min-h-[34rem] min-w-0 flex-col overflow-hidden rounded-[2rem] md:h-[calc(100dvh-5.4rem)] md:min-h-[36rem] xl:order-2', embedded && 'h-[calc(100dvh-4.5rem)]')}>
-          <header className="border-b border-violet-100 px-4 py-2.5 sm:px-5">
+        <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(22rem,2fr)]">
+          <div className="order-1 min-w-0">
+            <StudyMaterialPanel />
+          </div>
+          <div className="order-2 min-w-0 space-y-3">
+            <ConversationRail threads={threads} activeId={activeThreadId} onCreate={() => void createThread()} onSelect={(id) => { const thread = threads.find((item) => item.id === id); if (thread) openThread(thread); }} onDelete={(id) => void removeThread(id)} />
+            {activeThread ? <LongTermMemoryPanel memories={activeThread.memories} busy={memoryBusy} onAdd={(content) => void remember(content)} onDelete={(id) => void forget(id)} /> : null}
+            {historyLoading ? <p className="flex items-center gap-2 px-3 text-xs text-[var(--em-muted-ink)]"><Loader2 className="h-3.5 w-3.5 animate-spin" />读取历史记录…</p> : null}
+            {historyError ? <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-900">{historyError}</p> : null}
+            <GlassPanel className={cn('flex h-[calc(100dvh-19rem)] min-h-[25rem] min-w-0 flex-col overflow-hidden rounded-xl', embedded && 'h-[calc(100dvh-17rem)]')}>
+          <header className="border-b border-[var(--em-border)] px-4 py-3 sm:px-5">
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <XiaolianCharacter
                   runtimeState={runtimeState}
                   companionState={companionState}
-                  size="conversation"
+                  size="sm"
                   speaking={speech.speaking}
                   framing="portrait"
-                  priority
                 />
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold tracking-[0.16em] text-primary-700">XIAOLIAN CONVERSATION</p>
-                  <h1 className="mt-0.5 truncate text-lg font-bold">和小涟一起想明白</h1>
-                  <p className="mt-0.5 hidden text-xs text-[var(--em-muted-ink)] sm:block">说出目标或卡点，从历史与主动保存的记忆继续。</p>
+                  <p className="text-xs font-semibold text-[var(--em-primary)]">学习对话</p>
+                  <h1 className="mt-0.5 truncate text-lg font-semibold">围绕课程材料逐步推理</h1>
+                  <p className="mt-0.5 hidden text-sm text-[var(--em-muted-ink)] sm:block">阅读左侧材料，再和小涟核对思路与证据。</p>
                 </div>
               </div>
-              <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold', pending ? 'border-primary-200 bg-violet-50 text-primary-700' : 'border-emerald-100 bg-emerald-50/70 text-emerald-700')}>
+              <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium', pending ? 'border-[var(--em-border)] bg-[var(--em-primary-subtle)] text-[var(--em-primary)]' : 'border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-[var(--em-ink)]')}>
                 {pending ? <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
                 <span className="hidden sm:inline">
-                  {pending ? '协作流进行中' : '证据范围已锁定'}
+                  {pending ? '回答生成中' : '对话已就绪'}
                 </span>
                 <span className="sm:hidden">{pending ? '生成中' : '就绪'}</span>
               </span>
@@ -493,16 +493,15 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                       data-chat-message="true"
                       data-chat-role={message.role}
                       className={cn(
-                        'rounded-[22px] px-4 py-4 text-[15px] leading-7 sm:px-5 sm:text-base sm:leading-7',
+                        'rounded-xl px-4 py-4 text-[15px] leading-7 sm:px-5 sm:text-base sm:leading-7',
                         message.role === 'user'
-                          ? 'max-w-[78%] bg-primary-600 text-white shadow-[0_10px_26px_rgba(111,95,224,0.18)]'
-                          : 'max-w-[86%] border border-violet-100 bg-white/70 text-[var(--em-ink)] shadow-[0_12px_32px_rgba(76,62,132,0.06)]',
+                          ? 'max-w-[78%] bg-[var(--em-action)] text-white'
+                          : 'max-w-[86%] border border-[var(--em-border)] bg-[var(--em-surface)] text-[var(--em-ink)]',
                       )}
                     >
                       {message.role === 'assistant' && (
-                        <div className="mb-3 flex items-center gap-1.5 text-xs font-medium text-primary-600">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          小涟
+                        <div className="mb-3 flex items-center gap-1.5 text-sm font-medium text-[var(--em-primary)]">
+                          小涟 · 助教
                           {message.isFallback && (
                             <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700">
                               基础辅导模式
@@ -527,7 +526,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                             onClick={() =>
                               void remember(message.content, message.id)
                             }
-                            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-violet-100 bg-violet-50/70 px-3 text-xs font-semibold text-primary-700"
+                            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] px-3 text-sm font-medium text-[var(--em-ink)]"
                           >
                             <Brain className="h-3 w-3" />
                             记住这条
@@ -540,8 +539,8 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                         message.agentTrace?.length ||
                         message.sources?.length ||
                         message.provider) ? (
-                        <details className="group mt-4 border-t border-violet-100 pt-3">
-                          <summary className="flex cursor-pointer list-none items-center justify-between py-1 text-sm text-[var(--em-muted-ink)]">
+                        <details className="group mt-4 border-t border-[var(--em-border)] pt-3">
+                          <summary className="flex cursor-pointer list-none items-center justify-between py-1 text-sm text-[var(--em-ink)]">
                             <span>回答依据与下一步</span>
                             <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" />
                           </summary>
@@ -555,7 +554,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                                   {message.contextUsed.map((key) => (
                                     <span
                                       key={key}
-                                      className="rounded-full bg-violet-50 px-2.5 py-1 text-xs text-primary-700"
+                                      className="rounded-md bg-[var(--em-surface-subtle)] px-2.5 py-1 text-xs text-[var(--em-ink)]"
                                     >
                                       {CONTEXT_LABELS[key] ?? key}
                                     </span>
@@ -570,7 +569,7 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
                                 {message.suggestedActions.map((action) => (
                                   <p
                                     key={action}
-                                    className="mt-1.5 text-sm leading-6 text-[var(--em-muted-ink)]"
+                                    className="mt-1.5 text-sm leading-6 text-[var(--em-ink)]"
                                   >
                                     · {action}
                                   </p>
@@ -602,13 +601,25 @@ export function XiaolianWorkspace({ embedded = false }: { embedded?: boolean }) 
             })}
           </div>
 
-          <div className="border-t border-violet-100 p-4">
-            {messages.length === 1 && <div className="mb-3 flex flex-wrap gap-2">{QUICK_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-full border border-violet-200 bg-violet-50/65 px-3 py-1.5 text-xs font-medium text-primary-700 hover:bg-violet-100 disabled:opacity-50">{question}</button>)}</div>}
-            <form className="flex items-start gap-2" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="向小涟提问，例如：为什么我总学不会死锁？" className="h-11 flex-1 rounded-2xl bg-white/70" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" disabled={pending || !input.trim()} size="icon" className="h-11 w-11 shrink-0 rounded-2xl bg-primary-500" aria-label="发送"><Send className="h-4 w-4" /></Button></form>
-            <p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">语音仅填入输入框，确认文字后再发送；音频不会上传到涟千言后端。</p>
-            <details className="group mt-3"><summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-[var(--em-muted-ink)]">更多 · 服务状态<ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" /></summary><div className="mt-3 space-y-2"><p className="text-[10px] text-[var(--em-muted-ink)]">{llmStatus.loading ? '正在读取服务状态…' : llmStatus.data?.configured ? `对话服务：${llmStatus.data.provider}${llmStatus.data.model ? ` · ${llmStatus.data.model}` : ''}` : '外部模型未配置，当前回答由课程材料与学习记录生成'}</p>{speech.error ? <p className="text-[10px] text-rose-600">{speech.error}</p> : null}</div></details>
+          <div className="border-t border-[var(--em-border)] p-4">
+            {messages.length === 1 && <div className="mb-3 flex flex-wrap gap-2">{QUICK_QUESTIONS.map((question) => <button key={question} type="button" disabled={pending} onClick={() => void handleSend(question, null)} className="rounded-md border border-[var(--em-border)] bg-[var(--em-surface-subtle)] px-3 py-1.5 text-sm font-medium text-[var(--em-ink)] hover:bg-[var(--em-surface-subtle)] disabled:opacity-50">{question}</button>)}</div>}
+            <form className="flex items-start gap-2" onSubmit={(event) => { event.preventDefault(); void handleSend(); }}><Input value={input} onChange={(event) => setInput(event.target.value)} placeholder="结合左侧材料，写下你的问题或推理步骤" className="h-10 flex-1 rounded-lg bg-[var(--em-surface)]" disabled={pending} /><VoiceInputButton supported={voice.supported} listening={voice.listening} interimTranscript={voice.interimTranscript} error={voice.error} disabled={pending} compact onStart={() => { speech.stop(); voice.start(); }} onStop={voice.stop} className="shrink-0" /><Button type="submit" disabled={pending || !input.trim()} size="icon" className="h-10 w-10 shrink-0 rounded-lg bg-[var(--em-action)] hover:bg-[var(--em-action-hover)]" aria-label="发送"><Send className="h-4 w-4" /></Button></form>
+            <p className="mt-2 text-xs text-[var(--em-muted-ink)]">语音仅填入输入框，确认文字后再发送；音频不会上传到涟千言后端。</p>
+            <details className="group mt-3"><summary className="flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-[var(--em-ink)]">更多 · 服务状态<ChevronDown className="h-4 w-4 transition group-open:rotate-180" /></summary><div className="mt-3 space-y-2"><p className="text-xs text-[var(--em-muted-ink)]">{llmStatus.loading ? '正在读取服务状态…' : llmStatus.data?.configured ? `对话服务：${llmStatus.data.provider}${llmStatus.data.model ? ` · ${llmStatus.data.model}` : ''}` : '外部模型未配置，当前回答由课程材料与学习记录生成'}</p>{speech.error ? <p className="text-sm text-rose-700">{speech.error}</p> : null}</div></details>
           </div>
-        </GlassPanel></div>
+        </GlassPanel>
+          <details className="group rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-[var(--em-ink)]">
+              <span>学习任务与路线</span>
+              <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
+            </summary>
+            <div className="mt-3 grid gap-3 border-t border-[var(--em-border)] pt-3 sm:grid-cols-2">
+              <LeapEntryCard compact />
+              <NextStepGuidanceCard />
+            </div>
+          </details>
+          </div>
+        </div>
       </div>
   );
 }

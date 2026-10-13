@@ -28,7 +28,7 @@ function DirectionList({
       {values.map((value) => (
         <li
           key={value}
-          className="rounded-lg border border-violet-100 bg-white/60 px-3 py-1.5 text-sm font-medium"
+          className="rounded-lg border border-violet-100 bg-[var(--em-surface)] px-3 py-1.5 text-sm font-medium"
         >
           {value}
         </li>
@@ -46,8 +46,8 @@ export function XiaolianLearningPortrait({
   return (
     <GlassPanel className="p-5 sm:p-6">
       <div className="flex items-center gap-2">
-        <GraduationCap className="h-4 w-4 text-primary-600" />
-        <p className="text-[10px] font-bold text-primary-600">
+        <GraduationCap className="h-4 w-4 text-[var(--em-primary)]" />
+        <p className="text-[10px] font-bold text-[var(--em-primary)]">
           LEARNING PORTRAIT
         </p>
       </div>
@@ -56,7 +56,7 @@ export function XiaolianLearningPortrait({
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
         <section>
           <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-muted-ink)]">
-            <Compass className="h-4 w-4 text-primary-500" />
+            <Compass className="h-4 w-4 text-[var(--em-primary)]" />
             当前学习阶段
           </p>
           <p className="mt-2 text-base font-bold">{portrait.stage}</p>

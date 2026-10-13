@@ -40,7 +40,7 @@ export function SpeechControls({
       title={speaking ? stopLabel : actionLabel}
       onClick={() => (speaking ? onStop() : onSpeak(text))}
       className={cn(
-        'h-10 w-10 gap-0 rounded-xl border-violet-200 bg-white/70 p-0 text-primary-700',
+        'h-10 w-10 gap-0 rounded-xl border-violet-200 bg-[var(--em-surface)]/70 p-0 text-[var(--em-primary-deep)]',
         className,
       )}
     >

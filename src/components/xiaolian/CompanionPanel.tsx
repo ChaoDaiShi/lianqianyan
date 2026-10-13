@@ -16,16 +16,17 @@ export interface CompanionPanelProps {
 
 export function CompanionPanel({ state, eyebrow, title, message, action, details, className }: CompanionPanelProps) {
   return (
-    <GlassPanel className={cn('overflow-hidden p-5', className)}>
-      <div className="relative -mx-5 -mt-5 mb-4 overflow-hidden bg-gradient-to-b from-violet-100/70 via-sky-50/40 to-transparent px-5 pt-2">
-        <div className="absolute left-5 top-8 h-16 w-16 rounded-full bg-companion/20 blur-2xl" />
-        <XiaolianCharacter state={state} size="lg" className="relative" />
+    <GlassPanel className={cn('space-y-4 p-4', className)}>
+      <div className="flex items-start gap-3">
+        <XiaolianCharacter state={state} size="sm" />
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-[var(--em-primary)]">{eyebrow}</p>
+          <h2 className="mt-1 text-lg font-semibold text-[var(--em-ink)]">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">{message}</p>
+        </div>
       </div>
-      <p className="text-[10px] font-bold tracking-[0.18em] text-primary-600">{eyebrow}</p>
-      <h2 className="mt-2 text-xl font-bold text-[var(--em-ink)]">{title}</h2>
-      <p className="mt-2 text-sm leading-7 text-[var(--em-muted-ink)]">{message}</p>
-      {details && <div className="mt-4 border-t border-violet-100 pt-4">{details}</div>}
-      {action && <div className="mt-5">{action}</div>}
+      {details && <div className="border-t border-[var(--em-border)] pt-3">{details}</div>}
+      {action && <div>{action}</div>}
     </GlassPanel>
   );
 }

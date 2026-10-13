@@ -1,4 +1,5 @@
-import { AlertTriangle, Check, Circle, Loader2, Route } from 'lucide-react';
+import { useState } from 'react';
+import { AlertTriangle, Check, Circle, Clock3, LockKeyhole, Loader2 } from 'lucide-react';
 import type {
   DiagnosisResult,
   PersistedStudyPlan,
@@ -19,62 +20,229 @@ export interface TodaysJourneyProps {
   onRetry: () => void;
 }
 
-export function TodaysJourney({ diagnosis, plan, currentTask, evidence, loading, error, onRetry }: TodaysJourneyProps) {
-  const journey = buildHomeJourney({ diagnosis, plan, task: currentTask, evidence });
-  const current = journey.find((node) => node.state === 'current');
-  const introduction = !diagnosis
-    ? '今天从第一次诊断开始。'
-    : currentTask
-      ? `今天围绕「${currentTask.knowledgePointName}」完成一次学习闭环。`
-      : '诊断已经完成，下一步是生成学习计划。';
+function formatTime(value: string) {
+  return new Date(value).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
+function EvidenceRows({
+  entries,
+}: {
+  entries: LearningEvidence[];
+}) {
+  if (entries.length === 0) {
+    return <p className='text-sm text-[var(--em-muted-ink)]'>尚无这一阶段的学习记录。</p>;
+  }
   return (
-    <section className="rounded-[2rem] border border-violet-100/80 bg-white/55 px-5 py-5 sm:px-8 sm:py-6">
-      <div className="flex items-center gap-2 text-primary-700">
-        <Route className="h-4 w-4" />
-        <p className="text-xs font-bold tracking-[0.14em]">TODAY&apos;S JOURNEY</p>
-      </div>
-      <div className="mt-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
-        <div>
-          <h2 className="text-[1.75rem] font-bold tracking-[-0.03em] sm:text-[2rem]">今天的学习路径</h2>
-          <p data-journey-summary="true" className="mt-2 text-[15px] leading-7 text-[var(--em-muted-ink)] sm:text-base sm:leading-7">{introduction}</p>
-        </div>
-        {current ? <p className="text-sm text-[var(--em-muted-ink)]">当前停留：{current.label}</p> : null}
-      </div>
+    <div className='space-y-3'>
+      {entries.map(item => (
+        <article key={item.id} className='rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-3'>
+          <div className='flex flex-wrap items-start justify-between gap-2'>
+            <p className='text-sm font-medium text-[var(--em-ink)]'>
+              {item.evidenceType === 'learning_started' ? '学习已开始' : '练习已评价'}
+              {item.knowledgePointId ? ` · ${item.knowledgePointId}` : ''}
+            </p>
+            <time className='text-xs text-[var(--em-muted-ink)]'>{formatTime(item.occurredAt)}</time>
+          </div>
+          <dl className='mt-2 grid gap-1 text-xs sm:grid-cols-[100px_minmax(0,1fr)]'>
+            <dt className='text-[var(--em-muted-ink)]'>记录来源</dt>
+            <dd className='text-[var(--em-ink)]'>{item.source}</dd>
+            <dt className='text-[var(--em-muted-ink)]'>原始载荷</dt>
+            <dd className='min-w-0 whitespace-pre-wrap break-words font-mono text-[var(--em-ink)]'>
+              {JSON.stringify(item.payload, null, 2)}
+            </dd>
+          </dl>
+        </article>
+      ))}
+    </div>
+  );
+}
 
-      <div className="mt-5 flex flex-col gap-2 border-y border-violet-100/70 py-3.5 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-[var(--em-muted-ink)]">学习计划</span>
-          <strong className="font-semibold text-[var(--em-ink)]">{plan ? `${plan.tasks.length} 个步骤` : '尚未安排'}</strong>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <span className="text-[var(--em-muted-ink)]">学习证据</span>
-          <strong className="font-semibold text-[var(--em-ink)]">{evidence.length ? `${evidence.length} 条` : '--'}</strong>
-        </div>
-      </div>
+function StageRecord({
+  stage,
+  diagnosis,
+  plan,
+  task,
+  evidence,
+}: {
+  stage: 'diagnosis' | 'plan' | 'learning' | 'validation';
+  diagnosis: DiagnosisResult | null;
+  plan: PersistedStudyPlan | null;
+  task: PersistedStudyTask | null;
+  evidence: LearningEvidence[];
+}) {
+  if (stage === 'diagnosis') {
+    if (!diagnosis) return <p className='text-sm text-[var(--em-muted-ink)]'>尚无诊断结果。完成初测后，这里会显示记录时间、证据数量与诊断重点。</p>;
+    return (
+      <dl className='grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]'>
+        <dt className='text-[var(--em-muted-ink)]'>诊断记录时间</dt>
+        <dd className='text-[var(--em-ink)]'>{formatTime(diagnosis.diagnosisGeneratedAt)}</dd>
+        <dt className='text-[var(--em-muted-ink)]'>诊断结论</dt>
+        <dd className='text-[var(--em-ink)]'>
+          {diagnosis.primaryFocus
+            ? `${diagnosis.primaryFocus.knowledgePointName} · ${diagnosis.primaryFocus.evidenceCount} 条评价证据`
+            : '当前没有可证明的优先薄弱项'}
+        </dd>
+        <dt className='text-[var(--em-muted-ink)]'>状态依据</dt>
+        <dd className='text-[var(--em-ink)]'>{diagnosis.summaryCodes.join('、') || '暂无状态代码'}</dd>
+      </dl>
+    );
+  }
 
-      {loading ? (
-        <p className="mt-8 flex items-center gap-2 text-sm text-[var(--em-muted-ink)]"><Loader2 className="h-4 w-4 animate-spin" />正在同步真实学习进度…</p>
-      ) : error ? (
-        <div className="mt-7">
-          <p className="flex items-center gap-2 text-sm text-amber-700"><AlertTriangle className="h-4 w-4" />学习路径暂时没有加载成功</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>重新加载</Button>
-        </div>
-      ) : (
-        <ol className="relative mt-6 grid gap-4 sm:grid-cols-4 sm:gap-0">
-          <span aria-hidden="true" className="absolute left-6 top-6 hidden h-px w-[calc(100%-3rem)] bg-violet-200 sm:block" />
-          {journey.map((node, index) => (
-            <li key={node.id} data-journey-node={node.id} data-journey-state={node.state} className="relative flex gap-4 sm:block sm:px-3 sm:text-center">
-              <span className={cn('relative z-10 grid h-11 w-11 shrink-0 place-items-center rounded-full border bg-[var(--em-surface)] text-sm font-bold transition-colors sm:mx-auto', node.state === 'completed' && 'border-primary-500 bg-primary-600 text-white', node.state === 'current' && 'border-primary-400 text-primary-700 shadow-[0_0_0_6px_rgba(139,114,219,0.12)]', node.state === 'waiting' && 'border-violet-100 text-slate-400')}>
-                {node.state === 'completed' ? <Check className="h-4 w-4" /> : node.state === 'current' ? <Circle className="h-3.5 w-3.5 fill-current" /> : index + 1}
-              </span>
-              <div className="pt-1 sm:pt-4">
-                <strong className={cn('text-[15px]', node.state === 'waiting' && 'text-slate-400')}>{node.label}</strong>
-                <p className="mt-1 text-sm leading-6 text-[var(--em-muted-ink)]">{node.description}</p>
-              </div>
+  if (stage === 'plan') {
+    if (!plan) return <p className='text-sm text-[var(--em-muted-ink)]'>尚无已保存的学习计划。诊断完成后可以从今日任务卡生成计划。</p>;
+    return (
+      <div className='space-y-3'>
+        <dl className='grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]'>
+          <dt className='text-[var(--em-muted-ink)]'>计划生成时间</dt>
+          <dd className='text-[var(--em-ink)]'>{formatTime(plan.generatedAt)}</dd>
+          <dt className='text-[var(--em-muted-ink)]'>决策来源</dt>
+          <dd className='text-[var(--em-ink)]'>{plan.strategy} · {plan.reasonCodes.join('、')}</dd>
+          <dt className='text-[var(--em-muted-ink)]'>来源诊断时间</dt>
+          <dd className='text-[var(--em-ink)]'>{formatTime(plan.sourceDiagnosisGeneratedAt)}</dd>
+        </dl>
+        <ol className='divide-y divide-[var(--em-border)] rounded-lg border border-[var(--em-border)]'>
+          {plan.tasks.map(item => (
+            <li key={item.id} className='flex flex-wrap justify-between gap-2 px-3 py-2 text-sm'>
+              <span className='font-medium text-[var(--em-ink)]'>{item.order}. {item.knowledgePointName}</span>
+              <span className='text-[var(--em-muted-ink)]'>{item.estimatedMinutes} 分钟 · {item.reasonCodes.join('、')}</span>
             </li>
           ))}
         </ol>
+      </div>
+    );
+  }
+
+  const matchingEvidence = evidence.filter(item => {
+    if (task && item.knowledgePointId !== task.knowledgePointId) return false;
+    return stage === 'learning'
+      ? item.evidenceType === 'learning_started'
+      : item.evidenceType === 'practice_answer_evaluated';
+  });
+  const entries = matchingEvidence.slice(-3).reverse();
+  return <EvidenceRows entries={entries} />;
+}
+
+export function TodaysJourney({
+  diagnosis,
+  plan,
+  currentTask,
+  evidence,
+  loading,
+  error,
+  onRetry,
+}: TodaysJourneyProps) {
+  const [expandedStage, setExpandedStage] = useState<string | null>(null);
+  const journey = buildHomeJourney({
+    diagnosis,
+    plan,
+    task: currentTask,
+    evidence,
+  });
+  const current = journey.find(node => node.state === 'current');
+
+  return (
+    <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
+      <div className='flex flex-wrap items-start justify-between gap-3'>
+        <div>
+          <h2 className='text-lg font-semibold text-[var(--em-ink)]'>
+            今日学习工序
+          </h2>
+          <p data-journey-summary='true' className='mt-1 text-sm leading-6 text-[var(--em-muted-ink)]'>
+            {currentTask
+              ? `围绕「${currentTask.knowledgePointName}」记录每个阶段的真实输入与结果。`
+              : '从初测、方案、练习到独立验证，逐步留下可查证据。'}
+          </p>
+        </div>
+        <p className='text-xs text-[var(--em-muted-ink)]'>
+          当前阶段：{current?.label ?? '已完成'}
+        </p>
+      </div>
+
+      {loading ? (
+        <p role='status' className='mt-5 flex items-center gap-2 text-sm text-[var(--em-muted-ink)]'>
+          <Loader2 className='h-4 w-4 animate-spin' />
+          正在同步阶段记录…
+        </p>
+      ) : error ? (
+        <div role='alert' className='mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4'>
+          <p className='flex items-center gap-2 text-sm text-amber-900'>
+            <AlertTriangle className='h-4 w-4' />
+            学习工序记录暂时没有完整加载。
+          </p>
+          <Button variant='outline' size='sm' onClick={onRetry}>重新加载</Button>
+        </div>
+      ) : (
+        <>
+          <ol className='mt-5 grid gap-2 sm:grid-cols-4'>
+            {journey.map((node, index) => {
+              const expanded = expandedStage === node.id;
+              return (
+                <li key={node.id} data-journey-node={node.id} data-journey-state={node.state}>
+                  <button
+                    type='button'
+                    aria-expanded={expanded}
+                    aria-controls={`journey-record-${node.id}`}
+                    onClick={() => setExpandedStage(expanded ? null : node.id)}
+                    className={cn(
+                      'flex h-full w-full items-start gap-3 rounded-lg border p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--em-primary)] sm:flex-col sm:items-center sm:text-center',
+                      node.state === 'completed' && 'border-[var(--em-success)] bg-[var(--em-surface-subtle)]',
+                      node.state === 'current' && 'border-[var(--em-decision)] bg-[var(--em-surface-subtle)]',
+                      node.state === 'waiting' && 'border-[var(--em-border)] bg-[var(--em-surface-subtle)]',
+                      expanded && 'ring-2 ring-[var(--em-primary)]',
+                    )}
+                  >
+                    <span className={cn(
+                      'grid h-8 w-8 shrink-0 place-items-center rounded-full border',
+                      node.state === 'completed' && 'border-emerald-700 bg-emerald-700 text-white',
+                      node.state === 'current' && 'border-blue-700 bg-blue-700 text-white',
+                      node.state === 'waiting' && 'border-[var(--em-border-strong)] bg-[var(--em-surface)] text-[var(--em-muted-ink)]',
+                    )}>
+                      {node.state === 'completed'
+                        ? <Check className='h-4 w-4' />
+                        : node.state === 'current'
+                          ? <Circle className='h-2.5 w-2.5 fill-current' />
+                          : <LockKeyhole className='h-3.5 w-3.5' />}
+                    </span>
+                    <span className='min-w-0'>
+                      <span className='block text-sm font-semibold text-[var(--em-ink)]'>{node.label}</span>
+                      <span className='mt-1 block text-xs leading-5 text-[var(--em-muted-ink)]'>{node.description}</span>
+                      <span className='mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--em-primary)]'>
+                        <Clock3 className='h-3 w-3' />
+                        {expanded ? '收起记录' : '查看记录'}
+                      </span>
+                    </span>
+                    <span className='sr-only'>第 {index + 1} 步</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          {expandedStage && (
+            <section
+              id={`journey-record-${expandedStage}`}
+              aria-label={`${journey.find(node => node.id === expandedStage)?.label}阶段记录`}
+              className='mt-4 rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-4'
+            >
+              <h3 className='mb-3 text-sm font-semibold text-[var(--em-ink)]'>
+                {journey.find(node => node.id === expandedStage)?.label} · 输入与结果
+              </h3>
+              <StageRecord
+                stage={expandedStage as 'diagnosis' | 'plan' | 'learning' | 'validation'}
+                diagnosis={diagnosis}
+                plan={plan}
+                task={currentTask}
+                evidence={evidence}
+              />
+            </section>
+          )}
+        </>
       )}
     </section>
   );

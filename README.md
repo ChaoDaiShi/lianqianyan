@@ -49,6 +49,7 @@ localStorage 只缓存非敏感的账号 ID 与已选课程，用于让现有学
 | `POST /api/adaptive/sessions/{id}/practice` | 记录可选辅助练习；带提示成绩不计作独立验证 |
 | `POST /api/adaptive/sessions/{id}/ready-probe` | 收起教学，进入已保存的独立验证阶段 |
 | `POST /api/adaptive/sessions/{id}/probe` | 独立新题评分、结果记录与重规划 |
+| `POST /api/adaptive/sessions/{id}/ready-retest` | 到期后显式分配延迟复测题，读取会话不会分配题目 |
 | `POST /api/adaptive/sessions/{id}/retest` | 到期后的 7 天无提示复测 |
 | `GET /api/adaptive/overview` | 真实状态、会话和策略分组汇总 |
 | `GET /api/adaptive/experiments/export` | 导出当前学习者的版本化过程与结果 JSON |
@@ -56,6 +57,21 @@ localStorage 只缓存非敏感的账号 ID 与已选课程，用于让现有学
 查询当前范围使用 `learner_id`、`course_id`。独立题按学习者与主题分配未见题，题池耗尽时明确提示；前测、训练、后测和延迟题分别维护。`/#/outcome-lab` 展示实际作答成绩，空组与尚未完成的复测保持待采集。A–D 是可运行机制对照，用户可选择固定策略、证据策略、LEAP 及单要素消融；单次前后变化与非随机分组统计不用于宣称因果教学增益。
 
 部署沿用本项目原有前后端镜像与启动方式，不增加微服务。后端启动时为新的 `adaptive_sessions`、`adaptive_knowledge_states` 建表，保留现有账号与学习记录；前端使用 `pnpm build` 打包。必要检查为 `pnpm check`、`pnpm build`，后端核心流程检查为 `uv run pytest tests/test_adaptive_leap.py -q`。
+
+## 数据结构课程与评分证据（2026-10-14）
+
+数据结构使用 `apps/api/app/curriculum/course_ds.json` 作为课程索引，覆盖算法分析、线性表、栈与队列、递归、串、树、堆、图、排序查找和哈希 10 个知识点。每点有目标、教材、参考定位及明确先修声明；知识图的 `precedes` 表示前置知识点到后续知识点，不按文件顺序生成。教材与检索引用保留版本和原始资料定位。课程及题库仍标记为待教师审核。
+
+版本化客观题库含 80 题：40 道常规练习、20 道独立验证、20 道延迟复测。LEAP 的 5 个试点主题同时保留原有开放式规则题；规则参数与误解候选没有经过学生群体校准。
+
+- `GET /api/practice/questions` 返回本课程知识点的常规题和当前账号已保存结果，不返回未作答题答案或独立测评题。
+- `POST /api/practice/evaluate` 接收 `learner_id/course_id/knowledge_point_id/question_id/option_id/session_id?`；正确性和分数由服务端计算，客户端提交 `score/is_correct/difficulty` 会被拒绝。
+- 同题同版本跨会话、跨入口共享收据。带提示/复习题保留过程结果，不转为新的计分事实；常规练习不标作独立验证。
+- 自适应状态从可信 `LearningEvidence` 重放，普通练习、考试与 LEAP 使用同一事实来源；不同掌握模型的数值不强行等同。
+- 后测结果先保存，重规划另行记录状态；规划失败时返回已保存结果及失败状态。题池耗尽后提供复习或切换主题入口。
+- 前后测题型和评分口径未校准时，`scoreComparable=false`、`observedGain=null`，Outcome 分开展示成绩，不计算归一化增益。
+
+分阶段的契约、并发任务与实际验收记录见 [证据与知识库收口方案](docs/superpowers/plans/2026-10-14-evidence-knowledge-parallel-convergence.md)。
 
 ## 证据星河与小涟协作流
 

@@ -64,6 +64,7 @@ describe('ExamResultView', () => {
     expect(html).toContain('成绩复盘');
     expect(html).toContain('10 分待批');
     expect(html).toContain('暂不判定是否通过');
+    expect(html).toContain('已批题目失分 2 分 · 1 题待批，尚未计入失分');
     expect(html).toContain('还需补充不可抢占');
     expect(html).toContain('等待人工批阅');
     expect(html).toContain('导出 CSV');

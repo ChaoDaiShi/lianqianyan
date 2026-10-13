@@ -13,7 +13,7 @@ interface KnowledgeGraphProps {
 const RELATION_LABEL = {
   contains: '包含',
   explains: '解释',
-  precedes: '先后',
+  precedes: '先修依赖',
 } as const;
 
 export function graphCanvasWidth(sectionCount: number) {
@@ -71,13 +71,13 @@ export function KnowledgeGraph({ graph, loading, error, onRetry }: KnowledgeGrap
     [canvasWidth, visibleNodes],
   );
 
-  if (loading) return <div className="rounded-[28px] border border-violet-100 bg-white/55 p-8 text-center text-sm text-[var(--em-muted-ink)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /><p className="mt-2">小涟正在生成课程知识图谱…</p></div>;
+  if (loading) return <div className="rounded-[28px] border border-violet-100 bg-[var(--em-surface)] p-8 text-center text-sm text-[var(--em-muted-ink)]"><Loader2 className="mx-auto h-5 w-5 animate-spin" /><p className="mt-2">小涟正在生成课程知识图谱…</p></div>;
   if (error) return <div className="rounded-[28px] border border-amber-100 bg-amber-50/60 p-8 text-center"><p className="text-sm text-amber-800">知识图谱暂时无法读取。</p><Button type="button" variant="outline" size="sm" onClick={onRetry} className="mt-3 gap-2"><RefreshCw className="h-3.5 w-3.5" />重试</Button></div>;
-  if (!graph || graph.nodes.length === 0) return <div className="rounded-[28px] border border-dashed border-violet-200 bg-white/45 p-8 text-center text-sm text-[var(--em-muted-ink)]">当前课程没有可生成图谱的材料。</div>;
+  if (!graph || graph.nodes.length === 0) return <div className="rounded-[28px] border border-dashed border-violet-200 bg-[var(--em-surface)] p-8 text-center text-sm text-[var(--em-muted-ink)]">当前课程没有可生成图谱的材料。</div>;
 
   return <div className="space-y-4">
     <div className="rounded-[30px] border border-violet-100 bg-[radial-gradient(circle_at_top,rgba(167,139,250,.18),transparent_42%),rgba(255,255,255,.58)] p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="flex items-center gap-2 text-xs font-bold text-primary-700"><Share2 className="h-4 w-4" />课程材料知识图谱</p><p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">课程材料生成 · 全部 {graph.nodes.length} 节点 / {graph.edges.length} 关系 · 当前呈现 {visibleNodes.length} 节点</p><p className="mt-1 text-[10px] font-medium text-primary-700">点击知识点展开其课程章节</p></div><div className="flex gap-1.5">{Object.entries(RELATION_LABEL).map(([key, label]) => <span key={key} className="rounded-full border border-violet-100 bg-white/75 px-2 py-1 text-[10px]">{label}</span>)}</div></div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="flex items-center gap-2 text-xs font-bold text-[var(--em-primary-deep)]"><Share2 className="h-4 w-4" />课程材料知识图谱</p><p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">课程材料生成 · 全部 {graph.nodes.length} 节点 / {graph.edges.length} 关系 · 当前呈现 {visibleNodes.length} 节点</p><p className="mt-1 text-[10px] font-medium text-[var(--em-primary-deep)]">点击知识点展开其课程章节</p></div><div className="flex gap-1.5">{Object.entries(RELATION_LABEL).map(([key, label]) => <span key={key} className="rounded-full border border-violet-100 bg-[var(--em-surface)] px-2 py-1 text-[10px]">{label}</span>)}</div></div>
       <div className="mt-4 overflow-x-auto">
         <svg viewBox={`0 0 ${canvasWidth} 520`} role="img" aria-label="课程知识图谱" className="min-w-[820px]">
           {visibleEdges.map((edge) => {
@@ -96,7 +96,7 @@ export function KnowledgeGraph({ graph, loading, error, onRetry }: KnowledgeGrap
         </svg>
       </div>
     </div>
-    {selected && <div className="rounded-[22px] border border-violet-100 bg-white/60 p-4"><p className="text-sm font-bold">{selected.label}</p><p className="mt-1 text-xs text-[var(--em-muted-ink)]">{selected.kind === 'course' ? '课程根节点' : selected.kind === 'knowledge_point' ? '知识点节点' : '课程章节节点'}</p><div className="mt-3 flex flex-wrap gap-1.5">{selected.sourceSections.map((source) => <span key={source} className="rounded-full bg-violet-50 px-2 py-1 text-[10px] text-primary-700">{source}</span>)}</div></div>}
-    <div className="rounded-[20px] border border-sky-100 bg-sky-50/55 p-4"><p className="text-xs font-bold text-sky-800">来源清单</p><div className="mt-2 flex flex-wrap gap-1.5">{graph.sources.map((source) => <span key={source} className="rounded-full bg-white/80 px-2 py-1 text-[10px] text-sky-800">{source}</span>)}</div></div>
+    {selected && <div className="rounded-[22px] border border-violet-100 bg-[var(--em-surface)] p-4"><p className="text-sm font-bold">{selected.label}</p><p className="mt-1 text-xs text-[var(--em-muted-ink)]">{selected.kind === 'course' ? '课程根节点' : selected.kind === 'knowledge_point' ? '知识点节点' : '课程章节节点'}</p><div className="mt-3 flex flex-wrap gap-1.5">{selected.sourceSections.map((source) => <span key={source} className="rounded-full bg-violet-50 px-2 py-1 text-[10px] text-[var(--em-primary-deep)]">{source}</span>)}</div></div>}
+    <div className="rounded-[20px] border border-sky-100 bg-sky-50/55 p-4"><p className="text-xs font-bold text-sky-800">来源清单</p><div className="mt-2 flex flex-wrap gap-1.5">{graph.sources.map((source) => <span key={source} className="rounded-full bg-[var(--em-surface)] px-2 py-1 text-[10px] text-sky-800">{source}</span>)}</div></div>
   </div>;
 }

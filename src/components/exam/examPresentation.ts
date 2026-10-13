@@ -1,10 +1,12 @@
 import type {
   ExamAnswerValue,
   ExamDraftInput,
+  ExamQuestion,
   ExamResult,
   GradingStrategy,
   QuestionResponseKind,
 } from '@/domain';
+import type { LeapTopic } from '@/lib/adaptiveApi';
 
 const RESPONSE_KIND_LABELS: Record<QuestionResponseKind, string> = {
   single_choice: '单选',
@@ -42,6 +44,50 @@ export function answerIsComplete(answer: ExamAnswerValue): boolean {
  */
 export function shouldSyncAnswersBeforeSubmit(remainingMilliseconds: number): boolean {
   return remainingMilliseconds > 0;
+}
+
+export function summarizeExamPointLoss(result: ExamResult): {
+  lostPoints: number;
+  gradedCount: number;
+  pendingCount: number;
+} {
+  const gradedAnswers = result.answers.filter((answer) => answer.awardedScore !== null);
+  return {
+    lostPoints: gradedAnswers.reduce(
+      (total, answer) => total + answer.points - (answer.awardedScore ?? 0),
+      0,
+    ),
+    gradedCount: gradedAnswers.length,
+    pendingCount: result.answers.length - gradedAnswers.length,
+  };
+}
+
+export interface LeapRemediationTarget {
+  topicId: string;
+  topicName: string;
+  questionIds: string[];
+}
+
+export function buildLeapRemediationTargets(
+  result: ExamResult,
+  questions: Array<Pick<ExamQuestion, 'id' | 'knowledgePointId'>>,
+  topics: Array<Pick<LeapTopic, 'id' | 'name' | 'knowledgePointId'>>,
+): LeapRemediationTarget[] {
+  const pointByQuestionId = new Map(
+    questions.map((question) => [question.id, question.knowledgePointId]),
+  );
+  const lostQuestionIds = result.answers
+    .filter((answer) => answer.awardedScore !== null && answer.awardedScore < answer.points)
+    .map((answer) => answer.questionId);
+
+  return topics.flatMap((topic) => {
+    const questionIds = lostQuestionIds.filter(
+      (questionId) => pointByQuestionId.get(questionId) === topic.knowledgePointId,
+    );
+    return questionIds.length > 0
+      ? [{ topicId: topic.id, topicName: topic.name, questionIds }]
+      : [];
+  });
 }
 
 function displayNumber(value: number): string {

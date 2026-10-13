@@ -1,17 +1,29 @@
 :root {
-  --em-primary: #8b7cf6;
-  --em-primary-deep: #6f5fe0;
-  --em-secondary: #6ca8ff;
-  --em-accent: #ff9fcb;
-  --em-ink: #29234a;
-  --em-muted-ink: #6f6a8a;
-  --em-canvas: #f7f4ff;
+  color-scheme: light;
+  --em-canvas: #fbf8fa;
   --em-surface: #ffffff;
-  --em-surface-raised: rgba(255, 255, 255, 0.96);
-  --em-border-strong: rgba(139, 124, 246, 0.3);
-  --em-focus-ring: rgba(139, 124, 246, 0.22);
-  --em-success: #1c9a6a;
+  --em-surface-subtle: #f6f0f3;
+  --em-surface-raised: #ffffff;
+  --em-border: #e8dce2;
+  --em-border-strong: #d1bdc7;
+  --em-ink: #302733;
+  --em-muted-ink: #6e5d6b;
+  --em-subtle-ink: #887586;
+  --em-primary: #9b4f6b;
+  --em-primary-deep: #7d3c57;
+  --em-primary-subtle: #fbeef3;
+  --em-focus-ring: rgba(155, 79, 107, 0.24);
+  --em-action: #9b4f6b;
+  --em-action-hover: #7d3c57;
+  --em-sky: #477795;
+  --em-sky-subtle: #edf4f8;
+  --em-gold: #9a793b;
+  --em-gold-subtle: #f8f2e5;
+  --em-success: #15803d;
   --em-warning: #d97706;
+  --em-danger: #dc2626;
+  --em-unknown: #64748b;
+  --em-decision: #1d4ed8;
   --em-space-1: 0.25rem;
   --em-space-2: 0.5rem;
   --em-space-3: 0.75rem;
@@ -22,31 +34,49 @@
   --em-radius-full: 999px;
   --em-control-height: 2.75rem;
   --em-content-gap: 1.5rem;
-  --em-panel-radius: 32px;
-  --em-surface-radius: 24px;
-  --em-control-radius: 18px;
-  --em-glass-border: rgba(139, 124, 246, 0.18);
-  --em-glass-bg: rgba(255, 255, 255, 0.72);
-  --em-glass-shadow: 0 24px 70px rgba(87, 73, 151, 0.12);
+  --em-panel-radius: 16px;
+  --em-surface-radius: 12px;
+  --em-control-radius: 8px;
+  --em-glass-border: var(--em-border);
+  --em-glass-bg: var(--em-surface);
+  --em-glass-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --em-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --em-shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --em-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
+  --em-grid-line: rgba(15, 23, 42, 0.02);
 }
 
 :root[data-theme="dark"] {
-  --em-primary: #b9adff;
-  --em-primary-deep: #9586ff;
-  --em-secondary: #8dbbff;
-  --em-accent: #ffafd4;
-  --em-ink: #f3f0ff;
-  --em-muted-ink: #b8b1cf;
-  --em-canvas: #11101c;
-  --em-surface: #1d1a30;
-  --em-surface-raised: rgba(35, 31, 56, 0.97);
-  --em-border-strong: rgba(185, 173, 255, 0.34);
-  --em-focus-ring: rgba(185, 173, 255, 0.25);
-  --em-success: #6ee7b7;
-  --em-warning: #fcd34d;
-  --em-glass-border: rgba(185, 173, 255, 0.2);
-  --em-glass-bg: rgba(29, 26, 48, 0.78);
-  --em-glass-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  color-scheme: dark;
+  --em-canvas: #1b1820;
+  --em-surface: #26212c;
+  --em-surface-subtle: #302936;
+  --em-surface-raised: #26212c;
+  --em-border: #493b4b;
+  --em-border-strong: #685568;
+  --em-ink: #f8eef4;
+  --em-muted-ink: #d0bbcb;
+  --em-subtle-ink: #af96a9;
+  --em-primary: #efa8c2;
+  --em-primary-deep: #f7c5d7;
+  --em-primary-subtle: #402b39;
+  --em-focus-ring: rgba(239, 168, 194, 0.3);
+  --em-action: #9b4f6b;
+  --em-action-hover: #ad5d7b;
+  --em-sky: #91bad3;
+  --em-sky-subtle: #233440;
+  --em-gold: #d6bb81;
+  --em-gold-subtle: #393125;
+  --em-success: #4ade80;
+  --em-warning: #fbbf24;
+  --em-danger: #f87171;
+  --em-unknown: #af96a9;
+  --em-decision: #60a5fa;
+  --em-glass-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --em-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --em-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.28);
+  --em-shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.32);
+  --em-grid-line: rgba(226, 232, 240, 0.025);
 }
 
 html {
@@ -59,272 +89,16 @@ body {
   overflow-x: hidden;
   background: var(--em-canvas);
   color: var(--em-ink);
-  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-family: Inter, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 16px;
-  line-height: 1.65;
-}
-
-.em-nebula {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255, 159, 203, 0.2), transparent 28%),
-    radial-gradient(circle at 78% 8%, rgba(108, 168, 255, 0.22), transparent 30%),
-    radial-gradient(circle at 58% 68%, rgba(139, 124, 246, 0.16), transparent 34%),
-    linear-gradient(145deg, #fbf9ff 0%, #f4f3ff 52%, #f8fbff 100%);
-}
-
-.em-nebula[data-nebula-scene="companion"] {
-  background:
-    radial-gradient(circle at 24% 34%, rgba(255, 183, 215, 0.22), transparent 31%),
-    radial-gradient(circle at 72% 18%, rgba(188, 174, 255, 0.2), transparent 30%),
-    linear-gradient(155deg, #fffafd 0%, #f6f3ff 56%, #f7fbff 100%);
-}
-
-.em-nebula[data-nebula-scene="galaxy"] {
-  background:
-    radial-gradient(circle at 50% 18%, rgba(139, 124, 246, 0.22), transparent 34%),
-    radial-gradient(circle at 86% 58%, rgba(108, 168, 255, 0.18), transparent 32%),
-    linear-gradient(150deg, #f7f5ff 0%, #f2f4ff 54%, #f8fbff 100%);
-}
-
-.em-nebula[data-nebula-scene="storybook"] {
-  background:
-    radial-gradient(circle at 16% 22%, rgba(255, 205, 224, 0.18), transparent 27%),
-    radial-gradient(circle at 76% 64%, rgba(213, 202, 255, 0.18), transparent 30%),
-    linear-gradient(150deg, #fffbfd 0%, #f8f5ff 52%, #fafbff 100%);
-}
-
-:root[data-theme="dark"] .em-nebula {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255, 110, 179, 0.12), transparent 28%),
-    radial-gradient(circle at 78% 8%, rgba(80, 138, 255, 0.14), transparent 30%),
-    radial-gradient(circle at 58% 68%, rgba(139, 124, 246, 0.14), transparent 34%),
-    linear-gradient(145deg, #151322 0%, #11101c 52%, #121725 100%);
-}
-
-:root[data-theme="dark"] .em-nebula[data-nebula-scene="companion"],
-:root[data-theme="dark"] .em-nebula[data-nebula-scene="galaxy"],
-:root[data-theme="dark"] .em-nebula[data-nebula-scene="storybook"] {
-  background:
-    radial-gradient(circle at 22% 22%, rgba(185, 173, 255, 0.14), transparent 30%),
-    radial-gradient(circle at 78% 58%, rgba(108, 168, 255, 0.1), transparent 32%),
-    linear-gradient(145deg, #171423 0%, #11101c 52%, #121725 100%);
-}
-
-/* 暗色主题下，把为亮色玻璃面板编写的工具类统一映射到暗色体系。
-   这里必须穷举实际用到的档位：Tailwind 转义类名无法用通配符匹配。 */
-:root[data-theme="dark"] .bg-white,
-:root[data-theme="dark"] .bg-white\/95,
-:root[data-theme="dark"] .bg-white\/80,
-:root[data-theme="dark"] .bg-white\/75,
-:root[data-theme="dark"] .bg-white\/70,
-:root[data-theme="dark"] .bg-white\/65,
-:root[data-theme="dark"] .bg-white\/60,
-:root[data-theme="dark"] .bg-white\/58,
-:root[data-theme="dark"] .bg-white\/56,
-:root[data-theme="dark"] .bg-white\/55,
-:root[data-theme="dark"] .bg-white\/50,
-:root[data-theme="dark"] .bg-white\/46,
-:root[data-theme="dark"] .bg-white\/45,
-:root[data-theme="dark"] .bg-white\/44,
-:root[data-theme="dark"] .bg-white\/40,
-:root[data-theme="dark"] .bg-white\/35,
-:root[data-theme="dark"] .bg-white\/30,
-:root[data-theme="dark"] .bg-gray-50,
-:root[data-theme="dark"] .bg-gray-100,
-:root[data-theme="dark"] .bg-gray-200,
-:root[data-theme="dark"] .bg-slate-50\/70,
-:root[data-theme="dark"] .bg-slate-100 {
-  background-color: rgba(30, 27, 48, 0.88) !important;
-}
-
-:root[data-theme="dark"] .hover\:bg-white:hover,
-:root[data-theme="dark"] .hover\:bg-white\/80:hover,
-:root[data-theme="dark"] .hover\:bg-white\/70:hover {
-  background-color: rgba(41, 37, 66, 0.92) !important;
-}
-
-:root[data-theme="dark"] .bg-violet-50,
-:root[data-theme="dark"] .bg-violet-50\/35,
-:root[data-theme="dark"] .bg-violet-50\/45,
-:root[data-theme="dark"] .bg-violet-50\/55,
-:root[data-theme="dark"] .bg-violet-50\/60,
-:root[data-theme="dark"] .bg-violet-50\/65,
-:root[data-theme="dark"] .bg-violet-50\/70,
-:root[data-theme="dark"] .bg-violet-50\/80,
-:root[data-theme="dark"] .bg-violet-50\/85,
-:root[data-theme="dark"] .bg-violet-100,
-:root[data-theme="dark"] .bg-violet-100\/40,
-:root[data-theme="dark"] .bg-violet-100\/65,
-:root[data-theme="dark"] .bg-violet-100\/70,
-:root[data-theme="dark"] .bg-violet-100\/80,
-:root[data-theme="dark"] .bg-violet-200\/20,
-:root[data-theme="dark"] .bg-violet-200\/35,
-:root[data-theme="dark"] .bg-primary-50 {
-  background-color: rgba(52, 45, 88, 0.6) !important;
-}
-
-:root[data-theme="dark"] .hover\:bg-violet-50:hover,
-:root[data-theme="dark"] .hover\:bg-violet-100:hover {
-  background-color: rgba(64, 56, 104, 0.7) !important;
-}
-
-:root[data-theme="dark"] .bg-sky-50,
-:root[data-theme="dark"] .bg-sky-50\/40,
-:root[data-theme="dark"] .bg-sky-50\/50,
-:root[data-theme="dark"] .bg-sky-50\/55,
-:root[data-theme="dark"] .bg-sky-50\/60,
-:root[data-theme="dark"] .bg-sky-50\/65,
-:root[data-theme="dark"] .bg-sky-100 {
-  background-color: rgba(26, 42, 70, 0.6) !important;
-}
-
-:root[data-theme="dark"] .bg-amber-50,
-:root[data-theme="dark"] .bg-amber-50\/55,
-:root[data-theme="dark"] .bg-amber-50\/60 {
-  background-color: rgba(64, 50, 22, 0.55) !important;
-}
-
-:root[data-theme="dark"] .bg-rose-50,
-:root[data-theme="dark"] .bg-red-50,
-:root[data-theme="dark"] .bg-pink-50 {
-  background-color: rgba(70, 32, 46, 0.55) !important;
-}
-
-:root[data-theme="dark"] .bg-emerald-50,
-:root[data-theme="dark"] .bg-emerald-50\/60,
-:root[data-theme="dark"] .bg-emerald-50\/70 {
-  background-color: rgba(22, 52, 42, 0.55) !important;
-}
-
-:root[data-theme="dark"] .bg-fuchsia-50 {
-  background-color: rgba(58, 30, 66, 0.55) !important;
-}
-
-/* 渐变里的白色/浅色 stops 同样会压暗可读性，按同一体系重映射。 */
-:root[data-theme="dark"] .from-white\/95 {
-  --tw-gradient-from: rgba(24, 21, 38, 0.96) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgba(24, 21, 38, 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-:root[data-theme="dark"] .via-white\/78 {
-  --tw-gradient-to: rgba(24, 21, 38, 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), rgba(24, 21, 38, 0.8) var(--tw-gradient-via-position), var(--tw-gradient-to);
-}
-:root[data-theme="dark"] .to-white\/55,
-:root[data-theme="dark"] .to-white\/35 {
-  --tw-gradient-to: rgba(24, 21, 38, 0.45) var(--tw-gradient-to-position);
-}
-:root[data-theme="dark"] .from-violet-50,
-:root[data-theme="dark"] .from-violet-50\/80,
-:root[data-theme="dark"] .from-violet-50\/85,
-:root[data-theme="dark"] .from-violet-100\/40,
-:root[data-theme="dark"] .from-violet-100\/70 {
-  --tw-gradient-from: rgba(52, 45, 88, 0.75) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgba(52, 45, 88, 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-:root[data-theme="dark"] .to-violet-50\/70,
-:root[data-theme="dark"] .to-violet-100,
-:root[data-theme="dark"] .to-violet-50 {
-  --tw-gradient-to: rgba(38, 33, 64, 0.8) var(--tw-gradient-to-position);
-}
-:root[data-theme="dark"] .from-sky-100,
-:root[data-theme="dark"] .to-sky-100 {
-  --tw-gradient-from: rgba(26, 42, 70, 0.75) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgba(26, 42, 70, 0.2) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-:root[data-theme="dark"] .to-sky-100\/20 {
-  --tw-gradient-to: rgba(26, 42, 70, 0.2) var(--tw-gradient-to-position);
-}
-:root[data-theme="dark"] .via-sky-50\/40 {
-  --tw-gradient-to: rgba(26, 42, 70, 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), rgba(26, 42, 70, 0.4) var(--tw-gradient-via-position), var(--tw-gradient-to);
-}
-:root[data-theme="dark"] .to-sky-50,
-:root[data-theme="dark"] .to-sky-50\/50,
-:root[data-theme="dark"] .to-sky-50\/65 {
-  --tw-gradient-to: rgba(26, 42, 70, 0.7) var(--tw-gradient-to-position);
-}
-
-/* 浅紫边框在暗色底上过亮，统一压成暗色玻璃边。 */
-:root[data-theme="dark"] .border-violet-100,
-:root[data-theme="dark"] .border-violet-100\/70,
-:root[data-theme="dark"] .border-violet-200,
-:root[data-theme="dark"] .border-violet-200\/70 {
-  border-color: rgba(185, 173, 255, 0.22) !important;
-}
-
-/* 配套的深色状态文字（amber-700 等）在暗色底上不可读，换成亮色 tint。 */
-:root[data-theme="dark"] .text-amber-700,
-:root[data-theme="dark"] .text-amber-800,
-:root[data-theme="dark"] .text-amber-900 {
-  color: #fcd34d !important;
-}
-:root[data-theme="dark"] .text-sky-700,
-:root[data-theme="dark"] .text-sky-800,
-:root[data-theme="dark"] .text-sky-900 {
-  color: #93c5fd !important;
-}
-:root[data-theme="dark"] .text-rose-700 {
-  color: #fda4af !important;
-}
-:root[data-theme="dark"] .text-emerald-700,
-:root[data-theme="dark"] .text-emerald-800,
-:root[data-theme="dark"] .text-emerald-900 {
-  color: #6ee7b7 !important;
-}
-:root[data-theme="dark"] .text-fuchsia-700 {
-  color: #f0abfc !important;
-}
-:root[data-theme="dark"] .text-violet-700,
-:root[data-theme="dark"] .text-violet-800 {
-  color: #c4b8ff !important;
-}
-:root[data-theme="dark"] .text-blue-700,
-:root[data-theme="dark"] .text-blue-800 {
-  color: #a5c4ff !important;
-}
-:root[data-theme="dark"] .text-pink-700 {
-  color: #f9a8d4 !important;
-}
-:root[data-theme="dark"] .text-red-700 {
-  color: #fca5a5 !important;
-}
-:root[data-theme="dark"] .text-slate-800 {
-  color: #cbd5e1 !important;
-}
-:root[data-theme="dark"] .text-gray-700,
-:root[data-theme="dark"] .text-gray-800,
-:root[data-theme="dark"] .text-gray-900 {
-  color: #d1d5db !important;
-}
-:root[data-theme="dark"] .text-primary-600,
-:root[data-theme="dark"] .text-primary-700 {
-  color: var(--em-primary) !important;
+  line-height: 1.7;
 }
 
 .em-glass {
-  border: 1px solid var(--em-glass-border);
-  background: var(--em-glass-bg);
-  box-shadow: var(--em-glass-shadow);
-  backdrop-filter: blur(20px);
-}
-
-.em-learning-background {
-  opacity: 0.2;
-  filter: saturate(0.9) blur(0.5px);
-}
-
-.em-learning-background-wash {
-  background:
-    linear-gradient(120deg, rgba(252, 249, 255, 0.92) 0%, rgba(248, 246, 255, 0.78) 48%, rgba(248, 251, 255, 0.9) 100%),
-    radial-gradient(circle at 50% 54%, rgba(255, 255, 255, 0.55), transparent 42%);
-}
-
-@keyframes em-orbit-pulse {
-  0%, 100% { opacity: 0.18; transform: scale(0.9); }
-  50% { opacity: 0.5; transform: scale(1.12); }
+  border: 1px solid var(--em-border);
+  border-radius: var(--em-panel-radius);
+  background: var(--em-surface);
+  box-shadow: var(--em-shadow-sm);
 }
 
 @keyframes em-stream-caret {
@@ -332,27 +106,33 @@ body {
   49%, 100% { opacity: 0.18; }
 }
 
-.em-orbit-pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: em-orbit-pulse 2.2s ease-in-out infinite;
-}
-
 .em-stream-caret {
   animation: em-stream-caret 0.9s steps(1, end) infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .em-orbit-pulse {
-    animation: none;
-    opacity: 0.35;
-  }
+.em-focus-ring:focus-visible,
+:focus-visible {
+  outline: 2px solid var(--em-primary);
+  outline-offset: 3px;
+}
 
+::selection {
+  background: rgba(201, 125, 153, 0.24);
+  color: var(--em-ink);
+}
 
-  .em-stream-caret {
-    animation: none;
-    opacity: 1;
-  }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--em-surface-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--em-border-strong);
 }
 
 [data-auth-card-width="viewport-clamped"] {
@@ -367,48 +147,17 @@ body {
   }
 }
 
-:root[data-theme="dark"] .em-learning-background {
-  opacity: 0.14;
-  filter: saturate(0.7) brightness(0.72);
-}
-
-:root[data-theme="dark"] .em-learning-background-wash {
-  background:
-    linear-gradient(120deg, rgba(17, 16, 28, 0.94) 0%, rgba(22, 19, 38, 0.88) 48%, rgba(17, 23, 37, 0.94) 100%),
-    radial-gradient(circle at 50% 54%, rgba(113, 98, 178, 0.18), transparent 42%);
-}
-
-.em-focus-ring:focus-visible,
-:focus-visible {
-  outline: 2px solid var(--em-primary);
-  outline-offset: 3px;
-}
-
-::selection {
-  background: rgba(139, 124, 246, 0.22);
-  color: var(--em-ink);
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(139, 124, 246, 0.06);
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(139, 124, 246, 0.3);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+  html,
+  *,
+  *::before,
+  *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .em-stream-caret {
+    animation: none;
+    opacity: 1;
   }
 }

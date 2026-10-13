@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
 import { renderToStaticMarkup } from 'react-dom/server';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { PersistedStudyPlan } from '@/domain';
+import type { LearningEvidence } from '@/lib/educationApi';
 import { TodaysJourney } from './TodaysJourney';
 
 const plan: PersistedStudyPlan = {
@@ -64,15 +67,11 @@ describe('TodaysJourney', () => {
 
     expect(html).toContain('data-journey-node="diagnosis"');
     expect(html).toContain('data-journey-state="current"');
-    expect(html).toContain('今天从第一次诊断开始');
+    expect(html).toContain('从初测、方案、练习到独立验证');
     expect(html).toContain('data-journey-summary="true"');
-    expect(html).toContain('text-[15px]');
-    expect(html).toContain('sm:text-base');
-    expect(html).toContain('sm:leading-7');
-    expect(html).toContain('尚未安排');
-    expect(html).toContain('--');
-    expect(html).not.toContain('<button');
-    expect(html).not.toContain('继续默认学习');
+    expect(html).toContain('aria-expanded="false"');
+    expect(html).toContain('查看记录');
+    expect(html).not.toContain('开始诊断');
   });
 
   it('renders one connected semantic path instead of plan task cards', () => {
@@ -101,12 +100,42 @@ describe('TodaysJourney', () => {
     );
 
     expect(html.match(/data-journey-node=/g)).toHaveLength(4);
-    expect(html).toContain('诊断');
-    expect(html).toContain('计划');
-    expect(html).toContain('学习');
-    expect(html).toContain('验证');
+    expect(html).toContain('初测诊断');
+    expect(html).toContain('方案决策');
+    expect(html).toContain('针对练习');
+    expect(html).toContain('独立验证');
     expect(html).not.toContain('PV 操作');
     expect(html).not.toContain('sm:grid-cols-2');
     expect(html).not.toContain('lg:grid-cols-3');
+  });
+
+  it('opens the selected stage and shows its saved source payload', () => {
+    const item: LearningEvidence = {
+      id: 'evidence-validation',
+      learnerId: 'learner-1',
+      courseId: 'course-1',
+      knowledgePointId: 'kp-deadlock',
+      evidenceType: 'practice_answer_evaluated',
+      source: 'learning_space',
+      occurredAt: '2026-10-13T09:00:00.000Z',
+      payload: { score: 0.8, hintUsed: false },
+    };
+    render(
+      <TodaysJourney
+        diagnosis={null}
+        plan={null}
+        currentTask={null}
+        evidence={[item]}
+        loading={false}
+        error={false}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /独立验证/ }));
+
+    expect(screen.getByRole('region', { name: '独立验证阶段记录' }).textContent).toContain(
+      '"score": 0.8',
+    );
   });
 });

@@ -76,14 +76,14 @@ function ArtifactCard({
   tone?: 'violet' | 'sky' | 'amber' | 'emerald' | 'fuchsia';
 }) {
   const toneClass = {
-    violet: 'border-violet-100 bg-white/55',
-    sky: 'border-sky-100 bg-white/55',
-    amber: 'border-amber-100 bg-white/55',
-    emerald: 'border-emerald-100 bg-white/55',
-    fuchsia: 'border-fuchsia-100 bg-white/55',
+    violet: 'border-violet-100 bg-[var(--em-surface)]/55',
+    sky: 'border-sky-100 bg-[var(--em-surface)]/55',
+    amber: 'border-amber-100 bg-[var(--em-surface)]/55',
+    emerald: 'border-emerald-100 bg-[var(--em-surface)]/55',
+    fuchsia: 'border-fuchsia-100 bg-[var(--em-surface)]/55',
   }[tone];
   const iconClass = {
-    violet: 'text-primary-600',
+    violet: 'text-[var(--em-primary)]',
     sky: 'text-sky-600',
     amber: 'text-amber-700',
     emerald: 'text-emerald-600',
@@ -112,13 +112,13 @@ function ArtifactCard({
 function ArtifactAction({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-primary-700 hover:bg-violet-100">
+      <button type="button" onClick={onClick} className="rounded-full border border-violet-200 bg-violet-50/60 px-2.5 py-1 text-[11px] font-medium text-[var(--em-primary-deep)] hover:bg-violet-100">
         {children}
       </button>
     );
   }
   return (
-    <span className="rounded-full border border-violet-100 bg-white/70 px-2.5 py-1 text-[11px] text-[var(--em-muted-ink)]">
+    <span className="rounded-full border border-violet-100 bg-[var(--em-surface)]/70 px-2.5 py-1 text-[11px] text-[var(--em-muted-ink)]">
       {children}
     </span>
   );
@@ -149,7 +149,7 @@ export function WorkspaceArtifactsPanel({
 
   return (
     <div>
-      <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.16em] text-primary-600">
+      <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-[0.16em] text-[var(--em-primary)]">
         <Sparkles className="h-3.5 w-3.5" />
         ARTIFACTS
       </p>
@@ -164,8 +164,8 @@ export function WorkspaceArtifactsPanel({
             className={cn(
               'rounded-full border px-3 py-1 text-xs font-semibold transition',
               scope === item.id
-                ? 'border-primary-300 bg-violet-50 text-primary-800'
-                : 'border-violet-100 bg-white/55 text-[var(--em-muted-ink)] hover:bg-violet-50/60',
+                ? 'border-[var(--em-primary)] bg-violet-50 text-[var(--em-primary-deep)]'
+                : 'border-violet-100 bg-[var(--em-surface)]/55 text-[var(--em-muted-ink)] hover:bg-violet-50/60',
             )}
           >
             {item.label}
@@ -287,7 +287,7 @@ export function WorkspaceArtifactsPanel({
         )}
 
         {scope !== 'session' && (
-          <p className="rounded-2xl border border-dashed border-violet-200 bg-white/40 px-4 py-3 text-[11px] leading-5 text-[var(--em-muted-ink)]">
+          <p className="rounded-2xl border border-dashed border-violet-200 bg-[var(--em-surface)]/40 px-4 py-3 text-[11px] leading-5 text-[var(--em-muted-ink)]">
             <BookOpen className="mr-1 inline h-3 w-3" />
             当前范围学习证据：开始学习 {evidenceLearningStarted} 条 · 练习评价 {evidencePracticeEvaluated} 条。
             <Lightbulb className="mx-1 inline h-3 w-3" />

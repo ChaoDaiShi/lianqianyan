@@ -28,7 +28,7 @@ export function VoiceAttributionNotice({
       )}
       aria-label="语音技术来源"
     >
-      <p className="flex items-center gap-1.5 font-semibold text-primary-700">
+      <p className="flex items-center gap-1.5 font-semibold text-[var(--em-primary-deep)]">
         <AudioLines className="h-3 w-3" />
         {label}
       </p>

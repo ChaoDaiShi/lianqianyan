@@ -38,7 +38,7 @@ export function PortraitRadar({ axes }: PortraitRadarProps) {
   const allKnown = knownAxes.length === axes.length;
 
   return (
-    <figure className="rounded-[22px] border border-violet-100 bg-white/55 p-4">
+    <figure className="rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
       <figcaption className="mb-2 text-sm font-bold">成长维度雷达</figcaption>
       <svg
         role="img"
@@ -115,7 +115,7 @@ export function PortraitRadar({ axes }: PortraitRadarProps) {
               x={direction.labelX}
               y={direction.labelY}
               textAnchor={direction.anchor}
-              className="fill-violet-950 text-[11px] font-semibold"
+              className="fill-[var(--em-ink)] text-[11px] font-semibold"
             >
               {axis.label} {axis.value === null ? '暂无' : `${axis.value}%`}
             </text>

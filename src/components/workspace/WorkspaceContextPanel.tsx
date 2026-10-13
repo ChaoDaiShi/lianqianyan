@@ -66,7 +66,7 @@ export function WorkspaceContextPanel({
 
   return (
     <div>
-      <p className="text-[10px] font-bold tracking-[0.16em] text-primary-600">LEARNING CONTEXT</p>
+      <p className="text-[10px] font-bold tracking-[0.16em] text-[var(--em-primary)]">LEARNING CONTEXT</p>
       <dl className="mt-3 space-y-2 text-xs">
         {[
           ['当前课程', courseName],
@@ -82,7 +82,7 @@ export function WorkspaceContextPanel({
                 : '诊断未返回此知识点状态',
           ],
         ].map(([label, value]) => (
-          <div key={label} className="flex items-start justify-between gap-3 rounded-xl border border-violet-100 bg-white/55 px-3 py-2">
+          <div key={label} className="flex items-start justify-between gap-3 rounded-xl border border-violet-100 bg-[var(--em-surface)]/55 px-3 py-2">
             <dt className="shrink-0 text-[var(--em-muted-ink)]">{label}</dt>
             <dd className="text-right font-semibold text-[var(--em-ink)]">{value}</dd>
           </div>
@@ -114,7 +114,7 @@ export function WorkspaceContextPanel({
             </p>
           ) : (
             <>
-              <p className="mt-2 text-[10px] font-semibold text-primary-700">最近证据</p>
+              <p className="mt-2 text-[10px] font-semibold text-[var(--em-primary-deep)]">最近证据</p>
               <ul className="mt-1.5 space-y-1.5">
                 {recent.map((item) => (
                   <li key={item.id} className="text-[11px] leading-5 text-[var(--em-muted-ink)]">
@@ -123,7 +123,7 @@ export function WorkspaceContextPanel({
                 ))}
               </ul>
               <details className="mt-2">
-                <summary className="cursor-pointer text-[11px] font-semibold text-primary-700">查看全部证据</summary>
+                <summary className="cursor-pointer text-[11px] font-semibold text-[var(--em-primary-deep)]">查看全部证据</summary>
                 <ul className="mt-1.5 space-y-1.5">
                   {[...scoped.learningStarted, ...scoped.practiceEvaluated]
                     .sort((left, right) => right.occurredAt.localeCompare(left.occurredAt))

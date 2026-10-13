@@ -20,21 +20,21 @@ const items = [
 ];
 
 describe('AgentToolTrace', () => {
-  it('renders compact execution details as a visible ordered timeline', () => {
+  it('keeps real tool and stage fields behind an expandable audit row', () => {
     const html = renderToStaticMarkup(
       <AgentToolTrace items={items} compact />,
     );
 
     expect(html).toContain('data-agent-trace="timeline"');
-    expect(html).toContain('h-6 w-6');
-    expect(html).toContain('text-[13px]');
-    expect(html).toContain('text-[10px]');
+    expect(html).toContain('<details');
+    expect(html).toContain('<summary');
     expect(html).toContain('<ol');
     expect(html).toContain('课程知识检索');
     expect(html).toContain('小涟辅导');
     expect(html.indexOf('课程知识检索')).toBeLessThan(
       html.indexOf('小涟辅导'),
     );
-    expect(html).not.toContain('执行记录');
+    expect(html).toContain('search_course_knowledge');
+    expect(html).not.toContain('耗时');
   });
 });

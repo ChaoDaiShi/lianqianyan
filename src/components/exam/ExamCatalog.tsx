@@ -13,7 +13,11 @@ import { LearningState } from '@/components/feedback/LearningState';
 import { ExamRunner } from './ExamRunner';
 import { ExamResultView } from './ExamResultView';
 
-export function ExamCatalog() {
+export function ExamCatalog({
+  onImmersiveChange,
+}: {
+  onImmersiveChange?: (immersive: boolean) => void;
+}) {
   const [catalog, setCatalog] = useState<ExamCatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -44,6 +48,7 @@ export function ExamCatalog() {
         return;
       }
       setAttempt(await startExamAttempt(exam.id, ACTIVE_LEARNER_ID));
+      onImmersiveChange?.(true);
     } catch {
       setError(true);
     } finally {
@@ -55,8 +60,9 @@ export function ExamCatalog() {
     return (
       <ExamRunner
         attempt={attempt}
-        onExit={() => { setAttempt(null); void load(); }}
+        onExit={() => { onImmersiveChange?.(false); setAttempt(null); void load(); }}
         onSubmitted={(summary) => {
+          onImmersiveChange?.(false);
           void fetchExamResult(summary.id, ACTIVE_LEARNER_ID)
             .then((nextResult) => { setAttempt(null); setResult(nextResult); })
             .catch(() => setError(true));
@@ -70,7 +76,7 @@ export function ExamCatalog() {
         <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => { setResult(null); void load(); }}>
           返回考试列表
         </Button>
-        <ExamResultView result={result} />
+        <ExamResultView result={result} courseId={ACTIVE_COURSE_ID} />
       </div>
     );
   }
@@ -101,18 +107,18 @@ export function ExamCatalog() {
             <GlassPanel key={exam.id} className="p-5 sm:p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold text-primary-600"><BookOpenCheck className="h-4 w-4" />已发布</p>
+                  <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]"><BookOpenCheck className="h-4 w-4" />已发布</p>
                   <h3 className="mt-2 text-lg font-bold">{exam.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[var(--em-muted-ink)]">{exam.description || '暂无考试说明'}</p>
                 </div>
-                {latest && <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-semibold text-primary-700">{latest.status === 'in_progress' ? '作答中' : latest.status === 'needs_review' ? '待批阅' : `${latest.percentage}%`}</span>}
+                {latest && <span className="rounded-full bg-[var(--em-primary-subtle)] px-2.5 py-1 text-[10px] font-semibold text-[var(--em-primary-deep)]">{latest.status === 'in_progress' ? '作答中' : latest.status === 'needs_review' ? '待批阅' : `${latest.percentage}%`}</span>}
               </div>
               <div className="mt-4 flex flex-wrap gap-2 text-xs text-[var(--em-muted-ink)]">
-                <span className="flex items-center gap-1 rounded-full bg-white/60 px-2.5 py-1"><FileCheck2 className="h-3.5 w-3.5" />{exam.questionCount} 题 · {exam.totalPoints} 分</span>
-                <span className="flex items-center gap-1 rounded-full bg-white/60 px-2.5 py-1"><Clock3 className="h-3.5 w-3.5" />{exam.durationMinutes} 分钟</span>
-                <span className="rounded-full bg-white/60 px-2.5 py-1">及格线 {exam.passPercentage}%</span>
+                <span className="flex items-center gap-1 rounded-full bg-[var(--em-surface)] px-2.5 py-1"><FileCheck2 className="h-3.5 w-3.5" />{exam.questionCount} 题 · {exam.totalPoints} 分</span>
+                <span className="flex items-center gap-1 rounded-full bg-[var(--em-surface)] px-2.5 py-1"><Clock3 className="h-3.5 w-3.5" />{exam.durationMinutes} 分钟</span>
+                <span className="rounded-full bg-[var(--em-surface)] px-2.5 py-1">及格线 {exam.passPercentage}%</span>
               </div>
-              <Button type="button" className="mt-5 w-full gap-2 rounded-2xl bg-primary-500" disabled={pendingExamId === exam.id} onClick={() => void openExam(exam)}>
+              <Button type="button" className="mt-5 w-full gap-2 rounded-2xl bg-[var(--em-action)]" disabled={pendingExamId === exam.id} onClick={() => void openExam(exam)}>
                 <Play className="h-4 w-4" />{pendingExamId === exam.id ? '正在进入…' : actionLabel}
               </Button>
             </GlassPanel>

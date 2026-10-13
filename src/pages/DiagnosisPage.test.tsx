@@ -7,7 +7,10 @@ vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { chil
 vi.mock('@/components/xiaolian/CompanionPanel', () => ({ CompanionPanel: () => <aside>xiaolian-observer</aside> }));
 vi.mock('@/lib/educationApi', () => ({ fetchDiagnosis: vi.fn(), fetchLearnerProfile: vi.fn() }));
 vi.mock('@/store', () => ({ ACTIVE_COURSE_ID: 'course-os', ACTIVE_LEARNER_ID: 'account:user-1' }));
-vi.mock('@/lib/hooks', () => ({ useCurrentPlan: () => ({ plan: null, summary: null, loading: false, error: false, refetch: vi.fn(), generate: vi.fn(), generating: false }) }));
+vi.mock('@/lib/hooks', () => ({
+  useCurrentPlan: () => ({ plan: null, summary: null, loading: false, error: false, refetch: vi.fn(), generate: vi.fn(), generating: false }),
+  useRecentEvidence: () => ({ data: [], loading: false, error: false, refetch: vi.fn() }),
+}));
 
 import DiagnosisPage from './DiagnosisPage';
 
@@ -16,7 +19,7 @@ describe('DiagnosisPage observation space', () => {
     const html = renderToStaticMarkup(<StaticRouter location="/diagnosis"><DiagnosisPage /></StaticRouter>);
 
     expect(html).toContain('学习观察空间');
-    expect(html).toContain('真实学习证据');
+    expect(html).toContain('近期证据');
     expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('LEARNING HEALTH REPORT');
     expect(html).not.toContain('健康');

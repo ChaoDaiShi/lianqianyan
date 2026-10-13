@@ -5,7 +5,11 @@ import type {
   PersistedStudyTask,
 } from '@/domain';
 import type { LearningEvidence } from '@/lib/educationApi';
-import { buildHomeJourney, selectHomePrimaryAction } from './homePresentation';
+import {
+  buildHomeJourney,
+  formatRetestCountdown,
+  selectHomePrimaryAction,
+} from './homePresentation';
 
 const focus = {
   knowledgePointId: 'kp-deadlock',
@@ -81,6 +85,15 @@ function evidence(
 }
 
 describe('home presentation', () => {
+  it('keeps first assessment open when the API returns only an unassessed diagnosis snapshot', () => {
+    const emptyDiagnosis: DiagnosisResult = {
+      ...diagnosis,
+      primaryFocus: null,
+      priorityInterventions: [], strengths: [], weakPoints: [], developingPoints: [],
+      unassessedPoints: [], summaryCodes: ['NO_EVIDENCE'],
+    };
+    expect(buildHomeJourney({ diagnosis: emptyDiagnosis, plan: null, task: null, evidence: [] })[0].state).toBe('current');
+  });
   it('chooses exactly one real next action', () => {
     expect(
       selectHomePrimaryAction({ diagnosis: null, plan: null, task: null }),
@@ -130,6 +143,21 @@ describe('home presentation', () => {
           evidence('practice_answer_evaluated'),
         ],
       }).map((node) => node.state),
+    ).toEqual(['completed', 'completed', 'completed', 'current']);
+
+    expect(
+      buildHomeJourney({
+        diagnosis,
+        plan,
+        task,
+        evidence: [
+          evidence('learning_started'),
+          {
+            ...evidence('practice_answer_evaluated'),
+            payload: { independent: true, hintUsed: false },
+          },
+        ],
+      }).map((node) => node.state),
     ).toEqual(['completed', 'completed', 'completed', 'completed']);
   });
 
@@ -144,5 +172,32 @@ describe('home presentation', () => {
         (node) => node.state,
       ),
     ).toEqual(['completed', 'completed', 'current', 'waiting']);
+  });
+
+  it('does not treat ordinary practice feedback as an independent validation', () => {
+    const guidedPractice = {
+      ...evidence('practice_answer_evaluated'),
+      payload: { score: 0.8, hintUsed: false },
+    };
+
+    expect(
+      buildHomeJourney({
+        diagnosis,
+        plan,
+        task,
+        evidence: [evidence('learning_started'), guidedPractice],
+      }).map(node => node.state),
+    ).toEqual(['completed', 'completed', 'completed', 'current']);
+  });
+
+  it('formats a countdown from the server supplied retest due time', () => {
+    const now = Date.parse('2026-10-13T00:00:00.000Z');
+
+    expect(formatRetestCountdown('2026-10-15T00:00:00.000Z', now)).toBe(
+      '还有 2 天到期',
+    );
+    expect(formatRetestCountdown('2026-10-13T00:00:00.000Z', now)).toBe(
+      '已到期',
+    );
   });
 });

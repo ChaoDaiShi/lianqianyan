@@ -62,7 +62,7 @@ export function MasteryRadar({ points }: MasteryRadarProps) {
   }
 
   return (
-    <figure className="rounded-[22px] border border-violet-100 bg-white/55 p-4">
+    <figure className="rounded-[22px] border border-violet-100 bg-[var(--em-surface)] p-4">
       <figcaption className="mb-2 text-sm font-bold">知识点掌握雷达</figcaption>
       <svg
         role="img"

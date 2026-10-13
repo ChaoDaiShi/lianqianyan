@@ -47,9 +47,9 @@ export function XiaolianInsightCard({ profile, diagnosis, plan, evidence, loadin
   return <GlassPanel className="overflow-hidden p-5 sm:p-6">
     <div className="grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:items-center">
       <div className="rounded-[22px] bg-gradient-to-b from-violet-50 to-sky-50/50 px-3 pt-2"><XiaolianCharacter state={loading ? 'analyzing' : error ? 'idle' : focus || nextTask ? 'encourage' : 'idle'} size="lg" /></div>
-      <div><p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.18em] text-primary-600"><BrainCircuit className="h-3.5 w-3.5" />XIAOLIAN INSIGHT</p><h2 className="mt-1 text-2xl font-bold">小涟主动观察</h2>
+      <div><p className="flex items-center gap-2 text-[10px] font-bold tracking-[0.18em] text-[var(--em-primary)]"><BrainCircuit className="h-3.5 w-3.5" />XIAOLIAN INSIGHT</p><h2 className="mt-1 text-2xl font-bold">小涟主动观察</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2"><XiaolianMessage tone={error ? 'notice' : 'observe'} title="当前主要观察">{observation}{focus && reason && <span className="mt-1 block text-xs">原因：{reason}</span>}</XiaolianMessage><XiaolianMessage tone="suggest" title="下一步建议">{suggestion}</XiaolianMessage></div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--em-muted-ink)]"><span>真实记录：{hasLearning ? '已有学习行为' : '尚无学习行为'} · {hasAssessment ? '已有练习评价' : '尚无练习评价'}</span><Link to="/my-learning" className="inline-flex items-center gap-1 font-semibold text-primary-700">查看学习计划<ArrowRight className="h-3.5 w-3.5" /></Link></div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--em-muted-ink)]"><span>真实记录：{hasLearning ? '已有学习行为' : '尚无学习行为'} · {hasAssessment ? '已有练习评价' : '尚无练习评价'}</span><Link to="/my-learning" className="inline-flex items-center gap-1 font-semibold text-[var(--em-primary-deep)]">查看学习计划<ArrowRight className="h-3.5 w-3.5" /></Link></div>
       </div>
     </div>
   </GlassPanel>;

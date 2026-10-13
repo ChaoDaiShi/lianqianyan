@@ -11,7 +11,13 @@ import {
   buildReflectionResult,
   type ReflectionResult,
 } from '@/components/learning/learningLoop';
-import { REFLECTION_FEEDBACK_DISCLAIMER } from '@/components/learning/reflectionPresentation';
+import {
+  composeReflectionAnswers,
+  REFLECTION_FEEDBACK_DISCLAIMER,
+  REFLECTION_PROMPTS,
+  type ReflectionAnswers,
+  type ReflectionPromptKey,
+} from '@/components/learning/reflectionPresentation';
 import { XiaolianFeedbackBubble } from '@/components/xiaolian/XiaolianFeedbackBubble';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,7 +59,11 @@ export function ReflectionWorkspace({
         .filter((title) => title.length > 0),
     [knowledge.sections],
   );
-  const [input, setInput] = useState(validInitialResult?.submittedText ?? '');
+  const [answers, setAnswers] = useState<ReflectionAnswers>(() => ({
+    blindSpot: validInitialResult?.submittedText ?? '',
+    keyLogic: '',
+    firstCheck: '',
+  }));
   const [result, setResult] = useState<ReflectionResult | null>(
     validInitialResult,
   );
@@ -61,10 +71,13 @@ export function ReflectionWorkspace({
     validInitialResult ? 'completed' : 'idle',
   );
   const analyzingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const trimmedInput = input.trim();
+  const trimmedInput = composeReflectionAnswers(answers);
+  const answeredPromptCount = REFLECTION_PROMPTS.filter(
+    ({ key }) => answers[key].trim().length > 0,
+  ).length;
   const canSubmit =
     objectives.length > 0 &&
-    trimmedInput.length > 0 &&
+    answeredPromptCount === REFLECTION_PROMPTS.length &&
     state === 'writing';
 
   useEffect(
@@ -74,10 +87,11 @@ export function ReflectionWorkspace({
     [],
   );
 
-  const handleInputChange = (value: string) => {
-    setInput(value);
+  const handleInputChange = (key: ReflectionPromptKey, value: string) => {
+    const nextAnswers = { ...answers, [key]: value };
+    setAnswers(nextAnswers);
     setResult(null);
-    setState(value.trim() ? 'writing' : 'idle');
+    setState(Object.values(nextAnswers).some((answer) => answer.trim()) ? 'writing' : 'idle');
   };
 
   const handleSubmit = () => {
@@ -105,7 +119,7 @@ export function ReflectionWorkspace({
       clearTimeout(analyzingTimer.current);
       analyzingTimer.current = null;
     }
-    setInput('');
+    setAnswers({ blindSpot: '', keyLogic: '', firstCheck: '' });
     setResult(null);
     setState('idle');
   };
@@ -113,11 +127,11 @@ export function ReflectionWorkspace({
   return (
     <div className="space-y-5">
       <GlassPanel className="p-6 sm:p-8">
-        <div className="flex items-center gap-2 text-xs font-bold text-primary-700">
+        <div className="flex items-center gap-2 text-xs font-bold text-[var(--em-primary-deep)]">
           <BookOpenCheck className="h-4 w-4" />
-          FEYNMAN REFLECTION
+          元认知反思
         </div>
-        <h1 className="mt-3 text-3xl font-bold">用自己的话讲明白</h1>
+        <h1 className="mt-3 text-2xl font-bold">用自己的话讲明白</h1>
         <p className="mt-3 text-sm leading-7 text-[var(--em-muted-ink)]">
           当前知识点：
           <strong className="text-[var(--em-ink)]">{knowledge.title}</strong>
@@ -141,23 +155,30 @@ export function ReflectionWorkspace({
           )}
         </div>
 
-        <label htmlFor="reflection-input" className="mt-6 block text-sm font-semibold">
-          我的理解
-        </label>
-        <Textarea
-          id="reflection-input"
-          value={input}
-          disabled={state === 'analyzing'}
-          onChange={(event) => handleInputChange(event.target.value)}
-          placeholder={`请用自己的话解释「${knowledge.title}」`}
-          className="mt-2 min-h-[220px] border-violet-200 bg-white/70 p-4 leading-7 focus-visible:ring-primary-400"
-        />
+        <div className="mt-6 space-y-3">
+          {REFLECTION_PROMPTS.map(({ key, question }, index) => (
+            <fieldset key={key} className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-4">
+              <label htmlFor={`reflection-${key}`} className="block text-sm font-semibold leading-6">{index + 1}. {question}</label>
+              <Textarea
+                id={`reflection-${key}`}
+                value={answers[key]}
+                disabled={state === 'analyzing'}
+                onChange={(event) => handleInputChange(key, event.target.value)}
+                placeholder={`结合「${knowledge.title}」写下你的思考`}
+                rows={3}
+                className="mt-2 border-[var(--em-border)] bg-[var(--em-surface)] p-3 leading-6 focus-visible:ring-[var(--em-focus-ring)]"
+              />
+            </fieldset>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-[var(--em-muted-ink)]">已回答 {answeredPromptCount}/{REFLECTION_PROMPTS.length} 个问题。三个问题均完成后可提交。</p>
+        <p className="mt-2 rounded-lg border border-[var(--em-border)] bg-[var(--em-surface-subtle)] p-3 text-xs leading-5 text-[var(--em-muted-ink)]">提交结果保存在当前学习流程的本地状态中；当前没有将复述写入服务端 LearningEvidence、画像或掌握度的接口。</p>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <Button
             disabled={!canSubmit}
             onClick={handleSubmit}
-            className="gap-2 bg-primary-500 hover:bg-primary-600"
+            className="gap-2 bg-[var(--em-action)] hover:bg-[var(--em-action-hover)]"
           >
             {state === 'analyzing' ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -232,7 +253,7 @@ export function ReflectionWorkspace({
               </p>
             </div>
             <p className="mt-4 text-xs leading-5 text-amber-800">
-              本页面不会更新学习者画像、LearningEvidence 或 mastery。
+              本结果保存在当前学习流程的本地状态；当前没有写入服务端学习画像、LearningEvidence 或掌握度的接口。
             </p>
           </GlassPanel>
 

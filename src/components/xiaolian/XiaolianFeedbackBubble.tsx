@@ -82,7 +82,7 @@ export function XiaolianFeedbackBubble(
     >
       <XiaolianCharacter state="encourage" size="sm" />
       <div>
-        <p className="text-xs font-semibold text-primary-700">小涟反馈</p>
+        <p className="text-xs font-semibold text-[var(--em-primary-deep)]">小涟反馈</p>
         {content}
       </div>
     </GlassPanel>

@@ -1,0 +1,120 @@
+.archive-print-report {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+
+  body > *:not(#archive-print-report) {
+    display: none !important;
+  }
+
+  .archive-print-report {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    color: #111827 !important;
+    background: #ffffff !important;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+  }
+
+  .archive-print-report h1 {
+    margin: 4mm 0 2mm;
+    font-size: 22pt;
+  }
+
+  .archive-print-report h2 {
+    margin: 7mm 0 3mm;
+    border-bottom: 1px solid #111827;
+    padding-bottom: 2mm;
+    font-size: 14pt;
+  }
+
+  .archive-print-header {
+    border-bottom: 2px solid #111827;
+    padding-bottom: 5mm;
+  }
+
+  .archive-print-overview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3mm;
+  }
+
+  .archive-print-overview div {
+    border: 1px solid #6b7280;
+    padding: 3mm;
+  }
+
+  .archive-print-overview dt {
+    color: #374151;
+    font-size: 8pt;
+  }
+
+  .archive-print-overview dd {
+    margin: 1mm 0 0;
+    font-size: 14pt;
+    font-weight: 700;
+  }
+
+  .archive-print-report table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 8pt;
+  }
+
+  .archive-print-report th,
+  .archive-print-report td {
+    border: 1px solid #6b7280;
+    padding: 2mm;
+    overflow-wrap: anywhere;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .archive-print-report th {
+    color: #111827;
+    background: #f3f4f6 !important;
+    print-color-adjust: exact;
+  }
+
+  .archive-print-report thead {
+    display: table-header-group;
+  }
+
+  .archive-print-report tr {
+    break-inside: avoid;
+  }
+
+  .archive-print-signature {
+    margin-top: 8mm;
+    break-before: page;
+  }
+
+  .archive-print-signature p {
+    margin: 2mm 0;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, monospace;
+    font-size: 7pt;
+  }
+
+  .archive-print-signature pre {
+    margin: 3mm 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, "Microsoft YaHei", monospace;
+    font-size: 7pt;
+    line-height: 1.5;
+  }
+}

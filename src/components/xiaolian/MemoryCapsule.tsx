@@ -11,8 +11,8 @@ export function MemoryCapsule({
   return (
     <GlassPanel className="p-5 sm:p-6">
       <div className="flex items-center gap-2">
-        <Archive className="h-4 w-4 text-primary-600" />
-        <p className="text-[10px] font-bold text-primary-600">MEMORY CAPSULE</p>
+        <Archive className="h-4 w-4 text-[var(--em-primary)]" />
+        <p className="text-[10px] font-bold text-[var(--em-primary)]">MEMORY CAPSULE</p>
       </div>
       <h2 className="mt-1 text-xl font-bold">学习偏好记忆胶囊</h2>
 
@@ -21,7 +21,7 @@ export function MemoryCapsule({
           {confirmedPreferences.map((preference, index) => (
             <li
               key={`${preference}-${index}`}
-              className="flex gap-3 rounded-lg border border-violet-100 bg-white/60 p-3"
+              className="flex gap-3 rounded-lg border border-violet-100 bg-[var(--em-surface)] p-3"
             >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
               <span className="text-sm leading-6">{preference}</span>

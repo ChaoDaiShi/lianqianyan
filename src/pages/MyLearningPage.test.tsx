@@ -16,15 +16,17 @@ vi.mock('@/store', () => ({ ACTIVE_COURSE_ID: 'course-os', ACTIVE_LEARNER_ID: 'a
 
 import { MyLearningPage } from './MyLearningPage';
 
-describe('MyLearningPage growth route', () => {
+describe('MyLearningPage current study plan', () => {
   it('uses a compact truthful invitation when no active plan exists', () => {
     const html = renderToStaticMarkup(<StaticRouter location="/my-learning"><MyLearningPage /></StaticRouter>);
 
-    expect(html).toContain('我的成长路线');
-    expect(html).toContain('让小涟帮我建立第一条学习路线');
+    expect(html).toContain('我的学习任务');
+    expect(html).toContain('基于诊断建立学习计划');
     expect(html).toContain('xiaolian-guide');
     expect(html).toContain('href="/adaptive"');
     expect(html).not.toContain('小涟还没有为你生成学习计划');
     expect(html).not.toContain('生成学习计划');
+    expect(html).not.toContain('成长路线');
+    expect(html).not.toContain('经验值');
   });
 });

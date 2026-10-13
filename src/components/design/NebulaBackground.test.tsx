@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { NebulaBackground } from './NebulaBackground';
 
 describe('NebulaBackground', () => {
-  it('uses the shared learning-space background layer', () => {
+  it('uses the static workbench canvas without loading a background asset', () => {
     const html = renderToStaticMarkup(<NebulaBackground scene="companion" />);
 
-    expect(html).toContain('data-background="learning-space"');
-    expect(html).toContain('/brand/learning-space-background.png');
+    expect(html).toContain('data-background="workbench"');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('learning-space-background');
   });
 });

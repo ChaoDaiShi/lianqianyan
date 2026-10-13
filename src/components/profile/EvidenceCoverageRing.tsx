@@ -8,7 +8,7 @@ export function EvidenceCoverageRing({ profile }: { profile: LearnerProfile }) {
       : Math.round(Math.min(1, Math.max(0, profile.overallConfidence)) * 100);
 
   return (
-    <section className="rounded-[22px] border border-violet-100 bg-white/55 p-4">
+    <section className="rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
       <h3 className="text-sm font-bold">证据覆盖</h3>
       <div className="mt-4 flex items-center gap-5">
         <div
@@ -19,9 +19,9 @@ export function EvidenceCoverageRing({ profile }: { profile: LearnerProfile }) {
             background: `conic-gradient(rgb(124 92 246) 0 ${coverage}%, rgb(237 233 254) ${coverage}% 100%)`,
           }}
         >
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-white/95 text-center shadow-inner">
+          <div className="grid h-20 w-20 place-items-center rounded-full bg-[var(--em-surface)] text-center shadow-inner">
             <div>
-              <strong className="text-xl text-violet-700">{coverage}%</strong>
+              <strong className="text-xl text-[var(--em-primary)]">{coverage}%</strong>
               <p className="text-[10px] text-[var(--em-muted-ink)]">已覆盖</p>
             </div>
           </div>

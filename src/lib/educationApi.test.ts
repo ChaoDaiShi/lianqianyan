@@ -121,3 +121,121 @@ describe('learning workshop API mappings', () => {
     });
   });
 });
+
+describe('practice and curriculum API mappings', () => {
+  it('maps learner-safe practice questions and recorded result metadata', () => {
+    expect(
+      educationApi.mapPracticeQuestionCatalog({
+        version: 'ds-bank-v2',
+        questions: [
+          {
+            id: 'q-1',
+            version: 'ds-bank-v2',
+            knowledgePointId: 'kp-stack-queue',
+            objectiveId: 'stack-queue-order',
+            prompt: '栈顶是什么？',
+            options: [{ id: 'b', label: 'B' }],
+            recordedResult: {
+              optionId: 'b',
+              isCorrect: false,
+              score: 0,
+              feedback: '正确答案是 A。',
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      version: 'ds-bank-v2',
+      questions: [
+        {
+          id: 'q-1',
+          version: 'ds-bank-v2',
+          knowledgePointId: 'kp-stack-queue',
+          objectiveId: 'stack-queue-order',
+          prompt: '栈顶是什么？',
+          options: [{ id: 'b', label: 'B' }],
+          recordedResult: {
+            optionId: 'b',
+            isCorrect: false,
+            score: 0,
+            feedback: '正确答案是 A。',
+          },
+        },
+      ],
+    });
+  });
+
+  it('maps server-only practice grading and comparison metadata', () => {
+    expect(
+      educationApi.mapPracticeEvaluationResponse({
+        evidence: { id: 'e-1', payload: {} },
+        mastery_before: 0.3,
+        mastery_after: 0.4,
+        confidence: 0.5,
+        evidence_count: 2,
+        message: '已记录',
+        replanning: { status: 'not_needed', performed: false },
+        is_correct: true,
+        score: 1,
+        feedback: '正确。',
+        grading_version: 'server-objective-choice-v1',
+        already_recorded: false,
+      }),
+    ).toMatchObject({
+      masteryBefore: 0.3,
+      masteryAfter: 0.4,
+      confidence: 0.5,
+      evidenceCount: 2,
+      isCorrect: true,
+      score: 1,
+      feedback: '正确。',
+      gradingVersion: 'server-objective-choice-v1',
+      alreadyRecorded: false,
+    });
+  });
+
+  it('preserves knowledge provenance and maps the versioned curriculum', () => {
+    expect(
+      educationApi.mapKnowledgePointContent({
+        knowledge_point_id: 'kp-linear-list',
+        title: '线性表',
+        version: 'course-ds-v2',
+        material_path: 'course-ds/linear-list.md',
+        source_refs: [{ title: 'OpenDSA', url: 'https://example.org', locator: '5.1', verificationStatus: 'reference_checked' }],
+        objectives: [{ id: 'linear-insertion-cost', text: '拆分定位与修改成本' }],
+        prerequisite_ids: ['kp-ds-complexity'],
+        sections: [{ title: '插入', content: '内容' }],
+      }),
+    ).toMatchObject({
+      knowledgePointId: 'kp-linear-list',
+      version: 'course-ds-v2',
+      materialPath: 'course-ds/linear-list.md',
+      sourceRefs: [{ title: 'OpenDSA', locator: '5.1', verificationStatus: 'reference_checked' }],
+      objectives: [{ id: 'linear-insertion-cost', text: '拆分定位与修改成本' }],
+      prerequisiteIds: ['kp-ds-complexity'],
+    });
+    expect(
+      educationApi.mapCurriculum({
+        courseId: 'course-ds',
+        version: 'ds-v2',
+        reviewStatus: 'pending_human_review',
+        knowledgePoints: [{
+          id: 'kp-linear-list',
+          name: '线性表',
+          order: 2,
+          difficulty: 2,
+          material: 'linear-list.md',
+          prerequisiteIds: ['kp-ds-complexity'],
+          aliases: ['链表'],
+          objectives: [{ id: 'linear-insertion-cost', text: '拆分成本' }],
+          sourceRefs: [{ title: 'OpenDSA', url: null, locator: '5.1', verificationStatus: 'reference_checked' }],
+        }],
+      }),
+    ).toMatchObject({
+      courseId: 'course-ds',
+      version: 'ds-v2',
+      reviewStatus: 'pending_human_review',
+      knowledgePoints: [{ id: 'kp-linear-list', prerequisiteIds: ['kp-ds-complexity'] }],
+    });
+  });
+});

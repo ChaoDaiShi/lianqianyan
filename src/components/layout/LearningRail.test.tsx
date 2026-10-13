@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it, vi } from 'vitest';
+// @vitest-environment jsdom
+
+import { useState, type ReactNode } from 'react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { learningRailItems, LearningRail } from './LearningRail';
 
 interface NavLinkStubProps {
@@ -9,6 +11,7 @@ interface NavLinkStubProps {
   className?: string | ((state: { isActive: boolean }) => string);
   'aria-label'?: string;
   'data-mobile-dock-item'?: string;
+  'aria-current'?: string;
 }
 
 vi.mock('react-router-dom', () => ({
@@ -33,63 +36,86 @@ vi.mock('react-router-dom', () => ({
   },
 }));
 
-describe('LearningRail assessment and workshop entries', () => {
-  it('contains discoverable exam and learning workshop destinations', () => {
-    expect(
-      learningRailItems.filter(
-        (item) => item.label === '学习工坊' && item.to === '/resources',
-      ),
-    ).toHaveLength(1);
-    expect(
-      learningRailItems.filter(
-        (item) => item.label === '考试中心' && item.to === '/exams',
-      ),
-    ).toHaveLength(1);
-    expect(
-      learningRailItems.filter((item) => item.to === '/settings'),
-    ).toHaveLength(1);
-    expect(
-      learningRailItems.filter((item) => item.to === '/xiaolian'),
-    ).toHaveLength(1);
-    expect(learningRailItems.filter(item => item.label === '自适应学习' && item.to === '/adaptive')).toHaveLength(1);
-    expect(learningRailItems.filter(item => item.label === '成效观察' && item.to === '/outcome-lab')).toHaveLength(1);
-    expect(learningRailItems).toHaveLength(11);
+afterEach(cleanup);
+
+function LearningRailHarness() {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <LearningRail
+      currentPath="/resources"
+      expanded={expanded}
+      onExpandedChange={setExpanded}
+    />
+  );
+}
+
+describe('LearningRail navigation', () => {
+  it('keeps all registered study destinations reachable', () => {
+    expect(learningRailItems.map((item) => item.to)).toEqual([
+      '/',
+      '/my-learning',
+      '/adaptive',
+      '/space',
+      '/knowledge',
+      '/exams',
+      '/xiaolian',
+      '/resources',
+      '/outcome-lab',
+      '/diagnosis',
+      '/archive',
+      '/settings',
+    ]);
   });
 
-  it('uses a five-slot mobile command dock without horizontal scrolling', () => {
-    const html = renderToStaticMarkup(
-      <LearningRail currentPath="/resources" />,
-    );
+  it('expands by keyboard-accessible control and presents the three learning stages', () => {
+    render(<LearningRailHarness />);
+
+    const toggle = screen.getByRole('button', { name: '展开导航' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: '收起导航' }).getAttribute('aria-expanded')).toBe('true');
+    expect(screen.queryByText('日常闭环')).not.toBeNull();
+    expect(screen.queryByText('探究与实战')).not.toBeNull();
+    expect(screen.queryByText('成效与沉淀')).not.toBeNull();
+    expect(document.querySelector('a[href="/space"]')).not.toBeNull();
+    expect(document.querySelector('a[href="/resources"]')).not.toBeNull();
+  });
+
+  it('keeps the five-slot mobile dock and its more-entry dialog', () => {
+    const { container } = render(<LearningRailHarness />);
+    const html = container.innerHTML;
 
     expect(html).toContain('data-mobile-dock="primary"');
     expect(html.match(/data-mobile-dock-item=/g)).toHaveLength(5);
-    expect(html).toContain('data-mobile-dock-item="xiaolian"');
     expect(html).toContain('aria-label="和小涟聊聊"');
     expect(html).toContain('aria-label="更多学习入口"');
-    expect(html).not.toContain('overflow-x-auto');
-    expect(html).toContain('考试中心');
-    expect(html).toContain('学习工坊');
     expect(html).toContain('href="/resources"');
+    expect(html).toContain('href="/space"');
   });
 
-  it('marks the learning rail as the responsive primary navigation', () => {
-    const html = renderToStaticMarkup(<LearningRail currentPath="/" />);
+  it('moves focus into the more dialog, traps Tab, and restores focus after Escape', async () => {
+    render(<LearningRailHarness />);
+    const trigger = screen.getByRole('button', { name: '更多学习入口' });
 
-    expect(html).toContain('data-learning-rail="primary"');
-    expect(html).toContain('data-learning-rail="desktop"');
-    expect(html).toContain('data-learning-rail-mode="compact"');
-    expect(html).toContain('data-learning-rail-mode="expanded"');
-    expect(html).toContain('xl:w-[248px]');
-    expect(html).toContain('min-h-[52px]');
-    expect(html).toContain('h-9 w-9');
-    expect(html).toContain('学习星轨');
-    expect(html).toContain('开始学习');
-    expect(html).toContain('探索与训练');
-    expect(html).toContain('记录与设置');
-    expect(html).toContain('今日指挥台');
-    expect(html).toContain('流式陪伴');
-    expect(html).toContain('首页');
-    expect(html).toContain('小涟');
-    expect(html).toContain('设置');
+    fireEvent.click(trigger);
+
+    const dialog = await screen.findByRole('dialog', { name: '更多学习入口' });
+    const close = within(dialog).getByRole('button', { name: '关闭更多入口' });
+    const links = within(dialog).getAllByRole('link');
+    const lastLink = links[links.length - 1];
+
+    expect(document.activeElement).toBe(close);
+    lastLink.focus();
+    fireEvent.keyDown(lastLink, { key: 'Tab' });
+    expect(document.activeElement).toBe(close);
+
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(lastLink);
+    fireEvent.keyDown(lastLink, { key: 'Escape' });
+
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: '更多学习入口' })).toBeNull());
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
 });

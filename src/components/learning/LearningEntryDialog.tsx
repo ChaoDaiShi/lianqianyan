@@ -83,9 +83,9 @@ export function LearningEntryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] overflow-y-auto border-violet-100 bg-[var(--em-canvas)] sm:max-w-2xl">
+      <DialogContent className="max-h-[88vh] overflow-y-auto border-[var(--em-border)] bg-[var(--em-canvas)] sm:max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+          <div className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary-deep)]">
             <Sparkles className="h-4 w-4" />
             小涟学习准备
           </div>
@@ -96,13 +96,13 @@ export function LearningEntryDialog({
         </DialogHeader>
 
         {!content ? (
-          <p className="rounded-lg border border-dashed border-violet-200 p-4 text-sm text-[var(--em-muted-ink)]">
+          <p className="rounded-lg border border-dashed border-[var(--em-border)] p-4 text-sm text-[var(--em-muted-ink)]">
             当前没有可准备的真实计划任务。
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            <section className="rounded-lg border border-violet-100 bg-white/70 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold text-primary-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary-deep)]">
                 <BookOpenCheck className="h-4 w-4" />
                 当前知识点
               </p>
@@ -111,16 +111,16 @@ export function LearningEntryDialog({
               </strong>
             </section>
 
-            <section className="rounded-lg border border-sky-100 bg-white/70 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold text-sky-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]">
                 <Target className="h-4 w-4" />
                 今天学习目标
               </p>
               <p className="mt-2 text-sm leading-6">{content.todayGoal}</p>
             </section>
 
-            <section className="rounded-lg border border-amber-100 bg-white/70 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold text-amber-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-warning)]">
                 <AlertTriangle className="h-4 w-4" />
                 当前诊断重点
               </p>
@@ -129,7 +129,7 @@ export function LearningEntryDialog({
                   正在读取诊断…
                 </p>
               ) : diagnosisError && !diagnosis ? (
-                <p className="mt-2 text-sm text-amber-800">
+                <p className="mt-2 text-sm text-[var(--em-warning)]">
                   当前诊断暂时无法加载，不使用推测内容补齐。
                 </p>
               ) : content.diagnosisFocus ? (
@@ -150,8 +150,8 @@ export function LearningEntryDialog({
               )}
             </section>
 
-            <section className="rounded-lg border border-emerald-100 bg-white/70 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
+            <section className="rounded-lg border border-[var(--em-border)] bg-[var(--em-surface)] p-4">
+              <p className="flex items-center gap-2 text-xs font-semibold text-[var(--em-success)]">
                 <History className="h-4 w-4" />
                 历史学习提醒
               </p>
@@ -160,7 +160,7 @@ export function LearningEntryDialog({
                   正在读取学习记录…
                 </p>
               ) : evidenceError && evidence.length === 0 ? (
-                <p className="mt-2 text-sm text-amber-800">
+                <p className="mt-2 text-sm text-[var(--em-warning)]">
                   学习记录暂时无法加载，不使用虚构记录补齐。
                 </p>
               ) : content.historicalEvidence.length > 0 ? (
@@ -182,7 +182,7 @@ export function LearningEntryDialog({
         )}
 
         {startError ? (
-          <p className="text-sm text-amber-700">{startError}</p>
+          <p className="text-sm text-[var(--em-danger)]">{startError}</p>
         ) : null}
 
         <DialogFooter>
@@ -198,7 +198,7 @@ export function LearningEntryDialog({
             type="button"
             onClick={onConfirm}
             disabled={!content || dataLoading || starting}
-            className="gap-2 bg-primary-500 hover:bg-primary-600"
+            className="gap-2 bg-[var(--em-action)] hover:bg-[var(--em-action-hover)]"
           >
             {starting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

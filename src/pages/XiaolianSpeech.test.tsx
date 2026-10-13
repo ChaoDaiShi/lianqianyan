@@ -26,6 +26,7 @@ vi.mock('@/lib/hooks', () => ({
     generate: vi.fn(),
     generating: false,
   }),
+  useKnowledgePoint: () => ({ data: null, loading: false, error: false, refetch: vi.fn() }),
   useDiagnosis: () => ({
     data: null,
     loading: false,
@@ -76,24 +77,24 @@ vi.mock('@/store', () => ({
 import { XiaolianPage } from './XiaolianPage';
 
 describe('XiaolianPage digital-human speech', () => {
-  it('keeps conversation and voice primary while technical attribution is collapsed', () => {
+  it('keeps the current course reading track beside a compact voice-ready dialogue track', () => {
     const html = renderToStaticMarkup(<XiaolianPage />);
 
     expect(html).toContain('MiniMax 讲解');
-    expect(html).toContain('和小涟一起想明白');
+    expect(html).toContain('课程材料');
+    expect(html).toContain('围绕课程材料逐步推理');
     expect(html).toContain('更多');
     expect(html).toContain('服务状态');
     expect(html).toContain('语音输入');
     expect(html).toContain('语音仅填入输入框');
     expect(html).toContain('data-live2d-speaking="true"');
     expect(html).toContain('data-live2d-framing="portrait"');
-    expect(html).toContain('w-20');
+    expect(html).toContain('data-companion-size="28"');
     expect(html).toContain('你好，我是小涟');
     expect(html).toContain('data-chat-message="true"');
-    expect(html).toContain('text-[15px]');
-    expect(html).toContain('sm:text-base');
-    expect(html).toContain('h-[calc(100dvh-10rem)]');
-    expect(html).toContain('md:h-[calc(100dvh-5.4rem)]');
+    expect(html).toContain('data-agent-workspace="full"');
+    expect(html).toContain('aria-label="课程材料与关联知识"');
+    expect(html).toContain('学习任务与路线');
     expect(html).not.toContain('小涟学习工作台');
     expect(html).not.toContain('Provider：');
     expect(html).toContain('<details');

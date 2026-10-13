@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+import { fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { AgentStreamState } from '@/lib/agentStream';
@@ -37,17 +39,32 @@ describe('StreamingResponse', () => {
     );
 
     expect(html).toContain('data-streaming-response="active"');
-    expect(html).toContain('p-5');
-    expect(html).toContain('sm:p-6');
-    expect(html).toContain('text-[15px]');
-    expect(html).toContain('sm:text-base');
-    expect(html).toContain('h-10');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('正在检索课程知识');
     expect(html).toContain('死锁是多个进程互相等待');
     expect(html).toContain('课程知识检索');
     expect(html).toContain('停止生成');
     expect(html).not.toContain('重新生成');
+  });
+
+  it('stops a live stream and retries a cancelled or failed stream through their callbacks', () => {
+    const onStop = vi.fn();
+    const onRetry = vi.fn();
+    const { rerender } = render(
+      <StreamingResponse state={activeState} onStop={onStop} onRetry={onRetry} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '停止生成' }));
+    expect(onStop).toHaveBeenCalledOnce();
+
+    rerender(
+      <StreamingResponse
+        state={{ ...activeState, status: 'cancelled', activeStage: null, activeLabel: null }}
+        onStop={onStop}
+        onRetry={onRetry}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '重新生成' }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 
   it('preserves partial text and offers retry after an error', () => {

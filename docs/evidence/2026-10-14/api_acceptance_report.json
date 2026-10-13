@@ -1,0 +1,521 @@
+{
+  "reportType": "local_http_acceptance_script",
+  "claimBoundary": "Automated HTTP contract and persistence acceptance only; not evidence of student learning outcomes or human review.",
+  "baseOrigin": "http://127.0.0.1:5184",
+  "result": "passed",
+  "failure": null,
+  "requests": [
+    {
+      "check": "register_temporary_account",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "status": 201,
+      "expected": [
+        201
+      ]
+    },
+    {
+      "check": "login_temporary_account",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_authenticated_session",
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "select_course_ds",
+      "method": "PUT",
+      "path": "/api/auth/course",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_curriculum",
+      "method": "GET",
+      "path": "/api/knowledge/curriculum",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_material",
+      "method": "GET",
+      "path": "/api/knowledge/points/{knowledge_point_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_course_graph",
+      "method": "GET",
+      "path": "/api/knowledge/graph",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "search_course_material",
+      "method": "POST",
+      "path": "/api/knowledge/search",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_practice_question_catalog",
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_adaptive_overview",
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "answer_native_practice",
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_adaptive_overview",
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "replay_native_practice_answer",
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_adaptive_overview",
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "reject_client_supplied_score",
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 422,
+      "expected": [
+        422
+      ]
+    },
+    {
+      "check": "read_adaptive_overview",
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_adaptive_catalog",
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "create_leap_session",
+      "method": "POST",
+      "path": "/api/adaptive/sessions",
+      "status": 201,
+      "expected": [
+        201
+      ]
+    },
+    {
+      "check": "submit_leap_diagnostic",
+      "method": "POST",
+      "path": "/api/adaptive/sessions/{session_id}/diagnose",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "restore_after_diagnostic",
+      "method": "GET",
+      "path": "/api/adaptive/sessions/{session_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "execute_recommended_teaching_strategy",
+      "method": "POST",
+      "path": "/api/adaptive/sessions/{session_id}/intervene",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "answer_leap_practice",
+      "method": "POST",
+      "path": "/api/adaptive/sessions/{session_id}/practice",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "restore_after_practice",
+      "method": "GET",
+      "path": "/api/adaptive/sessions/{session_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "prepare_independent_probe",
+      "method": "POST",
+      "path": "/api/adaptive/sessions/{session_id}/ready-probe",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "submit_independent_probe",
+      "method": "POST",
+      "path": "/api/adaptive/sessions/{session_id}/probe",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "restore_completed_session",
+      "method": "GET",
+      "path": "/api/adaptive/sessions/{session_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_adaptive_overview",
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "registration_returns_account",
+      "passed": true
+    },
+    {
+      "name": "login_preserves_same_account",
+      "passed": true
+    },
+    {
+      "name": "authenticated_cookie_session",
+      "passed": true
+    },
+    {
+      "name": "course_selection_saved",
+      "passed": true
+    },
+    {
+      "name": "curriculum_has_ten_unique_points",
+      "passed": true,
+      "details": {
+        "knowledge_point_count": 10
+      }
+    },
+    {
+      "name": "all_ten_materials_have_content",
+      "passed": true,
+      "details": {
+        "available_materials": 10,
+        "course_points": 10
+      }
+    },
+    {
+      "name": "course_graph_is_nonempty_and_covers_curriculum",
+      "passed": true,
+      "details": {
+        "node_count": 126,
+        "edge_count": 137,
+        "knowledge_point_nodes": 10
+      }
+    },
+    {
+      "name": "grounded_retrieval_returns_cited_content",
+      "passed": true,
+      "details": {
+        "result_count": 4,
+        "grounded_result_count": 3
+      }
+    },
+    {
+      "name": "native_practice_catalog_nonempty",
+      "passed": true
+    },
+    {
+      "name": "native_practice_get_hides_answer_key",
+      "passed": true,
+      "details": {
+        "private_answer_key_count": 0
+      }
+    },
+    {
+      "name": "native_question_has_id",
+      "passed": true
+    },
+    {
+      "name": "native_answer_creates_server_scored_evidence",
+      "passed": true,
+      "details": {
+        "evidence_count_before": 0,
+        "evidence_count_after": 1,
+        "evidence_delta": 1,
+        "score_in_range": true
+      }
+    },
+    {
+      "name": "native_duplicate_is_replayed_without_new_evidence",
+      "passed": true,
+      "details": {
+        "already_recorded": true,
+        "evidence_count_before": 1,
+        "evidence_count_after": 1
+      }
+    },
+    {
+      "name": "rejected_score_does_not_add_evidence",
+      "passed": true,
+      "details": {
+        "evidence_count_before": 1,
+        "evidence_count_after": 1
+      }
+    },
+    {
+      "name": "adaptive_topic_matches_course_point",
+      "passed": true
+    },
+    {
+      "name": "leap_diagnostic_session_created",
+      "passed": true
+    },
+    {
+      "name": "native_evidence_is_visible_at_leap_entry",
+      "passed": true,
+      "details": {
+        "native_evidence_count": 1,
+        "leap_entry_evidence_count": 1
+      }
+    },
+    {
+      "name": "diagnostic_question_hides_private_grading",
+      "passed": true
+    },
+    {
+      "name": "diagnostic_saves_decision",
+      "passed": true
+    },
+    {
+      "name": "diagnostic_adds_one_synced_evidence",
+      "passed": true,
+      "details": {
+        "evidence_count_before": 1,
+        "evidence_count_after_diagnostic": 2
+      }
+    },
+    {
+      "name": "diagnosis_and_next_strategy_restore",
+      "passed": true
+    },
+    {
+      "name": "teaching_uses_server_recommended_action",
+      "passed": true
+    },
+    {
+      "name": "leap_practice_is_a_new_public_question",
+      "passed": true
+    },
+    {
+      "name": "leap_practice_saves_and_syncs_evidence",
+      "passed": true,
+      "details": {
+        "evidence_count_before": 2,
+        "evidence_count_after": 3
+      }
+    },
+    {
+      "name": "practice_assignment_restores",
+      "passed": true
+    },
+    {
+      "name": "probe_is_new_and_does_not_expose_private_answer",
+      "passed": true
+    },
+    {
+      "name": "probe_completes_saved_independent_outcome",
+      "passed": true,
+      "details": {
+        "phase_completed": true,
+        "assessment_saved": true,
+        "independent": true,
+        "score_range_valid": true
+      }
+    },
+    {
+      "name": "completed_outcome_survives_session_reload",
+      "passed": true
+    },
+    {
+      "name": "overview_restores_completed_outcome_and_native_synced_state",
+      "passed": true,
+      "details": {
+        "overview_contains_completed_session": true,
+        "evidence_count_expected": 4,
+        "evidence_count_actual": 4
+      }
+    }
+  ],
+  "metrics": {
+    "curriculum_point_count": 10,
+    "material_count": 10,
+    "graph_node_count": 126,
+    "graph_edge_count": 137,
+    "retrieval_result_count": 4,
+    "native_evidence_count": 1,
+    "final_evidence_count": 4,
+    "leap_completed": true
+  },
+  "credentialsSaved": false,
+  "cookiesSaved": false,
+  "tokensSaved": false
+}

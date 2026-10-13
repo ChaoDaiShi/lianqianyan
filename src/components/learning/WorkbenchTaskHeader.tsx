@@ -31,7 +31,7 @@ const PANEL_ENTRIES = [
 ] as const;
 
 const PANEL_ICON_BUTTON =
-  'inline-flex h-8 w-8 items-center justify-center rounded-full border border-violet-200/70 text-primary-700 transition hover:bg-violet-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7766E8]';
+  'inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--em-border)] text-[var(--em-primary-deep)] transition hover:bg-[var(--em-primary-subtle)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--em-primary)]';
 
 /**
  * 工作台单行任务头：返回 + 任务信息 + 阶段轨 + 抽屉入口。
@@ -52,17 +52,17 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
         <Link
           to="/"
           aria-label="返回首页"
-          className="inline-flex h-8 items-center gap-1 rounded-full border border-violet-200/70 px-2.5 text-xs font-semibold text-primary-700 transition hover:bg-violet-50/60"
+          className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--em-border)] px-2.5 text-xs font-semibold text-[var(--em-primary-deep)] transition hover:bg-[var(--em-primary-subtle)]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">返回首页</span>
           <span className="sm:hidden">返回</span>
         </Link>
         <h1 className="text-base font-bold sm:text-lg">{task.knowledgePointName}</h1>
-        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2 py-0.5 text-xs font-semibold text-primary-700 sm:inline">
+        <span className="hidden rounded-full border border-[var(--em-border)] bg-[var(--em-primary-subtle)] px-2 py-0.5 text-xs font-semibold text-[var(--em-primary-deep)] sm:inline">
           {ACTION_TYPE_LABEL[task.actionType]}
         </span>
-        <span className="hidden rounded-full border border-violet-100 bg-violet-50/70 px-2 py-0.5 text-xs font-semibold text-primary-700 lg:inline">
+        <span className="hidden rounded-full border border-[var(--em-border)] bg-[var(--em-primary-subtle)] px-2 py-0.5 text-xs font-semibold text-[var(--em-primary-deep)] lg:inline">
           预计 {task.estimatedMinutes} 分钟
         </span>
 
@@ -77,9 +77,9 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
                   title="阶段仅反映已观察到的学习互动，不代表掌握度"
                   className={cn(
                     'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold',
-                    completed && 'border-emerald-200 bg-emerald-50/70 text-emerald-800',
-                    current && 'border-primary-300 bg-violet-50 text-primary-800',
-                    !completed && !current && 'border-slate-200 bg-slate-50/70 text-slate-500',
+                    completed && 'border-[var(--em-success)] bg-[var(--em-surface-subtle)] text-[var(--em-success)]',
+                    current && 'border-[var(--em-primary)] bg-[var(--em-primary-subtle)] text-[var(--em-primary-deep)]',
+                    !completed && !current && 'border-[var(--em-border)] bg-[var(--em-surface-subtle)] text-[var(--em-muted-ink)]',
                   )}
                 >
                   {completed || current ? (
@@ -96,7 +96,7 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
                     aria-hidden="true"
                     className={cn(
                       'h-px w-2 shrink-0',
-                      completed ? 'bg-emerald-300/80' : 'bg-violet-200/60',
+                      completed ? 'bg-[var(--em-success)]' : 'bg-[var(--em-primary-subtle)]',
                     )}
                   />
                 )}
@@ -137,7 +137,7 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
                 <MoreHorizontal className="h-4 w-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 top-10 z-10 w-40 rounded-2xl border border-violet-100 bg-[var(--em-surface)] p-1.5 shadow-xl">
+                <div className="absolute right-0 top-10 z-10 w-40 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-1.5 shadow-[var(--em-shadow-md)]">
                   {PANEL_ENTRIES.map((entry) => {
                     const Icon = entry.icon;
                     return (
@@ -145,9 +145,9 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
                         key={entry.id}
                         type="button"
                         onClick={() => openPanel(entry.id)}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-[var(--em-ink)] transition hover:bg-violet-50/60"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold text-[var(--em-ink)] transition hover:bg-[var(--em-primary-subtle)]"
                       >
-                        <Icon className="h-3.5 w-3.5 text-primary-600" />
+                        <Icon className="h-3.5 w-3.5 text-[var(--em-primary)]" />
                         {entry.label}
                       </button>
                     );
@@ -156,7 +156,7 @@ export function WorkbenchTaskHeader({ plan, task, state, onOpenPanel }: Workbenc
               )}
             </span>
           )}
-          <span className="hidden rounded-full border border-primary-200 bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 lg:inline">
+          <span className="hidden rounded-full border border-[var(--em-border)] bg-[var(--em-primary-subtle)] px-2.5 py-0.5 text-xs font-semibold text-[var(--em-primary-deep)] lg:inline">
             任务 {task.order} / {plan.tasks.length}
           </span>
         </span>
