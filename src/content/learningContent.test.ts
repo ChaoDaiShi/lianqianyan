@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveQuickQuestions } from './learningContent';
+import { getMisconceptionIntervention, resolveQuickQuestions } from './learningContent';
 
 describe('resolveQuickQuestions', () => {
   it('uses the curated questions for topics that ship a dedicated module', () => {
@@ -19,5 +19,23 @@ describe('resolveQuickQuestions', () => {
   it('falls back to generic questions when the topic name is missing', () => {
     const questions = resolveQuickQuestions('kp-unknown');
     expect(questions).toEqual(['这个知识点最容易在哪里出错？', '可以帮我梳理一下重点吗？']);
+  });
+});
+
+describe('evidence-linked misconception intervention', () => {
+  it.each(['question-deadlock-001', 'question-deadlock-002', 'question-deadlock-003'])(
+    'gives a specific possible misunderstanding and an independent check for an incorrect answer: %s',
+    (questionId) => {
+      const intervention = getMisconceptionIntervention(questionId, false);
+      expect(intervention?.code).toMatch(/^MC-DEADLOCK-/);
+      expect(intervention?.hypothesis).toContain('可能');
+      expect(intervention?.explanation.length).toBeGreaterThan(20);
+      expect(intervention?.independentCheck.length).toBeGreaterThan(10);
+    },
+  );
+
+  it('does not diagnose a correct answer or unsupported question', () => {
+    expect(getMisconceptionIntervention('question-deadlock-001', true)).toBeNull();
+    expect(getMisconceptionIntervention('question-unknown', false)).toBeNull();
   });
 });

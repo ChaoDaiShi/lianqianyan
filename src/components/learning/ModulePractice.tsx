@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { evaluatePractice, type PracticeEvaluationResponse, type ReplanningResult } from '@/lib/educationApi';
 import { ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID } from '@/store';
 import type { DemoQuestion } from '@/content/learningContent';
+import { getMisconceptionIntervention } from '@/content/learningContent';
 import { cn } from '@/lib/utils';
 
 interface ModulePracticeProps {
@@ -133,6 +134,11 @@ export function ModulePractice({
     }
   };
 
+  // 只对本次已提交的错误作答生成教学建议；不将建议误标记为真实掌握度诊断。
+  const intervention = result.status === 'done'
+    ? getMisconceptionIntervention(question.id, result.correct)
+    : null;
+
   const before = result.status === 'done' ? result.data.masteryBefore : null;
   const after = result.status === 'done' ? result.data.masteryAfter : null;
 
@@ -223,6 +229,24 @@ export function ModulePractice({
               <p className="mt-0.5 text-sm text-gray-700">{pct(result.data.confidence)}</p>
             </div>
           </div>
+
+          {intervention && (
+            <section data-misconception-intervention="true" className="mt-4 space-y-3 rounded-2xl border border-violet-200 bg-violet-50/70 p-4">
+              <p className="text-xs font-semibold tracking-wide text-primary-700">
+                小涟的针对性学习建议 · {intervention.code}
+              </p>
+              <p className="text-sm font-medium text-gray-800">{intervention.hypothesis}</p>
+              <p className="text-sm leading-6 text-gray-700">{intervention.explanation}</p>
+              <div className="rounded-xl border border-violet-100 bg-white/85 p-3">
+                <p className="mb-1 text-xs font-semibold text-primary-700">无提示理解检查</p>
+                <p className="text-sm leading-6 text-gray-800">{intervention.independentCheck}</p>
+                <p className="mt-2 text-xs text-gray-500">
+                  请先独立思考，再向小涟说明理由。这道开放式检查目前不会自动计入掌握度；
+                  正式评价仍以已提交的练习证据为准。
+                </p>
+              </div>
+            </section>
+          )}
 
           {/* 确定性 before/after 反馈文案 */}
           <div className="mt-3 rounded-lg bg-blue-50/70 p-3">
