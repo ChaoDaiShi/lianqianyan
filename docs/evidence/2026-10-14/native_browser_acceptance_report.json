@@ -1,0 +1,529 @@
+{
+  "reportType": "local_native_practice_browser_acceptance",
+  "claimBoundary": "Real browser and HTTP persistence verification only; not evidence of student learning outcomes or human review.",
+  "environment": {
+    "origin": "http://127.0.0.1:5184",
+    "desktopViewport": "1440x1000",
+    "mobileViewport": "390x844",
+    "browser": "installed Chrome via Playwright",
+    "browserPluginAvailable": false,
+    "playwrightFallbackReason": "Browser plugin is not listed; the task explicitly requests Python Playwright."
+  },
+  "result": "passed",
+  "failure": null,
+  "requests": [
+    {
+      "check": "register_temporary_account",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "status": 201,
+      "expected": [
+        201
+      ]
+    },
+    {
+      "check": "select_course_ds",
+      "method": "PUT",
+      "path": "/api/auth/course",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_native_practice",
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "answer_one_native_question_for_profile",
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_diagnosis_for_home",
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_generated_current_plan",
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_native_questions_for_learning_space",
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_learning_evidence",
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "verify_saved_native_result",
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_learning_evidence",
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    },
+    {
+      "check": "read_learning_evidence",
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200,
+      "expected": [
+        200
+      ]
+    }
+  ],
+  "browserApiResponses": [
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/plans/generate",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/learning/start",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/points/kp-linear-list",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/points/kp-linear-list",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/{learner_id}",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    }
+  ],
+  "checks": [
+    {
+      "name": "temporary_account_created",
+      "passed": true
+    },
+    {
+      "name": "course_selection_persisted",
+      "passed": true
+    },
+    {
+      "name": "native_question_catalog_available",
+      "passed": true
+    },
+    {
+      "name": "first_question_not_preanswered_for_temporary_account",
+      "passed": true
+    },
+    {
+      "name": "native_answer_scored_by_server",
+      "passed": true,
+      "details": {
+        "server_marked_incorrect": true,
+        "score_is_zero": true,
+        "evidence_count": 1
+      }
+    },
+    {
+      "name": "native_evidence_establishes_linear_list_focus",
+      "passed": true,
+      "details": {
+        "has_primary_focus": true,
+        "focus_matches_seeded_native_question": true
+      }
+    },
+    {
+      "name": "home_page_identity",
+      "passed": true
+    },
+    {
+      "name": "home_is_not_blank",
+      "passed": true
+    },
+    {
+      "name": "no_framework_error_overlay",
+      "passed": true
+    },
+    {
+      "name": "home_generated_plan",
+      "passed": true
+    },
+    {
+      "name": "generated_plan_has_native_focus_task",
+      "passed": true
+    },
+    {
+      "name": "plan_task_start_recorded",
+      "passed": true
+    },
+    {
+      "name": "learning_space_first_native_answer_restored",
+      "passed": true
+    },
+    {
+      "name": "existing_answer_is_selected_and_locked",
+      "passed": true
+    },
+    {
+      "name": "existing_server_score_visible",
+      "passed": true
+    },
+    {
+      "name": "next_question_is_unanswered",
+      "passed": true
+    },
+    {
+      "name": "next_unanswered_prompt_is_displayed",
+      "passed": true
+    },
+    {
+      "name": "next_question_has_no_saved_result",
+      "passed": true
+    },
+    {
+      "name": "unanswered_question_has_options",
+      "passed": true
+    },
+    {
+      "name": "one_answer_option_selected",
+      "passed": true
+    },
+    {
+      "name": "learning_space_uses_practice_service",
+      "passed": true
+    },
+    {
+      "name": "server_scored_result_rendered",
+      "passed": true
+    },
+    {
+      "name": "server_persisted_selected_option_and_score",
+      "passed": true
+    },
+    {
+      "name": "page_answer_adds_one_evidence",
+      "passed": true,
+      "details": {
+        "evidence_before": 2,
+        "evidence_after": 3
+      }
+    },
+    {
+      "name": "reload_restores_answer_selection_and_score",
+      "passed": true,
+      "details": {
+        "selected_option_restored": true,
+        "server_score_restored": true,
+        "expected_score_percent": 100
+      }
+    },
+    {
+      "name": "reload_does_not_add_evidence_or_resubmit",
+      "passed": true,
+      "details": {
+        "evidence_after_submit": 3,
+        "evidence_after_reload": 3,
+        "browser_practice_post_count": 1
+      }
+    },
+    {
+      "name": "home_desktop_screenshot_has_saved_plan",
+      "passed": true
+    },
+    {
+      "name": "home_mobile_screenshot_has_saved_plan",
+      "passed": true
+    },
+    {
+      "name": "browser_console_health",
+      "passed": true,
+      "details": {
+        "console_error_count": 1,
+        "page_error_count": 0
+      }
+    }
+  ],
+  "metrics": {
+    "plan_task_count": 3,
+    "learning_space_result_visible": true,
+    "result_label": "correct",
+    "practice_evidence_count_after_submit": 3,
+    "practice_evidence_count_after_reload": 3,
+    "screenshots": [
+      "12-native-practice.png",
+      "11-home-cyrene.png",
+      "10-home-mobile.png"
+    ],
+    "home_plan_visible_on_desktop_and_mobile": true,
+    "expected_empty_plan_404s": 1,
+    "browser_console_errors": 1,
+    "browser_page_errors": 0
+  },
+  "consoleErrorCount": 1,
+  "pageErrorCount": 0,
+  "consoleErrorExplanation": "Initial current-plan 404s match the expected no-plan empty state.",
+  "credentialsSaved": false,
+  "cookiesSaved": false,
+  "tokensSaved": false
+}
