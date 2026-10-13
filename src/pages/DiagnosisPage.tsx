@@ -11,6 +11,7 @@ import { fetchDiagnosis, fetchLearnerProfile } from '@/lib/educationApi';
 import type { DiagnosisResult, KnowledgePointDiagnosis, LearnerProfile } from '@/domain';
 import { useCurrentPlan } from '@/lib/hooks';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
+import { LeapObservationPanel } from '@/components/adaptive/LeapObservationPanel';
 
 const COURSE_ID = ACTIVE_COURSE_ID;
 type ViewState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'empty' } | { status: 'ready'; profile: LearnerProfile; diagnosis: DiagnosisResult };
@@ -45,6 +46,7 @@ export default function DiagnosisPage() {
   const companion = <CompanionPanel state={view.status === 'loading' ? 'analyzing' : focus ? 'encourage' : 'idle'} eyebrow={view.status === 'loading' ? '小涟正在分析' : focus ? '小涟发现' : '小涟说明'} title={focus ? `优先关注「${focus.knowledgePointName}」` : '诊断只依据真实证据'} message={view.status === 'error' ? '画像与诊断没有成功加载，因此不展示模拟结论。' : focus ? buildDiagnosisAdvice(ready!.diagnosis)[0] ?? '当前诊断已形成。' : '没有足够证据时，我会保持未知，而不是把它当作薄弱。'} details={ready && <div className="space-y-2 text-xs text-[var(--em-muted-ink)]"><p>覆盖：{ready.profile.assessedCount}/{ready.profile.totalKnowledgePoints} 个知识点</p><p>综合掌握：{ready.profile.insufficientData ? '数据不足' : formatDiagnosisPercent(ready.profile.overallMastery, true)}</p></div>} />;
   return <AppShell companion={companion} scene="galaxy"><div className="mx-auto max-w-6xl space-y-5">
     <header><p className="flex items-center gap-2 text-[10px] font-semibold text-primary-700"><Compass className="h-4 w-4" />LEARNING OBSERVATION</p><h1 className="mt-1 text-2xl font-bold">学习观察空间</h1><p className="mt-1 max-w-2xl text-xs leading-5 text-[var(--em-muted-ink)]">从真实学习证据观察当前状态；没有证据的部分保持未知。</p></header>
+    <LeapObservationPanel learnerId={ACTIVE_LEARNER_ID} courseId={ACTIVE_COURSE_ID} />
     {view.status === 'loading' && <LearningState kind="loading" title="小涟正在分析你的学习星点" description="正在读取学习画像与诊断证据…" />}
     {view.status === 'error' && <LearningState kind="error" title={view.message} description="真实数据没有加载成功，因此不会显示模拟学习状态。" action={<Button variant="outline" onClick={() => void load()} className="gap-2"><RotateCw className="h-4 w-4" />重新加载</Button>} />}
     {view.status === 'empty' && <LearningState kind="empty" title="还没有足够学习证据" description="完成一次学习或快速练习后，小涟会逐步了解你的学习状态。" />}

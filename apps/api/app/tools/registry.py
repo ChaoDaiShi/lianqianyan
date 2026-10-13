@@ -38,6 +38,7 @@ class EducationToolRegistry:
 
 
 def build_tool_registry(db: Session) -> EducationToolRegistry:
+    from app.tools.adaptive_tools import GetAdaptiveLearningContextTool
     from app.tools.diagnosis_tools import GetLearningDiagnosisTool
     from app.tools.knowledge_tools import SearchCourseKnowledgeTool
     from app.tools.learning_tools import GetRecentLearningEvidenceTool
@@ -57,5 +58,6 @@ def build_tool_registry(db: Session) -> EducationToolRegistry:
             GetRecentLearningEvidenceTool(db),
             GenerateStudyPlanTool(db),
             ReplanStudyPlanTool(db),
+            GetAdaptiveLearningContextTool(db),
         ]
     )

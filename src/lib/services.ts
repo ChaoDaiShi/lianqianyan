@@ -1,6 +1,8 @@
 // React Hook helpers for data fetching.
 import { useState, useEffect, useCallback } from 'react';
 
+export { fetchLeapCatalog, fetchLeapSession, fetchLeapSessions, fetchLeapOverview, createLeapSession, diagnoseLeapSession, startLeapIntervention, practiceLeapSession, prepareLeapProbe, submitLeapProbe, submitLeapRetest, exportLeapExperiments } from './adaptiveApi';
+
 /**
  * Generic async data hook — loading / error / refetch for any `Promise` API.
  *

@@ -26,8 +26,36 @@ localStorage 只缓存非敏感的账号 ID 与已选课程，用于让现有学
 | `/#/exams` | 自定义题型、题库、组卷、作答、评分与复盘 |
 | `/#/resources` | 网络搜索、编译模拟和资源生成 |
 | `/#/archive` | 学习画像、证据、计划与考试成长记录 |
+| `/#/adaptive` | Lian-LEAP：诊断、教学决策、针对性学习与独立新题验证 |
+| `/#/outcome-lab` | 真实前后作答成绩、教学过程、策略对照与延迟复测 |
 
 `/demo` 和 `/showcase` 已撤除，不再注册路由。
+
+## Lian-LEAP 自适应教学
+
+当前以《数据结构与算法》（`course-ds`）为试点，覆盖单链表插入复杂度、栈与队列、二叉搜索树和图搜索。进入 `/#/adaptive` 后，学习者先作答，系统关联真实证据、形成误解假设并排序教学行动；完成讲解后，用不同题目进行无提示验证。验证结果写入现有 LearningEvidence、掌握度和动态规划；会话保存在数据库，刷新页面或从小涟、学习空间、诊断和档案进入后可以恢复。
+
+六类行动为诊断追问、对比讲解、前置知识补强、分步练习、迁移挑战和主动回忆。目录、题库、显式评分规则与策略分别有版本；开放文本按预设要点评分，当前不宣称为经过校准的语义阅卷或已验证的教学算法。`M` 是 BKT 掌握估计，`U` 是当前证据量下的不确定性指标，`Q` 是误解候选分布；它们与独立测评成绩分别保存。课程内容状态为 `pending_human_review`，需教师正式审核。
+
+主要 API（正式账号与所选课程权限沿用现有服务）：
+
+| API | 作用 |
+| --- | --- |
+| `GET /api/adaptive/catalog` | 目录、误解映射、前置关系和可用动作 |
+| `GET/POST /api/adaptive/sessions` | 列出或创建当前学习者会话 |
+| `GET /api/adaptive/sessions/{id}` | 恢复已保存状态 |
+| `POST /api/adaptive/sessions/{id}/diagnose` | 提交诊断作答并生成教学决策 |
+| `POST /api/adaptive/sessions/{id}/intervene` | 执行或调整教学方式 |
+| `POST /api/adaptive/sessions/{id}/practice` | 记录可选辅助练习；带提示成绩不计作独立验证 |
+| `POST /api/adaptive/sessions/{id}/ready-probe` | 收起教学，进入已保存的独立验证阶段 |
+| `POST /api/adaptive/sessions/{id}/probe` | 独立新题评分、结果记录与重规划 |
+| `POST /api/adaptive/sessions/{id}/retest` | 到期后的 7 天无提示复测 |
+| `GET /api/adaptive/overview` | 真实状态、会话和策略分组汇总 |
+| `GET /api/adaptive/experiments/export` | 导出当前学习者的版本化过程与结果 JSON |
+
+查询当前范围使用 `learner_id`、`course_id`。独立题按学习者与主题分配未见题，题池耗尽时明确提示；前测、训练、后测和延迟题分别维护。`/#/outcome-lab` 展示实际作答成绩，空组与尚未完成的复测保持待采集。A–D 是可运行机制对照，用户可选择固定策略、证据策略、LEAP 及单要素消融；单次前后变化与非随机分组统计不用于宣称因果教学增益。
+
+部署沿用本项目原有前后端镜像与启动方式，不增加微服务。后端启动时为新的 `adaptive_sessions`、`adaptive_knowledge_states` 建表，保留现有账号与学习记录；前端使用 `pnpm build` 打包。必要检查为 `pnpm check`、`pnpm build`，后端核心流程检查为 `uv run pytest tests/test_adaptive_leap.py -q`。
 
 ## 证据星河与小涟协作流
 

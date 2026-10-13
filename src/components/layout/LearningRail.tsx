@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   BookOpen,
+  BrainCircuit,
   ClipboardCheck,
   FolderOpen,
+  FlaskConical,
   GraduationCap,
   Home,
   MessageCircleHeart,
@@ -30,11 +32,13 @@ export const learningRailItems: RailItem[] = [
   { label: '首页', description: '今日指挥台', group: 'start', to: '/', icon: Home },
   { label: '小涟', shortLabel: '小涟', description: '流式陪伴', group: 'start', to: '/xiaolian', icon: MessageCircleHeart },
   { label: '我的学习', description: '计划与任务', group: 'start', to: '/my-learning', icon: GraduationCap },
+  { label: '自适应学习', description: 'Lian-LEAP 教学闭环', group: 'start', to: '/adaptive', icon: BrainCircuit },
   { label: '学习诊断', description: '看见真实起点', group: 'explore', to: '/diagnosis', icon: Stethoscope },
   { label: '知识空间', description: 'GraphRAG 关系', group: 'explore', to: '/knowledge', icon: BookOpen },
   { label: '考试中心', description: '测评与复盘', group: 'explore', to: '/exams', icon: ClipboardCheck },
   { label: '学习工坊', description: '检索与创作', group: 'explore', to: '/resources', icon: WandSparkles },
   { label: '学习档案', description: '证据与成长', group: 'record', to: '/archive', icon: FolderOpen },
+  { label: '成效观察', description: '独立验证与策略对照', group: 'record', to: '/outcome-lab', icon: FlaskConical },
   { label: '设置', description: '偏好与连接', group: 'record', to: '/settings', icon: Settings },
 ];
 
@@ -214,7 +218,7 @@ export function LearningRail({ currentPath }: { currentPath?: string }) {
           data-learning-rail="primary"
           data-learning-rail-mode="compact"
           aria-label="学习星轨"
-          className="em-glass fixed left-4 top-1/2 z-40 hidden w-[84px] -translate-y-1/2 flex-col rounded-[28px] px-2 py-3 md:flex xl:hidden"
+          className="em-glass fixed left-4 top-1/2 z-40 hidden max-h-[calc(100dvh-6rem)] w-[84px] -translate-y-1/2 flex-col overflow-y-auto rounded-[28px] px-2 py-3 md:flex xl:hidden"
         >
           {learningRailItems.map((item) => (
             <CompactRailLink

@@ -66,6 +66,8 @@ class EducationAgentOrchestrator:
         )
         trace: list[AgentTraceItem] = []
         results: list[AgentResult] = []
+        adaptive_context: dict[str, dict[str, str]] = {}
+        adaptive_context_has_evidence = False
 
         if decision.collaborative:
             self._emit_status(event_sink, "diagnosis", "正在读取真实学习诊断")
@@ -81,10 +83,13 @@ class EducationAgentOrchestrator:
             self._append_result_trace(planner, trace, event_sink)
             results.append(planner)
             knowledge = self._retrieve(request, trace, event_sink=event_sink)
+            adaptive_context, adaptive_context_has_evidence = self._read_adaptive_context(
+                request, trace, event_sink
+            )
             self._emit_status(event_sink, "tutoring", "正在结合证据与课程知识组织回答")
             tutor = await self._tutor.run(
                 request,
-                extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump(), **memory_context},
+                extra_context={"diagnosis": diagnosis.model_dump(), "planning": planner.model_dump(), **memory_context, **adaptive_context},
                 knowledge=knowledge,
             )
             self._append_trace(self._trace(tutor), trace, event_sink)
@@ -123,21 +128,27 @@ class EducationAgentOrchestrator:
                     "tutoring",
                     "正在结合练习证据与课程知识解释结果",
                 )
+                adaptive_context, adaptive_context_has_evidence = self._read_adaptive_context(
+                    request, trace, event_sink
+                )
                 tutor = await self._tutor.run(
                     request,
                     knowledge=knowledge,
                     assessment=assessment.data,
-                    extra_context=memory_context,
+                    extra_context={**memory_context, **adaptive_context},
                 )
                 self._append_trace(self._trace(tutor), trace, event_sink)
                 results.append(tutor)
         else:
             knowledge = self._retrieve(request, trace, event_sink=event_sink)
+            adaptive_context, adaptive_context_has_evidence = self._read_adaptive_context(
+                request, trace, event_sink
+            )
             self._emit_status(event_sink, "tutoring", "正在结合课程知识组织回答")
             result = await self._tutor.run(
                 request,
                 knowledge=knowledge,
-                extra_context=memory_context,
+                extra_context={**memory_context, **adaptive_context},
             )
             self._append_trace(self._trace(result), trace, event_sink)
             results.append(result)
@@ -149,6 +160,8 @@ class EducationAgentOrchestrator:
         context_used = _unique(item for result in results for item in result.context_used)
         if memories:
             context_used = _unique([*context_used, "long_term_memory"])
+        if adaptive_context_has_evidence:
+            context_used = _unique([*context_used, "adaptive_learning"])
         actions = _unique_actions(result.suggested_actions for result in results)
         tutor_result = next((result for result in reversed(results) if result.agent == AgentCapability.TUTORING), None)
         return AgentsChatResponse(
@@ -194,6 +207,36 @@ class EducationAgentOrchestrator:
         if not tool_result.success or not isinstance(tool_result.data, list):
             return []
         return [RetrievedKnowledge.model_validate(item) for item in tool_result.data]
+
+    def _read_adaptive_context(
+        self,
+        request: AgentRequest,
+        trace: list[AgentTraceItem],
+        event_sink: AgentEventSink | None = None,
+    ) -> tuple[dict[str, dict[str, str]], bool]:
+        self._emit_status(event_sink, "adaptive", "正在读取现有 LEAP 学习记录")
+        result = self._tools.execute(
+            "get_adaptive_learning_context",
+            {"learner_id": request.learner_id, "course_id": request.course_id},
+        )
+        self._append_trace(
+            AgentTraceItem(
+                agent="get_adaptive_learning_context",
+                name="get_adaptive_learning_context",
+                label="LEAP 学习上下文",
+                type="tool",
+                status="completed" if result.success else "failed",
+            ),
+            trace,
+            event_sink,
+        )
+        if not result.success or not isinstance(result.data, dict):
+            return {}, False
+        summary = result.data.get("summary")
+        if not isinstance(summary, str) or not summary:
+            return {}, False
+        has_evidence = result.data.get("hasLearningEvidence") is True
+        return {"adaptive_learning": {"summary": summary}}, has_evidence
 
     @staticmethod
     def _trace(result: AgentResult) -> AgentTraceItem:

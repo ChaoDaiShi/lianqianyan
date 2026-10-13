@@ -14,6 +14,7 @@ import {
   useRecentEvidence,
 } from '@/lib/hooks';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID, useLearningLoopStore } from '@/store';
+import { LeapArchivePanel } from '@/components/adaptive/LeapArchivePanel';
 
 export function ArchivePage() {
   const profile = useLearnerProfile(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
@@ -80,6 +81,8 @@ export function ArchivePage() {
             {profile.data && diagnosis.data ? <XiaolianMemoryCard profile={profile.data} diagnosis={diagnosis.data} evidence={evidence.data ?? []} reflectionResults={reflectionResults} learnerId={ACTIVE_LEARNER_ID} courseId={ACTIVE_COURSE_ID} /> : <div className="mt-4 border-l-2 border-violet-200 pl-4"><p className="text-sm font-semibold">小涟还在等待足够的真实记录</p><p className="mt-2 text-xs leading-5 text-[var(--em-muted-ink)]">当前不会根据空白状态生成成长结论。</p></div>}
           </aside>
         </div>
+
+        <LeapArchivePanel learnerId={ACTIVE_LEARNER_ID} courseId={ACTIVE_COURSE_ID} />
 
         {profile.data && diagnosis.data && profile.data.assessedCount > 0 ? <details className="rounded-[2rem] border border-violet-100/80 bg-white/44 p-4 sm:p-5">
           <summary className="cursor-pointer text-sm font-semibold text-primary-700">展开证据驱动学习画像</summary>

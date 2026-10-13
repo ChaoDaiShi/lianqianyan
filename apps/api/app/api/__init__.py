@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from app.auth.dependencies import current_account_if_required
 
 from app.api.routes import (
+    adaptive,
     agents,
     auth,
     assessment,
@@ -51,6 +52,7 @@ api_router.include_router(diagnosis.router, dependencies=_protected)
 api_router.include_router(plans.router, dependencies=_protected)
 api_router.include_router(learning.router, dependencies=_protected)
 api_router.include_router(practice.router, dependencies=_protected)
+api_router.include_router(adaptive.router, dependencies=_protected)
 api_router.include_router(agents.router, dependencies=_protected)
 api_router.include_router(assessment.router, dependencies=_protected)
 api_router.include_router(reports.router, dependencies=_protected)

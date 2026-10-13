@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api import api_router
+from app.adaptive import models as adaptive_models  # noqa: F401 - register adaptive tables
 from app.auth import models as auth_models  # noqa: F401 - register auth tables
 from app.companion import models as companion_models  # noqa: F401 - register companion tables
 from app.core.config import get_settings

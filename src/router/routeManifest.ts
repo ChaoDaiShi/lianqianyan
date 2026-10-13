@@ -2,6 +2,14 @@ import type { RouteObject } from 'react-router-dom';
 
 export const lazyRoutes: RouteObject[] = [
   {
+    path: '/adaptive',
+    lazy: () => import('@/pages/AdaptiveLearningPage').then((module) => ({ Component: module.AdaptiveLearningPage })),
+  },
+  {
+    path: '/outcome-lab',
+    lazy: () => import('@/pages/OutcomeLabPage').then((module) => ({ Component: module.OutcomeLabPage })),
+  },
+  {
     path: '/xiaolian',
     lazy: () =>
       import('@/pages/XiaolianPage').then((module) => ({

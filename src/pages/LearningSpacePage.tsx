@@ -37,6 +37,7 @@ import {
 } from '@/store';
 import { getLearningModule, resolveQuickQuestions } from '@/content/learningContent';
 import { selectLearningSpaceFeedback } from './learningSpacePresentation';
+import { LeapEntryCard } from '@/components/adaptive/LeapEntryCard';
 
 type SidePanelKind = 'guide' | 'artifacts' | 'history' | 'context' | 'sources';
 
@@ -236,6 +237,7 @@ export function LearningSpacePage() {
   return (
     <AppShell>
       <div className="space-y-6">
+        <LeapEntryCard compact />
         {!currentTask && (
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">小涟学习工作台</h1>
