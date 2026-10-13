@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from datetime import timedelta
 
@@ -12,6 +13,13 @@ from app.core.time import utc_now
 from app.db.session import get_db
 from app.domain import Base, LearningEvidence, MasteryRecord
 from app.main import create_app
+
+
+def _bank_answer(question_id: str) -> str:
+    bank_path = Path(__file__).resolve().parents[1] / "app" / "practice" / "data" / "course-ds.json"
+    bank = json.loads(bank_path.read_text(encoding="utf-8"))
+    question = next(item for item in bank["questions"] if item["id"] == question_id)
+    return question["correctOptionId"]
 
 
 def test_leap_session_persists_evidence_and_requires_independent_probe(
@@ -39,6 +47,7 @@ def test_leap_session_persists_evidence_and_requires_independent_probe(
         "stack-queue",
         "bst",
         "graph-search",
+        "sorting-search",
     }
     topics = {topic["id"]: topic for topic in catalog["topics"]}
     assert topics["linked-list"]["name"] == "单链表插入复杂度"
@@ -113,7 +122,8 @@ def test_leap_session_persists_evidence_and_requires_independent_probe(
     probed = client.post(
         f"/api/adaptive/sessions/{session_id}/probe",
         json={
-            "answer": "若先定位/查找前驱，最坏 O(n)；已经知道前驱结点后改指针插入 O(1)",
+            "answer": "",
+            "optionId": _bank_answer(prepared["probeQuestion"]["id"]),
             "durationSeconds": 52,
         },
     ).json()
@@ -121,6 +131,8 @@ def test_leap_session_persists_evidence_and_requires_independent_probe(
     assert probed["outcome"]["hintUsed"] is False
     assert probed["outcome"]["correct"] is True
     assert probed["outcome"]["misconceptionStatus"] == "repaired"
+    assert probed["outcome"]["scoreComparable"] is False
+    assert probed["outcome"]["observedGain"] is None
     assert probed["phase"] == "completed"
     assert probed["retestDueAt"] is not None
 
@@ -134,12 +146,15 @@ def test_leap_session_persists_evidence_and_requires_independent_probe(
     saved.retest_due_at = utc_now() - timedelta(days=1)
     session.commit()
     due = client.get(f"/api/adaptive/sessions/{session_id}").json()
+    assert due["retestQuestion"] is None
+    due = client.post(f"/api/adaptive/sessions/{session_id}/ready-retest").json()
     assert due["retestQuestion"] is not None
     assert due["retestQuestion"]["id"] != probed["probeQuestion"]["id"]
     retested = client.post(
         f"/api/adaptive/sessions/{session_id}/retest",
         json={
-            "answer": "先定位时要从头顺序访问 O(n)；找到前驱后修改链接为 O(1)",
+            "answer": "",
+            "optionId": _bank_answer(due["retestQuestion"]["id"]),
             "durationSeconds": 38,
         },
     ).json()

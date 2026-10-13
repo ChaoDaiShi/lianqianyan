@@ -38,5 +38,10 @@ class KnowledgeRepository:
         return KnowledgePointContent(
             knowledge_point_id=knowledge_point_id,
             title=document.title,
-            sections=document_sections(document),
+            sections=[section for item in documents for section in document_sections(item)],
+            version=document.version,
+            material_path=document.material_path,
+            source_refs=document.source_refs,
+            objectives=document.objectives,
+            prerequisite_ids=document.prerequisite_ids,
         )

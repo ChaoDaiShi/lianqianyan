@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 
 from app.knowledge.models import KnowledgeChunk, KnowledgeDocument, KnowledgeSection
+from app.curriculum import curriculum_for, point_metadata
 
 MATERIALS_DIR = Path(__file__).parent / "materials"
 CHUNK_MAX_CHARS = 800
@@ -12,7 +13,7 @@ CHUNK_OVERLAP = 80
 
 def load_documents(root: Path = MATERIALS_DIR) -> list[KnowledgeDocument]:
     documents = [parse_document(path) for path in sorted(root.glob("*/*.md"))]
-    return sorted(documents, key=lambda item: item.id)
+    return sorted(documents, key=lambda item: (item.course_id, item.order, item.id))
 
 
 def parse_document(path: Path) -> KnowledgeDocument:
@@ -21,12 +22,21 @@ def parse_document(path: Path) -> KnowledgeDocument:
     course_id = metadata.get("course_id") or path.parent.name
     knowledge_point_id = metadata["knowledge_point_id"]
     title = metadata["title"]
+    curriculum = curriculum_for(course_id)
+    point = point_metadata(course_id, knowledge_point_id)
     return KnowledgeDocument(
         id=f"{course_id}:{path.stem}",
         course_id=course_id,
         knowledge_point_id=knowledge_point_id,
-        title=title,
+        title=point.get("name", title),
         content=content.strip(),
+        version=curriculum["version"] if curriculum else metadata.get("version", "builtin-v1"),
+        material_path=f"{path.parent.name}/{path.name}",
+        source_refs=point.get("sourceRefs", []),
+        prerequisite_ids=point.get("prerequisiteIds", [value.strip() for value in metadata.get("prerequisite_ids", "").split(",") if value.strip()]),
+        aliases=point.get("aliases", []),
+        objectives=point.get("objectives", []),
+        order=point.get("order", 0),
     )
 
 
@@ -62,6 +72,10 @@ def chunk_document(document: KnowledgeDocument) -> list[KnowledgeChunk]:
                     content=piece,
                     chunk_index=index,
                     source=document.source,
+                    version=document.version,
+                    material_path=document.material_path,
+                    source_refs=document.source_refs,
+                    aliases=document.aliases,
                 )
             )
             index += 1

@@ -167,6 +167,16 @@ def probe(
     )
 
 
+@router.post("/sessions/{session_id}/ready-retest")
+def ready_retest(
+    session_id: str,
+    service: AdaptiveLearningService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
+) -> dict:
+    scope = _scope_session(service, session_id, account)
+    return service.ready_retest(session_id, scope["learnerId"])
+
+
 @router.post("/sessions/{session_id}/retest")
 def retest(
     session_id: str,

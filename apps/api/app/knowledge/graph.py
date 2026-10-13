@@ -31,8 +31,7 @@ class KnowledgeGraphGenerator:
         ]
         edges: list[KnowledgeGraphEdge] = []
         sources: list[str] = []
-        previous_point_id: str | None = None
-        previous_point_source: list[str] = []
+        point_ids = {document.knowledge_point_id for document in documents}
 
         for document in documents:
             point_node_id = f"point:{document.knowledge_point_id}"
@@ -46,6 +45,7 @@ class KnowledgeGraphGenerator:
                     kind="knowledge_point",
                     knowledge_point_id=document.knowledge_point_id,
                     source_sections=point_sources,
+                    order=document.order,
                 )
             )
             edges.append(
@@ -57,18 +57,26 @@ class KnowledgeGraphGenerator:
                     source_sections=point_sources,
                 )
             )
-            if previous_point_id is not None:
+            for prerequisite_id in document.prerequisite_ids:
+                if prerequisite_id not in point_ids:
+                    raise ValueError(f"Unknown prerequisite {prerequisite_id} for {document.knowledge_point_id}")
+                prerequisite_node_id = f"point:{prerequisite_id}"
+                declaration = (
+                    f"curriculum/course_ds.json · {document.knowledge_point_id} · prerequisiteIds"
+                    if course_id == "course-ds"
+                    else f"{document.material_path or document.id} · prerequisite_ids"
+                )
+                if declaration not in sources:
+                    sources.append(declaration)
                 edges.append(
                     KnowledgeGraphEdge(
-                        id=f"precedes:{previous_point_id}:{point_node_id}",
-                        source=previous_point_id,
+                        id=f"precedes:{prerequisite_node_id}:{point_node_id}",
+                        source=prerequisite_node_id,
                         target=point_node_id,
                         relation="precedes",
-                        source_sections=[*previous_point_source[-1:], *point_sources[:1]],
+                        source_sections=[declaration],
                     )
                 )
-            previous_section_id: str | None = None
-            previous_section_source: str | None = None
             for index, section in enumerate(sections, start=1):
                 section_node_id = f"section:{document.knowledge_point_id}:{index}"
                 section_source = f"{document.title} · {section.title}"
@@ -79,6 +87,7 @@ class KnowledgeGraphGenerator:
                         kind="section",
                         knowledge_point_id=document.knowledge_point_id,
                         source_sections=[section_source],
+                        order=index,
                     )
                 )
                 edges.append(
@@ -90,20 +99,6 @@ class KnowledgeGraphGenerator:
                         source_sections=[section_source],
                     )
                 )
-                if previous_section_id is not None and previous_section_source is not None:
-                    edges.append(
-                        KnowledgeGraphEdge(
-                            id=f"precedes:{previous_section_id}:{section_node_id}",
-                            source=previous_section_id,
-                            target=section_node_id,
-                            relation="precedes",
-                            source_sections=[previous_section_source, section_source],
-                        )
-                    )
-                previous_section_id = section_node_id
-                previous_section_source = section_source
-            previous_point_id = point_node_id
-            previous_point_source = point_sources
 
         nodes[0] = nodes[0].model_copy(update={"source_sections": sources})
         return KnowledgeGraphOut(
@@ -111,4 +106,5 @@ class KnowledgeGraphGenerator:
             nodes=nodes,
             edges=edges,
             sources=sources,
+            catalog_version=documents[0].version,
         )

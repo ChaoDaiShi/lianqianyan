@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Integer, JSON, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.time import utc_now
@@ -48,3 +48,44 @@ class AdaptiveKnowledgeState(Base):
     model_version: Mapped[str] = mapped_column(String(60))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
+
+
+class AdaptiveQuestionSubmission(Base):
+    """Durable idempotency receipt shared by public practice and LEAP answers."""
+
+    __tablename__ = "adaptive_question_submissions"
+    __table_args__ = (
+        UniqueConstraint(
+            "learner_id", "submission_id", name="uq_adaptive_submission_replay"
+        ),
+        UniqueConstraint(
+            "learner_id",
+            "course_id",
+            "assessment_item_key",
+            name="uq_adaptive_counted_item",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    learner_id: Mapped[str] = mapped_column(String(36), index=True)
+    course_id: Mapped[str] = mapped_column(String(36), index=True)
+    knowledge_point_id: Mapped[str] = mapped_column(String(36), index=True)
+    question_id: Mapped[str] = mapped_column(String(100), index=True)
+    question_version: Mapped[str] = mapped_column(String(100))
+    stage: Mapped[str] = mapped_column(String(20))
+    session_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    submission_id: Mapped[str] = mapped_column(String(240))
+    assessment_item_key: Mapped[str | None] = mapped_column(String(220), nullable=True)
+    answer_hash: Mapped[str] = mapped_column(String(64))
+    score: Mapped[float] = mapped_column(Float)
+    is_correct: Mapped[bool] = mapped_column(Boolean)
+    difficulty: Mapped[float] = mapped_column(Float)
+    grading_source: Mapped[str] = mapped_column(String(20))
+    grading_version: Mapped[str] = mapped_column(String(100))
+    independent: Mapped[bool] = mapped_column(Boolean)
+    hint_used: Mapped[bool] = mapped_column(Boolean)
+    counts_for_mastery: Mapped[bool] = mapped_column(Boolean)
+    misconception_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    evidence_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    result_json: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)

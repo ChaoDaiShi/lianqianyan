@@ -2,6 +2,7 @@
 course_id: course-os
 knowledge_point_id: kp-pv
 title: PV 操作与信号量
+prerequisite_ids: kp-process-sync
 ---
 
 ## 信号量的含义

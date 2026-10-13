@@ -2,6 +2,7 @@
 course_id: course-net
 knowledge_point_id: kp-tcp-udp
 title: TCP 与 UDP
+prerequisite_ids: kp-ip-addressing
 ---
 
 ## 传输层的职责

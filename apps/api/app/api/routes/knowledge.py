@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.domain import Course, KnowledgePoint
+from app.curriculum import curriculum_for
 
 from app.knowledge import (
     KnowledgePointContent,
@@ -18,6 +19,14 @@ from app.knowledge import (
 )
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+
+
+@router.get("/curriculum")
+def curriculum(course_id: str = Query(default="course-ds", min_length=1)) -> dict:
+    result = curriculum_for(course_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="versioned curriculum not available for this course")
+    return result
 
 
 class KnowledgePointOption(BaseModel):

@@ -13,6 +13,7 @@ def _repository() -> KnowledgeRepository:
                 knowledge_point_id="kp-deadlock",
                 title="死锁",
                 content="# 银行家算法\n\n银行家算法用于进行安全性检查。",
+                prerequisite_ids=["kp-process"],
             ),
             KnowledgeDocument(
                 id="course-test:process",
@@ -27,6 +28,7 @@ def _repository() -> KnowledgeRepository:
                 knowledge_point_id="kp-pv",
                 title="PV 操作",
                 content="# 信号量\n\nP 与 V 操作保持同步。",
+                prerequisite_ids=["kp-process"],
             ),
         ]
     )

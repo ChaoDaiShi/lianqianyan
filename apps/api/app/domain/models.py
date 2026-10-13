@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from sqlalchemy import JSON, DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -340,6 +340,65 @@ class PracticeEvaluateRequest(BaseModel):
     # score / difficulty 采用 0.0 ~ 1.0（Pydantic 校验边界）
     score: float = Field(ge=0.0, le=1.0)
     difficulty: float = Field(ge=0.0, le=1.0)
+
+
+class PracticeSubmissionRequest(BaseModel):
+    """Public learner answer; grading inputs are resolved from the server catalog."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    learner_id: str = Field(min_length=1, max_length=36)
+    course_id: str = Field(min_length=1, max_length=36)
+    knowledge_point_id: str = Field(min_length=1, max_length=36)
+    question_id: str = Field(min_length=1, max_length=100)
+    option_id: str = Field(min_length=1, max_length=80)
+    session_id: str | None = Field(default=None, max_length=36)
+
+
+class PracticeQuestionOptionOut(BaseModel):
+    id: str
+    label: str
+
+
+class PracticeQuestionRecordedResultOut(BaseModel):
+    option_id: str = Field(alias="optionId")
+    is_correct: bool = Field(alias="isCorrect")
+    score: float = Field(ge=0.0, le=1.0)
+    feedback: str
+
+
+class PracticeQuestionOut(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    version: str
+    knowledge_point_id: str = Field(alias="knowledgePointId")
+    objective_id: str = Field(alias="objectiveId")
+    prompt: str
+    options: list[PracticeQuestionOptionOut]
+    recorded_result: PracticeQuestionRecordedResultOut | None = Field(
+        default=None, alias="recordedResult"
+    )
+
+
+class PracticeQuestionCatalogOut(BaseModel):
+    version: str
+    questions: list[PracticeQuestionOut]
+
+
+class PracticeSubmissionResponse(BaseModel):
+    evidence: LearningEvidenceOut
+    mastery_before: float = Field(ge=0.0, le=1.0)
+    mastery_after: float = Field(ge=0.0, le=1.0)
+    confidence: float = Field(ge=0.0, le=1.0)
+    evidence_count: int = Field(ge=0)
+    message: str
+    replanning: dict[str, Any]
+    is_correct: bool
+    score: float = Field(ge=0.0, le=1.0)
+    feedback: str
+    grading_version: str
+    already_recorded: bool = False
 
 
 class StudyPlanGenerateRequest(BaseModel):

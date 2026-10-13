@@ -1,0 +1,285 @@
+{
+  "version": "course-os-practice-2026.10.14-v1",
+  "questions": [
+    {
+      "id": "question-deadlock-001",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-deadlock",
+      "objectiveId": "deadlock-necessary-conditions",
+      "stage": "practice",
+      "prompt": "以下哪一项不是产生死锁的必要条件？",
+      "options": [
+        { "id": "a", "label": "互斥" },
+        { "id": "b", "label": "请求并保持" },
+        { "id": "c", "label": "可抢占" },
+        { "id": "d", "label": "循环等待" }
+      ],
+      "correctOptionId": "c",
+      "explanation": "死锁的四个必要条件是互斥、请求并保持、不可剥夺和循环等待；允许资源被抢占会破坏不可剥夺条件。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:deadlock.md#四个必要条件"],
+      "misconceptionCode": "DEADLOCK_PREEMPTION_CONDITION"
+    },
+    {
+      "id": "question-deadlock-002",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-deadlock",
+      "objectiveId": "deadlock-prevention-condition",
+      "stage": "practice",
+      "prompt": "四个死锁必要条件必须同时成立。预防死锁的一般做法是什么？",
+      "options": [
+        { "id": "a", "label": "破坏任意一个必要条件" },
+        { "id": "b", "label": "提高 CPU 主频" },
+        { "id": "c", "label": "增加内存容量" },
+        { "id": "d", "label": "增加进程数量" }
+      ],
+      "correctOptionId": "a",
+      "explanation": "死锁必须同时满足四个必要条件。预防策略会设计资源或进程行为，使其中至少一个条件不成立。",
+      "difficulty": 0.55,
+      "sourceRefs": ["course-os:deadlock.md#死锁预防"],
+      "misconceptionCode": "DEADLOCK_BREAK_ANY_CONDITION"
+    },
+    {
+      "id": "question-deadlock-003",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-deadlock",
+      "objectiveId": "deadlock-avoidance",
+      "stage": "practice",
+      "prompt": "银行家算法在分配资源前检查系统状态，属于哪一种死锁处理策略？",
+      "options": [
+        { "id": "a", "label": "死锁预防" },
+        { "id": "b", "label": "死锁避免" },
+        { "id": "c", "label": "死锁检测" },
+        { "id": "d", "label": "死锁解除" }
+      ],
+      "correctOptionId": "b",
+      "explanation": "银行家算法根据资源分配后的安全性判断是否批准请求，因此属于死锁避免。",
+      "difficulty": 0.65,
+      "sourceRefs": ["course-os:deadlock.md#银行家算法"],
+      "misconceptionCode": "DEADLOCK_AVOIDANCE_VS_PREVENTION"
+    },
+    {
+      "id": "question-pv-demo-001",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-pv",
+      "objectiveId": "semaphore-p-down-available",
+      "stage": "practice",
+      "prompt": "某信号量初值为 1，一个进程执行 P 操作且资源可用时，信号量将如何变化？",
+      "options": [
+        { "id": "a", "label": "信号量变为 0，进程继续执行" },
+        { "id": "b", "label": "信号量变为 -1，进程阻塞" },
+        { "id": "c", "label": "信号量变为 1，进程继续执行" },
+        { "id": "d", "label": "信号量变为 2，进程继续执行" }
+      ],
+      "correctOptionId": "a",
+      "explanation": "有可用许可时，P 操作原子地申请并消耗一个许可；信号量从 1 变为 0，进程通过同步点继续执行。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:pv.md#P操作"],
+      "misconceptionCode": "PV_P_AVAILABLE_DECREMENT"
+    },
+    {
+      "id": "question-pv-demo-002",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-pv",
+      "objectiveId": "semaphore-p-down-unavailable",
+      "stage": "practice",
+      "prompt": "信号量没有可用许可时，P 操作应如何处理调用进程？",
+      "options": [
+        { "id": "a", "label": "让进程越过临界区继续执行" },
+        { "id": "b", "label": "将进程阻塞并放入等待队列" },
+        { "id": "c", "label": "增加一个许可后立即继续" },
+        { "id": "d", "label": "直接终止其他等待进程" }
+      ],
+      "correctOptionId": "b",
+      "explanation": "许可不可用时，P 操作使调用进程进入等待队列并阻塞，不能越过同步点。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:pv.md#等待与阻塞"],
+      "misconceptionCode": "PV_BLOCK_WHEN_UNAVAILABLE"
+    },
+    {
+      "id": "question-pv-demo-003",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-pv",
+      "objectiveId": "semaphore-v-wakeup-state",
+      "stage": "practice",
+      "prompt": "V 操作释放许可并唤醒一个等待进程后，该进程通常进入哪种状态？",
+      "options": [
+        { "id": "a", "label": "立即运行态，必定马上占用 CPU" },
+        { "id": "b", "label": "终止态" },
+        { "id": "c", "label": "就绪态，等待调度器分配 CPU" },
+        { "id": "d", "label": "保持阻塞态直到其他进程退出" }
+      ],
+      "correctOptionId": "c",
+      "explanation": "被唤醒意味着等待条件满足，进程通常转为就绪态；是否立即运行仍由调度器决定。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:pv.md#V操作"],
+      "misconceptionCode": "PV_WAKEUP_READY_NOT_RUNNING"
+    },
+    {
+      "id": "question-pv-demo-004",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-pv",
+      "objectiveId": "binary-semaphore-mutual-exclusion",
+      "stage": "practice",
+      "prompt": "初值为 1 的互斥信号量已被进程 A 执行 P 操作取得。此时进程 B 再执行 P 操作会怎样？",
+      "options": [
+        { "id": "a", "label": "B 与 A 同时进入临界区" },
+        { "id": "b", "label": "信号量自动恢复为 1，B 直接进入" },
+        { "id": "c", "label": "A 立即被终止" },
+        { "id": "d", "label": "B 因许可不可用而等待，不能进入临界区" }
+      ],
+      "correctOptionId": "d",
+      "explanation": "A 已取得唯一许可，B 的 P 操作不能重复取得该许可，因此会等待，保证临界区互斥。",
+      "difficulty": 0.65,
+      "sourceRefs": ["course-os:pv.md#互斥"],
+      "misconceptionCode": "PV_BINARY_SEMAPHORE_EXCLUSIVE"
+    },
+    {
+      "id": "question-pv-demo-005",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-pv",
+      "objectiveId": "semaphore-atomicity",
+      "stage": "practice",
+      "prompt": "P/V 操作为什么必须作为原子操作执行？",
+      "options": [
+        { "id": "a", "label": "避免多个进程同时基于过期许可状态作出错误判断" },
+        { "id": "b", "label": "保证每个进程都能永久占有 CPU" },
+        { "id": "c", "label": "自动扩大可用资源数量" },
+        { "id": "d", "label": "让等待队列不再需要调度" }
+      ],
+      "correctOptionId": "a",
+      "explanation": "若检查与修改信号量的过程可被交错，多个进程可能同时观察并消耗同一许可，破坏同步约束。",
+      "difficulty": 0.65,
+      "sourceRefs": ["course-os:pv.md#原子性"],
+      "misconceptionCode": "PV_OPERATION_ATOMICITY"
+    },
+    {
+      "id": "question-process-concept-001",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-process-concept",
+      "objectiveId": "io-completion-process-state",
+      "stage": "practice",
+      "prompt": "进程因磁盘 I/O 从运行态进入阻塞态。I/O 完成后，在处理器尚未分配给它时，进程进入哪种状态？",
+      "options": [
+        { "id": "a", "label": "运行态，因为 I/O 已完成" },
+        { "id": "b", "label": "就绪态，等待调度器分配处理器" },
+        { "id": "c", "label": "仍为阻塞态，直到进程主动申请 CPU" },
+        { "id": "d", "label": "终止态，因为 I/O 操作结束" }
+      ],
+      "correctOptionId": "b",
+      "explanation": "I/O 完成只表示等待事件满足，进程由阻塞态转为就绪态；是否立即运行还取决于调度。",
+      "difficulty": 0.55,
+      "sourceRefs": ["course-os:process.md#进程状态转换"],
+      "misconceptionCode": "PROCESS_IO_READY_NOT_RUNNING"
+    },
+    {
+      "id": "question-process-concept-002",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-process-concept",
+      "objectiveId": "context-switch-purpose",
+      "stage": "practice",
+      "prompt": "处理器从进程 A 切换到进程 B 时，上下文切换的核心工作是什么？",
+      "options": [
+        { "id": "a", "label": "复制 A 的全部文件到 B" },
+        { "id": "b", "label": "结束 A 并新建 B" },
+        { "id": "c", "label": "保存 A 的处理器现场并恢复 B 的处理器现场" },
+        { "id": "d", "label": "只把 B 加入就绪队列，不保存任何状态" }
+      ],
+      "correctOptionId": "c",
+      "explanation": "上下文切换要保存当前进程的程序计数器、寄存器等现场，并恢复下一进程此前保存的现场。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:process.md#上下文切换"],
+      "misconceptionCode": "CONTEXT_SWITCH_SAVE_RESTORE"
+    },
+    {
+      "id": "question-process-sync-001",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-process-sync",
+      "objectiveId": "binary-semaphore-pv-order",
+      "stage": "practice",
+      "prompt": "初值为 1 的二元信号量用于保护临界区，正确的基本操作顺序是什么？",
+      "options": [
+        { "id": "a", "label": "先 V，再进入临界区，最后 P" },
+        { "id": "b", "label": "P 申请许可，进入临界区，完成后 V 释放许可" },
+        { "id": "c", "label": "直接进入临界区，不需要信号量操作" },
+        { "id": "d", "label": "在临界区内重复执行 P，退出后不执行 V" }
+      ],
+      "correctOptionId": "b",
+      "explanation": "P 操作原子地申请许可，V 操作归还许可；二者包围临界区，使互斥约束得以维持。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:pv.md#互斥信号量"],
+      "misconceptionCode": "PV_PV_CRITICAL_SECTION_ORDER"
+    },
+    {
+      "id": "question-process-sync-002",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-process-sync",
+      "objectiveId": "semaphore-blocking-semantics",
+      "stage": "practice",
+      "prompt": "P 操作申请资源时没有可用许可，通常应如何处理进程？",
+      "options": [
+        { "id": "a", "label": "继续执行临界区代码" },
+        { "id": "b", "label": "把信号量加一后继续" },
+        { "id": "c", "label": "进入等待队列并阻塞，等待许可可用" },
+        { "id": "d", "label": "立即终止整个系统" }
+      ],
+      "correctOptionId": "c",
+      "explanation": "许可不可用时，P 操作不能越过同步点；调用者进入等待队列并阻塞，之后由 V 操作唤醒。",
+      "difficulty": 0.6,
+      "sourceRefs": ["course-os:pv.md#等待与唤醒"],
+      "misconceptionCode": "SEMAPHORE_WAIT_BLOCKS"
+    },
+    {
+      "id": "question-scheduling-001",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-scheduling",
+      "objectiveId": "round-robin-expired-quantum",
+      "stage": "practice",
+      "prompt": "时间片轮转中，进程的时间片用完但仍未结束，通常会发生什么？",
+      "options": [
+        { "id": "a", "label": "进程转为终止态" },
+        { "id": "b", "label": "进程回到就绪队列队尾，等待下一轮" },
+        { "id": "c", "label": "进程永久占有处理器" },
+        { "id": "d", "label": "系统删除该进程的资源" }
+      ],
+      "correctOptionId": "b",
+      "explanation": "时间片轮转在时间片耗尽时抢占处理器；仍可运行的进程回到就绪队列尾部等待下一轮。",
+      "difficulty": 0.55,
+      "sourceRefs": ["course-os:scheduling.md#时间片轮转"],
+      "misconceptionCode": "RR_REQUEUE_ON_QUANTUM"
+    },
+    {
+      "id": "question-scheduling-002",
+      "version": "course-os-practice-2026.10.14-v1",
+      "courseId": "course-os",
+      "knowledgePointId": "kp-scheduling",
+      "objectiveId": "turnaround-time-definition",
+      "stage": "practice",
+      "prompt": "周转时间的定义是哪一个？",
+      "options": [
+        { "id": "a", "label": "任务提交到首次获得 CPU 的时间" },
+        { "id": "b", "label": "任务只在就绪队列中的累计时间" },
+        { "id": "c", "label": "任务从提交到完成的总时间" },
+        { "id": "d", "label": "单位时间内完成的任务数" }
+      ],
+      "correctOptionId": "c",
+      "explanation": "周转时间从任务提交时刻计算到完成时刻；它包含运行与等待等经历时间。",
+      "difficulty": 0.5,
+      "sourceRefs": ["course-os:scheduling.md#周转时间"],
+      "misconceptionCode": "SCHED_TURNAROUND_DEFINITION"
+    }
+  ]
+}

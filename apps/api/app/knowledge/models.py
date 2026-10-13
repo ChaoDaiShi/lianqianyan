@@ -5,16 +5,33 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-class KnowledgeDocument(BaseModel):
+class KnowledgeReference(BaseModel):
+    title: str
+    url: str | None = None
+    locator: str = ""
+    verificationStatus: str = "reference_only"
+
+
+class KnowledgeProvenance(BaseModel):
+    version: str = "builtin-v1"
+    material_path: str = ""
+    source_refs: list[KnowledgeReference] = Field(default_factory=list)
+
+
+class KnowledgeDocument(KnowledgeProvenance):
     id: str
     course_id: str
     knowledge_point_id: str
     title: str
     content: str
     source: str = "builtin_course_material"
+    prerequisite_ids: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
+    objectives: list[dict[str, str]] = Field(default_factory=list)
+    order: int = 0
 
 
-class KnowledgeChunk(BaseModel):
+class KnowledgeChunk(KnowledgeProvenance):
     id: str
     document_id: str
     course_id: str
@@ -24,9 +41,10 @@ class KnowledgeChunk(BaseModel):
     content: str
     chunk_index: int
     source: str = "builtin_course_material"
+    aliases: list[str] = Field(default_factory=list)
 
 
-class RetrievedKnowledge(BaseModel):
+class RetrievedKnowledge(KnowledgeProvenance):
     chunk_id: str
     document_id: str
     title: str
@@ -37,7 +55,7 @@ class RetrievedKnowledge(BaseModel):
     source: str
 
 
-class KnowledgeSource(BaseModel):
+class KnowledgeSource(KnowledgeProvenance):
     id: str
     title: str
     section: str
@@ -62,10 +80,12 @@ class KnowledgeSection(BaseModel):
     content: str
 
 
-class KnowledgePointContent(BaseModel):
+class KnowledgePointContent(KnowledgeProvenance):
     knowledge_point_id: str
     title: str
     sections: list[KnowledgeSection] = Field(default_factory=list)
+    objectives: list[dict[str, str]] = Field(default_factory=list)
+    prerequisite_ids: list[str] = Field(default_factory=list)
 
 
 class KnowledgeGraphNode(BaseModel):
@@ -74,6 +94,7 @@ class KnowledgeGraphNode(BaseModel):
     kind: Literal["course", "knowledge_point", "section"]
     knowledge_point_id: str | None = None
     source_sections: list[str] = Field(default_factory=list)
+    order: int = 0
 
 
 class KnowledgeGraphEdge(BaseModel):
@@ -90,3 +111,4 @@ class KnowledgeGraphOut(BaseModel):
     nodes: list[KnowledgeGraphNode] = Field(default_factory=list)
     edges: list[KnowledgeGraphEdge] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)
+    catalog_version: str = "builtin-v1"

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-CATALOG_VERSION = "course-ds-leap-2026.10-v1"
-POLICY_VERSION = "leap-ranking-2026.10-v1"
-MODEL_VERSION = "bkt-mu-q-v1"
+CATALOG_VERSION = "course-ds-leap-2026.10.14-v2"
+POLICY_VERSION = "leap-ranking-2026.10.14-v2"
+QUESTION_VERSION = "ds-bank-2026.10.14-v2"
+MODEL_VERSION = "bkt-evidence-replay-v2-uncalibrated"
 
 ACTION_TYPES = (
     "diagnostic_probe",
@@ -28,11 +29,12 @@ TOPICS: dict[str, dict] = {
     "linked-list": {
         "id": "linked-list",
         "knowledgePointId": "kp-linear-list",
+        "prerequisiteIds": ["kp-ds-complexity"],
         "name": "单链表插入复杂度",
         "description": "区分已知前驱后改指针的成本与插入前查找位置的成本，避免把插入总复杂度一概写成 O(1)。",
         "misconceptionCode": "LL_IGNORES_SEARCH_COST",
         "misconceptionTitle": "忽略插入前的定位成本",
-        "prerequisites": [{"id": "ds-node-pointer-basics", "name": "结点与指针基础"}],
+        "prerequisites": [{"id": "kp-ds-complexity", "name": "数据结构与算法分析基础"}],
         "diagnostic": {
             "id": "ds-ll-diagnostic-q07",
             "prompt": "Q07：单链表插入节点只改指针，因此总是 O(1)，你赞同吗？",
@@ -63,7 +65,7 @@ TOPICS: dict[str, dict] = {
                 ("ds-ll-probe-2", "若只给出头指针，要在第 k 个位置插入，定位前驱需要怎样操作？完整操作最坏多少？", ["从头", "next", "查找", "o(n)"], "指出先从头沿 next 查找前驱，定位最坏 O(n)，之后指针修改 O(1)。"),
                 ("ds-ll-probe-3", "链表插入常被说成 O(1)。这个结论成立的前提是什么？若没给前驱呢？", ["已知前驱", "指针", "o(1)", "查找", "o(n)"], "说明只有已知前驱时改链接为 O(1)；若需先查找前驱，总操作最坏 O(n)。"),
                 ("ds-ll-probe-4", "比较单链表头部插入和仅给头指针的中间位置插入，解释两者定位与修改成本。", ["头部", "o(1)", "定位", "o(n)", "已知前驱"], "头部插入无需扫描，整体 O(1)；中间位置若需先定位前驱最坏 O(n)，找到后修改 O(1)。"),
-                ("ds-ll-probe-5", "若仅给出待插入位置的结点 x 而未给其前驱，单链表为何可能仍需 O(n)？", ["单链表", "前驱", "从头", "查找", "o(n)"], "单链表结点没有反向链接，需从头查找 x 的前驱，最坏 O(n)。"),
+                ("ds-ll-probe-5", "要求在单链表的已知结点 x 之前插入；若只给出头指针而未给 x 的前驱，为什么可能仍需 O(n)？", ["单链表", "前驱", "从头", "查找", "o(n)"], "题目要求在 x 之前插入；标准单链表没有 prev 链接，需从头查找 x 的前驱，最坏 O(n)。已知前驱后修改链接才是 O(1)。"),
             ],
             "retest": [
                 ("ds-ll-retest-1", "仅给头指针删除单链表第 i 个结点时，为什么整体通常仍为 O(n)，即使改链接可为 O(1)？", ["先定位", "从头", "o(n)", "链接", "o(1)"], "先从头定位前驱 O(n)，找到后改链接 O(1)，总成本由定位主导。"),
@@ -77,6 +79,7 @@ TOPICS: dict[str, dict] = {
     "stack-queue": {
         "id": "stack-queue",
         "knowledgePointId": "kp-stack-queue",
+        "prerequisiteIds": ["kp-linear-list"],
         "name": "栈与队列的出入顺序",
         "description": "根据最近进入或最早进入的访问顺序，选择栈或队列，并追踪基本操作结果。",
         "misconceptionCode": "SQ_ORDER_CONFUSION",
@@ -127,11 +130,12 @@ TOPICS: dict[str, dict] = {
     "bst": {
         "id": "bst",
         "knowledgePointId": "kp-trees",
+        "prerequisiteIds": ["kp-recursion"],
         "name": "二叉搜索树与平衡",
         "description": "按左小右大的规则判断搜索路径，并根据插入顺序认识普通 BST 可能退化成链。",
         "misconceptionCode": "BST_ALWAYS_BALANCED",
         "misconceptionTitle": "误以为普通二叉搜索树会自动保持平衡",
-        "prerequisites": [{"id": "ds-binary-tree-structure", "name": "二叉树结点与左右子树"}],
+        "prerequisites": [{"id": "kp-recursion", "name": "递归与子树结构"}],
         "diagnostic": {
             "id": "ds-bst-diagnostic-v1",
             "prompt": "普通二叉搜索树按 1、2、3、4 的顺序依次插入且不做平衡处理，树形更可能怎样？",
@@ -177,13 +181,14 @@ TOPICS: dict[str, dict] = {
     "graph-search": {
         "id": "graph-search",
         "knowledgePointId": "kp-graphs",
+        "prerequisiteIds": ["kp-stack-queue", "kp-recursion"],
         "name": "BFS与DFS适用条件",
         "description": "用访问次序解释广度优先与深度优先遍历，并选取对应的队列或栈。",
         "misconceptionCode": "GRAPH_BFS_DFS_ORDER",
         "misconceptionTitle": "混淆 BFS 的逐层扩展与 DFS 的深入回溯",
         "prerequisites": [
             {"id": "kp-stack-queue", "name": "栈与队列"},
-            {"id": "ds-adjacency-representation", "name": "图的邻接表示"},
+            {"id": "kp-recursion", "name": "递归与调用栈"},
         ],
         "diagnostic": {
             "id": "ds-graph-diagnostic-v1",
@@ -227,7 +232,102 @@ TOPICS: dict[str, dict] = {
             ],
         },
     },
+    "sorting-search": {
+        "id": "sorting-search",
+        "knowledgePointId": "kp-sorting-search",
+        "prerequisiteIds": ["kp-linear-list", "kp-recursion"],
+        "name": "查找与排序边界",
+        "description": "先核对算法前提，再用反例区分稳定性、gap 序列与最坏情况。",
+        "misconceptionCode": "SS_BINARY_SEARCH_PRECONDITION",
+        "misconceptionTitle": "忽略折半查找的有序前提",
+        "misconceptions": [
+            {
+                "code": "SS_BINARY_SEARCH_PRECONDITION",
+                "title": "对未排序数据直接使用折半查找",
+                "claim": "只要数组可按下标访问，二分查找就能正确。",
+                "correction": "标准二分查找依赖关键字有序；随机访问本身不能保证每次排除的一半都不含目标。",
+            },
+            {
+                "code": "SS_SORT_STABILITY",
+                "title": "把不稳定排序误判为稳定",
+                "claim": "键值相同的记录排序后仍必然保留原先后次序。",
+                "correction": "稳定性要按算法的移动/交换规则判断；标准选择排序的远距离交换可逆转相等记录。",
+            },
+            {
+                "code": "SS_SHELL_GAP",
+                "title": "不看 gap 序列就给 Shell 排序复杂度",
+                "claim": "Shell 排序总有一个固定的 n^c 复杂度。",
+                "correction": "Shell 排序的比较次数取决于 gap 序列；未说明序列时不应写统一复杂度。",
+            },
+            {
+                "code": "SS_QUICKSORT_WORST_CASE",
+                "title": "把快排平均界当作最坏保证",
+                "claim": "快速排序对任意输入都运行 Θ(n log n)。",
+                "correction": "坏枢轴划分可使递归树退化，最坏时间 Θ(n²)；平均/期望界需说明模型或枢轴策略。",
+            },
+            {
+                "code": "SS_COUNTING_RANGE",
+                "title": "忽略线性排序的键域成本",
+                "claim": "计数排序对所有整数键范围都只需 O(n) 时间和空间。",
+                "correction": "计数排序时间与辅助空间含范围大小 k，典型界为 Θ(n+k)。",
+            },
+        ],
+        "prerequisites": [
+            {"id": "kp-linear-list", "name": "线性表与随机访问"},
+            {"id": "kp-recursion", "name": "递归与分治"},
+        ],
+        "diagnostic": {
+            "id": "ds-sort-diagnostic-v1",
+            "prompt": "手头有未排序数组，想查找键值 17。直接套用标准折半查找能保证正确吗？",
+            "options": [
+                {"id": "a", "text": "能，只要数组连续存储"},
+                {"id": "b", "text": "不能，需先有序或使用满足其他条件的结构"},
+                {"id": "c", "text": "能，折半查找会自动把数组排序"},
+                {"id": "d", "text": "不能，因为折半查找只适用于链表"},
+            ],
+            "correctOptionId": "b",
+            "correctText": "不能，需先有序或使用满足其他条件的结构",
+            "acceptedTerms": ["有序", "未排序", "前提", "折半"],
+            "minimumTerms": 1,
+            "rubric": "识别标准折半查找依赖关键字有序；若通过预处理排序，还应计入该成本。",
+            "misconceptionCode": "SS_BINARY_SEARCH_PRECONDITION",
+        },
+        "concept": "查找和排序算法都依赖输入与实现前提。折半查找要求有序且可访问中点；排序的渐进成本需按输入情形和具体实现判断。",
+        "misconception": "只记算法名称和常见平均复杂度，不检查输入是否满足前提，也把平均界误读成最坏保证。",
+        "contrast": "折半查找的对数成本以有序随机访问为条件；快排通常有较好平均表现但有二次最坏界；Shell 排序的界依赖 gap 序列；稳定性由相等键的相对顺序定义。",
+        "example": "对未排序数组直接比较中点不能安全丢弃一半；对相等键记录，应跟踪原始标签观察某次排序是否交换了它们的相对次序。",
+        "fixedAction": "contrastive_teaching",
+        "questionMisconceptionCodes": {
+            "ds-sort-leap-practice-1": "SS_BINARY_SEARCH_PRECONDITION",
+            "ds-sort-leap-practice-2": "SS_SORT_STABILITY",
+            "ds-sort-leap-practice-3": "SS_QUICKSORT_WORST_CASE",
+            "ds-sort-leap-practice-4": "SS_SHELL_GAP",
+            "ds-sort-leap-probe-1": "SS_BINARY_SEARCH_PRECONDITION",
+            "ds-sort-leap-probe-2": "SS_SORT_STABILITY",
+            "ds-sort-leap-retest-1": "SS_COUNTING_RANGE",
+            "ds-sort-leap-retest-2": "SS_SHELL_GAP",
+        },
+        "questions": {
+            "practice": [
+                ("ds-sort-leap-practice-1", "值为 [9, 1, 7, 3, 5] 的数组未排序。二分查找比较中点后能否确定目标只可能在其中一半？", [{"any": ["不能", "不可以", "无法"]}, {"any": ["未排序", "有序", "前提"]}], "不能。标准二分查找依赖单调有序，未排序时比较中点无法排除某半区。"),
+                ("ds-sort-leap-practice-2", "相等键记录 (5,A)、(5,B) 原顺序为 A 在前。某排序执行后得到 B 在 A 前，能否称这次实现稳定？", [{"any": ["相对顺序", "原顺序", "先后"]}, {"any": ["改变", "逆转", "不稳定"]}], "不能。稳定排序须保留相等键记录的原相对顺序。"),
+                ("ds-sort-leap-practice-3", "快排总选末元素作枢轴，升序输入每次分成空区与剩余区。总时间是什么量级？", [{"any": ["快排", "快速排序", "枢轴"]}, {"any": ["o(n^2)", "n²", "二次"]}], "每层分区扫描当前规模，递归规模仅减少一项，求和为 Θ(n²)。"),
+                ("ds-sort-leap-practice-4", "一段 Shell 排序题只说“逐步缩小 gap”，未给出 gap 序列。能否据此给出统一的紧确复杂度？", [{"any": ["gap", "增量"]}, {"any": ["依赖", "取决"]}, {"any": ["不能", "未给", "不确定"]}], "不能。Shell 排序复杂度依赖采用的增量序列，题目应给序列或只问过程。"),
+            ],
+            "probe": [
+                ("ds-sort-leap-probe-1", "数组 [4,1,6,2] 未排序。说明为什么标准二分查找的一次中点比较不能决定安全的搜索区间。", [{"any": ["未排序"]}, {"any": ["不能排除", "无法排除", "不能确定"]}, {"any": ["前提", "中点", "有序"]}], "未排序时小于或大于中点并不说明目标只在某一侧，二分查找的排除逻辑失效。"),
+                ("ds-sort-leap-probe-2", "给相同键记录标成 2A、2B；排序后变为 2B、2A。这个观察说明了什么？", [{"any": ["相对次序", "原次序", "原顺序"]}, {"any": ["改变", "不稳定", "逆转"]}, {"any": ["相等", "相同"]}], "相等键记录的相对先后改变，因此该实现不稳定。"),
+            ],
+            "retest": [
+                ("ds-sort-leap-retest-1", "计数排序要处理 n 个整数，键值范围有 k 个可能值。它的线性成本中为何必须保留 k？", [{"any": ["范围", "k", "计数"]}, {"any": ["n+k", "n + k", "计数数组"]}], "计数数组有 k 个位置，初始化和处理范围需 Θ(k)，典型成本 Θ(n+k)。"),
+                ("ds-sort-leap-retest-2", "若题目没有声明 Shell 排序的 gap 序列，应该怎样陈述其时间复杂度？", [{"any": ["gap", "增量"]}, {"any": ["依赖", "取决"]}, {"any": ["不能", "未给", "限定"]}], "不同 gap 序列的分析不同；没有序列时不能给唯一的普遍紧确阶。"),
+            ],
+        },
+    },
 }
+
+for _topic in TOPICS.values():
+    _topic["diagnostic"]["version"] = QUESTION_VERSION
 
 
 _RUBRIC_ALIASES = {
@@ -338,6 +438,7 @@ def _text_question(question_id: str, prompt: str, accepted_terms: list, rubric: 
     rubric_groups = _groups_for_terms(question_id, accepted_terms)
     return {
         "id": question_id,
+        "version": QUESTION_VERSION,
         "prompt": prompt,
         "options": [],
         "responseMode": "text",
@@ -352,7 +453,11 @@ for topic_id, topic in TOPICS.items():
     for stage in ("practice", "probe", "retest"):
         questions = []
         for question_id, prompt, accepted_terms, rubric in topic["questions"][stage]:
-            questions.append(_text_question(question_id, prompt, accepted_terms, rubric))
+            question = _text_question(question_id, prompt, accepted_terms, rubric)
+            question["misconceptionCode"] = topic.get("questionMisconceptionCodes", {}).get(
+                question_id, topic["misconceptionCode"]
+            )
+            questions.append(question)
         question_sets[stage] = questions
     QUESTION_BANKS[topic_id] = question_sets
 
@@ -378,6 +483,20 @@ def catalog_payload() -> dict:
                 "description": topic["description"],
                 "misconceptionCode": topic["misconceptionCode"],
                 "misconceptionTitle": topic["misconceptionTitle"],
+                "misconceptions": deepcopy(
+                    topic.get(
+                        "misconceptions",
+                        [{
+                            "code": topic["misconceptionCode"],
+                            "title": topic["misconceptionTitle"],
+                            "claim": topic.get("misconception", ""),
+                            "correction": topic.get("contrast", ""),
+                        }],
+                    )
+                ),
+                "prerequisiteIds": deepcopy(
+                    topic.get("prerequisiteIds", [item["id"] for item in topic["prerequisites"]])
+                ),
                 "prerequisites": deepcopy(topic["prerequisites"]),
                 "diagnosticQuestion": public_question(topic["diagnostic"]),
                 "strategies": [

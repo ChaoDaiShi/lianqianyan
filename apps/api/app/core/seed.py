@@ -9,6 +9,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.domain.models import Course, KnowledgePoint
+from app.curriculum import data_structures_curriculum
 
 DEFAULT_COURSE_ID = "course-os"
 
@@ -91,37 +92,15 @@ CATALOG_KNOWLEDGE_POINTS = [
         "course_id": "course-net",
         "difficulty": 4,
     },
-    {
-        "id": "kp-linear-list",
-        "name": "线性表",
-        "course_id": "course-ds",
-        "difficulty": 2,
-    },
-    {
-        "id": "kp-stack-queue",
-        "name": "栈与队列",
-        "course_id": "course-ds",
-        "difficulty": 2,
-    },
-    {
-        "id": "kp-trees",
-        "name": "树与二叉树",
-        "course_id": "course-ds",
-        "difficulty": 3,
-    },
-    {
-        "id": "kp-graphs",
-        "name": "图与遍历",
-        "course_id": "course-ds",
-        "difficulty": 4,
-    },
-    {
-        "id": "kp-sorting-search",
-        "name": "排序与查找",
-        "course_id": "course-ds",
-        "difficulty": 3,
-    },
 ]
+
+CATALOG_KNOWLEDGE_POINTS.extend(
+    {
+        "id": point["id"], "name": point["name"], "course_id": "course-ds",
+        "difficulty": point["difficulty"],
+    }
+    for point in data_structures_curriculum()["knowledgePoints"]
+)
 
 
 def _seed_course_and_knowledge_points(db: Session) -> None:
@@ -136,7 +115,8 @@ def _seed_course_and_knowledge_points(db: Session) -> None:
             )
 
     for knowledge_point in CATALOG_KNOWLEDGE_POINTS:
-        if db.get(KnowledgePoint, knowledge_point["id"]) is None:
+        existing = db.get(KnowledgePoint, knowledge_point["id"])
+        if existing is None:
             db.add(
                 KnowledgePoint(
                     id=knowledge_point["id"],
@@ -145,6 +125,9 @@ def _seed_course_and_knowledge_points(db: Session) -> None:
                     difficulty=knowledge_point["difficulty"],
                 )
             )
+        elif knowledge_point["course_id"] == "course-ds":
+            existing.name = knowledge_point["name"]
+            existing.difficulty = knowledge_point["difficulty"]
 
 
 def seed_catalog_data(db: Session) -> None:

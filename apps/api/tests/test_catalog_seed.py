@@ -28,7 +28,7 @@ def test_catalog_seed_creates_no_learner_state() -> None:
             db.query(KnowledgePoint)
             .filter(KnowledgePoint.course_id == "course-ds")
             .count()
-            == 5
+            == 10
         )
         assert db.query(MasteryRecord).count() == 0
         assert db.query(LearningEvidence).count() == 0

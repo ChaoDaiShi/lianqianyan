@@ -2,6 +2,7 @@
 course_id: course-net
 knowledge_point_id: kp-ip-addressing
 title: IP 地址与子网划分
+prerequisite_ids: kp-osi-model
 ---
 
 ## IPv4 地址结构

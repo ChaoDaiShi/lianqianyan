@@ -9,7 +9,12 @@ from app.core.config import get_settings
 from app.auth.dependencies import authorize_learning_scope, optional_current_account
 from app.auth.models import AuthAccount
 from app.db.session import get_db
-from app.domain import MessageResponse, PracticeEvaluateRequest, PracticeEvaluateResponse
+from app.domain import MessageResponse
+from app.domain.models import (
+    PracticeQuestionCatalogOut,
+    PracticeSubmissionRequest,
+    PracticeSubmissionResponse,
+)
 from app.services import PracticeEvaluationService
 
 router = APIRouter(prefix="/practice", tags=["practice"])
@@ -25,16 +30,23 @@ def practice_root() -> MessageResponse:
     return MessageResponse(message=f"{settings.app_name} · practice module is ready")
 
 
-@router.post("/evaluate", response_model=PracticeEvaluateResponse)
-def evaluate_practice(
-    payload: PracticeEvaluateRequest,
+@router.get("/questions", response_model=PracticeQuestionCatalogOut)
+def list_practice_questions(
+    learner_id: str,
+    course_id: str,
+    knowledge_point_id: str,
     service: PracticeEvaluationService = Depends(_service),
     account: AuthAccount | None = Depends(optional_current_account),
-) -> PracticeEvaluateResponse:
-    """评价一道练习。
+) -> PracticeQuestionCatalogOut:
+    authorize_learning_scope(account, learner_id, course_id)
+    return service.list_practice_questions(learner_id, course_id, knowledge_point_id)
 
-    客户端只提供真实评价结果（is_correct / score / difficulty），
-    mastery_before / mastery_after / confidence / evidence_count 全部由服务端计算。
-    """
+
+@router.post("/evaluate", response_model=PracticeSubmissionResponse)
+def evaluate_practice(
+    payload: PracticeSubmissionRequest,
+    service: PracticeEvaluationService = Depends(_service),
+    account: AuthAccount | None = Depends(optional_current_account),
+) -> PracticeSubmissionResponse:
     authorize_learning_scope(account, payload.learner_id, payload.course_id)
-    return service.evaluate(payload)
+    return service.evaluate_catalog_question(payload)

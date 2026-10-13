@@ -2,6 +2,7 @@
 course_id: course-net
 knowledge_point_id: kp-routing
 title: 交换与路由基础
+prerequisite_ids: kp-ip-addressing
 ---
 
 ## 局域网中的交换

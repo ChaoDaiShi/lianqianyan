@@ -2,6 +2,7 @@
 course_id: course-net
 knowledge_point_id: kp-network-security
 title: 网络安全基础
+prerequisite_ids: kp-tcp-udp
 ---
 
 ## 安全的五个属性

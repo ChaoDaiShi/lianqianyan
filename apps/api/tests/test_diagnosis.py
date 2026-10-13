@@ -227,18 +227,17 @@ def test_practice_update_reflected_in_diagnosis(client: TestClient) -> None:
     m1 = pv1["mastery_score"]
 
     # 完成一次错误练习 → mastery 下降
-    client.post(
+    practice = client.post(
         "/api/practice/evaluate",
         json={
             "learner_id": LEARNER,
             "course_id": COURSE,
             "knowledge_point_id": "kp-pv",
-            "question_id": "q-p2c",
-            "is_correct": False,
-            "score": 0.0,
-            "difficulty": 0.6,
+            "question_id": "question-pv-demo-002",
+            "option_id": "a",
         },
     )
+    assert practice.status_code == 200
 
     r2 = client.get(f"/api/diagnosis/{LEARNER}", params={"course_id": COURSE})
     pv2 = next(p for p in r2.json()["priority_interventions"] + r2.json()["strengths"] + r2.json()["weak_points"] + r2.json()["developing_points"] if p["knowledge_point_id"] == "kp-pv")
@@ -599,18 +598,17 @@ def test_practice_update_reflected_in_profile(client: TestClient) -> None:
     pv1 = kp_map1["kp-pv"]["mastery_score"]
     om1 = r1.json()["overall_mastery"]
 
-    client.post(
+    practice = client.post(
         "/api/practice/evaluate",
         json={
             "learner_id": LEARNER,
             "course_id": COURSE,
             "knowledge_point_id": "kp-pv",
-            "question_id": "q-step2",
-            "is_correct": False,
-            "score": 0.0,
-            "difficulty": 0.6,
+            "question_id": "question-pv-demo-003",
+            "option_id": "a",
         },
     )
+    assert practice.status_code == 200
 
     r2 = client.get(f"/api/profile/{LEARNER}", params={"course_id": COURSE})
     kp_map2 = {kp["knowledge_point_id"]: kp for kp in r2.json()["knowledge_points"]}

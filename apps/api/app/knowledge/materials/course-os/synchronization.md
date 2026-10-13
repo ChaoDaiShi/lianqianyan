@@ -2,6 +2,7 @@
 course_id: course-os
 knowledge_point_id: kp-process-sync
 title: 进程同步
+prerequisite_ids: kp-process-concept
 ---
 
 ## 为什么需要同步

@@ -39,10 +39,8 @@ def _payload() -> dict:
         "learner_id": TEST_LEARNER_ID,
         "course_id": COURSE_OS,
         "knowledge_point_id": "kp-deadlock",
-        "question_id": "q-deadlock-threshold",
-        "is_correct": True,
-        "score": 1.0,
-        "difficulty": 0.6,
+        "question_id": "question-deadlock-001",
+        "option_id": "c",
     }
 
 
@@ -117,7 +115,7 @@ def test_replanning_failure_keeps_practice_committed(factory) -> None:
             learner_id=TEST_LEARNER_ID, knowledge_point_id="kp-deadlock"
         ).one()
         assert mastery.mastery_score == pytest.approx(0.515)
-        assert db.query(LearningEvidence).filter_by(question_id="q-deadlock-threshold").count() == 1
+        assert db.query(LearningEvidence).filter_by(question_id="question-deadlock-001").count() == 1
         old = db.get(StudyPlan, old_plan.id)
         assert old is not None and old.status == StudyPlanStatus.ACTIVE.value
         assert db.query(StudyPlan).count() == 1

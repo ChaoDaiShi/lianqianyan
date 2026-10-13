@@ -1,0 +1,287 @@
+{
+  "courseId": "course-ds",
+  "version": "course-ds-2026.10.14-v2",
+  "reviewStatus": "pending_human_review",
+  "knowledgePoints": [
+    {
+      "id": "kp-ds-complexity",
+      "name": "数据结构与算法分析基础",
+      "order": 1,
+      "difficulty": 2,
+      "material": "complexity.md",
+      "prerequisiteIds": [],
+      "aliases": ["ADT", "抽象数据类型", "渐进复杂度", "算法分析", "time complexity"],
+      "objectives": [
+        { "id": "complexity-adt-model", "text": "区分抽象数据类型规定的操作语义与具体存储结构的实现成本。" },
+        { "id": "complexity-growth-bounds", "text": "按输入规模和基本操作，用 O、Ω、Θ 表达上界、下界与紧确渐进界。" },
+        { "id": "complexity-cases", "text": "在题目给定分布或输入条件下分别判断最好、最坏、平均与摊还成本。" },
+        { "id": "complexity-space", "text": "区分输入空间与辅助空间，并按调用深度估算递归栈开销。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 3 Mathematical Background; Chapter 4 Algorithm Analysis, sections 4.3-4.8 and 4.12",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-linear-list",
+      "name": "线性表与链式结构",
+      "order": 2,
+      "difficulty": 2,
+      "material": "linear-list.md",
+      "prerequisiteIds": ["kp-ds-complexity"],
+      "aliases": ["线性表", "顺序表", "数组表", "单链表", "双向链表", "循环链表", "linked list"],
+      "objectives": [
+        { "id": "linear-adt-storage", "text": "区分线性表的逻辑顺序与顺序存储、链接存储的物理表示。" },
+        { "id": "linear-array-cost", "text": "在给定长度、容量和插入位置时计算顺序表访问、查找、插入与删除成本。" },
+        { "id": "linear-insertion-cost", "text": "区分链表在已知前驱后修改链接的 O(1) 成本与先定位前驱的遍历成本。" },
+        { "id": "linear-list-variants", "text": "比较单链表、双向链表、循环链表和哨兵结点在指定操作下的边界与空间代价。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 5 Linear Structures, sections 5.2-5.7",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "OpenDSA 5.1 Chapter Introduction: Lists",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/ListIntro.html",
+          "locator": "Chapter 5 introduction; list ADT versus array-based and linked implementations",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-stack-queue",
+      "name": "栈、队列与受限线性结构",
+      "order": 3,
+      "difficulty": 2,
+      "material": "stack-queue.md",
+      "prerequisiteIds": ["kp-linear-list"],
+      "aliases": ["栈", "队列", "循环队列", "双端队列", "stack", "queue", "deque"],
+      "objectives": [
+        { "id": "stack-queue-order", "text": "根据 push/pop、enqueue/dequeue 次序推演 LIFO 与 FIFO 的状态变化。" },
+        { "id": "stack-queue-representation", "text": "比较顺序和链接栈队列在端点操作、容量和空间上的成本。" },
+        { "id": "queue-circular-boundary", "text": "在声明的 front/rear 约定下计算循环队列长度、队空与队满条件。" },
+        { "id": "stack-queue-applications", "text": "为括号匹配、撤销、层序遍历与任务排队选择结构并说明依据。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 5 Linear Structures, sections 5.8-5.13",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-recursion",
+      "name": "递归、调用栈与递推",
+      "order": 4,
+      "difficulty": 3,
+      "material": "recursion.md",
+      "prerequisiteIds": ["kp-stack-queue"],
+      "aliases": ["递归", "递推式", "调用栈", "分治", "recursion", "recurrence"],
+      "objectives": [
+        { "id": "recursion-termination", "text": "从终止条件、规模递减和返回值建立过程正确结束的论证。" },
+        { "id": "recursion-trace", "text": "按调用栈的进入与返回顺序手工追踪递归状态。" },
+        { "id": "recursion-recurrence", "text": "由分治子问题数、子问题规模和合并工作写出并比较递推成本。" },
+        { "id": "recursion-space", "text": "按最大同时未返回的调用数估算辅助栈空间，并指出尾递归不自动保证常数空间。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 5, section 5.11 Implementing Recursion; Chapter 3, section 3.6 Recurrence Relations",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L2 Mergesort; course index entry only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-strings",
+      "name": "字符串与模式匹配",
+      "order": 5,
+      "difficulty": 3,
+      "material": "strings.md",
+      "prerequisiteIds": ["kp-linear-list"],
+      "aliases": ["串", "字符串", "朴素匹配", "KMP", "Rabin-Karp", "string matching"],
+      "objectives": [
+        { "id": "string-sequence-model", "text": "把串视为有序符号序列，并明确字符、下标和空串边界约定。" },
+        { "id": "string-naive-match", "text": "逐位推演朴素模式匹配，并用文本长度 n、模式长度 m 估算最坏成本。" },
+        { "id": "string-kmp-fallback", "text": "按最长相等真前缀/后缀计算 KMP 失配回退位置，避免把 next 定义混为一谈。" },
+        { "id": "string-hash-match", "text": "说明 Rabin-Karp 的滚动哈希、碰撞后验证和期望成本假设。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA 27.6 KMP String Search Algorithm",
+          "url": "https://opendsa-server.cs.vt.edu/ODSA/Books/pubbook/odsa-all/fall-2019/Public_Instance/html/StringSearchKMP.html",
+          "locator": "Chapter 27, section 27.6 KMP String Search Algorithm",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L6 Hashing II: table doubling, Karp-Rabin; course index entry only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-trees",
+      "name": "树、二叉树与搜索树",
+      "order": 6,
+      "difficulty": 3,
+      "material": "trees.md",
+      "prerequisiteIds": ["kp-recursion"],
+      "aliases": ["树", "二叉树", "二叉搜索树", "BST", "AVL", "哈夫曼树", "tree"],
+      "objectives": [
+        { "id": "tree-properties", "text": "在根深度和树高约定下使用树、二叉树、满二叉树与完全二叉树性质。" },
+        { "id": "tree-traversals", "text": "按先序、中序、后序和层序规则列出访问次序，并指出辅助结构。" },
+        { "id": "tree-reconstruction", "text": "在键值互异的前提下用中序与先序或后序重建二叉树，并识别重复键导致的歧义。" },
+        { "id": "tree-search-balance", "text": "区分普通 BST 次序约束与 AVL 平衡维护，并按树高分析查找成本。" },
+        { "id": "tree-huffman", "text": "按每次合并两个最小权值构造 Huffman 树并计算带权路径长度。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 7 Binary Trees, sections 7.2-7.18",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L3 Binary search trees; L4 Balanced binary search trees; course index entries only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-heaps",
+      "name": "堆与优先队列",
+      "order": 7,
+      "difficulty": 3,
+      "material": "heaps.md",
+      "prerequisiteIds": ["kp-trees"],
+      "aliases": ["大根堆", "小根堆", "堆排序", "优先队列", "heap", "priority queue"],
+      "objectives": [
+        { "id": "heap-invariant", "text": "区分完全二叉树形状约束与最大堆/最小堆的父子序关系。" },
+        { "id": "heap-array-index", "text": "在明确的零起始或一开始数组约定下计算父结点和孩子下标。" },
+        { "id": "heap-operations", "text": "手工执行插入上滤、删除堆顶下滤，并说明 O(log n) 高度依据。" },
+        { "id": "heap-build-sort", "text": "用自底向上建堆证明线性建堆量级，并说明堆排序不稳定及原地条件。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 7, sections 7.16 Complete Binary Trees and 7.17 Heaps and Priority Queues",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L8-L9 Sorting with heaps; course index entries only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-graphs",
+      "name": "图表示、遍历与图算法",
+      "order": 8,
+      "difficulty": 4,
+      "material": "graphs.md",
+      "prerequisiteIds": ["kp-stack-queue", "kp-recursion"],
+      "aliases": ["图", "邻接矩阵", "邻接表", "BFS", "DFS", "最小生成树", "最短路径", "graph"],
+      "objectives": [
+        { "id": "graph-terms-representations", "text": "区分有向/无向、带权/无权图术语，并比较矩阵与邻接表的空间和访问成本。" },
+        { "id": "graph-traversal", "text": "按显式邻接扫描顺序推演 BFS/DFS，并分析连通与非连通图的遍历成本。" },
+        { "id": "graph-spanning-path", "text": "区分生成树、最小生成树和最短路径，并选择 Prim、Kruskal、Dijkstra 或 Floyd 的适用条件。" },
+        { "id": "graph-dag-order", "text": "用入度法对 DAG 做拓扑排序并判断唯一性、成环条件与关键路径语义。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA 14.1 Graphs Chapter Introduction",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/GraphIntro.html",
+          "locator": "14.1.1 terminology, 14.1.1.1 graph representations; lines 27-57",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L12-L18 graph search, representations, topological sort and shortest paths; course index entries only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-sorting-search",
+      "name": "查找、排序与稳定性",
+      "order": 9,
+      "difficulty": 4,
+      "material": "sorting-search.md",
+      "prerequisiteIds": ["kp-linear-list", "kp-recursion"],
+      "aliases": ["顺序查找", "折半查找", "二分查找", "排序", "稳定排序", "Shell排序", "quick sort", "binary search"],
+      "objectives": [
+        { "id": "search-linear-binary", "text": "比较顺序与折半查找，并明确折半查找依赖有序数据与随机访问。" },
+        { "id": "sort-basic-algorithms", "text": "按给定数组手工执行插入、冒泡、选择、希尔、快排、归并和堆排序的一趟或一轮。" },
+        { "id": "sort-complexity", "text": "在输入与增量假设下比较各排序算法的最好、平均、最坏时间和辅助空间。" },
+        { "id": "sort-stability", "text": "用带相同关键字的记录判断排序稳定性，并区分算法性质与具体实现细节。" },
+        { "id": "sort-linear-time", "text": "判断计数排序与基数排序的键值范围、位数和稳定性前提。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 4 section 4.8 binary search; Chapter 8 sorting, including Shellsort, mergesort and quicksort",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L2 mergesort; L8-L11 heaps, sorting lower bounds and radix sort; course index entries only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    },
+    {
+      "id": "kp-hashing",
+      "name": "散列查找与冲突处理",
+      "order": 10,
+      "difficulty": 3,
+      "material": "hashing.md",
+      "prerequisiteIds": ["kp-linear-list", "kp-ds-complexity"],
+      "aliases": ["哈希", "散列", "冲突", "装载因子", "开放定址", "链地址", "hash table"],
+      "objectives": [
+        { "id": "hash-function-collision", "text": "计算散列地址并识别不同关键字映射到同一槽位的冲突。" },
+        { "id": "hash-collision-strategies", "text": "按题目约定推演链地址、线性探测、二次探测与双重散列的查找和插入。" },
+        { "id": "hash-load-factor-cost", "text": "计算装载因子，并在均匀散列假设与最坏碰撞下分别描述成本。" },
+        { "id": "hash-deletion-resize", "text": "说明开放定址删除标记和扩表重散列的必要性及其均摊成本。" }
+      ],
+      "sourceRefs": [
+        {
+          "title": "OpenDSA CS3 Data Structures & Algorithms",
+          "url": "https://opendsa-server.cs.vt.edu/OpenDSA/Books/CS3/html/index.html",
+          "locator": "Chapter 10 Hashing, including chaining, open addressing, analysis and deletion",
+          "verificationStatus": "reference_checked"
+        },
+        {
+          "title": "MIT OCW 6.006 Lecture Notes",
+          "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-spring-2008/pages/lecture-notes/",
+          "locator": "L5-L7 hashing: chaining, hash functions, table doubling and open addressing; course index entries only",
+          "verificationStatus": "reference_checked"
+        }
+      ]
+    }
+  ]
+}

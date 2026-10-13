@@ -50,6 +50,9 @@ class LexicalKnowledgeRetriever(BaseKnowledgeRetriever):
                 content=chunk.content,
                 score=round(score, 4),
                 source=chunk.source,
+                version=chunk.version,
+                material_path=chunk.material_path,
+                source_refs=chunk.source_refs,
             )
             for score, chunk in ranked[: max(1, min(top_k, 8))]
         ]
@@ -67,6 +70,8 @@ def _score(
         score += overlap / len(query_terms)
     title_terms = _terms(f"{chunk.title} {chunk.section}")
     score += len(query_terms & title_terms) * TITLE_BOOST
+    # Canonical aliases make queries such as BST / 二叉搜索树 share course vocabulary.
+    score += len(query_terms & _terms(" ".join(chunk.aliases))) * 0.5
     if knowledge_point_id and chunk.knowledge_point_id == knowledge_point_id:
         score += KNOWLEDGE_POINT_BOOST
     return score

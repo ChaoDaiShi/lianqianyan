@@ -2,6 +2,7 @@
 course_id: course-os
 knowledge_point_id: kp-scheduling
 title: 进程调度
+prerequisite_ids: kp-process-concept
 ---
 
 ## 调度目标与层次

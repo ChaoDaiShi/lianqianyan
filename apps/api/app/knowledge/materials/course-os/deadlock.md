@@ -2,6 +2,7 @@
 course_id: course-os
 knowledge_point_id: kp-deadlock
 title: 死锁
+prerequisite_ids: kp-process-sync
 ---
 
 ## 定义与判断

@@ -27,6 +27,9 @@ class KnowledgeContextBuilder:
                 section=item.section,
                 knowledge_point_id=item.knowledge_point_id,
                 excerpt=_excerpt(item.content),
+                version=item.version,
+                material_path=item.material_path,
+                source_refs=item.source_refs,
             )
             for item in results
         ]

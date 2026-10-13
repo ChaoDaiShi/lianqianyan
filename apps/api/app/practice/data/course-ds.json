@@ -1,0 +1,2725 @@
+{
+  "version": "ds-bank-2026.10.14-v2",
+  "questions": [
+    {
+      "id": "ds-cx-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-growth-bounds",
+      "stage": "practice",
+      "prompt": "某程序对 n 条记录各扫描一次，并对每条记录再完整扫描 n 条记录。扫描次数的紧确渐进阶是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(n log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n²)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(2ⁿ)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "两层循环各运行 n 次，基本操作总数与 n² 成正比，因此为 Θ(n²)。",
+      "difficulty": 0.25,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-growth-bounds"
+      ],
+      "misconceptionCode": "DC_GROWTH_RATE"
+    },
+    {
+      "id": "ds-cx-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-growth-bounds",
+      "stage": "practice",
+      "prompt": "一个循环第 i 轮执行 i 次基本操作，i 从 1 增长到 n。总操作数属于哪一阶？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(n log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n²)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(1)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "总数为 1+2+…+n=n(n+1)/2，故为 Θ(n²)。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-growth-bounds"
+      ],
+      "misconceptionCode": "DC_GROWTH_RATE"
+    },
+    {
+      "id": "ds-cx-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-growth-bounds",
+      "stage": "practice",
+      "prompt": "算法成本为 7n+4。忽略常数因子和低阶项后的紧确界是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "线性项 7n 支配常数项，紧确渐进阶为 Θ(n)。",
+      "difficulty": 0.2,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-growth-bounds"
+      ],
+      "misconceptionCode": "DC_GROWTH_RATE"
+    },
+    {
+      "id": "ds-cx-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-cases",
+      "stage": "practice",
+      "prompt": "归并过程满足 T(n)=2T(n/2)+Θ(n)，且 n 为 2 的幂。T(n) 属于哪一阶？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(n log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n²)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(log n)"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "每层合并工作总量 Θ(n)，递归树有 Θ(log n) 层，因此 T(n)=Θ(n log n)。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-cases"
+      ],
+      "misconceptionCode": "DC_RECURRENCE"
+    },
+    {
+      "id": "ds-cx-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-growth-bounds",
+      "stage": "probe",
+      "prompt": "在 n 足够大时，以下哪种增长较慢：n log₂n 还是 n^1.5？",
+      "options": [
+        {
+          "id": "a",
+          "label": "n log₂n"
+        },
+        {
+          "id": "b",
+          "label": "n^1.5"
+        },
+        {
+          "id": "c",
+          "label": "两者同阶"
+        },
+        {
+          "id": "d",
+          "label": "无法比较，因为都含 n"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "log n 的增长慢于 n^0.5，所以 n log n=o(n^1.5)。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-growth-bounds"
+      ],
+      "misconceptionCode": "DC_GROWTH_RATE"
+    },
+    {
+      "id": "ds-cx-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-cases",
+      "stage": "probe",
+      "prompt": "动态数组追加一个元素时若触发扩容，本次可能搬移 n 个元素。对连续多次 append 的总序列，几何扩容下通常怎样描述每次追加成本？",
+      "options": [
+        {
+          "id": "a",
+          "label": "每次最坏 O(1)"
+        },
+        {
+          "id": "b",
+          "label": "单次最坏 O(n)，摊还 O(1)"
+        },
+        {
+          "id": "c",
+          "label": "每次平均必须是 Θ(n)"
+        },
+        {
+          "id": "d",
+          "label": "单次与摊还都为 Θ(log n)"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "扩容那一次会搬移 Θ(n) 个元素；几何扩容下，跨连续操作分摊后每次追加摊还 O(1)。",
+      "difficulty": 0.7,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-cases"
+      ],
+      "misconceptionCode": "DC_WORST_VS_AMORTIZED"
+    },
+    {
+      "id": "ds-cx-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-cases",
+      "stage": "retest",
+      "prompt": "在线性数组中顺序查找一个存在的目标。若目标均匀分布在 n 个位置，平均比较次数是什么量级？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "均匀位置下平均比较数约为 (n+1)/2，属于 Θ(n)；若目标在首位才是最好 Θ(1)。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-cases"
+      ],
+      "misconceptionCode": "DC_AVERAGE_VS_WORST"
+    },
+    {
+      "id": "ds-cx-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-ds-complexity",
+      "objectiveId": "complexity-space",
+      "stage": "retest",
+      "prompt": "递归函数每次把规模减 1，直到 0 才返回；最大规模为 n，且没有尾调用优化保证。调用栈辅助空间是什么量级？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "最多同时存在约 n 个未返回调用帧，所以辅助栈空间为 Θ(n)。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-ds-complexity#complexity-space"
+      ],
+      "misconceptionCode": "DC_SPACE_VS_TIME"
+    },
+    {
+      "id": "ds-linear-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-array-cost",
+      "stage": "practice",
+      "prompt": "长度为 8 的顺序表在第 3 个（1 起始）位置前插入一个元素，需后移多少个已有元素？",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "3"
+        },
+        {
+          "id": "c",
+          "label": "6"
+        },
+        {
+          "id": "d",
+          "label": "8"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "要给第 3 位腾出空间，原第 3 到第 8 位共 6 个元素都需后移。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-array-cost"
+      ],
+      "misconceptionCode": "LL_POSITION_COST"
+    },
+    {
+      "id": "ds-linear-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-insertion-cost",
+      "stage": "practice",
+      "prompt": "已有单链表结点 p，要求在 p 之后插入新结点；p 和其后继指针均可直接访问。链接修改的时间复杂度是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n log n)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "已知插入前驱 p，只需常数次指针赋值，不需要遍历。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-insertion-cost"
+      ],
+      "misconceptionCode": "LL_IGNORES_SEARCH_COST"
+    },
+    {
+      "id": "ds-linear-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-insertion-cost",
+      "stage": "practice",
+      "prompt": "单链表只给头指针，要求在值为 X 的结点之前插入新结点；标准实现需要先找到 X 的前驱。最坏时间复杂度是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "单链表没有反向链接，需从头扫描以定位 X 的前驱，最坏 O(n)；定位后插入本身 O(1)。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-insertion-cost"
+      ],
+      "misconceptionCode": "LL_IGNORES_SEARCH_COST"
+    },
+    {
+      "id": "ds-linear-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-array-cost",
+      "stage": "practice",
+      "prompt": "对长度 n 的顺序表按下标 i 读取元素，在数组已分配且下标合法时，成本是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n log n)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "连续存储允许通过基址与偏移直接寻址，按下标访问为 O(1)。",
+      "difficulty": 0.2,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-array-cost"
+      ],
+      "misconceptionCode": "LL_STORAGE_CONFUSION"
+    },
+    {
+      "id": "ds-linear-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-insertion-cost",
+      "stage": "probe",
+      "prompt": "只给单链表头指针，要求删除第 i 个结点（i>1）。为什么整体操作不能直接按已知结点删除的 O(1) 计算？",
+      "options": [
+        {
+          "id": "a",
+          "label": "先定位第 i−1 个前驱，最坏 O(n)；找到后改链接为 O(1)"
+        },
+        {
+          "id": "b",
+          "label": "链表要移动所有后继结点，必为 O(n²)"
+        },
+        {
+          "id": "c",
+          "label": "只要知道 i，就能在单链表随机访问，必为 O(1)"
+        },
+        {
+          "id": "d",
+          "label": "删除结点必然需要二分查找，必为 O(log n)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "题目只给头指针且 i>1，没有给出前驱结点。单链表需先从头定位第 i−1 个结点，最坏 O(n)；随后更新其 next 链接为 O(1)，整体最坏 O(n)。",
+      "difficulty": 0.6,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-insertion-cost"
+      ],
+      "misconceptionCode": "LL_IGNORES_SEARCH_COST"
+    },
+    {
+      "id": "ds-linear-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-list-variants",
+      "stage": "probe",
+      "prompt": "双向链表中，一个非哨兵结点 x 已给出，删除 x 且相邻 prev/next 均可访问。忽略释放器开销，链接操作是什么量级？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n²)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "已知结点可直接改其前后邻居的链接，不需要搜索，因此为 O(1)。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-list-variants"
+      ],
+      "misconceptionCode": "LL_POSITION_COST"
+    },
+    {
+      "id": "ds-linear-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-insertion-cost",
+      "stage": "retest",
+      "prompt": "在单链表头部插入结点时，函数已直接获得头指针。复杂度如何？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)，不需要先扫描定位"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)，因为链表可逐次减半"
+        },
+        {
+          "id": "c",
+          "label": "O(n)，必须找到尾结点"
+        },
+        {
+          "id": "d",
+          "label": "O(n²)，需要移动后半段"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "头部位置由头指针直接给出，只改新结点 next 与 head，操作为 O(1)。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-insertion-cost"
+      ],
+      "misconceptionCode": "LL_IGNORES_SEARCH_COST"
+    },
+    {
+      "id": "ds-linear-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-linear-list",
+      "objectiveId": "linear-list-variants",
+      "stage": "retest",
+      "prompt": "用尾指针表示的循环单链表遍历时，正确的停止条件是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "当前结点为 null"
+        },
+        {
+          "id": "b",
+          "label": "再次回到本轮起始结点"
+        },
+        {
+          "id": "c",
+          "label": "访问到值最大的结点"
+        },
+        {
+          "id": "d",
+          "label": "访问次数达到指针宽度"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "循环链表尾结点 next 指回首结点，不会遇到 null；从起点出发并在再次回到起点时停止。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-linear-list#linear-list-variants"
+      ],
+      "misconceptionCode": "LL_CIRCULAR_BOUNDARY"
+    },
+    {
+      "id": "ds-sq-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "stack-queue-order",
+      "stage": "practice",
+      "prompt": "空栈依次 push(A)、push(B)、push(C)，随后 pop 一次，返回什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "A"
+        },
+        {
+          "id": "b",
+          "label": "B"
+        },
+        {
+          "id": "c",
+          "label": "C"
+        },
+        {
+          "id": "d",
+          "label": "栈为空"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "栈是后进先出，最后压入的 C 最先弹出。",
+      "difficulty": 0.2,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#stack-queue-order"
+      ],
+      "misconceptionCode": "SQ_ORDER_CONFUSION"
+    },
+    {
+      "id": "ds-sq-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "stack-queue-order",
+      "stage": "practice",
+      "prompt": "空队列依次 enqueue(4)、enqueue(7)、enqueue(9)，随后 dequeue 一次，返回什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "4"
+        },
+        {
+          "id": "b",
+          "label": "7"
+        },
+        {
+          "id": "c",
+          "label": "9"
+        },
+        {
+          "id": "d",
+          "label": "队列为空"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "队列是先进先出，最先入队的 4 先出队。",
+      "difficulty": 0.2,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#stack-queue-order"
+      ],
+      "misconceptionCode": "SQ_ORDER_CONFUSION"
+    },
+    {
+      "id": "ds-sq-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "queue-circular-boundary",
+      "stage": "practice",
+      "prompt": "循环队列数组长度为 10，约定保留一个空槽区分满空。最多能存放多少元素？",
+      "options": [
+        {
+          "id": "a",
+          "label": "9"
+        },
+        {
+          "id": "b",
+          "label": "10"
+        },
+        {
+          "id": "c",
+          "label": "11"
+        },
+        {
+          "id": "d",
+          "label": "20"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "保留一个槽后，最多可存 size−1=9 个元素。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#queue-circular-boundary"
+      ],
+      "misconceptionCode": "SQ_CIRCULAR_CAPACITY"
+    },
+    {
+      "id": "ds-sq-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "stack-queue-applications",
+      "stage": "practice",
+      "prompt": "检查表达式中括号是否按最近打开者优先闭合，最直接使用哪种结构？",
+      "options": [
+        {
+          "id": "a",
+          "label": "队列"
+        },
+        {
+          "id": "b",
+          "label": "栈"
+        },
+        {
+          "id": "c",
+          "label": "无序集合"
+        },
+        {
+          "id": "d",
+          "label": "邻接矩阵"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "最新打开且尚未闭合的括号必须先匹配，符合栈的 LIFO。",
+      "difficulty": 0.25,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#stack-queue-applications"
+      ],
+      "misconceptionCode": "SQ_APPLICATION_ORDER"
+    },
+    {
+      "id": "ds-sq-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "queue-circular-boundary",
+      "stage": "probe",
+      "prompt": "循环队列容量为 7，front 指向队头元素，rear 指向下一个空位置。front=4、rear=1 时，元素数为多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "3"
+        },
+        {
+          "id": "c",
+          "label": "4"
+        },
+        {
+          "id": "d",
+          "label": "6"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "按 (rear−front+7) mod 7 计算为 (1−4+7) mod 7=4。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#queue-circular-boundary"
+      ],
+      "misconceptionCode": "SQ_CIRCULAR_INDEX"
+    },
+    {
+      "id": "ds-sq-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "stack-queue-applications",
+      "stage": "probe",
+      "prompt": "无权图从起点按边数逐层发现可达顶点时，待处理顶点通常放在哪种结构？",
+      "options": [
+        {
+          "id": "a",
+          "label": "栈，优先处理最近发现者"
+        },
+        {
+          "id": "b",
+          "label": "队列，优先处理最早发现者"
+        },
+        {
+          "id": "c",
+          "label": "哈希表，按关键字排序"
+        },
+        {
+          "id": "d",
+          "label": "堆，按权重最大者优先"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "BFS 需要按发现先后处理同层顶点，使用 FIFO 队列。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#stack-queue-applications"
+      ],
+      "misconceptionCode": "SQ_APPLICATION_ORDER"
+    },
+    {
+      "id": "ds-sq-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "queue-circular-boundary",
+      "stage": "retest",
+      "prompt": "若循环队列容量为 6、front 指向队头、rear 指向下一个空位置，并采用空一格约定，rear 的下一个位置等于 front 时表示什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "队空"
+        },
+        {
+          "id": "b",
+          "label": "队满"
+        },
+        {
+          "id": "c",
+          "label": "恰有一个元素"
+        },
+        {
+          "id": "d",
+          "label": "容量已经扩大"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "在空一格实现中，rear 再前进一步撞到 front 时表示没有可用槽，即队满。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#queue-circular-boundary"
+      ],
+      "misconceptionCode": "SQ_CIRCULAR_CAPACITY"
+    },
+    {
+      "id": "ds-sq-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-stack-queue",
+      "objectiveId": "stack-queue-order",
+      "stage": "retest",
+      "prompt": "用两个栈实现队列时，输入栈非空且输出栈为空。一次 dequeue 前通常怎样得到最早入队元素？",
+      "options": [
+        {
+          "id": "a",
+          "label": "把输入栈元素逐个弹出并压入输出栈，再从输出栈弹出"
+        },
+        {
+          "id": "b",
+          "label": "直接从输入栈弹出"
+        },
+        {
+          "id": "c",
+          "label": "对输入栈排序后取最小值"
+        },
+        {
+          "id": "d",
+          "label": "清空两个栈并重建队列"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "转移会反转输入栈顺序，使最早入队元素到达输出栈顶；之后可从输出栈弹出。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-stack-queue#stack-queue-order"
+      ],
+      "misconceptionCode": "SQ_ORDER_CONFUSION"
+    },
+    {
+      "id": "ds-rec-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-termination",
+      "stage": "practice",
+      "prompt": "递归计算 n!，且输入保证 n≥0。以下哪组能确保递归终止且结果正确？",
+      "options": [
+        {
+          "id": "a",
+          "label": "n=0 返回 1，否则返回 n×f(n−1)"
+        },
+        {
+          "id": "b",
+          "label": "n=0 返回 0，否则返回 n×f(n+1)"
+        },
+        {
+          "id": "c",
+          "label": "每次继续调用 f(n)"
+        },
+        {
+          "id": "d",
+          "label": "n=1 返回 0，否则返回 f(n−1)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "n=0 是基例，n−1 严格靠近 0；0!=1，递归会终止且符合阶乘定义。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-termination"
+      ],
+      "misconceptionCode": "REC_BASE_CASE"
+    },
+    {
+      "id": "ds-rec-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-space",
+      "stage": "practice",
+      "prompt": "一个递归过程对长度 n 的链表逐结点递归，回到调用点后才处理当前结点。最深时的调用栈空间是什么量级？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "所有 n 个调用在返回前同时挂起，栈帧数与 n 成正比。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-space"
+      ],
+      "misconceptionCode": "REC_STACK_SPACE"
+    },
+    {
+      "id": "ds-rec-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-recurrence",
+      "stage": "practice",
+      "prompt": "归并排序把输入分成两个 n/2 子问题，并用线性时间合并。正确递推式是哪一个？",
+      "options": [
+        {
+          "id": "a",
+          "label": "T(n)=T(n−1)+1"
+        },
+        {
+          "id": "b",
+          "label": "T(n)=2T(n/2)+Θ(n)"
+        },
+        {
+          "id": "c",
+          "label": "T(n)=T(n/2)+Θ(1)"
+        },
+        {
+          "id": "d",
+          "label": "T(n)=nT(n−1)"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "两个半规模递归调用加上线性合并工作，得到 T(n)=2T(n/2)+Θ(n)。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-recurrence"
+      ],
+      "misconceptionCode": "REC_RECURRENCE"
+    },
+    {
+      "id": "ds-rec-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-trace",
+      "stage": "practice",
+      "prompt": "函数 f(n) 在 n>1 时先调用 f(n−1)，返回后打印 n。f(3) 的打印顺序是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "1,2,3"
+        },
+        {
+          "id": "b",
+          "label": "3,2,1"
+        },
+        {
+          "id": "c",
+          "label": "1,3,2"
+        },
+        {
+          "id": "d",
+          "label": "2,1,3"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "调用先深入到 f(1)，然后按返回栈顺序打印 1、2、3。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-trace"
+      ],
+      "misconceptionCode": "REC_CALL_RETURN"
+    },
+    {
+      "id": "ds-rec-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-recurrence",
+      "stage": "probe",
+      "prompt": "分治算法满足 T(n)=2T(n/2)+Θ(n)，n 为 2 的幂。递归树每层工作量与层数分别如何？",
+      "options": [
+        {
+          "id": "a",
+          "label": "每层 Θ(n)，共 Θ(log n) 层"
+        },
+        {
+          "id": "b",
+          "label": "每层 Θ(1)，共 Θ(n) 层"
+        },
+        {
+          "id": "c",
+          "label": "每层 Θ(n²)，共 Θ(log n) 层"
+        },
+        {
+          "id": "d",
+          "label": "每层 Θ(log n)，共 Θ(n) 层"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "两份规模 n/2 子问题与线性合并使每层总工作 Θ(n)，直到常数规模共 Θ(log n) 层。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-recurrence"
+      ],
+      "misconceptionCode": "REC_RECURRENCE"
+    },
+    {
+      "id": "ds-rec-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-termination",
+      "stage": "probe",
+      "prompt": "只定义递归基例 n=0，但允许负整数输入；递归分支调用 f(n−1)。主要问题是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "负数输入会持续远离基例，递归不终止"
+        },
+        {
+          "id": "b",
+          "label": "所有正数都立即返回"
+        },
+        {
+          "id": "c",
+          "label": "调用栈会变为常数空间"
+        },
+        {
+          "id": "d",
+          "label": "结果一定是 Θ(log n)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "若 n<0，反复减一永远到不了 n=0，应限制输入域或为负值定义处理。",
+      "difficulty": 0.6,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-termination"
+      ],
+      "misconceptionCode": "REC_BASE_CASE"
+    },
+    {
+      "id": "ds-rec-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-space",
+      "stage": "retest",
+      "prompt": "递归函数最多同时存在 d 层未返回调用，每层使用常数额外状态。辅助栈空间是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log d)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(d)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(d²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "每层一个常数大小的栈帧，共 d 层，故辅助空间 Θ(d)。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-space"
+      ],
+      "misconceptionCode": "REC_STACK_SPACE"
+    },
+    {
+      "id": "ds-rec-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-recursion",
+      "objectiveId": "recursion-recurrence",
+      "stage": "retest",
+      "prompt": "标准递归 Fibonacci 每次计算 fib(n−1) 与 fib(n−2)，没有缓存。关于运行时间哪个判断安全？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n)，因为参数每次只减一"
+        },
+        {
+          "id": "b",
+          "label": "指数级增长；重叠子问题被重复计算"
+        },
+        {
+          "id": "c",
+          "label": "Θ(log n)，因为有两条递归支路"
+        },
+        {
+          "id": "d",
+          "label": "Θ(1)，因为只返回一个整数"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "无缓存时相同子问题被反复求解，递归树节点数随 n 指数增长；精确常数底数不需要在本题求。",
+      "difficulty": 0.7,
+      "sourceRefs": [
+        "course-ds:kp-recursion#recursion-recurrence"
+      ],
+      "misconceptionCode": "REC_OVERLAPPING_SUBPROBLEMS"
+    },
+    {
+      "id": "ds-str-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-naive-match",
+      "stage": "practice",
+      "prompt": "文本长度 n=12，模式长度 m=4。朴素匹配最多尝试多少个起始位置？",
+      "options": [
+        {
+          "id": "a",
+          "label": "8"
+        },
+        {
+          "id": "b",
+          "label": "9"
+        },
+        {
+          "id": "c",
+          "label": "12"
+        },
+        {
+          "id": "d",
+          "label": "16"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "合法起点从 0 到 n−m，共 n−m+1=9 个。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-naive-match"
+      ],
+      "misconceptionCode": "STR_ALIGNMENT_COUNT"
+    },
+    {
+      "id": "ds-str-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-kmp-fallback",
+      "stage": "practice",
+      "prompt": "KMP 模式前缀为 ABAB，其前缀函数 pi[3]（0 起始）是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "0"
+        },
+        {
+          "id": "b",
+          "label": "1"
+        },
+        {
+          "id": "c",
+          "label": "2"
+        },
+        {
+          "id": "d",
+          "label": "3"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "ABAB 的最长相等真前缀与真后缀是 AB，长度为 2。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-kmp-fallback"
+      ],
+      "misconceptionCode": "STR_PREFIX_FUNCTION"
+    },
+    {
+      "id": "ds-str-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-hash-match",
+      "stage": "practice",
+      "prompt": "Rabin-Karp 中两个不同字符串的散列值相同。为了保证正确性，匹配器下一步必须怎样做？",
+      "options": [
+        {
+          "id": "a",
+          "label": "直接报告匹配"
+        },
+        {
+          "id": "b",
+          "label": "逐字符验证候选窗口"
+        },
+        {
+          "id": "c",
+          "label": "删除文本末尾一个字符"
+        },
+        {
+          "id": "d",
+          "label": "把散列值当成唯一编码"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "散列碰撞可能发生，散列相等只产生候选；还要比较实际字符确认。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-hash-match"
+      ],
+      "misconceptionCode": "STR_HASH_COLLISION"
+    },
+    {
+      "id": "ds-str-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-naive-match",
+      "stage": "practice",
+      "prompt": "假设 1≤m≤n，长度为 n 的文本和长度为 m 的模式用朴素逐位匹配，并报告全部匹配位置。最坏字符比较次数的紧确表达式上界是哪一个？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(n+m)"
+        },
+        {
+          "id": "b",
+          "label": "O(n log m)"
+        },
+        {
+          "id": "c",
+          "label": "O((n−m+1)m)，最坏为 O(nm)"
+        },
+        {
+          "id": "d",
+          "label": "O(2^m)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "有 n−m+1 个合法起点；每个窗口最多比较 m 个字符，所以最坏比较次数至多 (n−m+1)m，渐进上界为 O(nm)。m>n 时没有合法窗口，本题已排除该情形。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-naive-match"
+      ],
+      "misconceptionCode": "STR_COMPLEXITY"
+    },
+    {
+      "id": "ds-str-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-kmp-fallback",
+      "stage": "probe",
+      "prompt": "KMP 当前已匹配模式前 5 个字符，模式前缀为 ABABA；发生失配时 pi[4]=3。新一轮应把已匹配长度 j 设为多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "0"
+        },
+        {
+          "id": "b",
+          "label": "1"
+        },
+        {
+          "id": "c",
+          "label": "3"
+        },
+        {
+          "id": "d",
+          "label": "5"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "KMP 使用已匹配前缀的最长真前后缀长度回退，j=pi[j−1]=pi[4]=3；文本扫描位置不回退。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-kmp-fallback"
+      ],
+      "misconceptionCode": "STR_KMP_FALLBACK"
+    },
+    {
+      "id": "ds-str-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-hash-match",
+      "stage": "probe",
+      "prompt": "Rabin-Karp 在长度 n 文本、长度 m 模式上使用滚动哈希。若出现碰撞并逐字符验证，哪个复杂度表述最稳妥？",
+      "options": [
+        {
+          "id": "a",
+          "label": "所有输入都严格 O(n+m)"
+        },
+        {
+          "id": "b",
+          "label": "期望可近线性，但碰撞/验证可能使最坏达到 O(nm)"
+        },
+        {
+          "id": "c",
+          "label": "最坏 O(log n)"
+        },
+        {
+          "id": "d",
+          "label": "与模式长度无关"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "滚动哈希可减少重复计算；候选窗口的字符验证在大量碰撞时会增加工作，不能把期望效率说成无条件最坏界。",
+      "difficulty": 0.7,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-hash-match"
+      ],
+      "misconceptionCode": "STR_HASH_COLLISION"
+    },
+    {
+      "id": "ds-str-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-kmp-fallback",
+      "stage": "retest",
+      "prompt": "KMP 找到一次完整模式后，若要保留重叠匹配机会，下一步已匹配长度应怎样设置？",
+      "options": [
+        {
+          "id": "a",
+          "label": "总设为 0"
+        },
+        {
+          "id": "b",
+          "label": "设为 pi[m−1]"
+        },
+        {
+          "id": "c",
+          "label": "设为 m+1"
+        },
+        {
+          "id": "d",
+          "label": "重新从文本开头扫描"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "设置 j=pi[m−1] 保留已匹配模式中可复用的最长真前后缀，从而不会跳过重叠出现。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-kmp-fallback"
+      ],
+      "misconceptionCode": "STR_OVERLAP"
+    },
+    {
+      "id": "ds-str-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-strings",
+      "objectiveId": "string-sequence-model",
+      "stage": "retest",
+      "prompt": "若题目抽象地把文本作为长度 n 的符号序列，讨论 KMP 的 O(n+m)，应把“一个字符”理解成什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "固定为一个 UTF-8 字节"
+        },
+        {
+          "id": "b",
+          "label": "题目定义的一个序列符号单位"
+        },
+        {
+          "id": "c",
+          "label": "必然是一个 Unicode 字素簇"
+        },
+        {
+          "id": "d",
+          "label": "只能是 ASCII 数字"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "算法复杂度按抽象输入符号数量计；真实编码中的字节、码点或字素簇需由实现另行定义。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-strings#string-sequence-model"
+      ],
+      "misconceptionCode": "STR_SYMBOL_UNIT"
+    },
+    {
+      "id": "ds-tree-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-reconstruction",
+      "stage": "practice",
+      "prompt": "前序序列 A,B,C 与中序序列 B,A,C 中键值互异。根结点是谁？",
+      "options": [
+        {
+          "id": "a",
+          "label": "A"
+        },
+        {
+          "id": "b",
+          "label": "B"
+        },
+        {
+          "id": "c",
+          "label": "C"
+        },
+        {
+          "id": "d",
+          "label": "无法判断"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "前序首项是根，因此根为 A；中序再把 B 划入左子树、C 划入右子树。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-reconstruction"
+      ],
+      "misconceptionCode": "TREE_RECONSTRUCTION"
+    },
+    {
+      "id": "ds-tree-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-reconstruction",
+      "stage": "practice",
+      "prompt": "只给前序 A,B 和后序 B,A，且结点互异。能否确定 B 是 A 的左孩子还是右孩子？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，B 一定是左孩子"
+        },
+        {
+          "id": "b",
+          "label": "能，B 一定是右孩子"
+        },
+        {
+          "id": "c",
+          "label": "不能，单孩子方向有歧义"
+        },
+        {
+          "id": "d",
+          "label": "两序列互相矛盾"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "只有一个孩子时，前序和后序都无法说明它位于左侧还是右侧。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-reconstruction"
+      ],
+      "misconceptionCode": "TREE_RECONSTRUCTION"
+    },
+    {
+      "id": "ds-tree-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-search-balance",
+      "stage": "practice",
+      "prompt": "普通 BST 按 2、4、6、8 的递增顺序插入，未执行平衡操作。最坏查找成本是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n log n)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "该插入次序可形成右斜链，树高 Θ(n)，查找最坏 O(n)。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-search-balance"
+      ],
+      "misconceptionCode": "BST_ALWAYS_BALANCED"
+    },
+    {
+      "id": "ds-tree-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-huffman",
+      "stage": "practice",
+      "prompt": "Huffman 构造当前权值集合为 1、2、3、4。第一步应合并哪两个叶子？",
+      "options": [
+        {
+          "id": "a",
+          "label": "1 和 2"
+        },
+        {
+          "id": "b",
+          "label": "1 和 4"
+        },
+        {
+          "id": "c",
+          "label": "2 和 3"
+        },
+        {
+          "id": "d",
+          "label": "3 和 4"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "每一步选当前两个最小权值合并，因此第一步是 1 与 2。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-huffman"
+      ],
+      "misconceptionCode": "TREE_HUFFMAN_GREEDY"
+    },
+    {
+      "id": "ds-tree-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-huffman",
+      "stage": "probe",
+      "prompt": "符号权值为 2、3、7、9。每次合并当前最小的两个权值构造 Huffman 树，所得带权路径长度 WPL 是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "31"
+        },
+        {
+          "id": "b",
+          "label": "35"
+        },
+        {
+          "id": "c",
+          "label": "38"
+        },
+        {
+          "id": "d",
+          "label": "42"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "依次合并 2+3=5，5+7=12，9+12=21。WPL 等于每次合并新权值之和 5+12+21=38。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-huffman"
+      ],
+      "misconceptionCode": "TREE_HUFFMAN_WPL"
+    },
+    {
+      "id": "ds-tree-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-search-balance",
+      "stage": "probe",
+      "prompt": "插入后某个 AVL 结点左右子树高度差为 2。若其他约束满足，接下来该结构需要什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "忽略，因为 BST 只要求左小右大"
+        },
+        {
+          "id": "b",
+          "label": "按失衡形态执行旋转恢复 AVL 平衡条件"
+        },
+        {
+          "id": "c",
+          "label": "把所有键重新排序成数组"
+        },
+        {
+          "id": "d",
+          "label": "删除该结点且不重连"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "AVL 要求每个结点左右子树高度差至多 1；失衡后按 LL/RR/LR/RL 形态做旋转。",
+      "difficulty": 0.7,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-search-balance"
+      ],
+      "misconceptionCode": "AVL_BALANCE"
+    },
+    {
+      "id": "ds-tree-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-properties",
+      "stage": "retest",
+      "prompt": "完全二叉树有 7 个结点，根所在层记为第 1 层。其最小可能层数/深度是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "2"
+        },
+        {
+          "id": "b",
+          "label": "3"
+        },
+        {
+          "id": "c",
+          "label": "4"
+        },
+        {
+          "id": "d",
+          "label": "7"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "满二叉树前 3 层共有 1+2+4=7 个结点，因此深度为 3 层。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-properties"
+      ],
+      "misconceptionCode": "TREE_HEIGHT_CONVENTION"
+    },
+    {
+      "id": "ds-tree-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-trees",
+      "objectiveId": "tree-reconstruction",
+      "stage": "retest",
+      "prompt": "BST 插入规则没有说明重复键放左侧、放右侧还是计数。对两个相等键，能否仅凭“BST”判断其位置？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，所有教材都规定重复键放左侧"
+        },
+        {
+          "id": "b",
+          "label": "能，所有教材都规定重复键放右侧"
+        },
+        {
+          "id": "c",
+          "label": "不能，必须说明实现的重复键策略"
+        },
+        {
+          "id": "d",
+          "label": "能，重复键一定删除"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "BST 的键相等处理属于实现约定；没有给定策略时不能唯一推断结构。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-trees#tree-reconstruction"
+      ],
+      "misconceptionCode": "BST_DUPLICATE_POLICY"
+    },
+    {
+      "id": "ds-heap-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-array-index",
+      "stage": "practice",
+      "prompt": "0 起始数组表示的堆中，索引 i=5 的结点，其父结点索引是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "1"
+        },
+        {
+          "id": "b",
+          "label": "2"
+        },
+        {
+          "id": "c",
+          "label": "3"
+        },
+        {
+          "id": "d",
+          "label": "4"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "0 起始表示的父索引为 floor((i−1)/2)=floor(4/2)=2。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-array-index"
+      ],
+      "misconceptionCode": "HEAP_INDEX_CONVENTION"
+    },
+    {
+      "id": "ds-heap-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-invariant",
+      "stage": "practice",
+      "prompt": "一个最大堆的根结点是 90。仅凭最大堆性质可以确定什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "所有元素都按数组顺序递减"
+        },
+        {
+          "id": "b",
+          "label": "根是当前最大元素"
+        },
+        {
+          "id": "c",
+          "label": "最小元素一定在根的左孩子"
+        },
+        {
+          "id": "d",
+          "label": "中序遍历一定有序"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "最大堆只保证每个父结点不小于孩子，因此根为最大值；其余元素不保证全局有序。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-invariant"
+      ],
+      "misconceptionCode": "HEAP_IS_SORTED"
+    },
+    {
+      "id": "ds-heap-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-operations",
+      "stage": "practice",
+      "prompt": "最大堆插入新最大值时，通常从哪里开始并向哪里调整？",
+      "options": [
+        {
+          "id": "a",
+          "label": "追加到数组末尾，再向上滤"
+        },
+        {
+          "id": "b",
+          "label": "覆盖根，再向下滤"
+        },
+        {
+          "id": "c",
+          "label": "插入数组开头，再做全表排序"
+        },
+        {
+          "id": "d",
+          "label": "放在最左叶，保持原序"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "保持完全二叉树形状先把新项追加到末尾，再与父结点比较上滤至满足堆序。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-operations"
+      ],
+      "misconceptionCode": "HEAP_INSERT"
+    },
+    {
+      "id": "ds-heap-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-build-sort",
+      "stage": "practice",
+      "prompt": "用标准自底向上下滤法从无序数组建堆，时间复杂度是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n log n)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "大多数结点高度较低，各层工作求和为 Θ(n)，自底向上建堆为线性时间。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-build-sort"
+      ],
+      "misconceptionCode": "HEAP_BUILD_NLOGN"
+    },
+    {
+      "id": "ds-heap-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-operations",
+      "stage": "probe",
+      "prompt": "删除最大堆根时，用最后一个结点补到根后，怎样恢复最大堆？",
+      "options": [
+        {
+          "id": "a",
+          "label": "向上滤到末尾"
+        },
+        {
+          "id": "b",
+          "label": "与较大的孩子比较并向下交换，直到满足父大于等于子"
+        },
+        {
+          "id": "c",
+          "label": "对全数组快排"
+        },
+        {
+          "id": "d",
+          "label": "只交换左右孩子"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "根可能小于一个孩子，需每次选较大的孩子交换下滤，直到堆序恢复；路径长度 O(log n)。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-operations"
+      ],
+      "misconceptionCode": "HEAP_DELETE_ROOT"
+    },
+    {
+      "id": "ds-heap-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-build-sort",
+      "stage": "probe",
+      "prompt": "标准原地堆排序的关键性质组合是哪一个？",
+      "options": [
+        {
+          "id": "a",
+          "label": "稳定，Θ(n)，需 Θ(n) 辅助数组"
+        },
+        {
+          "id": "b",
+          "label": "不稳定，Θ(n log n)，可用 O(1) 额外数组空间"
+        },
+        {
+          "id": "c",
+          "label": "稳定，Θ(n log n)，只能递归实现"
+        },
+        {
+          "id": "d",
+          "label": "不稳定，Θ(n²)，需 Θ(n) 空间"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "堆排序不保证相等键的相对次序，时间 Θ(n log n)，常见实现原地工作且使用常数额外空间。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-build-sort"
+      ],
+      "misconceptionCode": "HEAP_SORT_STABILITY"
+    },
+    {
+      "id": "ds-heap-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-invariant",
+      "stage": "retest",
+      "prompt": "小根堆根为 3，左孩子为 8，右孩子为 5。能否据此断定数组表示从头到尾升序？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，堆就是排序数组"
+        },
+        {
+          "id": "b",
+          "label": "不能，堆只约束父子序，孩子子树间无全序保证"
+        },
+        {
+          "id": "c",
+          "label": "能，左孩子总比右孩子小"
+        },
+        {
+          "id": "d",
+          "label": "不能，因为小根堆不能保存重复值"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "堆序只要求父节点不大于子节点，不要求同层或整个数组有序。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-invariant"
+      ],
+      "misconceptionCode": "HEAP_IS_SORTED"
+    },
+    {
+      "id": "ds-heap-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-heaps",
+      "objectiveId": "heap-array-index",
+      "stage": "retest",
+      "prompt": "1 起始数组表示堆时，索引 i=9 的结点的父结点索引是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "3"
+        },
+        {
+          "id": "b",
+          "label": "4"
+        },
+        {
+          "id": "c",
+          "label": "5"
+        },
+        {
+          "id": "d",
+          "label": "18"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "1 起始公式 parent=floor(i/2)，所以 floor(9/2)=4。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-heaps#heap-array-index"
+      ],
+      "misconceptionCode": "HEAP_INDEX_CONVENTION"
+    },
+    {
+      "id": "ds-graph-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-traversal",
+      "stage": "practice",
+      "prompt": "无向图从 A 做 BFS；邻居扫描顺序固定为字母升序，A 邻接 B、C，且 B、C 都未访问。先发现谁？",
+      "options": [
+        {
+          "id": "a",
+          "label": "B"
+        },
+        {
+          "id": "b",
+          "label": "C"
+        },
+        {
+          "id": "c",
+          "label": "D"
+        },
+        {
+          "id": "d",
+          "label": "顺序不能确定，因为 BFS 不唯一"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "题目已给定邻居扫描顺序，B 会先于 C 被发现；若扫描顺序改变，合法 BFS 序列也可能改变。",
+      "difficulty": 0.4,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-traversal"
+      ],
+      "misconceptionCode": "GRAPH_TRAVERSAL_UNIQUENESS"
+    },
+    {
+      "id": "ds-graph-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-terms-representations",
+      "stage": "practice",
+      "prompt": "无自环简单有向图的邻接矩阵中，第 i 行元素之和表示什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "顶点 i 的入度"
+        },
+        {
+          "id": "b",
+          "label": "顶点 i 的出度"
+        },
+        {
+          "id": "c",
+          "label": "图的连通分量数"
+        },
+        {
+          "id": "d",
+          "label": "顶点数平方"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "有向矩阵 A[i][j]=1 表示 i 到 j 的弧，因此第 i 行和是出度。无向图的对称矩阵行和则是度。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-terms-representations"
+      ],
+      "misconceptionCode": "GRAPH_MATRIX_DEGREE"
+    },
+    {
+      "id": "ds-graph-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-terms-representations",
+      "stage": "practice",
+      "prompt": "用邻接表对一个无向图做一次完整 DFS，按 V 个顶点和 E 条边计，渐进时间是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(V)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(V²)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(V+E)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(E²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "邻接表遍历每个顶点一次并检查其邻边；无向边在表中出现两次但仍是 Θ(V+E)。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-terms-representations"
+      ],
+      "misconceptionCode": "GRAPH_COMPLEXITY"
+    },
+    {
+      "id": "ds-graph-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-spanning-path",
+      "stage": "practice",
+      "prompt": "从单源到各点求最少边数路径，图为无权图。通常选择什么算法？",
+      "options": [
+        {
+          "id": "a",
+          "label": "BFS"
+        },
+        {
+          "id": "b",
+          "label": "Dijkstra 且必须先赋权"
+        },
+        {
+          "id": "c",
+          "label": "Prim"
+        },
+        {
+          "id": "d",
+          "label": "拓扑排序"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "无权图边数相当于每条边长度 1，BFS 按距离层次扩展，首次发现给出最少边数。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-spanning-path"
+      ],
+      "misconceptionCode": "GRAPH_BFS_WEIGHTED_SHORTEST"
+    },
+    {
+      "id": "ds-graph-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-spanning-path",
+      "stage": "probe",
+      "prompt": "某带权有向图包含负权边。仅凭这些条件，能否直接保证 Dijkstra 正确？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，Dijkstra 对任意有向图都正确"
+        },
+        {
+          "id": "b",
+          "label": "不能；标准 Dijkstra 要求边权非负"
+        },
+        {
+          "id": "c",
+          "label": "能，只要图连通"
+        },
+        {
+          "id": "d",
+          "label": "不能；MST 必须先存在"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "标准 Dijkstra 的贪心定点依赖非负边权；有负权边时不能无条件保证正确。",
+      "difficulty": 0.6,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-spanning-path"
+      ],
+      "misconceptionCode": "GRAPH_DIJKSTRA_NEGATIVE_EDGE"
+    },
+    {
+      "id": "ds-graph-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-spanning-path",
+      "stage": "probe",
+      "prompt": "一个连通带权无向图的最小生成树最小化什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "指定根到每个顶点的最长距离"
+        },
+        {
+          "id": "b",
+          "label": "整棵树所选边的权值总和"
+        },
+        {
+          "id": "c",
+          "label": "每对顶点最短路径长度之和"
+        },
+        {
+          "id": "d",
+          "label": "图中边数最大值"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "MST 在覆盖所有顶点的生成树中最小化边权总和，不保证产生任意指定根的最短路径树。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-spanning-path"
+      ],
+      "misconceptionCode": "GRAPH_MST_VS_SHORTEST_PATH"
+    },
+    {
+      "id": "ds-graph-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-dag-order",
+      "stage": "retest",
+      "prompt": "有向图执行 Kahn 入度法时，尚有顶点未输出但队列已空。能推出什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "图中有环"
+        },
+        {
+          "id": "b",
+          "label": "图一定是强连通"
+        },
+        {
+          "id": "c",
+          "label": "存在唯一拓扑序"
+        },
+        {
+          "id": "d",
+          "label": "图是无权图"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "有未输出顶点却没有入度为 0 的候选，剩余子图中存在有向环。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-dag-order"
+      ],
+      "misconceptionCode": "GRAPH_TOPOLOGY_CYCLE"
+    },
+    {
+      "id": "ds-graph-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-graphs",
+      "objectiveId": "graph-traversal",
+      "stage": "retest",
+      "prompt": "同一张图使用邻接矩阵做 DFS，改变顶点扫描顺序后访问序列是否可能改变？",
+      "options": [
+        {
+          "id": "a",
+          "label": "不可能，邻接矩阵固定唯一顺序"
+        },
+        {
+          "id": "b",
+          "label": "可能；若顶点/邻居扫描规则固定则结果可重复"
+        },
+        {
+          "id": "c",
+          "label": "不可能，DFS 只能有一个序列"
+        },
+        {
+          "id": "d",
+          "label": "只有图是完全图时会改变"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "图可能有多种合法 DFS 顺序；具体实现扫描邻接点的顺序决定本次序列，矩阵本身不赋予唯一性。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-graphs#graph-traversal"
+      ],
+      "misconceptionCode": "GRAPH_TRAVERSAL_UNIQUENESS"
+    },
+    {
+      "id": "ds-sort-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "search-linear-binary",
+      "stage": "practice",
+      "prompt": "二分查找的输入是一段未排序数组 [8,2,7,1,5]。能否按标准二分查找直接保证找到目标？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，数组下标连续就足够"
+        },
+        {
+          "id": "b",
+          "label": "不能，必须先按关键字排序或另有有序判定结构"
+        },
+        {
+          "id": "c",
+          "label": "能，只要用递归版本"
+        },
+        {
+          "id": "d",
+          "label": "不能，因为二分查找只支持链表"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "标准二分查找每次根据中间值排除一半区间，依赖关键字有序且可有效访问中点。",
+      "difficulty": 0.35,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#search-linear-binary"
+      ],
+      "misconceptionCode": "SS_BINARY_SEARCH_PRECONDITION"
+    },
+    {
+      "id": "ds-sort-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-stability",
+      "stage": "practice",
+      "prompt": "稳定排序处理记录 (key=2,id=A)、(key=1,id=X)、(key=2,id=B) 后，两个 key=2 记录应是什么次序？",
+      "options": [
+        {
+          "id": "a",
+          "label": "A 再 B"
+        },
+        {
+          "id": "b",
+          "label": "B 再 A"
+        },
+        {
+          "id": "c",
+          "label": "顺序无约束"
+        },
+        {
+          "id": "d",
+          "label": "必须按 id 排序"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "稳定性定义为相等关键字记录保留输入相对次序，因此 A 仍在 B 前。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-stability"
+      ],
+      "misconceptionCode": "SS_SORT_STABILITY"
+    },
+    {
+      "id": "ds-sort-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-complexity",
+      "stage": "practice",
+      "prompt": "Shell 排序没有给出 gap 序列。此时能否指定一个普遍适用的单一渐进复杂度？",
+      "options": [
+        {
+          "id": "a",
+          "label": "能，所有 gap 都是 Θ(n log n)"
+        },
+        {
+          "id": "b",
+          "label": "能，所有 gap 都是 Θ(n^1.3)"
+        },
+        {
+          "id": "c",
+          "label": "不能，复杂度依赖 gap 序列"
+        },
+        {
+          "id": "d",
+          "label": "能，所有 gap 都是 Θ(n²)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "Shell 排序的复杂度与选用的增量序列相关；缺少 gap 序列时不能给一个通用紧确阶。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-complexity"
+      ],
+      "misconceptionCode": "SS_SHELL_GAP"
+    },
+    {
+      "id": "ds-sort-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-complexity",
+      "stage": "practice",
+      "prompt": "快速排序每次都选最后一个元素作枢轴，输入已升序且分区每次切成 0 与 n−1。最坏时间是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(log n)"
+        },
+        {
+          "id": "c",
+          "label": "Θ(n log n)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n²)"
+        }
+      ],
+      "correctOptionId": "d",
+      "explanation": "递推约为 T(n)=T(n−1)+Θ(n)，累加为 Θ(n²)；快排的表现受枢轴与输入影响。",
+      "difficulty": 0.5,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-complexity"
+      ],
+      "misconceptionCode": "SS_QUICKSORT_WORST_CASE"
+    },
+    {
+      "id": "ds-sort-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-linear-time",
+      "stage": "probe",
+      "prompt": "稳定的 LSD 基数排序每一趟按一位数字分组。每趟所用的稳定排序为什么重要？",
+      "options": [
+        {
+          "id": "a",
+          "label": "保证上一趟已确定的低位相对次序不被打乱"
+        },
+        {
+          "id": "b",
+          "label": "让键值自动变为比较模型输入"
+        },
+        {
+          "id": "c",
+          "label": "可以省略最高有效位"
+        },
+        {
+          "id": "d",
+          "label": "保证任何整数范围都为 O(n)"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "低位优先基数排序依赖每趟稳定性，使前一趟已排序的低位次序在当前位排序后仍保留。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-linear-time"
+      ],
+      "misconceptionCode": "SS_RADIX_STABILITY"
+    },
+    {
+      "id": "ds-sort-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-linear-time",
+      "stage": "probe",
+      "prompt": "计数排序对 n 个整数键工作，键值范围大小为 k。更准确的时间/空间界是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "Θ(n log n)，O(1)"
+        },
+        {
+          "id": "b",
+          "label": "Θ(n+k) 时间，通常 Θ(n+k) 额外空间"
+        },
+        {
+          "id": "c",
+          "label": "Θ(k log n)，O(n²)"
+        },
+        {
+          "id": "d",
+          "label": "Θ(n) 时间且与 k 无关"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "计数数组需要 Θ(k)，处理和输出元素需要 Θ(n)；当 k 远大于 n 时不再是线性于 n 的小成本。",
+      "difficulty": 0.6,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-linear-time"
+      ],
+      "misconceptionCode": "SS_COUNTING_RANGE"
+    },
+    {
+      "id": "ds-sort-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-stability",
+      "stage": "retest",
+      "prompt": "标准选择排序每轮把未排序区最小元素与首元素直接交换。是否稳定？",
+      "options": [
+        {
+          "id": "a",
+          "label": "稳定，因只交换一次"
+        },
+        {
+          "id": "b",
+          "label": "通常不稳定，交换可能越过相等键"
+        },
+        {
+          "id": "c",
+          "label": "一定稳定，只看比较符"
+        },
+        {
+          "id": "d",
+          "label": "无法讨论稳定性，因为它是比较排序"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "最小值与首位交换可能跨过一个相等键，例如 2A,2B,1 变为 1,2B,2A，破坏稳定性。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-stability"
+      ],
+      "misconceptionCode": "SS_SORT_STABILITY"
+    },
+    {
+      "id": "ds-sort-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-sorting-search",
+      "objectiveId": "sort-complexity",
+      "stage": "retest",
+      "prompt": "快速排序的平均比较次数 Θ(n log n) 是否意味着对每个输入都能保证 Θ(n log n)？",
+      "options": [
+        {
+          "id": "a",
+          "label": "是，平均和最坏相同"
+        },
+        {
+          "id": "b",
+          "label": "否；坏枢轴划分会造成 Θ(n²) 最坏情况"
+        },
+        {
+          "id": "c",
+          "label": "否；任何输入都是 Θ(n²)"
+        },
+        {
+          "id": "d",
+          "label": "是，只要输入不含重复键"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "平均分析是对输入或枢轴分布的假设；最坏分割可能退化为长度 n 的单侧递归。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-sorting-search#sort-complexity"
+      ],
+      "misconceptionCode": "SS_QUICKSORT_WORST_CASE"
+    },
+    {
+      "id": "ds-hash-practice-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-load-factor-cost",
+      "stage": "practice",
+      "prompt": "散列表有 m=50 个槽，存有 n=30 条记录。装载因子 α 是多少？",
+      "options": [
+        {
+          "id": "a",
+          "label": "0.4"
+        },
+        {
+          "id": "b",
+          "label": "0.6"
+        },
+        {
+          "id": "c",
+          "label": "1.2"
+        },
+        {
+          "id": "d",
+          "label": "20"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "α=n/m=30/50=0.6。",
+      "difficulty": 0.25,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-load-factor-cost"
+      ],
+      "misconceptionCode": "HASH_LOAD_FACTOR"
+    },
+    {
+      "id": "ds-hash-practice-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-collision-strategies",
+      "stage": "practice",
+      "prompt": "链地址法中多个关键字映射到同一槽位后，通常怎样保存？",
+      "options": [
+        {
+          "id": "a",
+          "label": "沿该槽关联的桶/链保存冲突项"
+        },
+        {
+          "id": "b",
+          "label": "覆盖掉旧项且不记录"
+        },
+        {
+          "id": "c",
+          "label": "把整张表转成有序数组"
+        },
+        {
+          "id": "d",
+          "label": "直接把槽号改成关键字"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "链地址法在槽位关联的链或桶中保存同一散列地址下的多个记录。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-collision-strategies"
+      ],
+      "misconceptionCode": "HASH_COLLISION_METHOD"
+    },
+    {
+      "id": "ds-hash-practice-03",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-collision-strategies",
+      "stage": "practice",
+      "prompt": "线性探测插入多个冲突键时，连续占用的槽段可能导致什么现象？",
+      "options": [
+        {
+          "id": "a",
+          "label": "主聚集，后续探测变长"
+        },
+        {
+          "id": "b",
+          "label": "保证零冲突"
+        },
+        {
+          "id": "c",
+          "label": "冲突自动消失"
+        },
+        {
+          "id": "d",
+          "label": "只影响删除、不影响查找"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "线性探测会形成连续占用区，称为主聚集，更多键会进入该区并增加探测长度。",
+      "difficulty": 0.45,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-collision-strategies"
+      ],
+      "misconceptionCode": "HASH_LINEAR_PROBING_CLUSTERING"
+    },
+    {
+      "id": "ds-hash-practice-04",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-function-collision",
+      "stage": "practice",
+      "prompt": "查找得到散列值为 12。是否可以不比较关键字就断定目标记录就是槽中对象？",
+      "options": [
+        {
+          "id": "a",
+          "label": "可以，散列地址唯一代表键"
+        },
+        {
+          "id": "b",
+          "label": "不可以，仍需检查键相等以排除碰撞"
+        },
+        {
+          "id": "c",
+          "label": "可以，只要负载因子小于 1"
+        },
+        {
+          "id": "d",
+          "label": "不可以，散列查找不能使用关键字"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "不同关键字可能有相同散列地址，候选记录仍需做关键字相等验证。",
+      "difficulty": 0.3,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-function-collision"
+      ],
+      "misconceptionCode": "HASH_COLLISION_CHECK"
+    },
+    {
+      "id": "ds-hash-probe-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-load-factor-cost",
+      "stage": "probe",
+      "prompt": "在均匀散列且装载因子受控的假设下，链地址查找常描述为期望 O(1+α)。若所有 n 个键都碰撞到一个槽，最坏是什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "O(1)"
+        },
+        {
+          "id": "b",
+          "label": "O(log n)"
+        },
+        {
+          "id": "c",
+          "label": "O(n)"
+        },
+        {
+          "id": "d",
+          "label": "O(n log n)"
+        }
+      ],
+      "correctOptionId": "c",
+      "explanation": "均匀假设失效时，单条链可能含 n 项，查找最坏线性。期望界不能当成无条件保证。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-load-factor-cost"
+      ],
+      "misconceptionCode": "HASH_EXPECTED_VS_WORST"
+    },
+    {
+      "id": "ds-hash-probe-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-collision-strategies",
+      "stage": "probe",
+      "prompt": "表长为 7，线性探测，h(k)=k mod 7，依次插入 10、17、24。它们落在哪些槽？",
+      "options": [
+        {
+          "id": "a",
+          "label": "3、4、5"
+        },
+        {
+          "id": "b",
+          "label": "3、3、3"
+        },
+        {
+          "id": "c",
+          "label": "3、2、1"
+        },
+        {
+          "id": "d",
+          "label": "0、1、2"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "10%7=3；17 冲突后探测 4；24 在 3、4 冲突后放到 5。",
+      "difficulty": 0.55,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-collision-strategies"
+      ],
+      "misconceptionCode": "HASH_LINEAR_PROBING"
+    },
+    {
+      "id": "ds-hash-retest-01",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-deletion-resize",
+      "stage": "retest",
+      "prompt": "开放定址查找沿探测序列遇到被删除位置。若直接清成“从未使用”状态，可能发生什么？",
+      "options": [
+        {
+          "id": "a",
+          "label": "后续冲突键可能变得不可达"
+        },
+        {
+          "id": "b",
+          "label": "所有键自动重散列"
+        },
+        {
+          "id": "c",
+          "label": "只会造成额外内存"
+        },
+        {
+          "id": "d",
+          "label": "不会影响查找"
+        }
+      ],
+      "correctOptionId": "a",
+      "explanation": "查找通常在首次遇到从未使用槽时停止；若把中间删除槽清空，可能提前终止而漏掉后续冲突键，需墓碑标记或重建簇。",
+      "difficulty": 0.65,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-deletion-resize"
+      ],
+      "misconceptionCode": "HASH_TOMBSTONE"
+    },
+    {
+      "id": "ds-hash-retest-02",
+      "version": "ds-bank-2026.10.14-v2",
+      "courseId": "course-ds",
+      "knowledgePointId": "kp-hashing",
+      "objectiveId": "hash-deletion-resize",
+      "stage": "retest",
+      "prompt": "散列表几何扩容时，触发扩容的那次插入需要重散列旧记录。哪种描述符合摊还分析？",
+      "options": [
+        {
+          "id": "a",
+          "label": "每次插入最坏都 O(1)"
+        },
+        {
+          "id": "b",
+          "label": "一次扩容可 O(n)，但跨长序列每次插入摊还 O(1)"
+        },
+        {
+          "id": "c",
+          "label": "扩容成本永远 Θ(log n)"
+        },
+        {
+          "id": "d",
+          "label": "扩容不需要重新计算散列地址"
+        }
+      ],
+      "correctOptionId": "b",
+      "explanation": "单次扩容会搬迁 Θ(n) 记录；几何增长让扩容总成本分摊到先前多次插入后可得摊还 O(1)。",
+      "difficulty": 0.7,
+      "sourceRefs": [
+        "course-ds:kp-hashing#hash-deletion-resize"
+      ],
+      "misconceptionCode": "HASH_RESIZE_AMORTIZED"
+    }
+  ]
+}
