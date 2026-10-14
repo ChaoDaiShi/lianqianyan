@@ -411,7 +411,12 @@ export function AdaptiveLearningPage() {
               </span>
             </div>
             <div className='grid gap-4 sm:grid-cols-2'>
-              {catalog.topics.map((item, index) => (
+              {(initialQuery.topic
+                ? [...catalog.topics].sort((left, right) =>
+                    Number(right.id === initialQuery.topic) - Number(left.id === initialQuery.topic),
+                  )
+                : catalog.topics
+              ).map((item, index) => (
                 <TopicCard
                   key={item.id}
                   topic={item}
@@ -492,7 +497,7 @@ export function AdaptiveLearningPage() {
                   >
                     <option value='none'>完整机制</option>
                     <option value='misconception'>关闭误解匹配</option>
-                    <option value='prerequisites'>关闭前置关系</option>
+                    <option value='prerequisites'>不使用前置薄弱信息</option>
                     <option value='ranking'>关闭候选行动排序</option>
                   </select>
                 </label>
@@ -539,6 +544,9 @@ export function AdaptiveLearningPage() {
                 <p className='font-semibold'>评估结果已保存。</p>
                 {session.replanning.status === 'performed' && (
                   <p>服务端已完成学习路线重排。</p>
+                )}
+                {session.replanning.status === 'not_needed' && (
+                  <p>本次评估后无需调整学习路线。</p>
                 )}
                 {session.replanning.status === 'failed' && (
                   <p role='alert' className='text-amber-900'>评估和证据已保存，但学习路线重排未完成。{session.replanning.reasonCodes.length ? ` 原因：${session.replanning.reasonCodes.join('、')}` : ''}</p>
@@ -906,21 +914,21 @@ function KnowledgeStateCard({ session }: { session: LeapSession }) {
         ATS 算法状态与证据
       </p>
       <div className='mt-4 grid gap-3 sm:grid-cols-3'>
-        <AlgorithmMetric label='M · 掌握度' value={percent(state.mastery)} />
+        <AlgorithmMetric label='M · LEAP 掌握估计' value={percent(state.mastery)} />
         <AlgorithmMetric label='U · 不确定性' value={percent(state.uncertainty)} />
         <AlgorithmMetric label='评价证据数' value={String(state.evidenceCount)} />
       </div>
       <p className='mt-3 text-xs leading-5 text-[var(--em-muted-ink)]'>
-        M 与 U 来自当前知识状态；接口未返回 M 更新前值或掌握度置信区间。两者不以独立后测分数替代。
+        M 是未校准的 LEAP 掌握估计，U 是不确定性指标，均由当前证据按规则计算；它们与独立后测实际分数分别呈现。
       </p>
       {session.diagnosis && (
         <p className='mt-2 text-xs text-[var(--em-muted-ink)]'>
-          误解假设置信度 {percent(session.diagnosis.confidence)} · {session.diagnosis.needsProbe ? '仍待独立新题验证' : '依据当前诊断作答'}
+          误解候选规则支持度 {percent(session.diagnosis.confidence)}（未校准） · {session.diagnosis.needsProbe ? '仍待独立新题验证' : '依据当前诊断作答'}
         </p>
       )}
       {state.misconceptions.length > 0 && (
         <div className='mt-4 border-t border-[var(--em-border)] pt-4'>
-          <p className='text-xs font-semibold text-[var(--em-ink)]'>Q · 误解候选分布</p>
+          <p className='text-xs font-semibold text-[var(--em-ink)]'>Q · 规则误解候选权重</p>
           <ul className='mt-3 space-y-3'>
             {state.misconceptions.map(item => (
               <li key={item.code}>
@@ -931,7 +939,7 @@ function KnowledgeStateCard({ session }: { session: LeapSession }) {
                 <div
                   className='mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--em-surface-subtle)]'
                   role='progressbar'
-                  aria-label={`${item.code} 误解候选概率`}
+                  aria-label={`${item.code} 规则误解候选权重`}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(item.probability * 100)}
@@ -1207,7 +1215,7 @@ function OutcomeCard({
         </span>
         <div>
           <p className='text-[11px] font-semibold text-emerald-600'>
-            评估结果已保存
+            {session.assessmentStatus === 'saved' ? '评估结果已保存' : '评估结果待保存'}
           </p>
           <h2 className='mt-2 text-xl font-bold text-[var(--em-ink)]'>
             {outcome.correct
@@ -1240,12 +1248,17 @@ function OutcomeCard({
         </span>
         <span className='rounded-full bg-[var(--em-primary-subtle)] px-3 py-1.5 text-[11px] text-[var(--em-primary)]'>
           {outcome.misconceptionStatus === 'repaired'
-            ? '目标误解在新题中得到修复证据'
+            ? '本次验证通过'
             : outcome.misconceptionStatus === 'persisting'
-              ? '误解仍待修复'
-              : '误解假设继续观察'}
+              ? '误解候选仍需巩固'
+              : '误解候选继续观察'}
         </span>
       </div>
+      {outcome.misconceptionStatus === 'repaired' && isUnsetScore(outcome.retestScore) && (
+        <p className='mt-2 text-xs leading-5 text-[var(--em-muted-ink)]'>
+          对应误解候选暂缓，保持情况待复测。
+        </p>
+      )}
       <div className='mt-5 rounded-2xl border border-[var(--em-border)] bg-[var(--em-primary-subtle)] p-4'>
         <p className='flex items-center gap-2 text-xs font-semibold text-[var(--em-primary)]'>
           <GitBranch className='h-4 w-4' />
@@ -1280,6 +1293,9 @@ function OutcomeCard({
         )}
         <Button asChild variant='ghost'>
           <Link to='/outcome-lab'>查看成效记录</Link>
+        </Button>
+        <Button asChild variant='outline'>
+          <Link to='/archive'>查看学习档案</Link>
         </Button>
       </div>
     </section>

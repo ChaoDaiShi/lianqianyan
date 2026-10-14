@@ -1,0 +1,70 @@
+{
+  "candidate": "a63da76-worktree-20261014-leap-freeze",
+  "executionKind": "technical_demo",
+  "participantAlias": "学生 B · 技术演示续验",
+  "courseId": "course-ds",
+  "topicId": "linked-list",
+  "catalogVersion": "course-ds-leap-2026.10.14-v2",
+  "policyVersion": "leap-ranking-2026.10.14-v2",
+  "questionBankVersion": "ds-bank-2026.10.14-v2",
+  "modelVersion": "bkt-evidence-replay-v2-uncalibrated",
+  "sessionRef": "ref-001",
+  "practice": {
+    "questionId": "ds-linear-practice-02",
+    "questionVersion": "ds-bank-2026.10.14-v2",
+    "score": 0,
+    "gradingVersion": "server-objective-choice-v1",
+    "evidenceRef": "ref-002",
+    "occurredAt": "2026-10-14T02:11:29.978034",
+    "independent": false,
+    "hintUsed": false,
+    "countsForMastery": true
+  },
+  "diagnostic": {
+    "questionId": "ds-ll-diagnostic-q07",
+    "questionVersion": "course-ds-leap-2026.10.14-v2",
+    "score": 0,
+    "gradingVersion": "server-objective-choice-v1",
+    "evidenceRef": "ref-003",
+    "occurredAt": "2026-10-14T02:12:01.736062",
+    "independent": true,
+    "hintUsed": false,
+    "countsForMastery": true
+  },
+  "decision": {
+    "actionType": "contrastive_teaching",
+    "reason": "承接上一步的明确教学动作建议。 已知误解策略偏好 1.00；预计 5 分钟，时间匹配 1.00，成本因子 0.17",
+    "policyVersion": "leap-ranking-2026.10.14-v2",
+    "evidenceRefs": [
+      "ref-003"
+    ]
+  },
+  "probe": {
+    "questionId": "ds-linear-probe-01",
+    "questionVersion": "ds-bank-2026.10.14-v2",
+    "score": 1,
+    "gradingVersion": "server-objective-choice-v1",
+    "evidenceRef": "ref-004",
+    "occurredAt": "2026-10-14T02:12:02.159656",
+    "independent": true,
+    "hintUsed": false,
+    "countsForMastery": true
+  },
+  "replanning": {
+    "status": "not_needed",
+    "reasonCodes": [
+      "NO_MATERIAL_CHANGE"
+    ],
+    "previousPlanId": "ref-005",
+    "newPlanId": null
+  },
+  "retestDueAt": "2026-10-21T02:12:02Z",
+  "retest": null,
+  "retentionStatus": "RETENTION_PENDING",
+  "effectClaim": "not_established",
+  "softwareGate": "PASS",
+  "preScore": 0,
+  "postScore": 1,
+  "scoreComparable": false,
+  "observedGain": null
+}

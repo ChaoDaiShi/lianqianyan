@@ -125,6 +125,15 @@ export function summarizeByGroup(sessions: LeapSession[]) {
   });
 }
 
+export function ablationLabel(ablation: LeapSession['ablation']): string {
+  return {
+    none: '无消融',
+    misconception: '关闭误解匹配',
+    prerequisites: '不使用前置薄弱信息',
+    ranking: '关闭 LEAP 排序，回退课程固定动作',
+  }[ablation];
+}
+
 function escapeCsv(value: unknown): string {
   const text = value === null || value === undefined ? '' : String(value);
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -193,12 +202,12 @@ export function serializeOutcomeCsv(payload: LeapExportPayload): string {
 export function serializeGroupOutcomeCsv(sessions: LeapSession[]): string {
   const headers = [
     '策略组',
-    '会话数',
-    '无提示独立样本 N',
+    '总会话数',
+    '无提示后测会话数',
     '前测均值',
     '后测均值',
     '后测样本标准差',
-    '可比增益样本 N',
+    '可比增益会话数',
     '可比增益均值',
     '可比性说明',
   ];
@@ -212,8 +221,8 @@ export function serializeGroupOutcomeCsv(sessions: LeapSession[]): string {
     summary.gainN,
     summary.meanGain,
     summary.gainN === 0
-      ? '没有后端标记为可比且含实际观察增益的样本，未计算差值。'
-      : '仅汇总后端标记 scoreComparable=true 的 observedGain。',
+      ? '没有后端标记为可比且含实际观察增益的会话，未计算差值。'
+      : '仅汇总后端标记 scoreComparable=true 且有 observedGain 的会话。',
   ]);
   return serializeRows([headers, ...rows]);
 }

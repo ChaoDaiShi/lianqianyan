@@ -330,7 +330,7 @@ class ProfileOut(BaseModel):
 
 
 class PracticeEvaluateRequest(BaseModel):
-    """练习评价请求 —— 客户端只提供真实学习行为 / 评价结果。"""
+    """内部遗留评价 DTO；公共练习入口使用 PracticeSubmissionRequest，由服务端根据题库评分。"""
 
     learner_id: str
     course_id: str

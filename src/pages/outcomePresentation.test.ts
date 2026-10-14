@@ -203,7 +203,7 @@ describe('outcome presentation', () => {
       session('one', outcome({ preScore: 0.2, postScore: 0.8 })),
     ]);
 
-    expect(csv.split('\r\n')[0]).toContain('可比增益样本 N,可比增益均值');
+    expect(csv.split('\r\n')[0]).toContain('可比增益会话数,可比增益均值');
     expect(csv).not.toContain('归一化增益');
   });
 });

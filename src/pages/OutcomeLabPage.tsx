@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -26,6 +27,7 @@ import {
   independentOutcomes,
   independentSessions,
   isIndependentOutcome,
+  ablationLabel,
   serializeGroupOutcomeCsv,
   serializeOutcomeCsv,
   summarizeByGroup,
@@ -43,7 +45,7 @@ const groupNames = {
   A: '通用固定基线',
   B: '课程固定策略',
   C: '证据动态策略',
-  D: 'LEAP 完整机制',
+  D: 'LEAP 规则机制',
 };
 
 export function OutcomeLabPage() {
@@ -118,7 +120,7 @@ export function OutcomeLabPage() {
                 成效观察实验室
               </h1>
               <p className='mt-2 max-w-2xl text-sm leading-6 text-[var(--em-muted-ink)]'>
-                仅汇总无提示独立作答；前测、即时后测与延迟复测分别呈现，只有后端标记可比的结果才计算增益。
+                仅汇总无提示独立后测记录，计数单位为会话，不代表学生人数；前测、即时后测与延迟复测分别呈现，只有后端标记可比的结果才计算增益。
               </p>
             </div>
             <div className='flex gap-2'>
@@ -185,9 +187,9 @@ export function OutcomeLabPage() {
             <div className='grid grid-cols-2 gap-3 xl:grid-cols-5'>
               <Stat
                 icon={Fingerprint}
-                label='独立样本 N'
+                label='无提示后测会话数'
                 value={String(summary.n)}
-                detail='仅含 independent=true 且 hintUsed=false'
+                detail='仅含 independent=true 且 hintUsed=false；同一学习者的多次会话分别计数。'
               />
               <Stat
                 icon={TrendingUp}
@@ -197,15 +199,15 @@ export function OutcomeLabPage() {
               />
               <Stat
                 icon={Target}
-                label='后测样本标准差 SD'
+                label='后测成绩标准差 SD'
                 value={summary.postSd === null ? '待采集' : `${(summary.postSd * 100).toFixed(1)} 分`}
-                detail={summary.n < 2 ? '至少需要 2 个独立样本' : `样本标准差 · n=${summary.n}`}
+                detail={summary.n < 2 ? '至少需要 2 条无提示后测会话' : `样本标准差 · 会话数 n=${summary.n}`}
               />
               <Stat
                 icon={GitBranch}
                 label='可比增益均值'
                 value={summary.meanGain === null ? '未计算' : `${summary.meanGain > 0 ? '+' : ''}${Math.round(summary.meanGain * 100)} 个百分点`}
-                detail={summary.gainN === 0 ? '当前没有后端标记为可比的前后测；保留两项原始成绩。' : `仅汇总后端标记 scoreComparable=true 的样本 · n=${summary.gainN}`}
+                detail={summary.gainN === 0 ? '当前没有后端标记为可比的前后测；保留两项原始成绩。' : `仅汇总后端标记 scoreComparable=true 的会话 · n=${summary.gainN}`}
               />
               <Stat
                 icon={CalendarClock}
@@ -217,7 +219,7 @@ export function OutcomeLabPage() {
             <dl aria-label='服务端会话计数' className='grid grid-cols-2 gap-3 rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] px-4 py-3 text-xs sm:grid-cols-4'>
               <MetricCount label='总会话' value={data.stats.totalSessions} />
               <MetricCount label='服务端完成会话' value={data.stats.completedSessions} />
-              <MetricCount label='误解修复记录' value={data.stats.misconceptionsRepaired} />
+              <MetricCount label='本次验证通过记录' value={data.stats.misconceptionsRepaired} />
               <MetricCount label='到期复测' value={data.stats.delayedDue} />
             </dl>
             <div className='grid items-stretch gap-5 xl:grid-cols-[1.18fr_1fr]'>
@@ -225,7 +227,7 @@ export function OutcomeLabPage() {
                 <PanelTitle
                   icon={TrendingUp}
                   title='A–D 策略组描述统计'
-                  description='柱条分别呈现独立、无提示会话的前测、即时后测与复测均值；未标记可比的前后测不计算差值。'
+                  description='柱条分别呈现无提示后测会话的前测、即时后测与复测均值；组内会话数不是学生人数，未标记可比的前后测不计算差值。'
                 />
                 <GroupComparison groups={groupSummaries} />
                 <div className='mt-3 flex flex-wrap gap-4 text-[10px] text-[var(--em-muted-ink)]'>
@@ -241,7 +243,7 @@ export function OutcomeLabPage() {
                   <span>单位：作答成绩 %</span>
                 </div>
                 <p className='mt-4 rounded-lg bg-[var(--em-surface-subtle)] p-3 text-xs leading-5 text-[var(--em-muted-ink)]'>
-                  前测与独立后测的题型或评分标准尚未校准，当前只分别展示实际分数，不计算增益。这里是个人会话的描述性记录，不据此推断因果效果。
+                  前测与独立后测的题型或评分标准尚未校准，当前只分别展示实际分数，不计算增益。这里是当前学习者按会话形成的描述性记录；同一人多次会话不是多个学生，也不据此推断因果效果。
                 </p>
               </section>
               <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
@@ -341,9 +343,9 @@ export function OutcomeLabPage() {
                               {session.topicName}
                             </p>
                             <p className='mt-1 text-[10px] text-[var(--em-muted-ink)]'>
-                              {session.experimentGroup} ·{' '}
-                              {session.decision?.label ??
-                                groupNames[session.experimentGroup]}
+                              {session.experimentGroup} · {groupNames[session.experimentGroup]}
+                              {session.decision?.label ? ` · 本次决策：${session.decision.label}` : ''}
+                              {session.experimentGroup === 'D' ? ` · 消融：${ablationLabel(session.ablation)}` : ''}
                             </p>
                           </td>
                           <td className='px-3 py-4 text-[var(--em-muted-ink)]'>
@@ -413,7 +415,7 @@ export function OutcomeLabPage() {
           </>
         )}
       </div>
-      {exportOpen && exportPayload && (
+      {exportOpen && exportPayload && createPortal(
         <div className='fixed inset-0 z-50 bg-slate-950/40'>
           <section
             role='dialog'
@@ -439,7 +441,8 @@ export function OutcomeLabPage() {
               {JSON.stringify(exportPayload, null, 2)}
             </pre>
           </section>
-        </div>
+        </div>,
+        document.body,
       )}
     </AppShell>
   );
@@ -506,7 +509,7 @@ function GroupComparison({ groups }: { groups: ReturnType<typeof summarizeByGrou
         <section key={group} className='rounded-lg border border-[var(--em-border)] p-3'>
           <div className='flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1'>
             <h3 className='text-sm font-semibold text-[var(--em-ink)]'>{group} · {groupNames[group]}</h3>
-            <p className='text-xs text-[var(--em-muted-ink)]'>{summary.n} 个独立样本 / {sessions} 个会话 · 可比增益样本 {summary.gainN}{summary.meanGain === null ? '' : ` · 均值 ${summary.meanGain > 0 ? '+' : ''}${Math.round(summary.meanGain * 100)} 个百分点`}</p>
+            <p className='text-xs text-[var(--em-muted-ink)]'>无提示后测 {summary.n} 条 / 总会话 {sessions} 次 · 可比增益会话 {summary.gainN}{summary.meanGain === null ? '' : ` · 均值 ${summary.meanGain > 0 ? '+' : ''}${Math.round(summary.meanGain * 100)} 个百分点`}</p>
           </div>
           <div className='mt-3 space-y-2'>
             {[
@@ -538,12 +541,12 @@ function MechanismMatrix() {
     { group: 'A', strategy: groupNames.A, misconception: '不匹配', ranking: '通用固定动作', probe: '无提示新题' },
     { group: 'B', strategy: groupNames.B, misconception: '不匹配', ranking: '课程固定动作', probe: '无提示新题' },
     { group: 'C', strategy: groupNames.C, misconception: '不匹配', ranking: '依据掌握证据与前置状态', probe: '无提示新题' },
-    { group: 'D', strategy: groupNames.D, misconception: '按候选误解匹配', ranking: '按误解、前置、证据与时间排序', probe: '无提示新题' },
+    { group: 'D', strategy: `${groupNames.D}（常规配置）`, misconception: '按课程知识结构匹配误解候选', ranking: '按误解、前置、证据与时间规则排序', probe: '无提示新题' },
   ] as const;
 
   return (
     <section className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 shadow-[var(--em-shadow-sm)] sm:p-6'>
-      <PanelTitle icon={GitBranch} title='A–D 教学机制对照' description='按服务端策略规则标注机制。D 组会话若启用消融，以该会话记录的消融设置为准。' />
+      <PanelTitle icon={GitBranch} title='A–D 教学机制对照' description='此表描述各组策略配置，不表示随机分组或因果结果。D 组常规配置为 LEAP 规则机制；单条会话的实际消融见会话记录，组内统计不按消融拆分。' />
       <div className='mt-4 overflow-x-auto'>
         <table className='w-full min-w-[760px] border-collapse text-left text-xs'>
           <thead className='bg-[var(--em-surface-subtle)] text-[var(--em-muted-ink)]'>

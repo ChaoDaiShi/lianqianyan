@@ -1,0 +1,942 @@
+{
+  "candidate": "a63da76-worktree-20261014-leap-freeze",
+  "browser": "Chrome / Playwright (Browser plugin not available)",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 960
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "checks": [
+    {
+      "name": "续验账号真实注册",
+      "status": "PASS"
+    },
+    {
+      "name": "新账号无预置证据",
+      "status": "PASS"
+    },
+    {
+      "name": "服务端正确与错误评分分别为1和0",
+      "status": "PASS"
+    },
+    {
+      "name": "普通练习非独立且服务端可信",
+      "status": "PASS"
+    },
+    {
+      "name": "刷新不重复产生证据",
+      "status": "PASS"
+    },
+    {
+      "name": "真实薄弱点推荐指向链表且展示2条评价证据",
+      "status": "PASS"
+    },
+    {
+      "name": "topic入口不自动创建会话",
+      "status": "PASS"
+    },
+    {
+      "name": "形成课程误解候选且普通练习进入LEAP状态",
+      "status": "PASS"
+    },
+    {
+      "name": "执行真实服务端对比教学建议",
+      "status": "PASS"
+    },
+    {
+      "name": "独立题不同于诊断与练习",
+      "status": "PASS"
+    },
+    {
+      "name": "独立阶段教学提示收起",
+      "status": "PASS"
+    },
+    {
+      "name": "独立后测真实通过且未计算不可比增益",
+      "status": "PASS"
+    },
+    {
+      "name": "保存状态与实际重规划结果可读",
+      "status": "PASS"
+    },
+    {
+      "name": "真实七天复测待完成",
+      "status": "PASS"
+    },
+    {
+      "name": "刷新恢复结果并可达真实档案",
+      "status": "PASS"
+    },
+    {
+      "name": "成效统计为当前学习者会话而非独立学生",
+      "status": "PASS"
+    },
+    {
+      "name": "不可比增益显示未计算",
+      "status": "PASS"
+    },
+    {
+      "name": "导出包含实际会话",
+      "status": "PASS"
+    },
+    {
+      "name": "分组CSV下载与会话表头正确",
+      "status": "PASS"
+    },
+    {
+      "name": "修复后导出面板位于顶层可点击",
+      "status": "PASS"
+    },
+    {
+      "name": "原失败关闭操作已通过",
+      "status": "PASS"
+    },
+    {
+      "name": "手机首页无横向页面溢出",
+      "status": "PASS"
+    },
+    {
+      "name": "手机推荐主按钮可见",
+      "status": "PASS"
+    },
+    {
+      "name": "手机结果页无横向页面溢出",
+      "status": "PASS"
+    },
+    {
+      "name": "手机档案出口可操作",
+      "status": "PASS"
+    },
+    {
+      "name": "浏览器无页面脚本异常",
+      "status": "PASS"
+    },
+    {
+      "name": "浏览器无构建错误遮罩",
+      "status": "PASS"
+    },
+    {
+      "name": "手机推荐按钮未被底部导航遮挡",
+      "status": "PASS"
+    },
+    {
+      "name": "手机推荐按钮实际进入目标主题",
+      "status": "PASS"
+    },
+    {
+      "name": "手机导出面板关闭正常",
+      "status": "PASS"
+    }
+  ],
+  "http": [
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/public/config",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/api/auth/course",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/plans/generate",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/learning/start",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/points/kp-linear-list",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/evaluate",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/questions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/points/kp-linear-list",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/adaptive/sessions",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/adaptive/sessions/[id]/diagnose",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/adaptive/sessions/[id]/intervene",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/adaptive/sessions/[id]/ready-probe",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/adaptive/sessions/[id]/probe",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/exams/analytics",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/experiments/export",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/experiments/export",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/exams/analytics",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/diagnosis/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/profile/[id]",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/catalog",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/sessions",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/courses",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/learning/evidence",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/overview",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/adaptive/experiments/export",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "knownHttpConditions": [
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/plans/current",
+      "status": 404
+    }
+  ],
+  "interruption": {
+    "stage": "attempt-1 export close",
+    "cause": "global fixed header intercepted nested modal close button",
+    "fix": "createPortal into document.body",
+    "recheck": "PASS"
+  }
+}

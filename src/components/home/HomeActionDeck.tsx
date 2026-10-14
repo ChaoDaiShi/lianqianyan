@@ -127,7 +127,7 @@ export function HomeActionDeck({
               <p className='mt-1 max-w-xl text-sm leading-6 text-[var(--em-muted-ink)]'>
                 {evidenceCount > 0
                   ? `已有 ${evidenceCount} 条学习行为记录；它们不代表诊断结果。`
-                  : '欢迎进入学习空间。先完成一次 5 分钟快速水平摸底诊断。'}
+                  : '欢迎进入学习空间。先完成一次短诊断。'}
                 {' '}完成诊断后，系统会根据真实作答安排学习任务。
               </p>
             </div>

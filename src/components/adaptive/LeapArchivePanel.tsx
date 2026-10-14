@@ -1,8 +1,17 @@
 import { CalendarClock, CheckCircle2, Clock3, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useApi } from '@/lib/services';
-import { fetchLeapOverview } from '@/lib/adaptiveApi';
+import { fetchLeapOverview, type LeapSession } from '@/lib/adaptiveApi';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID } from '@/store';
+
+function ablationLabel(ablation: LeapSession['ablation']) {
+  return {
+    none: '无消融',
+    misconception: '关闭误解匹配',
+    prerequisites: '不使用前置薄弱信息',
+    ranking: '关闭 LEAP 排序，回退课程固定动作',
+  }[ablation];
+}
 
 function formatTime(value: string) {
   return new Date(value).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -43,7 +52,7 @@ export function LeapArchivePanel({ learnerId = ACTIVE_LEARNER_ID, courseId = ACT
             return (
               <li key={session.id} className="rounded-2xl border border-[var(--em-border)] bg-[var(--em-surface)] p-4 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div><h3 className="font-bold">{session.topicName}</h3><p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">{formatTime(session.createdAt)} · {session.policy === 'leap' ? 'LEAP 策略' : '固定策略'} · 组别 {session.experimentGroup}</p></div>
+                  <div><h3 className="font-bold">{session.topicName}</h3><p className="mt-1 text-[10px] text-[var(--em-muted-ink)]">{formatTime(session.createdAt)} · {session.policy === 'leap' ? 'LEAP 策略' : '固定策略'} · 组别 {session.experimentGroup}{session.experimentGroup === 'D' ? ` · 消融：${ablationLabel(session.ablation)}` : ''}</p></div>
                   <Link to={`/adaptive?session=${encodeURIComponent(session.id)}`} className="text-xs font-semibold text-[var(--em-primary-deep)] hover:underline">{session.phase === 'completed' ? '查看结果' : '继续会话'} →</Link>
                 </div>
                 {session.assessmentStatus === 'saved' ? <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs text-emerald-800">评估结果已保存。</p> : null}
@@ -60,7 +69,7 @@ export function LeapArchivePanel({ learnerId = ACTIVE_LEARNER_ID, courseId = ACT
                   </article>
                   <article className="rounded-xl bg-emerald-50 p-3">
                     <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" />独立后测</p>
-                    {session.outcome ? <><p className="mt-2 text-xs leading-5">{session.outcome.feedback}</p><p className="mt-2 text-xs font-bold">{hasIndependentResult ? '独立作答' : '非独立练习'} · 得分 {formatScore(session.outcome.score)} · 前测 {formatScore(session.outcome.preScore)} / 后测 {formatScore(session.outcome.postScore)} · {comparableGain}</p><p className="mt-1 text-[10px] leading-5 text-[var(--em-muted-ink)]">{session.outcome.comparisonReason ?? '前后测可比性未提供。'} · {formatTime(session.outcome.completedAt)} · 误解状态：{session.outcome.misconceptionStatus === 'repaired' ? '已修复' : session.outcome.misconceptionStatus === 'persisting' ? '仍存在' : '待确认'}</p></> : independentPosttest ? <><p className="mt-2 text-xs leading-5">{independentPosttest.summary}</p><p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">{formatTime(independentPosttest.createdAt)} · {independentPosttest.kind === 'probe' ? '迁移探测' : independentPosttest.kind === 'retest' ? '延迟复测' : '练习'} · 得分 {formatScore(independentPosttest.score)}；结果尚未写入 outcome。</p></> : <p className="mt-2 text-xs text-[var(--em-muted-ink)]">尚未产生独立后测结果。</p>}</article>
+                    {session.outcome ? <><p className="mt-2 text-xs leading-5">{session.outcome.feedback}</p><p className="mt-2 text-xs font-bold">{hasIndependentResult ? '独立作答' : '非独立练习'} · 得分 {formatScore(session.outcome.score)} · 前测 {formatScore(session.outcome.preScore)} / 后测 {formatScore(session.outcome.postScore)} · {comparableGain}</p><p className="mt-1 text-[10px] leading-5 text-[var(--em-muted-ink)]">{session.outcome.comparisonReason ?? '前后测可比性未提供。'} · {formatTime(session.outcome.completedAt)} · 本次误解状态：{session.outcome.misconceptionStatus === 'repaired' ? session.outcome.retestScore === null ? '本次验证通过；对应误解候选暂缓，保持情况待复测' : '本次验证通过' : session.outcome.misconceptionStatus === 'persisting' ? '误解候选仍存在' : '误解候选待确认'}</p></> : independentPosttest ? <><p className="mt-2 text-xs leading-5">{independentPosttest.summary}</p><p className="mt-2 text-[10px] text-[var(--em-muted-ink)]">{formatTime(independentPosttest.createdAt)} · {independentPosttest.kind === 'probe' ? '迁移探测' : independentPosttest.kind === 'retest' ? '延迟复测' : '练习'} · 得分 {formatScore(independentPosttest.score)}；结果尚未写入 outcome。</p></> : <p className="mt-2 text-xs text-[var(--em-muted-ink)]">尚未产生独立后测结果。</p>}</article>
                 </div>
                 {session.outcome?.retestScore !== null && session.outcome?.retestScore !== undefined ? <p className="mt-3 rounded-xl bg-[var(--em-surface)] px-3 py-2 text-xs">延迟复测得分：{formatScore(session.outcome.retestScore)}</p> : session.retestDueAt ? <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">延迟复测待完成 · 计划时间 {formatTime(session.retestDueAt)}</p> : null}
               </li>

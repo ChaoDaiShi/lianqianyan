@@ -1,0 +1,74 @@
+{
+  "initialFrontend": [
+    {
+      "name": "check",
+      "startedAt": "2026-10-14T02:02:49.6788059Z",
+      "command": "pnpm check",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:03:14.3660956Z"
+    },
+    {
+      "name": "vitest",
+      "startedAt": "2026-10-14T02:03:14.40162Z",
+      "command": "pnpm exec vitest run",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:03:54.7726627Z"
+    },
+    {
+      "name": "video-tooling",
+      "startedAt": "2026-10-14T02:03:54.7840957Z",
+      "command": "pnpm exec node --test scripts/demo-video/demo-video-lib.test.mjs",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:03:56.5392568Z"
+    },
+    {
+      "name": "build",
+      "startedAt": "2026-10-14T02:03:56.5477581Z",
+      "command": "pnpm build",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:04:32.3796146Z"
+    }
+  ],
+  "counts": {
+    "backendTests": 348,
+    "browserChecks": 30,
+    "vitestTests": 407,
+    "videoTests": 12,
+    "vitestFiles": 126
+  },
+  "backend": {
+    "startedAt": "2026-10-14T02:02:49.688467Z",
+    "finishedAt": "2026-10-14T02:06:37.5698175Z",
+    "name": "pytest",
+    "command": "uv run pytest -q",
+    "exitCode": 0
+  },
+  "notes": [
+    "Frontend rerun followed a real export-close UI failure and targeted portal fix.",
+    "Backend and video tooling were unchanged and were not rerun."
+  ],
+  "finalFrontend": [
+    {
+      "startedAt": "2026-10-14T02:13:32.8035459Z",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:13:57.402216Z",
+      "name": "check",
+      "command": "pnpm check"
+    },
+    {
+      "startedAt": "2026-10-14T02:13:57.4572366Z",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:14:30.3559026Z",
+      "name": "vitest",
+      "command": "pnpm exec vitest run"
+    },
+    {
+      "startedAt": "2026-10-14T02:14:30.373209Z",
+      "exitCode": 0,
+      "finishedAt": "2026-10-14T02:15:03.7511711Z",
+      "name": "build",
+      "command": "pnpm build"
+    }
+  ],
+  "candidate": "a63da76-worktree-20261014-leap-freeze"
+}

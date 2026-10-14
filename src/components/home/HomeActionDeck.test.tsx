@@ -36,7 +36,8 @@ describe('HomeActionDeck', () => {
 
     expect(html).toContain('尚未完成课程诊断');
     expect(html).toContain('href="/adaptive"');
-    expect(html).toContain('5 分钟快速水平摸底诊断');
+    expect(html).toContain('先完成一次短诊断');
+    expect(html).not.toContain('5 分钟快速水平摸底诊断');
     expect(html).not.toContain('0%');
   });
 

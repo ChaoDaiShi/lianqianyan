@@ -15,7 +15,7 @@ function phaseLabel(phase: LeapSession['phase']) {
 }
 
 function misconceptionStatusLabel(status: NonNullable<LeapSession['outcome']>['misconceptionStatus']) {
-  return { repaired: '已修复', persisting: '仍存在', uncertain: '待确认' }[status];
+  return { repaired: '本次验证通过', persisting: '误解候选仍存在', uncertain: '误解候选待确认' }[status];
 }
 
 function formatScore(score: number) {
@@ -67,7 +67,7 @@ export function LeapEntryCard({
               <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">
                 {current.decision?.reason ?? current.diagnosis?.reason ?? `当前阶段：${phaseLabel(current.phase)}；已记录 ${current.evidence.length} 条学习证据。`}
               </p>
-              {current.outcome ? <p className="mt-1 text-xs text-[var(--em-ink)]">无提示独立后测：{current.outcome.independent && !current.outcome.hintUsed ? '是' : '否'} · 得分 {formatScore(current.outcome.score)} · 误解{misconceptionStatusLabel(current.outcome.misconceptionStatus)}</p> : null}
+              {current.outcome ? <><p className="mt-1 text-xs text-[var(--em-ink)]">无提示独立后测：{current.outcome.independent && !current.outcome.hintUsed ? '是' : '否'} · 得分 {formatScore(current.outcome.score)} · {misconceptionStatusLabel(current.outcome.misconceptionStatus)}</p>{current.outcome.misconceptionStatus === 'repaired' ? <p className="mt-1 text-xs leading-5 text-[var(--em-muted-ink)]">{current.outcome.retestScore === null ? '对应误解候选暂缓，保持情况待复测。' : `延迟复测实际得分：${formatScore(current.outcome.retestScore)}。`}</p> : null}</> : null}
               <Link to={destination} className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-[var(--em-action)] px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[var(--em-action-hover)]">{active ? '继续 LEAP 学习' : '查看本次结果'} <ArrowRight className="h-3.5 w-3.5" /></Link>
             </>
           ) : (

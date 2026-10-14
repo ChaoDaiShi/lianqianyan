@@ -2,13 +2,28 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { HomeActionDeck } from '@/components/home/HomeActionDeck';
 import { HomeEvidencePanel } from '@/components/home/HomeEvidencePanel';
+import { HomeLeapRecommendation } from '@/components/home/HomeLeapRecommendation';
 import { TodaysJourney } from '@/components/home/TodaysJourney';
 import { LearningEntryDialog } from '@/components/learning/LearningEntryDialog';
 import { useStartPlanTask } from '@/components/learning/useStartPlanTask';
+import { Button } from '@/components/ui/button';
 import { useCurrentPlan, useDiagnosis, useLearnerProfile, useRecentEvidence } from '@/lib/hooks';
-import { fetchLeapSessions, type LeapSession } from '@/lib/adaptiveApi';
+import { fetchLeapCatalog, fetchLeapOverview, type LeapCatalog, type LeapOverview } from '@/lib/adaptiveApi';
+import type { LeapRecommendation } from '@/lib/leapRecommendation';
+import { selectLeapRecommendation } from '@/lib/leapRecommendation';
 import { ACTIVE_COURSE_ID, ACTIVE_LEARNER_ID, useXiaolianRuntimeStore } from '@/store';
 import { formatApiTime } from '@/lib/apiTime';
+
+const COURSE_ENTRY_RECOMMENDATION: LeapRecommendation = {
+  kind: 'course-entry',
+  title: '前往数据结构诊断',
+  reason: 'LEAP 当前面向数据结构课程；你可以在课程入口自行切换。',
+  actionLabel: '打开课程入口',
+  href: '/adaptive',
+  topicId: null,
+  sessionId: null,
+  evidenceCount: null,
+};
 
 function formatDate(value: string) {
   return formatApiTime(value, {
@@ -27,9 +42,10 @@ function Home() {
   const plan = useCurrentPlan(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID);
   const evidence = useRecentEvidence();
   const { startTask, startingTaskId, error: startError } = useStartPlanTask();
-  const [leapSessions, setLeapSessions] = useState<LeapSession[]>([]);
-  const [sessionsLoading, setSessionsLoading] = useState(ACTIVE_COURSE_ID === 'course-ds');
-  const [sessionsError, setSessionsError] = useState<string | null>(null);
+  const [leapCatalog, setLeapCatalog] = useState<LeapCatalog | null>(null);
+  const [leapOverview, setLeapOverview] = useState<LeapOverview | null>(null);
+  const [leapLoading, setLeapLoading] = useState(ACTIVE_COURSE_ID === 'course-ds');
+  const [leapError, setLeapError] = useState(false);
   const setRuntimeState = useXiaolianRuntimeStore(runtime => runtime.setRuntimeState);
   const setCompanionState = useXiaolianRuntimeStore(runtime => runtime.setCompanionState);
   const resetRuntime = useXiaolianRuntimeStore(runtime => runtime.reset);
@@ -44,22 +60,35 @@ function Home() {
   const loading = profile.loading || diagnosis.loading || plan.loading || evidence.loading;
   const error = profile.error || diagnosis.error || plan.error || evidence.error;
 
-  const loadSessions = useCallback(() => {
+  const loadLeap = useCallback(() => {
     if (ACTIVE_COURSE_ID !== 'course-ds') {
-      setSessionsLoading(false);
+      setLeapCatalog(null);
+      setLeapOverview(null);
+      setLeapLoading(false);
+      setLeapError(false);
       return;
     }
-    setSessionsLoading(true);
-    setSessionsError(null);
-    void fetchLeapSessions(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID)
-      .then(setLeapSessions)
-      .catch(cause => setSessionsError(cause instanceof Error ? cause.message : '请求失败'))
-      .finally(() => setSessionsLoading(false));
+    setLeapLoading(true);
+    setLeapError(false);
+    void Promise.all([
+      fetchLeapCatalog(),
+      fetchLeapOverview(ACTIVE_LEARNER_ID, ACTIVE_COURSE_ID),
+    ])
+      .then(([nextCatalog, nextOverview]) => {
+        setLeapCatalog(nextCatalog);
+        setLeapOverview(nextOverview);
+      })
+      .catch(() => setLeapError(true))
+      .finally(() => setLeapLoading(false));
   }, []);
 
   useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
+    loadLeap();
+  }, [loadLeap]);
+  useEffect(() => {
+    window.addEventListener('educationmind:evidence-updated', loadLeap);
+    return () => window.removeEventListener('educationmind:evidence-updated', loadLeap);
+  }, [loadLeap]);
   useEffect(() => {
     if (plan.generating || loading) setRuntimeState('loading');
     else setRuntimeState('idle');
@@ -77,8 +106,23 @@ function Home() {
     void diagnosis.refetch();
     void plan.refetch();
     void evidence.refetch();
-    loadSessions();
+    loadLeap();
   };
+  const recommendationLoading = ACTIVE_COURSE_ID === 'course-ds' &&
+    (leapLoading || diagnosis.loading);
+  const recommendationError = ACTIVE_COURSE_ID === 'course-ds' &&
+    (leapError || diagnosis.error);
+  const recommendation = ACTIVE_COURSE_ID !== 'course-ds'
+    ? COURSE_ENTRY_RECOMMENDATION
+    : !recommendationLoading && !recommendationError && leapCatalog && leapOverview
+      ? selectLeapRecommendation({
+          courseId: ACTIVE_COURSE_ID,
+          catalog: leapCatalog,
+          overview: leapOverview,
+          diagnosis: diagnosis.data,
+          nowMs: Date.now(),
+        })
+      : null;
 
   return (
     <AppShell scene='companion'>
@@ -127,6 +171,20 @@ function Home() {
               onPrepareTask={() => setEntryOpen(true)}
               onRetry={retry}
             />
+            {recommendationLoading ? (
+              <p role='status' className='rounded-xl border border-[var(--em-border)] bg-[var(--em-surface)] p-5 text-sm text-[var(--em-muted-ink)]'>
+                正在读取针对性学习建议…
+              </p>
+            ) : recommendationError ? (
+              <div role='alert' className='flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5'>
+                <p className='text-sm text-amber-900'>针对性学习建议暂时无法读取。</p>
+                <Button variant='outline' size='sm' onClick={retry}>
+                  重新加载建议
+                </Button>
+              </div>
+            ) : recommendation ? (
+              <HomeLeapRecommendation recommendation={recommendation} />
+            ) : null}
             <TodaysJourney
               diagnosis={diagnosis.data}
               plan={plan.plan}
@@ -144,9 +202,9 @@ function Home() {
               evidenceError={evidence.error}
               onRetryEvidence={() => void evidence.refetch()}
               diagnosis={diagnosis.data}
-              sessions={leapSessions}
-              sessionsLoading={sessionsLoading}
-              sessionsError={sessionsError}
+              sessions={leapOverview?.sessions ?? []}
+              sessionsLoading={leapLoading}
+              sessionsError={leapError ? '复测安排暂时无法读取。' : null}
             />
           </aside>
         </div>

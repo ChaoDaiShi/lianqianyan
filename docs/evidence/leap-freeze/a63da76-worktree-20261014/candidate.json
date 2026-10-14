@@ -1,0 +1,66 @@
+{
+  "candidate": "a63da76-worktree-20261014-leap-freeze",
+  "baseline": "a63da76880a631713baaaff158df1dec3dba28f4",
+  "sourceFiles": [
+    {
+      "path": "apps/api/app/domain/models.py",
+      "sha256": "086F5F4220807CC2097BBBDC96E2D3097065F50BBB8DD2D4562E8738E0EC8F69"
+    },
+    {
+      "path": "src/components/adaptive/LeapArchivePanel.tsx",
+      "sha256": "17E4D6588DF05D3A240969B211B1D5E2173F95758F1EC0B6566BBC35D1D150DF"
+    },
+    {
+      "path": "src/components/adaptive/LeapEntryCard.tsx",
+      "sha256": "1E37B600A0141CB22EBBCC9F6D0FEEC41CDDC51502CF758629C1E37BAAB6294E"
+    },
+    {
+      "path": "src/components/adaptive/LeapObservationPanel.tsx",
+      "sha256": "3A01FDB16C03D881FD4B64A979E618A0DA4FA14A249CCA2CB1DAA22D1D924F41"
+    },
+    {
+      "path": "src/components/home/HomeActionDeck.test.tsx",
+      "sha256": "9D443164DD83F75AF1054C241E04992862D98F30614A55B447076501B436A262"
+    },
+    {
+      "path": "src/components/home/HomeActionDeck.tsx",
+      "sha256": "06993850F63AC529D77C19D5E51A653AD0ED0CCE9EB14A1CDE2C650D2CFE3914"
+    },
+    {
+      "path": "src/components/home/HomeLeapRecommendation.test.tsx",
+      "sha256": "1AF2438DFD1D4319AD22A1B18A082B7A388B676D1FF04B4A69B0E5E02AA619C3"
+    },
+    {
+      "path": "src/components/home/HomeLeapRecommendation.tsx",
+      "sha256": "078BFD4EEBAA67706F0EB018DEF00F20D0C2CC3DAC88197E6D9AAAD59061C21C"
+    },
+    {
+      "path": "src/lib/leapRecommendation.test.ts",
+      "sha256": "0D5A26BD6193D5B04A58D7D08A1DC99F5CD4E9CB758FCA1170DA022904285417"
+    },
+    {
+      "path": "src/lib/leapRecommendation.ts",
+      "sha256": "0153AB8C0A6C98369D9B6B108FE1D374A6C803515D683E18C764BC6D78C39B57"
+    },
+    {
+      "path": "src/pages/AdaptiveLearningPage.tsx",
+      "sha256": "E221BB41216B789656154399B60E6BBFF49FEBF10406D3DE29CB4C6E584E4D08"
+    },
+    {
+      "path": "src/pages/Home.tsx",
+      "sha256": "888B35D8FA7BDF2CD2DAC504B4F2476101687BA5C6349A5DCF86B4184CF95048"
+    },
+    {
+      "path": "src/pages/OutcomeLabPage.tsx",
+      "sha256": "5F89C0F26E491A8B2903AB107451C5ADCAE23D6382BAF1B510408149F002CA39"
+    },
+    {
+      "path": "src/pages/outcomePresentation.test.ts",
+      "sha256": "FB39C89A7CED51CBE19994C0E3FEB7767F4AA627EC69EF1FEF33F7DEF00490E3"
+    },
+    {
+      "path": "src/pages/outcomePresentation.ts",
+      "sha256": "5E758B2F8347134C8C2F9535A0D16D8707BF9FE853D9B3AD8EA0BE82F1187226"
+    }
+  ]
+}
