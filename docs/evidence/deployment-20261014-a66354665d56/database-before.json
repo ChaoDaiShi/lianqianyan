@@ -1,0 +1,34 @@
+{
+  "quick_check": "ok",
+  "tables": {
+    "auth_accounts": {
+      "count": 3,
+      "ids_sha256": "201d48890b78b8da829d13a10ec25e6d7ce62e62e4ab7b771208bcc57e31ea48"
+    },
+    "auth_sessions": {
+      "count": 13,
+      "ids_sha256": "72fb055dcda7144784cebc12f6ca7753503dd92b773c2807615410e04f20c5ff"
+    },
+    "learning_evidence": {
+      "count": 3,
+      "ids_sha256": "7932b1b05da473d28557af619ece3457dbcefd5481946af949a173bc4b832b84"
+    },
+    "mastery_records": {
+      "count": 1,
+      "ids_sha256": "456646b2c44cceaf29065f513894d2fa86d47ba7d17c7ff432f0f390171ebe47"
+    },
+    "study_plans": {
+      "count": 3,
+      "ids_sha256": "b772da63bc4912d69ce373bf3681cadba4bfb24eca1ecbfe69b37f7d00da4d0a"
+    },
+    "courses": {
+      "count": 3,
+      "ids_sha256": "bf71f2d44c14264736e85a0ca944770350a328dd310e9272a0aebfb139b8b866"
+    },
+    "knowledge_points": {
+      "count": 15,
+      "ids_sha256": "933b06470f6bf2b49f44d1ab18c400ae099ab79b3c644849f280648e9e661527"
+    },
+    "adaptive_sessions": null
+  }
+}

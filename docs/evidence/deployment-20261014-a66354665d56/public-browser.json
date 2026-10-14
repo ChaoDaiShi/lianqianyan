@@ -1,0 +1,67 @@
+{
+  "sourceCommit": "a66354665d56e96b2ef00f6648ecdc7946e4e740",
+  "release": "20261014-a66354665d56",
+  "url": "https://8.156.67.132/lianqianyan/",
+  "checks": [
+    {
+      "name": "公网HTTPS入口200",
+      "status": "PASS"
+    },
+    {
+      "name": "公网HTML与发布包逐字节一致",
+      "status": "PASS"
+    },
+    {
+      "name": "Web健康入口200",
+      "status": "PASS"
+    },
+    {
+      "name": "API健康入口正常",
+      "status": "PASS"
+    },
+    {
+      "name": "匿名账号接口保持401",
+      "status": "PASS"
+    },
+    {
+      "name": "原有专用验收账号可正常登录",
+      "status": "PASS"
+    },
+    {
+      "name": "线上新版首页推荐可见",
+      "status": "PASS"
+    },
+    {
+      "name": "线上LEAP五个主题目录可用",
+      "status": "PASS"
+    },
+    {
+      "name": "空学习记录未被预填",
+      "status": "PASS"
+    },
+    {
+      "name": "公网子路径下的LEAP入口可达",
+      "status": "PASS"
+    },
+    {
+      "name": "线上导出面板可以正常关闭",
+      "status": "PASS"
+    },
+    {
+      "name": "专用验收账号恢复原课程设置",
+      "status": "PASS"
+    },
+    {
+      "name": "线上页面无脚本异常",
+      "status": "PASS"
+    },
+    {
+      "name": "同机原根站仍返回200",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "certificateVerification": "enabled",
+  "account": "existing dedicated deployment acceptance account; original course restored; session logged out",
+  "scope": "deployment smoke only; no learning answers submitted"
+}

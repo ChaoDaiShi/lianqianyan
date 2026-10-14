@@ -1,0 +1,9 @@
+{
+  "status": "deployed",
+  "release_id": "20261014-a66354665d56",
+  "source_commit": "a66354665d56e96b2ef00f6648ecdc7946e4e740",
+  "api_image": "lianqianyan-api:1.4.0-a66354665d56",
+  "web_image": "lianqianyan-web:1.4.0-a66354665d56",
+  "offline_image_archive_sha256": "bc405f3d3ee108b57c41f373cdd4e0e2c991769a2ac1b609a8ff003664b719af",
+  "deployed_at_utc": "2026-10-14T04:49:10.311324+00:00"
+}

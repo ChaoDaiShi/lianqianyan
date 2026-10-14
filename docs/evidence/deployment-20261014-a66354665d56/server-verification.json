@@ -1,0 +1,30 @@
+{
+  "current": "/opt/apps/lianqianyan/releases/20261014-a66354665d56",
+  "previous": {
+    "version": "20261007-7129efd87579"
+  },
+  "sources": {
+    "verified_api_files": 174,
+    "mismatches": []
+  },
+  "images": {
+    "api": {
+      "image": "lianqianyan-api:1.4.0-a66354665d56",
+      "id": "sha256:03c984ea7764302f63746f5c222955f2277a6f71e7db1fc6e3098d6d14fbca78",
+      "revision": "a66354665d56e96b2ef00f6648ecdc7946e4e740",
+      "health": "healthy"
+    },
+    "web": {
+      "image": "lianqianyan-web:1.4.0-a66354665d56",
+      "id": "sha256:af81166ac58b4bcc02e4a46726c9c6e3473e847fa18082f4e57b34e6496eb963",
+      "revision": "a66354665d56e96b2ef00f6648ecdc7946e4e740",
+      "health": "healthy"
+    }
+  },
+  "other_projects_unchanged": true,
+  "other_containers_checked": 7,
+  "production_env_unchanged": true,
+  "backup_sha256": "8da0977599d09159e138beb60e3366071d09bff95f89ab3974cad260fffadb3f",
+  "api_build_strategy": "reuse-identical-locked-dependencies",
+  "dependency_base_image": "sha256:821a4497ed2ac577189c2d62ccaef4bebd1e0e823eaaca54a489543f3e48ed6b"
+}
